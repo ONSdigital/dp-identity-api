@@ -1,0 +1,15 @@
+---
+
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: golang
+    tag: 1.15.8
+
+inputs:
+  - name: dp-identity-api
+
+run:
+  path: dp-identity-api/ci/scripts/unit.sh
