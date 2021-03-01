@@ -23,15 +23,15 @@ audit:
 .PHONY: build
 build:
 	@mkdir -p $(BUILD_ARCH)/$(BIN_DIR)
-	go build $(LDFLAGS) -o $(BUILD_ARCH)/$(BIN_DIR)/$(MAIN) cmd/$(MAIN)/main.go
+	go build $(LDFLAGS) -o $(BUILD_ARCH)/$(BIN_DIR)/$(MAIN) main.go
 
 .PHONY: debug
 debug:
-	HUMAN_LOG=1 go run $(LDFLAGS) -race cmd/$(MAIN)/main.go
+	HUMAN_LOG=1 go run $(LDFLAGS) -race main.go
 
 .PHONY: acceptance
 acceptance:
-	MONGODB_IMPORTS_DATABASE=test HUMAN_LOG=1 go run $(LDFLAGS) -race cmd/$(MAIN)/main.go
+	MONGODB_IMPORTS_DATABASE=test HUMAN_LOG=1 go run $(LDFLAGS) -race main.go
 
 .PHONY: test
 test:
