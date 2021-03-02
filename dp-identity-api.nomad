@@ -26,7 +26,7 @@ job "dp-identity-api" {
       mode     = "delay"
     }
 
-    task "dp-identity-api-publishing" {
+    task "dp-identity-api" {
       driver = "docker"
 
       artifact {
@@ -69,7 +69,7 @@ job "dp-identity-api" {
       }
 
       vault {
-        policies = ["dp-identity-api-publishing"]
+        policies = ["dp-identity-api"]
       }
     }
   }
