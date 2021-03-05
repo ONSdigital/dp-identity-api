@@ -25,7 +25,7 @@ func TestConfig(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(configuration, ShouldResemble, &Config{
 					BindAddr:                   "localhost:25600",
-					GracefulShutdownTimeout:    5 * time.Second,
+					GracefulShutdownTimeout:    20 * time.Second,
 					HealthCheckInterval:        30 * time.Second,
 					HealthCheckCriticalTimeout: 90 * time.Second,
 				})
