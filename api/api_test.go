@@ -19,6 +19,10 @@ func TestSetup(t *testing.T) {
 			// Replace the check below with any newly added api endpoints
 			So(hasRoute(api.Router, "/hello", "GET"), ShouldBeTrue)
 		})
+
+		Convey("Ensure cognito client has been added to api", func() {
+			So(api.CognitoClient, ShouldNotBeNil)
+		})
 	})
 }
 
