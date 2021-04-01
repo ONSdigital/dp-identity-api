@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/ONSdigital/dp-api-clients-go v1.34.2 // indirect
+	github.com/ONSdigital/dp-component-test v0.3.0
 	github.com/ONSdigital/dp-healthcheck v1.0.5
 	github.com/ONSdigital/dp-net v1.0.12
 	github.com/ONSdigital/log.go v1.0.1
