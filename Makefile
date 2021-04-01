@@ -38,3 +38,7 @@ test:
 	go test -cover -race ./...
 
 .PHONY: test build debug
+
+.PHONY: test-component
+test-component:
+	go test -cover -coverpkg=github.com/ONSdigital/dp-identity-api/... -component

@@ -9,6 +9,7 @@ require (
 	github.com/ONSdigital/dp-net v1.0.12
 	github.com/ONSdigital/log.go v1.0.1
 	github.com/aws/aws-sdk-go v1.37.32
+	github.com/cucumber/godog v0.10.0
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-uuid v1.0.2 // indirect
@@ -17,6 +18,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/pkg/errors v0.9.1
 	github.com/smartystreets/goconvey v1.6.4
+	github.com/stretchr/testify v1.6.1
 	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4 // indirect
 	golang.org/x/sys v0.0.0-20210317091845-390168757d9c // indirect
 	gopkg.in/jcmturner/aescts.v1 v1.0.1 // indirect
