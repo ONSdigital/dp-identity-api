@@ -5,9 +5,14 @@ import (
 
 	"github.com/ONSdigital/dp-identity-api/api"
 	"github.com/ONSdigital/dp-identity-api/config"
+	health "github.com/ONSdigital/dp-identity-api/service/healthcheck"
 	"github.com/ONSdigital/log.go/log"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+
+	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
 // Service contains all the configs, server and clients to run the dp-identity-api API
@@ -26,17 +31,17 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	log.Event(ctx, "running service", log.INFO)
 
 	log.Event(ctx, "using service configuration", log.Data{"config": cfg}, log.INFO)
-
-	// Get HTTP Server and ... // ADD CODE: Add any middleware that your service requires
+	
 	r := mux.NewRouter()
 
 	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
+	
+	cognitoclient := cognito.New(session.Must(session.NewSessionWithOptions(session.Options{
+        SharedConfigState: session.SharedConfigEnable,
+    })), &aws.Config{Region: &cfg.AWSRegion})
 
-	// ADD CODE: Add other(s) to serviceList here
-
-	// Setup the API
-	a := api.Setup(ctx, cfg, r)
-
+	a := api.Setup(ctx, r, cognitoclient)
+	
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
 
 	if err != nil {
@@ -44,7 +49,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	if err := registerCheckers(ctx, hc); err != nil {
+	if err := registerCheckers(ctx, hc, cognitoclient, &cfg.AWSCognitoUserPoolID); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -114,10 +119,17 @@ func (svc *Service) Close(ctx context.Context) error {
 	return nil
 }
 
-func registerCheckers(ctx context.Context,
-	hc HealthChecker) (err error) {
+func registerCheckers(ctx context.Context, hc HealthChecker, client *cognito.CognitoIdentityProvider, userPoolID *string) (err error) {
+	hasErrors := false
 
-	// ADD CODE: add other health checks here, as per dp-upload-service
+	if err := hc.AddCheck("cognito healthchecker", health.CognitoHealthCheck(client, userPoolID)); err != nil {
+		hasErrors = true
+		log.Event(ctx, "error adding check for cognito client", log.ERROR, log.Error(err))
+	}
+
+	if hasErrors {
+		return errors.New("Error(s) registering checkers for healthcheck")
+	}
 
 	return nil
 }

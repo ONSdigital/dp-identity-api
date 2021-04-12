@@ -5,22 +5,19 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
+
+	cognitomock "github.com/ONSdigital/dp-identity-api/cognitoclient/mock"
 )
 
 func TestSetup(t *testing.T) {
-
-	cfg := &config.Config{AWSRegion: "eu-west-1"}
-
 	Convey("Given an API instance", t, func() {
 		r := mux.NewRouter()
 		ctx := context.Background()
-		api := Setup(ctx, cfg, r)
+		api := Setup(ctx, r, &cognitomock.MockCognitoIdentityProviderClient{})
 
-		Convey("When created the following routes should have been added", func() {
-			// Replace the check below with any newly added api endpoints
+		Convey("When created the following route(s) should have been added", func() {
 			So(hasRoute(api.Router, "/hello", "GET"), ShouldBeTrue)
 		})
 
