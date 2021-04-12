@@ -41,4 +41,4 @@ test:
 
 .PHONY: test-component
 test-component:
-	go test -cover -coverpkg=github.com/ONSdigital/dp-identity-api/... -component
+	go test -cover -race -coverpkg=github.com/ONSdigital/dp-identity-api/... -component

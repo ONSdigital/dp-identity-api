@@ -9,6 +9,7 @@ import (
 	"github.com/ONSdigital/dp-identity-api/features/steps"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
+	"github.com/ONSdigital/log.go/log"
 )
 
 var componentFlag = flag.Bool("component", false, "perform component tests")
@@ -20,7 +21,8 @@ type ComponentTest struct {
 func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
 	component, err := steps.NewComponent()
 	if err != nil {
-		panic(err)
+		log.Event(nil, "fatal error initialising a test scenario", log.Error(err), log.FATAL)
+		os.Exit(1)
 	}
 
 	ctx.BeforeScenario(func(*godog.Scenario) {
@@ -34,9 +36,7 @@ func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
 	component.RegisterSteps(ctx)
 }
 
-func (f *ComponentTest) InitializeTestSuite(ctx *godog.TestSuiteContext) {
-
-}
+func (f *ComponentTest) InitializeTestSuite(ctx *godog.TestSuiteContext){}
 
 func TestComponent(t *testing.T) {
 	if *componentFlag {
