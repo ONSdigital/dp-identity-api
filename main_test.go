@@ -7,9 +7,9 @@ import (
 
 	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-identity-api/features/steps"
+	"github.com/ONSdigital/log.go/log"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
-	"github.com/ONSdigital/log.go/log"
 )
 
 var componentFlag = flag.Bool("component", false, "perform component tests")
@@ -19,7 +19,7 @@ type ComponentTest struct {
 }
 
 func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
-	component, err := steps.NewComponent()
+	component, err := steps.NewIdentityComponent()
 	if err != nil {
 		log.Event(nil, "fatal error initialising a test scenario", log.Error(err), log.FATAL)
 		os.Exit(1)
@@ -30,13 +30,15 @@ func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
 	})
 
 	ctx.AfterScenario(func(*godog.Scenario, error) {
-		_ = component.Close()
+		if err = component.Close(); err != nil {
+			log.Event(nil, "error closing identity component", log.Error(err), log.WARN)
+		}
 	})
 
 	component.RegisterSteps(ctx)
 }
 
-func (f *ComponentTest) InitializeTestSuite(ctx *godog.TestSuiteContext){}
+func (f *ComponentTest) InitializeTestSuite(ctx *godog.TestSuiteContext) {}
 
 func TestComponent(t *testing.T) {
 	if *componentFlag {
