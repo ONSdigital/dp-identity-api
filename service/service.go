@@ -35,7 +35,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	// ADD CODE: Add other(s) to serviceList here
 
 	// Setup the API
-	a := api.Setup(ctx, r)
+	a := api.Setup(ctx, cfg, r)
 
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
 
