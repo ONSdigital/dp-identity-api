@@ -27,7 +27,48 @@ paths:
             $ref: "#/definitions/HelloResponse"
         500:
           $ref: '#/responses/InternalError'
-
+  /tokens:
+    post:
+      tags:
+        - token
+      summary: "Creates"
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: user
+          description: "The email and password for a user"
+          schema:
+            type: object
+            required:
+              - user
+            properties:
+              email:
+                type: string
+              password:
+                type: string
+      responses:
+        201:
+          description: "Created"
+          headers: 
+            Authorization:
+              type: string
+              description: "Auth token"
+            ID:
+              type: string
+              description: "ID token"
+            Refresh:
+              type: string
+              description: "Refresh token"
+        400:
+          description: "Invalid request. Empty or invalid email or empty password."
+        401:
+          description: "Email or password are not authenticated"
+        403:
+          description: "Forbidden. Too many login attempts"
+        500:
+          description: "Unexpected internal error"
+        
 responses:
   InternalError:
     description: "Failed to process the request due to an internal error"
