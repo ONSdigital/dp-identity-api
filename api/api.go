@@ -31,5 +31,6 @@ func Setup(ctx context.Context, cfg *config.Config, r *mux.Router) *API {
 	}
 
 	r.HandleFunc("/hello", HelloHandler(ctx)).Methods("GET")
+	r.HandleFunc("/login", LoginHandler(ctx)).Methods("POST")
 	return api
 }
