@@ -11,8 +11,5 @@ image_resource:
 inputs:
   - name: dp-identity-api
 
-outputs:
-  - name: build
-
 run:
-  path: dp-identity-api/ci/scripts/build.sh
+  path: dp-identity-api/ci/scripts/component.sh
