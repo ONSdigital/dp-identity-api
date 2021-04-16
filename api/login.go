@@ -2,10 +2,10 @@ package api
 
 import (
 	"context"
-	"regexp"
-	"net/http"
-	"io/ioutil"
 	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"regexp"
 )
 
 type ErrorStructure struct {
@@ -14,8 +14,8 @@ type ErrorStructure struct {
 
 type IndividualError struct {
 	SpecificError string `json:"error,omitempty"`
-	Message string `json:"message,omitempty"`
-	Source Source `json:"source,omitempty"`
+	Message       string `json:"message,omitempty"`
+	Source        Source `json:"source,omitempty"`
 }
 
 type Source struct {
@@ -25,37 +25,39 @@ type Source struct {
 
 func LoginHandler(ctx context.Context) http.HandlerFunc {
 
-	return func(w http.ResponseWriter, req *http.Request){
+	return func(w http.ResponseWriter, req *http.Request) {
 
 		body, _ := ioutil.ReadAll(req.Body)
+
+		//Need to close the body
 
 		authParams := make(map[string]string)
 		_ = json.Unmarshal(body, &authParams)
 
-		emailResponse, passwordResponse := bodyValidation(authParams) 
-		if ! (emailResponse || passwordResponse) {
+		emailResponse, passwordResponse := bodyValidation(authParams)
+		if !(emailResponse || passwordResponse) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
 
-			sourceResponse := Source{
-				Field: "reference to field like some.field or something",
-				Param: "query param causing issue",
+			fullResponse := ErrorStructure{
+				Errors: []IndividualError{
+					{
+						SpecificError: "string, unchanging so devs can use this in code",
+						Message:       "detailed explanation of error",
+						Source: Source{
+							Field: "reference to field like some.field or something",
+							Param: "query param causing issue"}},
+				},
 			}
 
-			response := IndividualError{
-						SpecificError: "string, unchanging so devs can use this in code",
-						Message: "detailed explanation of error",
-						Source: sourceResponse,
-			}	
-
-			jsonResponse, _ := json.Marshal(response)
+			jsonResponse, _ := json.Marshal(fullResponse)
 			_, _ = w.Write(jsonResponse)
-			
+
 			return
 		}
 
 		validEmailResponse := emailValidation(authParams)
-		if ! validEmailResponse {
+		if !validEmailResponse {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -64,12 +66,11 @@ func LoginHandler(ctx context.Context) http.HandlerFunc {
 
 }
 
-func bodyValidation(requestBody map[string]string)(emailResponse, passwordResponse bool){
+func bodyValidation(requestBody map[string]string) (emailResponse, passwordResponse bool) {
 
 	emailResponse = false
 	passwordResponse = false
 
-	
 	if len(requestBody["email"]) != 0 {
 		emailResponse = true
 	}
@@ -81,7 +82,7 @@ func bodyValidation(requestBody map[string]string)(emailResponse, passwordRespon
 	return emailResponse, passwordResponse
 }
 
-func emailValidation(requestBody map[string]string)(emailResponse bool){
+func emailValidation(requestBody map[string]string) (emailResponse bool) {
 
 	emailResponse = false
 
