@@ -8,8 +8,7 @@ Feature: Login
             "password": ""
         }
         """
-        Then the HTTP status code should be "400"
-        And I should receive the following response:
+        Then I should receive the following JSON response with status "400":
         """
         {
             "errors": [
