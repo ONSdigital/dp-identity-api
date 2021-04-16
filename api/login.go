@@ -4,31 +4,62 @@ import (
 	"context"
 	"regexp"
 	"net/http"
-	"fmt"
+	"io/ioutil"
+	"encoding/json"
 )
+
+type ErrorStructure struct {
+	Errors []IndividualError `json:"errors,omitempty"`
+}
+
+type IndividualError struct {
+	SpecificError string `json:"error,omitempty"`
+	Message string `json:"message,omitempty"`
+	Source Source `json:"source,omitempty"`
+}
+
+type Source struct {
+	Field string `json:"field,omitempty"`
+	Param string `json:"param,omitempty"`
+}
 
 func LoginHandler(ctx context.Context) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, req *http.Request){
-		req.ParseForm()
 
-		userEmail := req.Form.Get("email")
-		password := req.Form.Get("password")
+		body, _ := ioutil.ReadAll(req.Body)
 
-		authParams := map[string]string{
-			"email": userEmail,
-			"password": password,
-		}
-
-		fmt.Println(authParams)
+		authParams := make(map[string]string)
+		_ = json.Unmarshal(body, &authParams)
 
 		emailResponse, passwordResponse := bodyValidation(authParams) 
-		if emailResponse || passwordResponse == false {
+		if ! (emailResponse || passwordResponse) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+
+			sourceResponse := Source{
+				Field: "reference to field like some.field or something",
+				Param: "query param causing issue",
+			}
+
+			response := IndividualError{
+						SpecificError: "string, unchanging so devs can use this in code",
+						Message: "detailed explanation of error",
+						Source: sourceResponse,
+			}	
+
+			jsonResponse, _ := json.Marshal(response)
+			_, _ = w.Write(jsonResponse)
+			
+			return
+		}
+
+		validEmailResponse := emailValidation(authParams)
+		if ! validEmailResponse {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
 	}
 
 }
