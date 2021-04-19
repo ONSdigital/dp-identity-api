@@ -3,25 +3,29 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"regexp"
 )
 
 type ErrorStructure struct {
-	Errors []IndividualError `json:"errors,omitempty"`
+	Errors []IndividualError `json:"errors"`
 }
 
 type IndividualError struct {
-	SpecificError string `json:"error,omitempty"`
-	Message       string `json:"message,omitempty"`
-	Source        Source `json:"source,omitempty"`
+	SpecificError string `json:"error"`
+	Message       string `json:"message"`
+	Source        Source `json:"source"`
 }
 
 type Source struct {
-	Field string `json:"field,omitempty"`
-	Param string `json:"param,omitempty"`
+	Field string `json:"field"`
+	Param string `json:"param"`
 }
+
+var passwordErrorList []IndividualError
+var emailErrorList []IndividualError
 
 func LoginHandler(ctx context.Context) http.HandlerFunc {
 
@@ -34,23 +38,21 @@ func LoginHandler(ctx context.Context) http.HandlerFunc {
 		authParams := make(map[string]string)
 		_ = json.Unmarshal(body, &authParams)
 
-		emailResponse, passwordResponse := bodyValidation(authParams)
-		if !(emailResponse || passwordResponse) {
+		passwordResponse := passwordValidation(authParams)
+		if !(passwordResponse) {
+
+			errorMessage := errors.New("Invalid password")
+			message := "Unable to validate the password in the request"
+			field := ""
+			param := ""
+
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
 
-			fullResponse := ErrorStructure{
-				Errors: []IndividualError{
-					{
-						SpecificError: "string, unchanging so devs can use this in code",
-						Message:       "detailed explanation of error",
-						Source: Source{
-							Field: "reference to field like some.field or something",
-							Param: "query param causing issue"}},
-				},
-			}
+			errorList := errorListBuilder(passwordErrorList, individualErrorBuilder(errorMessage, message, field, param))
+			errorResponseBody := errorResponseBodyBuilder(errorList)
 
-			jsonResponse, _ := json.Marshal(fullResponse)
+			jsonResponse, _ := json.Marshal(errorResponseBody)
 			_, _ = w.Write(jsonResponse)
 
 			return
@@ -58,30 +60,40 @@ func LoginHandler(ctx context.Context) http.HandlerFunc {
 
 		validEmailResponse := emailValidation(authParams)
 		if !validEmailResponse {
+
+			errorMessage := errors.New("Invalid email")
+			message := "Unable to validate the email in the request"
+			field := ""
+			param := ""
+
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
+
+			errorList := errorListBuilder(emailErrorList, individualErrorBuilder(errorMessage, message, field, param))
+			errorResponseBody := errorResponseBodyBuilder(errorList)
+
+			jsonResponse, _ := json.Marshal(errorResponseBody)
+			_, _ = w.Write(jsonResponse)
+
 			return
+
 		}
 	}
 
 }
 
-func bodyValidation(requestBody map[string]string) (emailResponse, passwordResponse bool) {
+func passwordValidation(requestBody map[string]string) (passwordResponse bool) {
 
-	emailResponse = false
 	passwordResponse = false
-
-	if len(requestBody["email"]) != 0 {
-		emailResponse = true
-	}
 
 	if len(requestBody["password"]) != 0 {
 		passwordResponse = true
 	}
 
-	return emailResponse, passwordResponse
+	return passwordResponse
 }
 
+//emailValidation checks for both a valid email address and an empty email address
 func emailValidation(requestBody map[string]string) (emailResponse bool) {
 
 	emailResponse = false
@@ -89,4 +101,33 @@ func emailValidation(requestBody map[string]string) (emailResponse bool) {
 	emailResponse, _ = regexp.MatchString("^[a-zA-Z0-9.]+@(ext.)?ons.gov.uk$", requestBody["email"])
 
 	return emailResponse
+}
+
+func individualErrorBuilder(err error, message, sourceField, sourceParam string) (individualError IndividualError) {
+
+	individualError = IndividualError{
+		SpecificError: error.Error(err),
+		Message:       message,
+		Source: Source{
+			Field: sourceField,
+			Param: sourceParam},
+	}
+
+	return individualError
+}
+
+func errorListBuilder(errorList []IndividualError, individualError IndividualError) (listOfErrors []IndividualError) {
+
+	errorList = append(errorList, individualError)
+
+	return errorList
+}
+
+func errorResponseBodyBuilder(listOfErrors []IndividualError) (errorResponseBody ErrorStructure) {
+
+	errorResponseBody = ErrorStructure{
+		Errors: listOfErrors,
+	}
+
+	return errorResponseBody
 }
