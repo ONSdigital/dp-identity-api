@@ -74,7 +74,7 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 
 	Convey("The email doesn't conform to the expected format and it isn't validated", t, func() {
 
-		email := "email@ons2.gov.uk"
+		email := "email"
 
 		body := make(map[string]string)
 		body["email"] = email
@@ -104,51 +104,6 @@ func TestBuildingIndividualErrors(t *testing.T) {
 		individualError := individualErrorBuilder(err, message, sourceField, sourceParam)
 
 		So(individualError, ShouldResemble, individualErrorExample)
-
-	})
-}
-
-func TestBuildingListOfErrors(t *testing.T) {
-
-	Convey("An eror can be added to a list of errors", t, func() {
-
-		individualErrorOne := IndividualError{
-			SpecificError: "string, unchanging so devs can use this in code",
-			Message:       "detailed explanation of error",
-			Source: Source{
-				Field: "reference to field like some.field or something",
-				Param: "query param causing issue"},
-		}
-
-		individualErrorTwo := IndividualError{
-			SpecificError: "string, unchanging so devs can use this in code",
-			Message:       "detailed explanation of error two",
-			Source: Source{
-				Field: "reference to field like some.field or something",
-				Param: "query param causing issue"},
-		}
-
-		listOfErrorsExample := []IndividualError{
-			{
-				SpecificError: "string, unchanging so devs can use this in code",
-				Message:       "detailed explanation of error",
-				Source: Source{
-					Field: "reference to field like some.field or something",
-					Param: "query param causing issue"},
-			},
-			{
-				SpecificError: "string, unchanging so devs can use this in code",
-				Message:       "detailed explanation of error two",
-				Source: Source{
-					Field: "reference to field like some.field or something",
-					Param: "query param causing issue"},
-			},
-		}
-
-		listOfErrors := errorListBuilder(nil, individualErrorOne)
-		listOfErrors = errorListBuilder(listOfErrors, individualErrorTwo)
-
-		So(listOfErrors, ShouldResemble, listOfErrorsExample)
 
 	})
 }

@@ -24,8 +24,10 @@ type Source struct {
 	Param string `json:"param"`
 }
 
-var passwordErrorList []IndividualError
-var emailErrorList []IndividualError
+var errorList []IndividualError
+
+var invalidEmailError IndividualError
+var invalidPasswordError IndividualError
 
 func LoginHandler(ctx context.Context) http.HandlerFunc {
 
@@ -38,18 +40,30 @@ func LoginHandler(ctx context.Context) http.HandlerFunc {
 		authParams := make(map[string]string)
 		_ = json.Unmarshal(body, &authParams)
 
-		passwordResponse := passwordValidation(authParams)
-		if !(passwordResponse) {
+		validPasswordResponse := passwordValidation(authParams)
+		validEmailResponse := emailValidation(authParams)
+
+		field := ""
+		param := ""
+
+		if !(validPasswordResponse) && !(validEmailResponse) {
 
 			errorMessage := errors.New("Invalid password")
 			message := "Unable to validate the password in the request"
-			field := ""
-			param := ""
+
+			invalidPasswordError = individualErrorBuilder(errorMessage, message, field, param)
+
+			errorList := append(errorList, invalidPasswordError)
+
+			errorMessage = errors.New("Invalid email")
+			message = "Unable to validate the email in the request"
+
+			invalidEmailError = individualErrorBuilder(errorMessage, message, field, param)
+			errorList = append(errorList, invalidEmailError)
 
 			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(400)
 
-			errorList := errorListBuilder(passwordErrorList, individualErrorBuilder(errorMessage, message, field, param))
 			errorResponseBody := errorResponseBodyBuilder(errorList)
 
 			jsonResponse, _ := json.Marshal(errorResponseBody)
@@ -58,28 +72,43 @@ func LoginHandler(ctx context.Context) http.HandlerFunc {
 			return
 		}
 
-		validEmailResponse := emailValidation(authParams)
+		if !validPasswordResponse {
+
+			errorMessage := errors.New("Invalid password")
+			message := "Unable to validate the password in the request"
+
+			invalidPasswordError = individualErrorBuilder(errorMessage, message, field, param)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(400)
+
+			errorList := append(errorList, invalidPasswordError)
+			errorResponseBody := errorResponseBodyBuilder(errorList)
+
+			jsonResponse, _ := json.Marshal(errorResponseBody)
+			_, _ = w.Write(jsonResponse)
+
+			return
+		}
+
 		if !validEmailResponse {
 
 			errorMessage := errors.New("Invalid email")
 			message := "Unable to validate the email in the request"
-			field := ""
-			param := ""
+
+			invalidEmailError = individualErrorBuilder(errorMessage, message, field, param)
 
 			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(400)
 
-			errorList := errorListBuilder(emailErrorList, individualErrorBuilder(errorMessage, message, field, param))
+			errorList := append(errorList, invalidEmailError)
 			errorResponseBody := errorResponseBodyBuilder(errorList)
 
 			jsonResponse, _ := json.Marshal(errorResponseBody)
 			_, _ = w.Write(jsonResponse)
 
 			return
-
 		}
 	}
-
 }
 
 func passwordValidation(requestBody map[string]string) (passwordResponse bool) {
@@ -114,13 +143,6 @@ func individualErrorBuilder(err error, message, sourceField, sourceParam string)
 	}
 
 	return individualError
-}
-
-func errorListBuilder(errorList []IndividualError, individualError IndividualError) (listOfErrors []IndividualError) {
-
-	errorList = append(errorList, individualError)
-
-	return errorList
 }
 
 func errorResponseBodyBuilder(listOfErrors []IndividualError) (errorResponseBody ErrorStructure) {
