@@ -5,15 +5,19 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSetup(t *testing.T) {
+
+	cfg := &config.Config{AWSRegion: "eu-west-1"}
+
 	Convey("Given an API instance", t, func() {
 		r := mux.NewRouter()
 		ctx := context.Background()
-		api := Setup(ctx, r)
+		api := Setup(ctx, cfg, r)
 
 		Convey("When created the following routes should have been added", func() {
 			// Replace the check below with any newly added api endpoints
