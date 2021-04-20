@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -33,13 +32,13 @@ func LoginHandler(ctx context.Context) http.HandlerFunc {
 
 		body, _ := ioutil.ReadAll(req.Body)
 
-		//Need to close the body
+		defer req.Body.Close()
 
 		authParams := make(map[string]string)
 		_ = json.Unmarshal(body, &authParams)
 
-		validPasswordResponse := passwordValidation(authParams)
-		validEmailResponse := emailValidation(authParams)
+		validPasswordRequest := passwordValidation(authParams)
+		validEmailRequest := emailValidation(authParams)
 
 		invalidPasswordError := errors.New("Invalid password")
 		invalidPasswordMessage := "Unable to validate the password in the request"
@@ -51,54 +50,32 @@ func LoginHandler(ctx context.Context) http.HandlerFunc {
 		invalidPasswordErrorBody := individualErrorBuilder(invalidPasswordError, invalidPasswordMessage, field, param)
 		invalidEmailErrorBody := individualErrorBuilder(invalidEmailError, invalidErrorMessage, field, param)
 
-		if !(validPasswordResponse) && !(validEmailResponse) {
+		if !(validPasswordRequest) && !(validEmailRequest) {
 
 			errorList := append(errorList, invalidPasswordErrorBody)
 			errorList = append(errorList, invalidEmailErrorBody)
 
 			errorResponseBody := errorResponseBodyBuilder(errorList)
-			fmt.Println(errorResponseBody)
 			writeErrorResponse(w, 400, errorResponseBody)
-			/*
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(400)
-
-				jsonResponse, _ := json.Marshal(errorResponseBody)
-				_, _ = w.Write(jsonResponse)
-
-				return
-			*/
+			return
 		}
 
-		if !validPasswordResponse {
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(400)
+		if !validPasswordRequest {
 
 			errorList := append(errorList, invalidPasswordErrorBody)
 			errorResponseBody := errorResponseBodyBuilder(errorList)
 
-			jsonResponse, _ := json.Marshal(errorResponseBody)
-			_, _ = w.Write(jsonResponse)
-
+			writeErrorResponse(w, 400, errorResponseBody)
 			return
 		}
 
-		if !validEmailResponse {
+		if !validEmailRequest {
 
 			errorList := append(errorList, invalidEmailErrorBody)
 			errorResponseBody := errorResponseBodyBuilder(errorList)
 
 			writeErrorResponse(w, 400, errorResponseBody)
-			/*
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(400)
-
-				jsonResponse, _ := json.Marshal(errorResponseBody)
-				_, _ = w.Write(jsonResponse)
-
-				return
-			*/
+			return
 		}
 	}
 }
