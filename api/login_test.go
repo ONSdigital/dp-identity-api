@@ -2,6 +2,8 @@ package api
 
 import (
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -109,7 +111,7 @@ func TestBuildingIndividualErrors(t *testing.T) {
 }
 
 func TestBuildingErrorStructure(t *testing.T) {
-	Convey("An error structure is created from a list of errors ", t, func() {
+	Convey("An error structure is created from a list of errors", t, func() {
 
 		listOfErrors := []IndividualError{
 			{
@@ -135,5 +137,29 @@ func TestBuildingErrorStructure(t *testing.T) {
 		errorResponseBody := errorResponseBodyBuilder(listOfErrors)
 
 		So(errorResponseBody, ShouldResemble, errorResponseBodyExample)
+	})
+}
+
+func TestWriteErrorResponse(t *testing.T) {
+	Convey("A status code and an error body with two errors is written to a http response", t, func() {
+
+		errorResponseBodyExample := `{"errors":[{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}},{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}}]}`
+
+		invalidEmailError := errors.New("Invalid email")
+		invalidErrorMessage := "Unable to validate the email in the request"
+		field := ""
+		param := ""
+		invalidEmailErrorBody := individualErrorBuilder(invalidEmailError, invalidErrorMessage, field, param)
+		errorList = append(errorList, invalidEmailErrorBody)
+		errorList = append(errorList, invalidEmailErrorBody)
+
+		resp := httptest.NewRecorder()
+		statusCode := 400
+		errorResponseBody := errorResponseBodyBuilder(errorList)
+
+		writeErrorResponse(resp, statusCode, errorResponseBody)
+
+		So(resp.Code, ShouldEqual, http.StatusBadRequest)
+		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
 	})
 }
