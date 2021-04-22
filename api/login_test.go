@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -50,7 +51,7 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 		body := make(map[string]string)
 		body["email"] = email
 
-		emailResponse := emailValidation(body)
+		emailResponse, _ := emailValidation(body)
 		So(emailResponse, ShouldBeTrue)
 	})
 
@@ -60,7 +61,7 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 		body := make(map[string]string)
 		body["password"] = password
 
-		emailResponse := emailValidation(body)
+		emailResponse, _ := emailValidation(body)
 		So(emailResponse, ShouldBeFalse)
 	})
 
@@ -70,8 +71,8 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 		body := make(map[string]string)
 		body["email"] = email
 
-		passwordResponse := emailValidation(body)
-		So(passwordResponse, ShouldBeFalse)
+		emailResponse, _ := emailValidation(body)
+		So(emailResponse, ShouldBeFalse)
 	})
 
 	Convey("The email doesn't conform to the expected format and it isn't validated", t, func() {
@@ -81,7 +82,7 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 		body := make(map[string]string)
 		body["email"] = email
 
-		emailResponse := emailValidation(body)
+		emailResponse, _ := emailValidation(body)
 		So(emailResponse, ShouldBeFalse)
 	})
 }
@@ -153,13 +154,34 @@ func TestWriteErrorResponse(t *testing.T) {
 		errorList = append(errorList, invalidEmailErrorBody)
 		errorList = append(errorList, invalidEmailErrorBody)
 
+		ctx := context.Background()
 		resp := httptest.NewRecorder()
 		statusCode := 400
 		errorResponseBody := errorResponseBodyBuilder(errorList)
 
-		writeErrorResponse(resp, statusCode, errorResponseBody)
+		writeErrorResponse(ctx, resp, statusCode, errorResponseBody)
 
 		So(resp.Code, ShouldEqual, http.StatusBadRequest)
+		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
+	})
+}
+
+func TestHandleUnexpectedError(t *testing.T) {
+	Convey("An error, an error message, a field and a param is logged and written to a http response", t, func() {
+
+		errorResponseBodyExample := `{"errors":[{"error":"unexpected error","message":"something unexpected has happened","source":{"field":"","param":""}}]}`
+
+		ctx := context.Background()
+		unexpectedError := errors.New("unexpected error")
+		unexpectedErrorMessage := "something unexpected has happened"
+		field := ""
+		param := ""
+
+		resp := httptest.NewRecorder()
+
+		handleUnexpectedError(ctx, resp, unexpectedError, unexpectedErrorMessage, field, param)
+
+		So(resp.Code, ShouldEqual, http.StatusInternalServerError)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
 	})
 }

@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+
+	"github.com/ONSdigital/log.go/log"
 )
 
 type ErrorStructure struct {
@@ -26,55 +28,76 @@ type Source struct {
 
 var errorList []IndividualError
 
-func LoginHandler(ctx context.Context) http.HandlerFunc {
+func LoginHandler() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, req *http.Request) {
 
-		body, _ := ioutil.ReadAll(req.Body)
+		ctx := req.Context()
+
+		field := ""
+		param := ""
+
+		body, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			errorMessage := "api endpoint POST login returned an error reading the request body"
+			handleUnexpectedError(ctx, w, err, errorMessage, field, param)
+			return
+		}
 
 		defer req.Body.Close()
 
 		authParams := make(map[string]string)
-		_ = json.Unmarshal(body, &authParams)
+		err = json.Unmarshal(body, &authParams)
+		if err != nil {
+			errorMessage := "api endpoint POST login returned an error unmarshalling the body"
+			handleUnexpectedError(ctx, w, err, errorMessage, field, param)
+			return
+		}
 
 		validPasswordRequest := passwordValidation(authParams)
-		validEmailRequest := emailValidation(authParams)
+		validEmailRequest, err := emailValidation(authParams)
+		if err != nil {
+			errorMessage := "api endpoint POST login returned an error validating the email"
+			handleUnexpectedError(ctx, w, err, errorMessage, field, param)
+			return
+		}
 
 		invalidPasswordError := errors.New("Invalid password")
 		invalidPasswordMessage := "Unable to validate the password in the request"
 		invalidEmailError := errors.New("Invalid email")
 		invalidErrorMessage := "Unable to validate the email in the request"
-		field := ""
-		param := ""
 
 		invalidPasswordErrorBody := individualErrorBuilder(invalidPasswordError, invalidPasswordMessage, field, param)
 		invalidEmailErrorBody := individualErrorBuilder(invalidEmailError, invalidErrorMessage, field, param)
 
 		if !(validPasswordRequest) && !(validEmailRequest) {
 
-			errorList := append(errorList, invalidPasswordErrorBody)
+			errorList = nil
+			errorList = append(errorList, invalidPasswordErrorBody)
 			errorList = append(errorList, invalidEmailErrorBody)
 
 			errorResponseBody := errorResponseBodyBuilder(errorList)
-			writeErrorResponse(w, 400, errorResponseBody)
+			writeErrorResponse(ctx, w, 400, errorResponseBody)
 			return
 		}
 
 		if !validPasswordRequest {
 
-			errorList := append(errorList, invalidPasswordErrorBody)
+			errorList = nil
+			errorList = append(errorList, invalidPasswordErrorBody)
 			errorResponseBody := errorResponseBodyBuilder(errorList)
 
-			writeErrorResponse(w, 400, errorResponseBody)
+			writeErrorResponse(ctx, w, 400, errorResponseBody)
 			return
 		}
 
 		if !validEmailRequest {
 
-			errorList := append(errorList, invalidEmailErrorBody)
+			errorList = nil
+			errorList = append(errorList, invalidEmailErrorBody)
 			errorResponseBody := errorResponseBodyBuilder(errorList)
 
-			writeErrorResponse(w, 400, errorResponseBody)
+			writeErrorResponse(ctx, w, 400, errorResponseBody)
 			return
 		}
 	}
@@ -92,13 +115,13 @@ func passwordValidation(requestBody map[string]string) (passwordResponse bool) {
 }
 
 //emailValidation checks for both a valid email address and an empty email address
-func emailValidation(requestBody map[string]string) (emailResponse bool) {
+func emailValidation(requestBody map[string]string) (emailResponse bool, err error) {
 
 	emailResponse = false
 
-	emailResponse, _ = regexp.MatchString("^[a-zA-Z0-9.]+@(ext.)?ons.gov.uk$", requestBody["email"])
+	emailResponse, err = regexp.MatchString("^[a-zA-Z0-9.]+@(ext.)?ons.gov.uk$", requestBody["email"])
 
-	return emailResponse
+	return emailResponse, err
 }
 
 func individualErrorBuilder(err error, message, sourceField, sourceParam string) (individualError IndividualError) {
@@ -123,13 +146,32 @@ func errorResponseBodyBuilder(listOfErrors []IndividualError) (errorResponseBody
 	return errorResponseBody
 }
 
-func writeErrorResponse(w http.ResponseWriter, status int, errorResponseBody interface{}) {
+func writeErrorResponse(ctx context.Context, w http.ResponseWriter, status int, errorResponseBody interface{}) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
 	jsonResponse, _ := json.Marshal(errorResponseBody)
-	_, _ = w.Write(jsonResponse)
+	_, err := w.Write(jsonResponse)
+	if err != nil {
 
+		log.Event(ctx, "writing response failed", log.Error(err), log.ERROR)
+		http.Error(w, "Failed to write http response", http.StatusInternalServerError)
+		return
+	}
+
+	return
+}
+
+func handleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error, message, sourceField, sourceParam string) {
+
+	errorList = nil
+	statusCode := 500
+	internalServerErrorBody := individualErrorBuilder(err, message, sourceField, sourceParam)
+	errorList := append(errorList, internalServerErrorBody)
+	errorResponseBody := errorResponseBodyBuilder(errorList)
+
+	log.Event(ctx, message, log.ERROR, log.Error(err))
+	writeErrorResponse(ctx, w, statusCode, errorResponseBody)
 	return
 }
