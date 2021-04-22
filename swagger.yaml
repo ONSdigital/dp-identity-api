@@ -31,7 +31,7 @@ paths:
     post:
       tags:
         - token
-      summary: "Creates"
+      summary: "Creates tokens for authorisation, ID and refresh for authenticated users"
       consumes:
         - application/json
       parameters:
@@ -62,13 +62,22 @@ paths:
               description: "Refresh token"
         400:
           description: "Invalid request. Empty or invalid email or empty password."
+          schema:
+            $ref: '#/definitions/LoginErrorList'
         401:
           description: "Email or password are not authenticated"
+          schema:
+            $ref: '#/definitions/LoginErrorList'
         403:
           description: "Forbidden. Too many login attempts"
+          schema:
+            $ref: '#/definitions/LoginErrorList'
+
         500:
           description: "Unexpected internal error"
-        
+          schema:
+            $ref: '#/definitions/LoginErrorList'
+
 responses:
   InternalError:
     description: "Failed to process the request due to an internal error"
@@ -81,3 +90,36 @@ definitions:
         type: string
         description: "Message returned by hello world endpoint"
         example: "Hello, world!"
+
+  LoginErrorList:
+    description: "A list of errors"
+    type: object
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/LoginErrorResponse'
+
+  LoginErrorResponse:
+    description: "an individual error"
+    type: object
+    properties:
+      error: 
+        type: string
+        description: "returned error description"
+      message: 
+        type: string
+        description: "returned message"
+      source: 
+        $ref:  '#/definitions/LoginErrorSource'
+
+  LoginErrorSource:
+    description : "returned field and parameter"
+    type: object
+    properties: 
+      field:
+        type: string
+        description: "returned field name on which error has occurred"
+      param:
+        type: string
+        description: "returned parameter on which an error has occurred"

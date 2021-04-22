@@ -27,7 +27,7 @@ type Source struct {
 	Param string `json:"param"`
 }
 
-func LoginHandler() http.HandlerFunc {
+func TokensHandler() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, req *http.Request) {
 

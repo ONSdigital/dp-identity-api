@@ -1,7 +1,7 @@
-Feature: Login
+Feature: Tokens
 
-    Scenario: POST /login
-        When I POST "/login"
+    Scenario: POST /tokens
+        When I POST "/tokens"
         """
         {
             "email": "email@ons.gov.uk",
@@ -24,8 +24,8 @@ Feature: Login
         }
         """
 
-    Scenario: POST /login
-        When I POST "/login"
+    Scenario: POST /tokens
+        When I POST "/tokens"
         """
         {
             "email": "email",
@@ -48,8 +48,8 @@ Feature: Login
         }
         """
 
-    Scenario: POST /login
-        When I POST "/login"
+    Scenario: POST /tokens
+        When I POST "/tokens"
         """
         {
             "email": "",
@@ -72,8 +72,8 @@ Feature: Login
         }
         """
 
-        Scenario: POST /login
-        When I POST "/login"
+        Scenario: POST /tokens
+        When I POST "/tokens"
         """
         {
             "email": "",
