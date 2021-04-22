@@ -51,7 +51,7 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 		body := make(map[string]string)
 		body["email"] = email
 
-		emailResponse, _ := emailValidation(body)
+		emailResponse := emailValidation(body)
 		So(emailResponse, ShouldBeTrue)
 	})
 
@@ -61,7 +61,7 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 		body := make(map[string]string)
 		body["password"] = password
 
-		emailResponse, _ := emailValidation(body)
+		emailResponse := emailValidation(body)
 		So(emailResponse, ShouldBeFalse)
 	})
 
@@ -71,7 +71,7 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 		body := make(map[string]string)
 		body["email"] = email
 
-		emailResponse, _ := emailValidation(body)
+		emailResponse := emailValidation(body)
 		So(emailResponse, ShouldBeFalse)
 	})
 
@@ -82,7 +82,7 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 		body := make(map[string]string)
 		body["email"] = email
 
-		emailResponse, _ := emailValidation(body)
+		emailResponse := emailValidation(body)
 		So(emailResponse, ShouldBeFalse)
 	})
 }
@@ -145,6 +145,9 @@ func TestWriteErrorResponse(t *testing.T) {
 	Convey("A status code and an error body with two errors is written to a http response", t, func() {
 
 		errorResponseBodyExample := `{"errors":[{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}},{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}}]}`
+
+		var errorList []IndividualError
+		errorList = nil
 
 		invalidEmailError := errors.New("Invalid email")
 		invalidErrorMessage := "Unable to validate the email in the request"

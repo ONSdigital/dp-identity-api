@@ -6,7 +6,8 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"regexp"
+
+	"github.com/ONSdigital/dp-identity-api/emailvalidation"
 
 	"github.com/ONSdigital/log.go/log"
 )
@@ -25,8 +26,6 @@ type Source struct {
 	Field string `json:"field"`
 	Param string `json:"param"`
 }
-
-var errorList []IndividualError
 
 func LoginHandler() http.HandlerFunc {
 
@@ -55,7 +54,7 @@ func LoginHandler() http.HandlerFunc {
 		}
 
 		validPasswordRequest := passwordValidation(authParams)
-		validEmailRequest, err := emailValidation(authParams)
+		validEmailRequest := emailValidation(authParams)
 		if err != nil {
 			errorMessage := "api endpoint POST login returned an error validating the email"
 			handleUnexpectedError(ctx, w, err, errorMessage, field, param)
@@ -69,6 +68,8 @@ func LoginHandler() http.HandlerFunc {
 
 		invalidPasswordErrorBody := individualErrorBuilder(invalidPasswordError, invalidPasswordMessage, field, param)
 		invalidEmailErrorBody := individualErrorBuilder(invalidEmailError, invalidErrorMessage, field, param)
+
+		var errorList []IndividualError
 
 		if !(validPasswordRequest) && !(validEmailRequest) {
 
@@ -103,25 +104,24 @@ func LoginHandler() http.HandlerFunc {
 	}
 }
 
-func passwordValidation(requestBody map[string]string) (passwordResponse bool) {
+func passwordValidation(requestBody map[string]string) (isPasswordValid bool) {
 
-	passwordResponse = false
+	isPasswordValid = false
 
 	if len(requestBody["password"]) != 0 {
-		passwordResponse = true
+		isPasswordValid = true
 	}
 
-	return passwordResponse
+	return isPasswordValid
 }
 
 //emailValidation checks for both a valid email address and an empty email address
-func emailValidation(requestBody map[string]string) (emailResponse bool, err error) {
+func emailValidation(requestBody map[string]string) (isEmailValid bool) {
 
-	emailResponse = false
+	isEmailValid = false
+	isEmailValid = emailvalidation.IsEmailValid(requestBody["email"])
 
-	emailResponse, err = regexp.MatchString("^[a-zA-Z0-9.]+@(ext.)?ons.gov.uk$", requestBody["email"])
-
-	return emailResponse, err
+	return isEmailValid
 }
 
 func individualErrorBuilder(err error, message, sourceField, sourceParam string) (individualError IndividualError) {
@@ -165,10 +165,12 @@ func writeErrorResponse(ctx context.Context, w http.ResponseWriter, status int, 
 
 func handleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error, message, sourceField, sourceParam string) {
 
+	var errorList []IndividualError
+
 	errorList = nil
 	statusCode := 500
 	internalServerErrorBody := individualErrorBuilder(err, message, sourceField, sourceParam)
-	errorList := append(errorList, internalServerErrorBody)
+	errorList = append(errorList, internalServerErrorBody)
 	errorResponseBody := errorResponseBodyBuilder(errorList)
 
 	log.Event(ctx, message, log.ERROR, log.Error(err))
