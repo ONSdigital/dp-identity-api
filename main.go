@@ -53,6 +53,11 @@ func run(ctx context.Context) error {
 		return errors.Wrap(err, "error getting configuration")
 	}
 
+	// sensitive fields are omitted from config.String().
+	log.Event(ctx, "loaded config", log.INFO, log.Data{
+		"config": cfg,
+	})
+
 	// Start service
 	svc, err := service.Run(ctx, cfg, svcList, BuildTime, GitCommit, Version, svcErrors)
 	if err != nil {

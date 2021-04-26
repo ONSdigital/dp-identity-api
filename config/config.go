@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -13,7 +14,7 @@ type Config struct {
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
 	AWSRegion                  string        `envconfig:"AWS_REGION"`
-	AWSCognitoUserPoolID       string        `envconfig:"AWS_COGNTIO_USER_POOL_ID"`
+	AWSCognitoUserPoolID       string        `envconfig:"AWS_COGNTIO_USER_POOL_ID" json:"-"`
 }
 
 var cfg *Config
@@ -34,4 +35,11 @@ func Get() (*Config, error) {
 	}
 
 	return cfg, envconfig.Process("", cfg)
+}
+
+// String is implemented to prevent sensitive fields being logged.
+// The config is returned as JSON with sensitive fields omitted.
+func (config Config) String() string {
+	json, _ := json.Marshal(config)
+	return string(json)
 }

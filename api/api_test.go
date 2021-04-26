@@ -8,14 +8,14 @@ import (
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 
-	cognitomock "github.com/ONSdigital/dp-identity-api/cognitoclient/mock"
+	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 )
 
 func TestSetup(t *testing.T) {
 	Convey("Given an API instance", t, func() {
 		r := mux.NewRouter()
 		ctx := context.Background()
-		api := Setup(ctx, r, &cognitomock.MockCognitoIdentityProviderClient{})
+		api := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{})
 
 		Convey("When created the following route(s) should have been added", func() {
 			So(hasRoute(api.Router, "/hello", "GET"), ShouldBeTrue)
