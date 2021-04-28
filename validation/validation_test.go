@@ -1,4 +1,4 @@
-package emailvalidation
+package validation
 
 import (
 	"strings"
@@ -23,14 +23,6 @@ func TestEmailValidationConformsToExpectedFormat(t *testing.T) {
 
 		emailResponse := IsEmailValid(email)
 		So(emailResponse, ShouldBeTrue)
-	})
-
-	Convey("The single domain email does not conform to the expected format and is validated", t, func() {
-
-		email := "emailemail@domainhost"
-
-		emailResponse := IsEmailValid(email)
-		So(emailResponse, ShouldBeFalse)
 	})
 
 	Convey("The empty email does not conform to the expected format and is validated", t, func() {
@@ -70,12 +62,17 @@ func TestEmailValidationConformsToExpectedFormat(t *testing.T) {
 		emailResponse := IsEmailValid(email)
 		So(emailResponse, ShouldBeFalse)
 	})
-
 	Convey("The email has . at the start of prefix and does not conform to the expected format and is validated", t, func() {
 		email := ".string.string@string.string"
 
 		emailResponse := IsEmailValid(email)
 		So(emailResponse, ShouldBeFalse)
+	})
+
+	Convey("The email conforms to the expected format and is validated", t, func() {
+		email := "\"email.email\"@ons.gov.uk"
+		emailResponse := IsEmailValid(email)
+		So(emailResponse, ShouldBeTrue)
 	})
 
 }

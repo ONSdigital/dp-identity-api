@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
-	"github.com/ONSdigital/dp-identity-api/emailvalidation"
+	"github.com/ONSdigital/dp-identity-api/validation"
 
 	"github.com/ONSdigital/log.go/log"
 )
@@ -71,7 +71,7 @@ func TokensHandler() http.HandlerFunc {
 		}
 
 		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-		writeErrorResponse(ctx, w, 400, errorResponseBody)
+		writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 		return
 	}
 }
@@ -84,7 +84,7 @@ func passwordValidation(requestBody AuthParams) (isPasswordValid bool) {
 //emailValidation checks for both a valid email address and an empty email address
 func emailValidation(requestBody AuthParams) (isEmailValid bool) {
 
-	isEmailValid = emailvalidation.IsEmailValid(requestBody.Email)
+	isEmailValid = validation.IsEmailValid(requestBody.Email)
 
 	return isEmailValid
 }
@@ -113,12 +113,11 @@ func handleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error
 
 	var errorList []apierrors.IndividualError
 
-	statusCode := 500
 	internalServerErrorBody := apierrors.IndividualErrorBuilder(err, message, sourceField, sourceParam)
 	errorList = append(errorList, internalServerErrorBody)
 	errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
 
 	log.Event(ctx, message, log.ERROR, log.Error(err))
-	writeErrorResponse(ctx, w, statusCode, errorResponseBody)
+	writeErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
 	return
 }
