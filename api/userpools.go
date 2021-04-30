@@ -3,31 +3,29 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"net/http"
-
+	"fmt"
 	"github.com/ONSdigital/log.go/log"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/gorilla/mux"
+	"net/http"
 )
 
-const helloMessage = "Hello, World!"
-
-type HelloResponse struct {
-	Message string `json:"message,omitempty"`
-}
-
-const healthyMessage = "API and Cognito healthy"
-
-type HealthcheckResponse struct {
-	Message string `json:"message,omitempty"`
-}
-
-// HelloHandler returns function containing a simple hello world example of an api handler
-func HelloHandler(ctx context.Context) http.HandlerFunc {
-	log.Event(ctx, "api contains example endpoint, remove hello.go as soon as possible", log.INFO)
+// DescribeUserPoolHandler returns details of the user pool
+func (api *API) DescribeUserPoolHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
+		vars := mux.Vars(req)
+		userpool := vars["userpool"]
+		_, err := api.CognitoClient.DescribeUserPool(&cognitoidentityprovider.DescribeUserPoolInput{UserPoolId: &userpool})
 
-		response := HelloResponse{
-			Message: helloMessage,
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Failed to load user pool details", http.StatusInternalServerError)
+			return
+		}
+
+		response := HealthcheckResponse{
+			Message: healthyMessage,
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -35,7 +33,6 @@ func HelloHandler(ctx context.Context) http.HandlerFunc {
 		if err != nil {
 			log.Event(ctx, "marshalling response failed", log.Error(err), log.ERROR)
 			http.Error(w, "Failed to marshall json response", http.StatusInternalServerError)
-			return
 		}
 
 		_, err = w.Write(jsonResponse)
