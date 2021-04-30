@@ -20,7 +20,6 @@ var (
 	GitCommit string
 	// Version represents the version of the service that is running
 	Version string
-
 /* NOTE: replace the above with the below to run code with for example vscode debugger.
 BuildTime string = "1601119818"
 GitCommit string = "6584b786caac36b6214ffe04bf62f058d4021538"
@@ -53,6 +52,11 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "error getting configuration")
 	}
+
+	// sensitive fields are omitted from config.String().
+	log.Event(ctx, "loaded config", log.INFO, log.Data{
+		"config": cfg,
+	})
 
 	// Start service
 	svc, err := service.Run(ctx, cfg, svcList, BuildTime, GitCommit, Version, svcErrors)
