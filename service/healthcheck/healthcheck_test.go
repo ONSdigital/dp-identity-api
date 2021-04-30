@@ -31,7 +31,7 @@ func TestGetHealthCheck(t *testing.T) {
 		checkState := health.NewCheckState("dp-identity-api-test")
 	
 		checker := healthcheck.CognitoHealthCheck(m, &awsUserPoolID)
-		err := checker(ctx,checkState)
+		err := checker(ctx, checkState)
 		Convey("When GetHealthCheck is called", func() {
 			Convey("Then the HealthCheck flag is set to true and HealthCheck is returned", func() {
 				So(checkState.StatusCode(), ShouldEqual, http.StatusOK)

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	cognitoclient "github.com/ONSdigital/dp-identity-api/cognito"
 	"net/http"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
@@ -16,6 +17,7 @@ import (
 type Initialiser interface {
 	DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer
 	DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error)
+	DoGetCognitoClient(region string) cognitoclient.Client
 }
 
 // HTTPServer defines the required methods from the HTTP server
