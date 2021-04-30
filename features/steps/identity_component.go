@@ -2,6 +2,8 @@ package steps
 
 import (
 	"context"
+	"github.com/ONSdigital/dp-identity-api/cognito"
+	cognitoMock "github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"net/http"
 
 	"github.com/ONSdigital/dp-identity-api/config"
@@ -21,6 +23,7 @@ type IdentityComponent struct {
 	HTTPServer     *http.Server
 	ServiceRunning bool
 	apiFeature     *componenttest.APIFeature
+	CognitoClient  *cognitoMock.CognitoIdentityProviderClientStub
 }
 
 func NewIdentityComponent() (*IdentityComponent, error) {
@@ -42,6 +45,7 @@ func NewIdentityComponent() (*IdentityComponent, error) {
 	initMock := &mock.InitialiserMock{
 		DoGetHealthCheckFunc: c.DoGetHealthcheckOk,
 		DoGetHTTPServerFunc:  c.DoGetHTTPServer,
+		DoGetCognitoClientFunc: c.DoGetCognitoClient,
 	}
 
 	c.svcList = service.NewServiceList(initMock)
@@ -86,4 +90,9 @@ func (c *IdentityComponent) DoGetHTTPServer(bindAddr string, router http.Handler
 	c.HTTPServer.Addr = bindAddr
 	c.HTTPServer.Handler = router
 	return c.HTTPServer
+}
+
+func (c *IdentityComponent) DoGetCognitoClient(AWSRegion string) cognito.Client  {
+	c.CognitoClient = &cognitoMock.CognitoIdentityProviderClientStub{}
+	return c.CognitoClient
 }
