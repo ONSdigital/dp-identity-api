@@ -2,13 +2,20 @@ package api
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/validation"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
 	"github.com/ONSdigital/log.go/log"
 )
@@ -115,4 +122,35 @@ func handleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error
 	log.Event(ctx, message, log.ERROR, log.Error(err))
 	writeErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
 	return
+}
+
+func computeSecretHash(clientSecret string, username string, clientId string) string {
+	mac := hmac.New(sha256.New, []byte(clientSecret))
+	mac.Write([]byte(username + clientId))
+
+	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
+}
+
+func buildCognitoRequest(authParams AuthParams, config config.Config) (authInput *cognitoidentityprovider.InitiateAuthInput) {
+
+	secretHash := computeSecretHash(config.AWSClientSecret, authParams.Email, config.AWSClientId)
+
+	authParameters := map[string]*string{
+		"USERNAME":    &authParams.Email,
+		"PASSWORD":    &authParams.Password,
+		"SECRET_HASH": &secretHash,
+	}
+
+	authInput = &cognitoidentityprovider.InitiateAuthInput{
+		AnalyticsMetadata: &cognitoidentityprovider.AnalyticsMetadataType{},
+		AuthFlow:          &config.AWSAuthFlow,
+		AuthParameters:    authParameters,
+		ClientId:          &config.AWSClientId,
+		ClientMetadata:    map[string]*string{},
+		UserContextData:   &cognitoidentityprovider.UserContextDataType{},
+	}
+
+	fmt.Println(reflect.TypeOf(authInput))
+
+	return authInput
 }

@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/config"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -132,5 +134,30 @@ func TestHandleUnexpectedError(t *testing.T) {
 
 		So(resp.Code, ShouldEqual, http.StatusInternalServerError)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
+	})
+}
+func TestCognitoRespose(t *testing.T) {
+	Convey("build Cognito Request, an authParams and Config is processed and Cognito Request is built", t, func() {
+
+		authParams := AuthParams{
+			Email:    "email.email@ons.gov.uk",
+			Password: "password",
+		}
+		config := config.Config{
+			BindAddr:                   "localhost:25600",
+			GracefulShutdownTimeout:    20 * time.Second,
+			HealthCheckInterval:        30 * time.Second,
+			HealthCheckCriticalTimeout: 90 * time.Second,
+			AWSRegion:                  "eu-west-1",
+			AWSCognitoUserPoolID:       "",
+			AWSClientId:                "",
+			AWSClientSecret:            "",
+			AWSAuthFlow:                "",
+		}
+
+		response := buildCognitoRequest(authParams, config)
+
+		So(*response.AuthParameters["USERNAME"], ShouldEqual, authParams.Email)
+		So(*response.AuthParameters["PASSWORD"], ShouldEqual, authParams.Password)
 	})
 }
