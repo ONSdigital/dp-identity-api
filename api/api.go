@@ -15,11 +15,12 @@ type API struct {
 
 //Setup function sets up the api and returns an api
 func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client) *API {
-	api := &API{	
+	api := &API{
 		Router:        r,
 		CognitoClient: cognitoClient,
 	}
 
 	r.HandleFunc("/hello", HelloHandler(ctx)).Methods("GET")
-    return api
+	r.HandleFunc("/tokens", TokensHandler()).Methods("POST")
+	return api
 }
