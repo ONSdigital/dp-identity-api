@@ -73,7 +73,6 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 func (e *Init) DoGetCognitoClient(AWSRegion string) cognitoclient.Client {
 	client := cognito.New(session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
-		Profile:           "development",
 	})), &aws.Config{Region: &AWSRegion})
 	return client
 }
