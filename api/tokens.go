@@ -51,11 +51,6 @@ func TokensHandler() http.HandlerFunc {
 
 		validPasswordRequest := passwordValidation(authParams)
 		validEmailRequest := emailValidation(authParams)
-		if err != nil {
-			errorMessage := "api endpoint POST login returned an error validating the email"
-			handleUnexpectedError(ctx, w, err, errorMessage, field, param)
-			return
-		}
 
 		invalidPasswordErrorBody := apierrors.IndividualErrorBuilder(invalidPasswordError, invalidPasswordMessage, field, param)
 		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(invalidEmailError, invalidErrorMessage, field, param)
