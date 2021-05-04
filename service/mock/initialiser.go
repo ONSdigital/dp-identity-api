@@ -4,6 +4,7 @@
 package mock
 
 import (
+	cognitoclient "github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/service"
 	"net/http"
@@ -38,6 +39,9 @@ type InitialiserMock struct {
 
 	// DoGetHealthCheckFunc mocks the DoGetHealthCheck method.
 	DoGetHealthCheckFunc func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error)
+
+	// DoGetCognitoClientFunc mocks the DoGetCognitoClient method.
+	DoGetCognitoClientFunc func(AWSRegion string) cognitoclient.Client
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -140,4 +144,10 @@ func (mock *InitialiserMock) DoGetHealthCheckCalls() []struct {
 	calls = mock.calls.DoGetHealthCheck
 	mock.lockDoGetHealthCheck.RUnlock()
 	return calls
+}
+
+
+// DoGetCognitoClient creates a CognitoClient with the provided region
+func (mock *InitialiserMock) DoGetCognitoClient(AWSRegion string) cognitoclient.Client {
+	return mock.DoGetCognitoClientFunc(AWSRegion)
 }
