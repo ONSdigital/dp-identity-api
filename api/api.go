@@ -22,5 +22,6 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client) *AP
 
 	r.HandleFunc("/hello", HelloHandler(ctx)).Methods("GET")
 	r.HandleFunc("/tokens", TokensHandler()).Methods("POST")
+	r.HandleFunc("/users", api.CreateUserHandler(ctx)).Methods("POST")
 	return api
 }

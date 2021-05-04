@@ -20,6 +20,7 @@ func TestSetup(t *testing.T) {
 		Convey("When created the following route(s) should have been added", func() {
 			So(hasRoute(api.Router, "/hello", "GET"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/tokens", "POST"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/users", "POST"), ShouldBeTrue)
 		})
 
 		Convey("Ensure cognito client has been added to api", func() {
