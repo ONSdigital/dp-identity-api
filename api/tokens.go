@@ -7,10 +7,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/ONSdigital/dp-identity-api/config"
@@ -149,8 +147,6 @@ func buildCognitoRequest(authParams AuthParams, config config.Config) (authInput
 		ClientMetadata:    map[string]*string{},
 		UserContextData:   &cognitoidentityprovider.UserContextDataType{},
 	}
-
-	fmt.Println(reflect.TypeOf(authInput))
 
 	return authInput
 }

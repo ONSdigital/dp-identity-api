@@ -150,14 +150,18 @@ func TestCognitoRespose(t *testing.T) {
 			HealthCheckCriticalTimeout: 90 * time.Second,
 			AWSRegion:                  "eu-west-1",
 			AWSCognitoUserPoolID:       "",
-			AWSClientId:                "",
+			AWSClientId:                "awsclientid",
 			AWSClientSecret:            "",
-			AWSAuthFlow:                "",
+			AWSAuthFlow:                "awsauthflow",
 		}
 
 		response := buildCognitoRequest(authParams, config)
 
 		So(*response.AuthParameters["USERNAME"], ShouldEqual, authParams.Email)
 		So(*response.AuthParameters["PASSWORD"], ShouldEqual, authParams.Password)
+		So(*response.AuthParameters["SECRET_HASH"], ShouldNotBeEmpty)
+		So(response.AuthFlow, ShouldResemble, "awsauthflow")
+		So(response.ClientId, ShouldResemble, "awsclientid")
+
 	})
 }
