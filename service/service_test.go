@@ -3,6 +3,8 @@ package service_test
 import (
 	"context"
 	"fmt"
+	"github.com/ONSdigital/dp-identity-api/cognito"
+	cognitoMock "github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"net/http"
 	"sync"
 	"testing"
@@ -84,6 +86,7 @@ func TestRun(t *testing.T) {
 			initMock := &serviceMock.InitialiserMock{
 				DoGetHTTPServerFunc:  funcDoGetHTTPServerNil,
 				DoGetHealthCheckFunc: funcDoGetHealthcheckErr,
+				DoGetCognitoClientFunc: DoGetCognitoClient,
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -105,6 +108,7 @@ func TestRun(t *testing.T) {
 			initMock := &serviceMock.InitialiserMock{
 				DoGetHTTPServerFunc:  funcDoGetHTTPServer,
 				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
+				DoGetCognitoClientFunc: DoGetCognitoClient,
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -171,6 +175,7 @@ func TestRun(t *testing.T) {
 			initMock := &serviceMock.InitialiserMock{
 				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
 				DoGetHTTPServerFunc:  funcDoGetFailingHTTPSerer,
+				DoGetCognitoClientFunc: DoGetCognitoClient,
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -225,6 +230,7 @@ func TestClose(t *testing.T) {
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},
+				DoGetCognitoClientFunc: DoGetCognitoClient,
 			}
 
 			svcErrors := make(chan error, 1)
@@ -252,6 +258,7 @@ func TestClose(t *testing.T) {
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},
+				DoGetCognitoClientFunc: DoGetCognitoClient,
 			}
 
 			svcErrors := make(chan error, 1)
@@ -291,4 +298,8 @@ func TestClose(t *testing.T) {
 			So(len(timeoutServerMock.ShutdownCalls()), ShouldEqual, 1)
 		})
 	})
+}
+
+func DoGetCognitoClient(AWSRegion string) cognito.Client  {
+	return  &cognitoMock.CognitoIdentityProviderClientStub{}
 }
