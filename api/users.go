@@ -3,11 +3,11 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
-	models "github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/log.go/log"
-
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -27,18 +27,18 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 			return
 		}
 		defer req.Body.Close()
-		
+
 		username := req.Form.Get("username")
 		tempPassword := req.Form.Get("password")
 		email := req.Form.Get("email")
-		
-		newUser,err := CreateNewUserModel(ctx,id,username,tempPassword,email)
+
+		newUser, err := CreateNewUserModel(ctx, id, username, tempPassword, email)
 		if err != nil {
-			log.Event(ctx, "creating new user model failed", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to create new user model", http.StatusInternalServerError)
+			log.Event(ctx, "creating new user failed model", log.Error(err), log.ERROR)
+			http.Error(w, "Failed to create user model", http.StatusInternalServerError)
 			return
 		}
-		
+
 		//Create user in cognito
 		resultUser, err := api.CognitoClient.AdminCreateUser(newUser)
 		if err != nil {
@@ -65,24 +65,28 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 	}
 }
 
-	func CreateNewUserModel(ctx context.Context, id string, username string, tempPass string, email string) (models.CognitoUser,error){
+func CreateNewUserModel(ctx context.Context, id string, username string, tempPass string, emailId string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
 
-		log.Event(ctx, "creating user", log.Data{"id": id})
+	log.Event(ctx, "creating user", log.Data{"id": id})
 
-		// Return an error if empty id was passed.
-		if id == "" {
-			return nil, errors.New("id must not be an empty string")
-		}
-		return models.CognitoUser{
-			TemporaryPassword : &tempPass,
-			UserAttributes{
-				Name: 
-				Value: &email
-			}
-			UserPoolId: id,
-			Username: &username,
-			DesiredDeliveryMediums: "EMAIL"
-
-		}, nil
-
+	// Return an error if empty id was passed.
+	if id == "" {
+		return nil, errors.New("id must not be an empty string")
 	}
+	emailAttrName := "email"
+	deliveryMethod := "EMAIL"
+	user := &cognitoidentityprovider.AdminCreateUserInput{
+		UserAttributes: []*cognitoidentityprovider.AttributeType{
+			{
+				Name:  &emailAttrName,
+				Value: &emailId,
+			},
+		},
+		DesiredDeliveryMediums: []*string{
+			&deliveryMethod,
+		},
+		TemporaryPassword: &tempPass,
+		UserPoolId:        &id,
+		Username:          &username}
+	return user, nil
+}
