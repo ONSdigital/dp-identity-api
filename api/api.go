@@ -29,5 +29,6 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, cfg
 
 	r.HandleFunc("/hello", HelloHandler(ctx)).Methods("GET")
 	r.HandleFunc("/tokens", TokensHandler()).Methods("POST")
+	r.HandleFunc("/tokens/self", api.tokensLogoutHandler).Methods("DELETE")
 	return api
 }
