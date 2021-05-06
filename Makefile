@@ -27,6 +27,9 @@ build:
 
 .PHONY: debug
 debug:
+	AWS_COGNITO_USER_POOL_ID=eu-west-1_QKpqp91nJ \
+	AWS_CLIENT_ID=`aws cognito-idp list-user-pool-clients --user-pool-id $$AWS_COGNITO_USER_POOL_ID --query 'UserPoolClients[0].ClientId' --output text` \
+	AWS_CLIENT_SECRET=`aws cognito-idp describe-user-pool-client --user-pool-id $$AWS_COGNITO_USER_POOL_ID --client-id $$AWS_CLIENT_ID --query 'UserPoolClient.ClientSecret' --output text` \
 	HUMAN_LOG=1 go run $(LDFLAGS) -race main.go
 
 .PHONY: acceptance
