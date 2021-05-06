@@ -2,6 +2,7 @@ package mock
 
 import (
 	"errors"
+
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
 )
@@ -18,4 +19,9 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cogn
 		}
 	}
 	return nil, errors.New("Failed to load user pool data")
+}
+
+func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
+
+	return nil, errors.New("Failed to add user")
 }

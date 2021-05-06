@@ -9,6 +9,7 @@ import (
 	"github.com/ONSdigital/log.go/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	uuid "github.com/satori/go.uuid"
+	"github.com/sethvargo/go-password/password"
 )
 
 //NewID generates a random uuid and returns it as a string.
@@ -28,8 +29,13 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 		}
 		defer req.Body.Close()
 
+		res, err := password.Generate(64, 10, 10, false, false)
+		if err != nil {
+			log.Event(ctx, "failed to generate password", log.ERROR, log.Error(err))
+		}
+
 		username := req.Form.Get("username")
-		tempPassword := req.Form.Get("password")
+		tempPassword := req.Form.Get(res)
 		email := req.Form.Get("email")
 
 		newUser, err := CreateNewUserModel(ctx, id, username, tempPassword, email)
