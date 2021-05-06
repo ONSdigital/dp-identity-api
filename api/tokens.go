@@ -4,11 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
-	"net/http"
-
 	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/ONSdigital/dp-identity-api/validation"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/ONSdigital/log.go/log"
 )
@@ -22,6 +21,8 @@ var invalidPasswordError = errors.New("Invalid password")
 var invalidPasswordMessage = "Unable to validate the password in the request"
 var invalidEmailError = errors.New("Invalid email")
 var invalidErrorMessage = "Unable to validate the email in the request"
+var invalidTokenError = errors.New("Invalid token")
+var invalidTokenMessage = "The provided token does not correspond to an active session"
 
 func TokensHandler() http.HandlerFunc {
 
@@ -65,6 +66,23 @@ func TokensHandler() http.HandlerFunc {
 			errorList = append(errorList, invalidEmailErrorBody)
 		}
 
+		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+		writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+		return
+	}
+}
+
+func (api *API)tokensLogoutHandler(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	var errorList []apierrors.IndividualError
+	field := ""
+	param := ""
+
+	authString := req.Header.Get("Authorization")
+	if authString == "" {
+		invalidTokenErrorBody := apierrors.IndividualErrorBuilder(invalidTokenError, invalidTokenMessage, field, param)
+		errorList = append(errorList, invalidTokenErrorBody)
+		log.Event(ctx, "no access token provided", log.ERROR)
 		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
 		writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 		return
