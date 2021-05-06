@@ -8,6 +8,7 @@ import (
 	"github.com/ONSdigital/dp-identity-api/validation"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/ONSdigital/log.go/log"
 )
@@ -82,7 +83,17 @@ func (api *API)tokensLogoutHandler(w http.ResponseWriter, req *http.Request) {
 	if authString == "" {
 		invalidTokenErrorBody := apierrors.IndividualErrorBuilder(invalidTokenError, invalidTokenMessage, field, param)
 		errorList = append(errorList, invalidTokenErrorBody)
-		log.Event(ctx, "no access token provided", log.ERROR)
+		log.Event(ctx, "no authorization header provided", log.ERROR)
+		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+		writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+		return
+	}
+
+	authComponents := strings.Split(authString, " ")
+	if len(authComponents) != 2 {
+		log.Event(ctx, "malformed authorization header provided", log.ERROR)
+		invalidTokenErrorBody := apierrors.IndividualErrorBuilder(invalidTokenError, invalidTokenMessage, field, param)
+		errorList = append(errorList, invalidTokenErrorBody)
 		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
 		writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 		return
