@@ -21,7 +21,15 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cogn
 	return nil, errors.New("Failed to load user pool data")
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
+// func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
+// 	status := "UNCONFIRMED"
 
-	return nil, errors.New("Failed to add user")
-}
+// 	v:= {
+// 			User: &cognitoidentityprovider.UserType{
+// 					Username: &name,
+// 					UserStatus: &status,
+// 			},
+// 		}
+
+// 	return userOutput, nil
+// 	}

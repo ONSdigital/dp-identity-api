@@ -6,22 +6,18 @@ import (
 	"errors"
 	"net/http"
 
+	"io/ioutil"
+
+	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	uuid "github.com/satori/go.uuid"
 	"github.com/sethvargo/go-password/password"
 )
 
-//NewID generates a random uuid and returns it as a string.
-var NewID = func() string {
-	return uuid.NewV4().String()
-}
-
+//CreateUserHandler creates a new user and returns a http handler interface
 func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 	log.Event(ctx, "starting to generate a new user", log.INFO)
 	return func(w http.ResponseWriter, req *http.Request) {
-
-		id := NewID()
 
 		if err := req.ParseForm(); err != nil {
 			log.Event(ctx, "failed to parse request form", log.ERROR, log.Error(err))
@@ -29,16 +25,33 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 		}
 		defer req.Body.Close()
 
-		res, err := password.Generate(64, 10, 10, false, false)
+		resPassword, err := password.Generate(64, 10, 10, false, false)
 		if err != nil {
 			log.Event(ctx, "failed to generate password", log.ERROR, log.Error(err))
+			http.Error(w, "Failed to generate password", http.StatusInternalServerError)
+			return
 		}
 
-		username := req.Form.Get("username")
-		tempPassword := req.Form.Get(res)
-		email := req.Form.Get("email")
+		body, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			log.Event(ctx, "api endpoint POST user returned an error reading the request body", log.Error(err), log.ERROR)
+			http.Error(w, "Failed to read the request body", http.StatusInternalServerError)
+			return
+		}
 
-		newUser, err := CreateNewUserModel(ctx, id, username, tempPassword, email)
+		user := models.UserParams{}
+		err = json.Unmarshal(body, &user)
+		if err != nil {
+			log.Event(ctx, "api endpoint POST user returned an error unmarshalling the body", log.Error(err), log.ERROR)
+			http.Error(w, "Failed to unmarshall the body", http.StatusInternalServerError)
+			return
+		}
+
+		username := user.UserName
+		tempPassword := resPassword
+		email := user.Email
+
+		newUser, err := CreateNewUserModel(ctx, username, tempPassword, email, api.UserPoolId)
 		if err != nil {
 			log.Event(ctx, "creating new user failed model", log.Error(err), log.ERROR)
 			http.Error(w, "Failed to create user model", http.StatusInternalServerError)
@@ -71,7 +84,8 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 	}
 }
 
-func CreateNewUserModel(ctx context.Context, id string, username string, tempPass string, emailId string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
+//CreateNewUserModel creates and returns AdminCreateUserInput
+func CreateNewUserModel(ctx context.Context, username string, tempPass string, emailId string, id string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
 
 	log.Event(ctx, "creating user", log.Data{"id": id})
 
