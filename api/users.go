@@ -18,14 +18,9 @@ import (
 func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 	log.Event(ctx, "starting to generate a new user", log.INFO)
 	return func(w http.ResponseWriter, req *http.Request) {
-
-		if err := req.ParseForm(); err != nil {
-			log.Event(ctx, "failed to parse request form", log.ERROR, log.Error(err))
-			return
-		}
 		defer req.Body.Close()
 
-		resPassword, err := password.Generate(64, 10, 10, false, false)
+		tempPassword, err := password.Generate(32, 10, 10, false, false)
 		if err != nil {
 			log.Event(ctx, "failed to generate password", log.ERROR, log.Error(err))
 			http.Error(w, "Failed to generate password", http.StatusInternalServerError)
@@ -48,7 +43,6 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 		}
 
 		username := user.UserName
-		tempPassword := resPassword
 		email := user.Email
 
 		newUser, err := CreateNewUserModel(ctx, username, tempPassword, email, api.UserPoolId)
@@ -85,28 +79,29 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 }
 
 //CreateNewUserModel creates and returns AdminCreateUserInput
-func CreateNewUserModel(ctx context.Context, username string, tempPass string, emailId string, id string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
-
-	log.Event(ctx, "creating user", log.Data{"id": id})
-
+func CreateNewUserModel(ctx context.Context, username string, tempPass string, emailId string, userPoolId string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
 	// Return an error if empty id was passed.
-	if id == "" {
-		return nil, errors.New("id must not be an empty string")
+	if userPoolId == "" {
+		return nil, errors.New("userPoolId must not be an empty string")
 	}
 	emailAttrName := "email"
 	deliveryMethod := "EMAIL"
-	user := &cognitoidentityprovider.AdminCreateUserInput{
-		UserAttributes: []*cognitoidentityprovider.AttributeType{
-			{
-				Name:  &emailAttrName,
-				Value: &emailId,
+
+	user := &models.CreateUserInput{
+		UserInput: &cognitoidentityprovider.AdminCreateUserInput{
+			UserAttributes: []*cognitoidentityprovider.AttributeType{
+				{
+					Name:  &emailAttrName,
+					Value: &emailId,
+				},
 			},
+			DesiredDeliveryMediums: []*string{
+				&deliveryMethod,
+			},
+			TemporaryPassword: &tempPass,
+			UserPoolId:        &userPoolId,
+			Username:          &username,
 		},
-		DesiredDeliveryMediums: []*string{
-			&deliveryMethod,
-		},
-		TemporaryPassword: &tempPass,
-		UserPoolId:        &id,
-		Username:          &username}
-	return user, nil
+	}
+	return user.UserInput, nil
 }

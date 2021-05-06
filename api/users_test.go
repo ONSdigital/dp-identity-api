@@ -15,6 +15,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const usersEndPoint = "http://localhost:25600/users"
+
 func TestCreateUserHandler(t *testing.T) {
 
 	r := mux.NewRouter()
@@ -23,39 +25,46 @@ func TestCreateUserHandler(t *testing.T) {
 	name := "Foo Bar"
 	password := "temp1234"
 	email := "foo_bar123@foobar.io.me"
+	status := "UNCONFIRMED"
 
 	m := &mock.MockCognitoIdentityProviderClient{}
 
+	// mock call to: AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error)
 	m.AdminCreateUserFunc = func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
-
-		status := "UNCONFIRMED"
-
-		v := &models.CreateUserOutput{
-			&cognitoidentityprovider.AdminCreateUserOutput{
+		user := &models.CreateUserOutput{
+			UserOutput: &cognitoidentityprovider.AdminCreateUserOutput{
 				User: &cognitoidentityprovider.UserType{
 					Username:   &name,
 					UserStatus: &status,
 				},
 			},
 		}
-
-		return v.AdminCreateUserOutput, nil
+		return user.UserOutput, nil
 	}
 
 	api := Setup(ctx, r, m, "us-west-11_bxushuds")
 
 	Convey("Admin create user returns 201: success", t, func() {
-		postBody := map[string]interface{}{"username": name, "password": password, "email": email}
+		postBody := map[string]interface{}{
+			"username": name,
+			"password": password,
+			"email": email,
+		}
 
-		body, _ := json.Marshal(postBody)
+		body, _ := json.Marshal(
+			postBody,
+		)
 
-		req := httptest.NewRequest("POST", "localhost:25600/users", bytes.NewReader(body))
+		r := httptest.NewRequest(
+			"POST",
+			usersEndPoint,
+			bytes.NewReader(body),
+		)
 
-		createUserHandler := api.CreateUserHandler(ctx)
-		createUserHandler.ServeHTTP(httptest.NewRecorder(), req)
-		res := req.Response
+		w := httptest.NewRecorder()
 
-		// this will break until implemented!
-		So(res.StatusCode, ShouldEqual, http.StatusCreated)
+		api.Router.ServeHTTP(w, r)
+
+		So(w.Code, ShouldEqual, http.StatusCreated)
 	})
 }

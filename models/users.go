@@ -6,6 +6,9 @@ type UserParams struct {
 	UserName string `json:"username"`
 	Email    string `json:"email"`
 }
+type CreateUserInput struct {
+	UserInput *cognitoidentityprovider.AdminCreateUserInput
+}
 type CreateUserOutput struct {
-	*cognitoidentityprovider.AdminCreateUserOutput
+	UserOutput *cognitoidentityprovider.AdminCreateUserOutput
 }
