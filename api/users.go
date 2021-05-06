@@ -3,11 +3,11 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"io/ioutil"
 
+	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -18,95 +18,79 @@ import (
 func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 	log.Event(ctx, "starting to generate a new user", log.INFO)
 	return func(w http.ResponseWriter, req *http.Request) {
-
-		if err := req.ParseForm(); err != nil {
-			log.Event(ctx, "failed to parse request form", log.ERROR, log.Error(err))
-			return
-		}
 		defer req.Body.Close()
 
-		resPassword, err := password.Generate(64, 10, 10, false, false)
+		tempPassword, err := password.Generate(32, 10, 10, false, false)
 		if err != nil {
-			log.Event(ctx, "failed to generate password", log.ERROR, log.Error(err))
-			http.Error(w, "Failed to generate password", http.StatusInternalServerError)
+			apierrors.HandleUnexpectedError(ctx, w, err, "failed to generate password", "", "")
 			return
 		}
 
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
-			log.Event(ctx, "api endpoint POST user returned an error reading the request body", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to read the request body", http.StatusInternalServerError)
+			apierrors.HandleUnexpectedError(ctx, w, err, "api endpoint POST user returned an error reading request body", "", "")
 			return
 		}
 
 		user := models.UserParams{}
 		err = json.Unmarshal(body, &user)
-		if err != nil {
-			log.Event(ctx, "api endpoint POST user returned an error unmarshalling the body", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to unmarshall the body", http.StatusInternalServerError)
+		if err != nil{
+			apierrors.HandleUnexpectedError(ctx, w, err, "api endpoint POST user returned an error unmarshalling request body", "", "")
 			return
 		}
 
 		username := user.UserName
-		tempPassword := resPassword
 		email := user.Email
 
 		newUser, err := CreateNewUserModel(ctx, username, tempPassword, email, api.UserPoolId)
 		if err != nil {
-			log.Event(ctx, "creating new user failed model", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to create user model", http.StatusInternalServerError)
+			apierrors.HandleUnexpectedError(ctx, w, err, "Failed to create new user model", "", "")
 			return
 		}
 
 		//Create user in cognito
 		resultUser, err := api.CognitoClient.AdminCreateUser(newUser)
 		if err != nil {
-			log.Event(ctx, "creating user failed", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to create user", http.StatusInternalServerError)
+			apierrors.HandleUnexpectedError(ctx, w, err, "Failed to create new user in user pool", "", "")
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		jsonResponse, err := json.Marshal(resultUser)
 		if err != nil {
-			log.Event(ctx, "marshalling response failed", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to marshall json response", http.StatusInternalServerError)
+			apierrors.HandleUnexpectedError(ctx, w, err, "Failed to marshall json response", "", "")
 			return
 		}
 
 		w.WriteHeader(http.StatusCreated)
 		_, err = w.Write(jsonResponse)
 		if err != nil {
-			log.Event(ctx, "writing response failed", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to write http response", http.StatusInternalServerError)
+			apierrors.HandleUnexpectedError(ctx, w, err, "Failed to write http response", "", "")
 			return
 		}
 	}
 }
 
 //CreateNewUserModel creates and returns AdminCreateUserInput
-func CreateNewUserModel(ctx context.Context, username string, tempPass string, emailId string, id string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
-
-	log.Event(ctx, "creating user", log.Data{"id": id})
-
-	// Return an error if empty id was passed.
-	if id == "" {
-		return nil, errors.New("id must not be an empty string")
-	}
+func CreateNewUserModel(ctx context.Context, username string, tempPass string, emailId string, userPoolId string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
 	emailAttrName := "email"
 	deliveryMethod := "EMAIL"
-	user := &cognitoidentityprovider.AdminCreateUserInput{
-		UserAttributes: []*cognitoidentityprovider.AttributeType{
-			{
-				Name:  &emailAttrName,
-				Value: &emailId,
+
+	user := &models.CreateUserInput{
+		UserInput: &cognitoidentityprovider.AdminCreateUserInput{
+			UserAttributes: []*cognitoidentityprovider.AttributeType{
+				{
+					Name:  &emailAttrName,
+					Value: &emailId,
+				},
 			},
+			DesiredDeliveryMediums: []*string{
+				&deliveryMethod,
+			},
+			TemporaryPassword: &tempPass,
+			UserPoolId:        &userPoolId,
+			Username:          &username,
 		},
-		DesiredDeliveryMediums: []*string{
-			&deliveryMethod,
-		},
-		TemporaryPassword: &tempPass,
-		UserPoolId:        &id,
-		Username:          &username}
-	return user, nil
+	}
+	return user.UserInput, nil
 }

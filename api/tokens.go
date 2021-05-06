@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -9,8 +8,6 @@ import (
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/ONSdigital/dp-identity-api/validation"
-
-	"github.com/ONSdigital/log.go/log"
 )
 
 type AuthParams struct {
@@ -37,7 +34,7 @@ func TokensHandler() http.HandlerFunc {
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			errorMessage := "api endpoint POST login returned an error reading the request body"
-			handleUnexpectedError(ctx, w, err, errorMessage, field, param)
+			apierrors.HandleUnexpectedError(ctx, w, err, errorMessage, field, param)
 			return
 		}
 
@@ -45,7 +42,7 @@ func TokensHandler() http.HandlerFunc {
 		err = json.Unmarshal(body, &authParams)
 		if err != nil {
 			errorMessage := "api endpoint POST login returned an error unmarshalling the body"
-			handleUnexpectedError(ctx, w, err, errorMessage, field, param)
+			apierrors.HandleUnexpectedError(ctx, w, err, errorMessage, field, param)
 			return
 		}
 
@@ -66,7 +63,7 @@ func TokensHandler() http.HandlerFunc {
 		}
 
 		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-		writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+		apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 		return
 	}
 }
@@ -82,37 +79,4 @@ func emailValidation(requestBody AuthParams) (isEmailValid bool) {
 	isEmailValid = validation.IsEmailValid(requestBody.Email)
 
 	return isEmailValid
-}
-
-func writeErrorResponse(ctx context.Context, w http.ResponseWriter, status int, errorResponseBody interface{}) {
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-
-	jsonResponse, err := json.Marshal(errorResponseBody)
-	if err != nil {
-		log.Event(ctx, "failed to marshal the error", log.Error(err), log.ERROR)
-		http.Error(w, "failed to marshal the error", http.StatusInternalServerError)
-		return
-	}
-
-	_, err = w.Write(jsonResponse)
-	if err != nil {
-		log.Event(ctx, "writing response failed", log.Error(err), log.ERROR)
-		http.Error(w, "failed to write http response", http.StatusInternalServerError)
-		return
-	}
-}
-
-func handleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error, message, sourceField, sourceParam string) {
-
-	var errorList []apierrors.IndividualError
-
-	internalServerErrorBody := apierrors.IndividualErrorBuilder(err, message, sourceField, sourceParam)
-	errorList = append(errorList, internalServerErrorBody)
-	errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-
-	log.Event(ctx, message, log.ERROR, log.Error(err))
-	writeErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
-	return
 }

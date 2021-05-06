@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -15,47 +16,76 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const usersEndPoint = "http://localhost:25600/users"
+
+type ErrorStructure struct {
+	Errors []IndividualError `json:"errors"`
+}
+
+type IndividualError struct {
+	SpecificError string `json:"error"`
+	Message       string `json:"message"`
+	Source        Source `json:"source"`
+}
+
+type Source struct {
+	Field string `json:"field"`
+	Param string `json:"param"`
+}
+
 func TestCreateUserHandler(t *testing.T) {
 
-	r := mux.NewRouter()
-	ctx := context.Background()
-
-	name := "Foo Bar"
-	password := "temp1234"
-	email := "foo_bar123@foobar.io.me"
+	var (
+		r      = mux.NewRouter()
+		ctx    = context.Background()
+		name   = "Foo Bar"
+		status = "UNCONFIRMED"
+		email  = "foo_bar123@foobar.io.me"
+	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
 
+	// mock call to: AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error)
 	m.AdminCreateUserFunc = func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
-
-		status := "UNCONFIRMED"
-
-		v := &models.CreateUserOutput{
-			&cognitoidentityprovider.AdminCreateUserOutput{
+		user := &models.CreateUserOutput{
+			UserOutput: &cognitoidentityprovider.AdminCreateUserOutput{
 				User: &cognitoidentityprovider.UserType{
 					Username:   &name,
 					UserStatus: &status,
 				},
 			},
 		}
-
-		return v.AdminCreateUserOutput, nil
+		return user.UserOutput, nil
 	}
 
 	api := Setup(ctx, r, m, "us-west-11_bxushuds")
 
-	Convey("Admin create user returns 201: success", t, func() {
-		postBody := map[string]interface{}{"username": name, "password": password, "email": email}
+	Convey("Admin create user returns 201: successfully created user", t, func() {
+		postBody := map[string]interface{}{"username": name, "email": email,}
 
-		body, _ := json.Marshal(postBody)
+		body, _ := json.Marshal(postBody,)
 
-		req := httptest.NewRequest("POST", "localhost:25600/users", bytes.NewReader(body))
+		r := httptest.NewRequest("POST",usersEndPoint,bytes.NewReader(body),)
 
-		createUserHandler := api.CreateUserHandler(ctx)
-		createUserHandler.ServeHTTP(httptest.NewRecorder(), req)
-		res := req.Response
+		w := httptest.NewRecorder()
 
-		// this will break until implemented!
-		So(res.StatusCode, ShouldEqual, http.StatusCreated)
+		api.Router.ServeHTTP(w, r)
+
+		So(w.Code, ShouldEqual, http.StatusCreated)
+	})
+
+	Convey("Admin create user returns 500: error unmarshalling request body", t, func() {
+		r := httptest.NewRequest("POST",usersEndPoint,bytes.NewReader(nil),)
+
+		w := httptest.NewRecorder()
+
+		api.Router.ServeHTTP(w, r)
+
+		errorBody, _ := ioutil.ReadAll(w.Body)
+		var e ErrorStructure
+		json.Unmarshal(errorBody, &e)
+
+		So(w.Code, ShouldEqual, http.StatusInternalServerError)
+		So(e.Errors[0].Message, ShouldEqual, "api endpoint POST user returned an error unmarshalling request body")
 	})
 }

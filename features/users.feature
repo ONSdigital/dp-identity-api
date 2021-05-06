@@ -5,21 +5,20 @@ Feature: users
         """
         {
             "email": "email@ons.gov.uk",
-            "password": "password"
-            "username":"smileons"
+            "username":"Foo_Bar"
         }
         """
-        Then I should receive the following JSON response with status "200":
+        Then I should receive the following JSON response with status "201":
         """
         {
-           
-            {
-                "UserAttributes":{
-                    Name  "email"
-                    Value "email@ons.gov.uk"
-                }
-                "Username": "smileons"
+            "User": {
+                "Attributes": null,
+                "Enabled": null,
+                "MFAOptions": null,
+                "UserCreateDate": null,
+                "UserLastModifiedDate": null,
+                "UserStatus": "UNCONFIRMED",
+                "Username": "Foo_Bar"
             }
-
         }
         """
