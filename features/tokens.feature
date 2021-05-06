@@ -122,3 +122,41 @@ Feature: Tokens
             ]
         }
         """
+
+    Scenario: DELETE /tokens/self
+        Given I set the "Authorization" header to "Bearer"
+        When I DELETE "/tokens/self"
+        Then I should receive the following JSON response with status "400":
+        """
+        {
+            "errors": [
+                {
+                    "error": "Invalid token",
+                    "message": "The provided token does not correspond to an active session",
+                    "source": {
+                        "field": "",
+                        "param": ""
+                    }
+                }
+            ]
+        }
+        """
+
+    Scenario: DELETE /tokens/self
+        Given I set the "Authorization" header to "BearerSomeToken"
+        When I DELETE "/tokens/self"
+        Then I should receive the following JSON response with status "400":
+        """
+        {
+            "errors": [
+                {
+                    "error": "Invalid token",
+                    "message": "The provided token does not correspond to an active session",
+                    "source": {
+                        "field": "",
+                        "param": ""
+                    }
+                }
+            ]
+        }
+        """
