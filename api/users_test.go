@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -16,6 +17,22 @@ import (
 )
 
 const usersEndPoint = "http://localhost:25600/users"
+
+
+type ErrorStructure struct {
+	Errors []IndividualError `json:"errors"`
+}
+
+type IndividualError struct {
+	SpecificError string `json:"error"`
+	Message       string `json:"message"`
+	Source        Source `json:"source"`
+}
+
+type Source struct {
+	Field string `json:"field"`
+	Param string `json:"param"`
+}
 
 func TestCreateUserHandler(t *testing.T) {
 
@@ -44,27 +61,33 @@ func TestCreateUserHandler(t *testing.T) {
 
 	api := Setup(ctx, r, m, "us-west-11_bxushuds")
 
-	Convey("Admin create user returns 201: success", t, func() {
-		postBody := map[string]interface{}{
-			"username": name,
-			"password": password,
-			"email": email,
-		}
+	Convey("Admin create user returns 201: successfully created user", t, func() {
+		postBody := map[string]interface{}{"username": name, "password": password, "email": email,}
 
-		body, _ := json.Marshal(
-			postBody,
-		)
+		body, _ := json.Marshal(postBody,)
 
-		r := httptest.NewRequest(
-			"POST",
-			usersEndPoint,
-			bytes.NewReader(body),
-		)
+		r := httptest.NewRequest("POST",usersEndPoint,bytes.NewReader(body),)
 
 		w := httptest.NewRecorder()
 
 		api.Router.ServeHTTP(w, r)
 
 		So(w.Code, ShouldEqual, http.StatusCreated)
+	})
+
+	Convey("Admin create user returns 500: error unmarshalling request body", t, func() {
+
+		r := httptest.NewRequest("POST",usersEndPoint,bytes.NewReader(nil),)
+
+		w := httptest.NewRecorder()
+
+		api.Router.ServeHTTP(w, r)
+
+		body, _ := ioutil.ReadAll(w.Body)
+		var e ErrorStructure
+		json.Unmarshal(body, &e)
+
+		So(w.Code, ShouldEqual, http.StatusInternalServerError)
+		So(e.Errors[0].Message, ShouldEqual, "api endpoint POST user returned an error unmarshalling request body")
 	})
 }

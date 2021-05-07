@@ -108,7 +108,7 @@ func TestWriteErrorResponse(t *testing.T) {
 		statusCode := 400
 		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
 
-		writeErrorResponse(ctx, resp, statusCode, errorResponseBody)
+		apierrors.WriteErrorResponse(ctx, resp, statusCode, errorResponseBody)
 
 		So(resp.Code, ShouldEqual, http.StatusBadRequest)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
@@ -128,7 +128,7 @@ func TestHandleUnexpectedError(t *testing.T) {
 
 		resp := httptest.NewRecorder()
 
-		handleUnexpectedError(ctx, resp, unexpectedError, unexpectedErrorMessage, field, param)
+		apierrors.HandleUnexpectedError(ctx, resp, unexpectedError, unexpectedErrorMessage, field, param)
 
 		So(resp.Code, ShouldEqual, http.StatusInternalServerError)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)

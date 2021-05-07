@@ -8,6 +8,7 @@ import (
 
 	"io/ioutil"
 
+	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -22,23 +23,20 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 
 		tempPassword, err := password.Generate(32, 10, 10, false, false)
 		if err != nil {
-			log.Event(ctx, "failed to generate password", log.ERROR, log.Error(err))
-			http.Error(w, "Failed to generate password", http.StatusInternalServerError)
+			apierrors.HandleUnexpectedError(ctx, w, err, "failed to generate password", "", "")
 			return
 		}
 
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
-			log.Event(ctx, "api endpoint POST user returned an error reading the request body", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to read the request body", http.StatusInternalServerError)
+			apierrors.HandleUnexpectedError(ctx, w, err, "api endpoint POST user returned an error reading request body", "", "")
 			return
 		}
 
 		user := models.UserParams{}
 		err = json.Unmarshal(body, &user)
 		if err != nil {
-			log.Event(ctx, "api endpoint POST user returned an error unmarshalling the body", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to unmarshall the body", http.StatusInternalServerError)
+			apierrors.HandleUnexpectedError(ctx, w, err, "api endpoint POST user returned an error unmarshalling request body", "", "")
 			return
 		}
 
@@ -47,32 +45,28 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 
 		newUser, err := CreateNewUserModel(ctx, username, tempPassword, email, api.UserPoolId)
 		if err != nil {
-			log.Event(ctx, "creating new user failed model", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to create user model", http.StatusInternalServerError)
+			apierrors.HandleUnexpectedError(ctx, w, err, "Failed to create new user model", "", "")
 			return
 		}
 
 		//Create user in cognito
 		resultUser, err := api.CognitoClient.AdminCreateUser(newUser)
 		if err != nil {
-			log.Event(ctx, "creating user failed", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to create user", http.StatusInternalServerError)
+			apierrors.HandleUnexpectedError(ctx, w, err, "Failed to create new user in user pool", "", "")
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		jsonResponse, err := json.Marshal(resultUser)
 		if err != nil {
-			log.Event(ctx, "marshalling response failed", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to marshall json response", http.StatusInternalServerError)
+			apierrors.HandleUnexpectedError(ctx, w, err, "Failed to marshall json response", "", "")
 			return
 		}
 
 		w.WriteHeader(http.StatusCreated)
 		_, err = w.Write(jsonResponse)
 		if err != nil {
-			log.Event(ctx, "writing response failed", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to write http response", http.StatusInternalServerError)
+			apierrors.HandleUnexpectedError(ctx, w, err, "Failed to write http response", "", "")
 			return
 		}
 	}
