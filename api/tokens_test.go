@@ -10,6 +10,7 @@ import (
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/ONSdigital/dp-identity-api/config"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -136,7 +137,7 @@ func TestHandleUnexpectedError(t *testing.T) {
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
 	})
 }
-func TestCognitoRespose(t *testing.T) {
+func TestCognitoResponseBuild(t *testing.T) {
 	Convey("build Cognito Request, an authParams and Config is processed and Cognito Request is built", t, func() {
 
 		authParams := AuthParams{
@@ -160,8 +161,32 @@ func TestCognitoRespose(t *testing.T) {
 		So(*response.AuthParameters["USERNAME"], ShouldEqual, authParams.Email)
 		So(*response.AuthParameters["PASSWORD"], ShouldEqual, authParams.Password)
 		So(*response.AuthParameters["SECRET_HASH"], ShouldNotBeEmpty)
-		So(response.AuthFlow, ShouldResemble, "awsauthflow")
-		So(response.ClientId, ShouldResemble, "awsclientid")
+		So(*response.AuthFlow, ShouldResemble, "awsauthflow")
+		So(*response.ClientId, ShouldResemble, "awsclientid")
+	})
+}
+
+func TestCognitoRequestHeaderBuild(t *testing.T) {
+	Convey("build Cognito Request, an authParams and Config is processed and Cognito Request is built", t, func() {
+		w := httptest.NewRecorder()
+		ctx := context.Background()
+		accessToken := "accessToken"
+		var expiration int64 = 123
+		idToken := "idToken"
+		refreshToken := "refreshToken"
+
+		initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{
+			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
+				AccessToken:  &accessToken,
+				ExpiresIn:    &expiration,
+				IdToken:      &idToken,
+				RefreshToken: &refreshToken,
+			},
+		}
+
+		buildSucessfulResponse(initiateAuthOutput, w, ctx)
+
+		So(w.Result().StatusCode, ShouldEqual, 201)
 
 	})
 }
