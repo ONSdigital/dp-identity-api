@@ -1,6 +1,25 @@
 Feature: Tokens
 
     Scenario: POST /tokens
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I POST "/tokens"
+        """
+        {
+            "email": "email@ons.gov.uk",
+            "password": "Passw0rd!"
+        }
+        """
+        Then I should receive the following JSON response with status "201":
+        """
+        {
+            "expirationTime":"123"
+        }
+        """
+        And the response header "Authorization" should be "accessToken"
+        And the response header "ID" should be "idToken"
+        And the response header "Refresh" should be "RefreshToken"
+
+    Scenario: POST /tokens
         When I POST "/tokens"
         """
         {
