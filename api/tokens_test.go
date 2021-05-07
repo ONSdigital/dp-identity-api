@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
+	errModels "github.com/ONSdigital/dp-identity-api/models"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -92,7 +93,7 @@ func TestWriteErrorResponse(t *testing.T) {
 
 		errorResponseBodyExample := `{"errors":[{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}},{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}}]}`
 
-		var errorList []apierrors.IndividualError
+		var errorList []errModels.IndividualError
 		errorList = nil
 
 		invalidEmailError := errors.New("Invalid email")

@@ -3,6 +3,7 @@ package mock
 import (
 	"errors"
 
+	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
 )
@@ -18,18 +19,21 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cogn
 			return nil, nil
 		}
 	}
-	return nil, errors.New("Failed to load user pool data")
+	return nil, errors.New("failed to load user pool data")
 }
 
-// func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
-// 	status := "UNCONFIRMED"
+func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
+	status := "FORCE_CHANGE_PASSWORD"
+	name := "smileons"
 
-// 	v:= {
-// 			User: &cognitoidentityprovider.UserType{
-// 					Username: &name,
-// 					UserStatus: &status,
-// 			},
-// 		}
+	user := &models.CreateUserOutput{
+		UserOutput: &cognitoidentityprovider.AdminCreateUserOutput{
+			User: &cognitoidentityprovider.UserType{
+				Username:   &name,
+				UserStatus: &status,
+			},
+		},
+	}
 
-// 	return userOutput, nil
-// 	}
+	return user.UserOutput, nil
+}

@@ -5,30 +5,16 @@ import (
 	"encoding/json"
 	"net/http"
 
+	errModels "github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/log.go/log"
 )
 
-type ErrorStructure struct {
-	Errors []IndividualError `json:"errors"`
-}
+func IndividualErrorBuilder(err error, message, sourceField, sourceParam string) (individualError errModels.IndividualError) {
 
-type IndividualError struct {
-	SpecificError string `json:"error"`
-	Message       string `json:"message"`
-	Source        Source `json:"source"`
-}
-
-type Source struct {
-	Field string `json:"field"`
-	Param string `json:"param"`
-}
-
-func IndividualErrorBuilder(err error, message, sourceField, sourceParam string) (individualError IndividualError) {
-
-	individualError = IndividualError{
+	individualError = errModels.IndividualError{
 		SpecificError: error.Error(err),
 		Message:       message,
-		Source: Source{
+		Source: errModels.Source{
 			Field: sourceField,
 			Param: sourceParam},
 	}
@@ -36,9 +22,9 @@ func IndividualErrorBuilder(err error, message, sourceField, sourceParam string)
 	return individualError
 }
 
-func ErrorResponseBodyBuilder(listOfErrors []IndividualError) (errorResponseBody ErrorStructure) {
+func ErrorResponseBodyBuilder(listOfErrors []errModels.IndividualError) (errorResponseBody errModels.ErrorStructure) {
 
-	errorResponseBody = ErrorStructure{
+	errorResponseBody = errModels.ErrorStructure{
 		Errors: listOfErrors,
 	}
 
@@ -67,7 +53,7 @@ func WriteErrorResponse(ctx context.Context, w http.ResponseWriter, status int, 
 
 func HandleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error, message, sourceField, sourceParam string) {
 
-	var errorList []IndividualError
+	var errorList []errModels.IndividualError
 
 	internalServerErrorBody := IndividualErrorBuilder(err, message, sourceField, sourceParam)
 	errorList = append(errorList, internalServerErrorBody)

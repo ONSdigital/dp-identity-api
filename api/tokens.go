@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/validation"
 )
 
@@ -52,7 +53,7 @@ func TokensHandler() http.HandlerFunc {
 		invalidPasswordErrorBody := apierrors.IndividualErrorBuilder(invalidPasswordError, invalidPasswordMessage, field, param)
 		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(invalidEmailError, invalidErrorMessage, field, param)
 
-		var errorList []apierrors.IndividualError
+		var errorList []models.IndividualError
 
 		if !validPasswordRequest {
 			errorList = append(errorList, invalidPasswordErrorBody)
