@@ -160,3 +160,8 @@ Feature: Tokens
             ]
         }
         """
+
+    Scenario: DELETE /tokens/self
+        Given I am authorised
+        When I DELETE "/tokens/self"
+        Then the HTTP status code should be "204"
