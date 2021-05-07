@@ -34,6 +34,5 @@ func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidenti
 			},
 		},
 	}
-
 	return user.UserOutput, nil
 }

@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"net/http"
-
 	"io/ioutil"
+	"net/http"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/ONSdigital/dp-identity-api/models"
@@ -78,8 +77,9 @@ func CreateNewUserModel(ctx context.Context, username string, tempPass string, e
 	if userPoolId == "" {
 		return nil, errors.New("userPoolId must not be an empty string")
 	}
-	emailAttrName := "email"
+
 	deliveryMethod := "EMAIL"
+	emailAttrName := "email"
 
 	user := &models.CreateUserInput{
 		UserInput: &cognitoidentityprovider.AdminCreateUserInput{

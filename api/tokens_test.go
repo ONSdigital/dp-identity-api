@@ -96,11 +96,11 @@ func TestWriteErrorResponse(t *testing.T) {
 		var errorList []errModels.IndividualError
 		errorList = nil
 
-		invalidEmailError := errors.New("Invalid email")
+		errInvalidEmail := errors.New("Invalid email")
 		invalidErrorMessage := "Unable to validate the email in the request"
 		field := ""
 		param := ""
-		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(invalidEmailError, invalidErrorMessage, field, param)
+		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(errInvalidEmail, invalidErrorMessage, field, param)
 		errorList = append(errorList, invalidEmailErrorBody)
 		errorList = append(errorList, invalidEmailErrorBody)
 

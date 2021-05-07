@@ -13,7 +13,7 @@ Feature: Tokens
         {
             "errors": [
                 {
-                    "error": "Invalid password",
+                    "error": "invalid password",
                     "message": "Unable to validate the password in the request",
                     "source": {
                         "field": "",
@@ -37,7 +37,7 @@ Feature: Tokens
         {
             "errors": [
                 {
-                    "error": "Invalid email",
+                    "error": "invalid email",
                     "message": "Unable to validate the email in the request",
                     "source": {
                         "field": "",
@@ -61,7 +61,7 @@ Feature: Tokens
         {
             "errors": [
                 {
-                    "error": "Invalid email",
+                    "error": "invalid email",
                     "message": "Unable to validate the email in the request",
                     "source": {
                         "field": "",
@@ -85,7 +85,7 @@ Feature: Tokens
         {
             "errors": [
                 {
-                    "error": "Invalid password",
+                    "error": "invalid password",
                     "message": "Unable to validate the password in the request",
                     "source": {
                         "field": "",
@@ -93,7 +93,7 @@ Feature: Tokens
                     }
                 },
                 {
-                    "error": "Invalid email",
+                    "error": "invalid email",
                     "message": "Unable to validate the email in the request",
                     "source": {
                         "field": "",

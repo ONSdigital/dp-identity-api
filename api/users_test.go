@@ -20,13 +20,13 @@ const usersEndPoint = "http://localhost:25600/users"
 
 func TestCreateUserHandler(t *testing.T) {
 
-	r := mux.NewRouter()
-	ctx := context.Background()
-
-	name := "Foo Bar"
-	password := "temp1234"
-	email := "foo_bar123@foobar.io.me"
-	status := "UNCONFIRMED"
+	var (
+		r      = mux.NewRouter()
+		ctx    = context.Background()
+		name   = "Foo Bar"
+		status = "UNCONFIRMED"
+		email  = "foo_bar123@foobar.io.me"
+	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
 
@@ -46,7 +46,7 @@ func TestCreateUserHandler(t *testing.T) {
 	api := Setup(ctx, r, m, "us-west-11_bxushuds")
 
 	Convey("Admin create user returns 201: successfully created user", t, func() {
-		postBody := map[string]interface{}{"username": name, "password": password, "email": email}
+		postBody := map[string]interface{}{"username": name, "email": email}
 
 		body, _ := json.Marshal(postBody)
 
@@ -60,32 +60,15 @@ func TestCreateUserHandler(t *testing.T) {
 	})
 
 	Convey("Admin create user returns 500: error unmarshalling request body", t, func() {
-
 		r := httptest.NewRequest("POST", usersEndPoint, bytes.NewReader(nil))
 
 		w := httptest.NewRecorder()
 
 		api.Router.ServeHTTP(w, r)
 
-		body, _ := ioutil.ReadAll(w.Body)
+		errorBody, _ := ioutil.ReadAll(w.Body)
 		var e models.ErrorStructure
-		json.Unmarshal(body, &e)
-
-		So(w.Code, ShouldEqual, http.StatusInternalServerError)
-		So(e.Errors[0].Message, ShouldEqual, "api endpoint POST user returned an error unmarshalling request body")
-	})
-
-	Convey("Admin create user returns 400: bad request error", t, func() {
-
-		r := httptest.NewRequest("POST", usersEndPoint, bytes.NewReader(nil))
-
-		w := httptest.NewRecorder()
-
-		api.Router.ServeHTTP(w, r)
-
-		body, _ := ioutil.ReadAll(w.Body)
-		var e models.ErrorStructure
-		json.Unmarshal(body, &e)
+		json.Unmarshal(errorBody, &e)
 
 		So(w.Code, ShouldEqual, http.StatusInternalServerError)
 		So(e.Errors[0].Message, ShouldEqual, "api endpoint POST user returned an error unmarshalling request body")
