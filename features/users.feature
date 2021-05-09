@@ -1,6 +1,6 @@
-Feature: users
+Feature: Users
 
-    Scenario: POST /users and checking the response
+    Scenario: POST /users and checking the response status 201
         When I POST "/users"
         """
         {
@@ -23,3 +23,23 @@ Feature: users
         }
         """
 
+ Scenario: POST /users and checking the response status 500
+        When I POST "/users"
+        """
+       
+        """
+        Then I should receive the following JSON response with status "500":
+        """
+        {
+            "errors": [
+                {
+                    "error": "unexpected end of JSON input",
+                    "message": "api endpoint POST user returned an error unmarshalling request body",
+                    "source": {
+                        "field": "",
+                        "param": ""
+                    }
+                }
+            ]  
+        }
+        """
