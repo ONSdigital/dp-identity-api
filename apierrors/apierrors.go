@@ -3,11 +3,21 @@ package apierrors
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	errModels "github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/log.go/log"
 )
+
+var InvalidUserNameMessage = "Unable to validate the username in the request"
+var ErrInvalidUserName = errors.New("invalid username")
+
+var InvalidPasswordMessage = "Unable to validate the password in the request"
+var ErrInvalidPassword = errors.New("invalid password")
+
+var InvalidErrorMessage = "Unable to validate the email in the request"
+var ErrInvalidEmail = errors.New("invalid email")
 
 func IndividualErrorBuilder(err error, message, sourceField, sourceParam string) (individualError errModels.IndividualError) {
 
