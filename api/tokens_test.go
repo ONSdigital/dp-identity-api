@@ -206,7 +206,7 @@ func TestSignOutHandler(t *testing.T) {
 		So(w.Code, ShouldEqual, http.StatusInternalServerError)
 	})
 
-	Convey("Global Sign Out returns 500: request error", t, func() {
+	Convey("Global Sign Out returns 400: request error", t, func() {
 		r := httptest.NewRequest(requestType, signOutEndPoint, bytes.NewReader(nil))
 		r.Header.Set("Authorization", "Bearer zzzz-yyyy-xxxx")
 
