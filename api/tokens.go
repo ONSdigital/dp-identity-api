@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/ONSdigital/dp-identity-api/validation"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -98,6 +99,16 @@ func (api *API)tokensLogoutHandler(w http.ResponseWriter, req *http.Request) {
 		writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 		return
 	}
+
+	_, err := api.CognitoClient.GlobalSignOut(
+		&cognitoidentityprovider.GlobalSignOutInput{
+			AccessToken: &authComponents[0]})
+
+	if err != nil {
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func passwordValidation(requestBody AuthParams) (isPasswordValid bool) {

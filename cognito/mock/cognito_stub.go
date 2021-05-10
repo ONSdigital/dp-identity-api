@@ -19,3 +19,12 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cogn
 	}
 	return nil, errors.New("Failed to load user pool data")
 }
+
+func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+	if *signOutInput.AccessToken != "" {
+		return &cognitoidentityprovider.GlobalSignOutOutput{
+
+		}, nil
+	}
+	return nil, errors.New("failed logging out the user")
+}
