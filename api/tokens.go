@@ -102,9 +102,18 @@ func (api *API)tokensLogoutHandler(w http.ResponseWriter, req *http.Request) {
 
 	_, err := api.CognitoClient.GlobalSignOut(
 		&cognitoidentityprovider.GlobalSignOutInput{
-			AccessToken: &authComponents[0]})
+			AccessToken: &authComponents[1]})
 
 	if err != nil {
+		log.Event(ctx, "From Cognito - " + err.Error(), log.ERROR)
+		invalidTokenErrorBody := apierrors.IndividualErrorBuilder(err, "", field, param)
+		errorList = append(errorList, invalidTokenErrorBody)
+		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+		if strings.Contains(err.Error(), "InternalErrorException") {
+			writeErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
+		} else {
+			writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+		}
 		return
 	}
 

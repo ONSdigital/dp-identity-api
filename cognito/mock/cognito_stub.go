@@ -21,7 +21,9 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cogn
 }
 
 func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
-	if *signOutInput.AccessToken != "" {
+	if *signOutInput.AccessToken == "InternalError" {
+		return nil, errors.New("InternalErrorException: Something went wrong" )
+	} else if *signOutInput.AccessToken != "" {
 		return &cognitoidentityprovider.GlobalSignOutOutput{
 
 		}, nil
