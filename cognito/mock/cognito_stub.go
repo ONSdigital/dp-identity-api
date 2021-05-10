@@ -23,10 +23,10 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cogn
 func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 	if *signOutInput.AccessToken == "InternalError" {
 		return nil, errors.New("InternalErrorException: Something went wrong" )
+	} else if *signOutInput.AccessToken == "NotAuthorized" {
+		return nil, errors.New("NotAuthorizedException: User is not authorized" )
 	} else if *signOutInput.AccessToken != "" {
-		return &cognitoidentityprovider.GlobalSignOutOutput{
-
-		}, nil
+		return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
 	}
 	return nil, errors.New("failed logging out the user")
 }
