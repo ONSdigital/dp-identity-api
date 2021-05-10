@@ -14,7 +14,9 @@ type Config struct {
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
 	AWSRegion                  string        `envconfig:"AWS_REGION"`
-	AWSCognitoUserPoolID       string        `envconfig:"AWS_COGNTIO_USER_POOL_ID" json:"-"`
+	AWSCognitoUserPoolID       string        `envconfig:"AWS_COGNITO_USER_POOL_ID" json:"-"`
+	AWSClientId                string        `envconfig:"AWS_CLIENT_ID" json:"-"`
+	AWSClientSecret            string        `envconfig:"AWS_CLIENT_SECRET" json:"-"`
 }
 
 var cfg *Config
