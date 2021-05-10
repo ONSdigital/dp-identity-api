@@ -2,8 +2,6 @@ package api
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-identity-api/config"
-
 	"github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/gorilla/mux"
 )
@@ -18,13 +16,13 @@ type API struct {
 }
 
 //Setup function sets up the api and returns an api
-func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, cfg *config.Config) *API {
+func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, userPoolId string, clientId string, clientSecret string) *API {
 	api := &API{
 		Router:        	r,
 		CognitoClient: 	cognitoClient,
-		UserPoolId: 	cfg.AWSCognitoUserPoolID,
-		ClientId: 		cfg.AWSClientId,
-		ClientSecret: 	cfg.AWSClientSecret,
+		UserPoolId: 	userPoolId,
+		ClientId: 		clientId,
+		ClientSecret: 	clientSecret,
 	}
 
 	r.HandleFunc("/hello", HelloHandler(ctx)).Methods("GET")
