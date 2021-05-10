@@ -50,7 +50,7 @@ paths:
       responses:
         201:
           description: "Created"
-          headers: 
+          headers:
             Authorization:
               type: string
               description: "Auth token"
@@ -63,20 +63,41 @@ paths:
         400:
           description: "Invalid request. Empty or invalid email or empty password."
           schema:
-            $ref: '#/definitions/LoginErrorList'
+            $ref: '#/definitions/TokensErrorList'
         401:
           description: "Email or password are not authenticated"
           schema:
-            $ref: '#/definitions/LoginErrorList'
+            $ref: '#/definitions/TokensErrorList'
         403:
           description: "Forbidden. Too many login attempts"
           schema:
-            $ref: '#/definitions/LoginErrorList'
+            $ref: '#/definitions/TokensErrorList'
 
         500:
           description: "Unexpected internal error"
           schema:
-            $ref: '#/definitions/LoginErrorList'
+            $ref: '#/definitions/TokensErrorList'
+    delete:
+      tags:
+        - token
+      summary: "Signs out a user, invalidating their access tokens"
+      consumes:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: "The users access token as bearer token"
+      responses:
+        204:
+          description: "No Content - Successful sign out"
+        400:
+          description: "Invalid request. Missing, malformed or invalid access token provided"
+          schema:
+            $ref: '#/definitions/TokensErrorResponse'
+        500:
+          description: "Unexpected internal error"
+          schema:
+            $ref: '#/definitions/TokensErrorResponse'
 
 responses:
   InternalError:
@@ -91,32 +112,32 @@ definitions:
         description: "Message returned by hello world endpoint"
         example: "Hello, world!"
 
-  LoginErrorList:
+  TokensErrorList:
     description: "A list of errors"
     type: object
     properties:
       errors:
         type: array
         items:
-          $ref: '#/definitions/LoginErrorResponse'
+          $ref: '#/definitions/TokensErrorResponse'
 
-  LoginErrorResponse:
+  TokensErrorResponse:
     description: "an individual error"
     type: object
     properties:
-      error: 
+      error:
         type: string
         description: "returned error description"
-      message: 
+      message:
         type: string
         description: "returned message"
-      source: 
-        $ref:  '#/definitions/LoginErrorSource'
+      source:
+        $ref:  '#/definitions/TokensErrorSource'
 
-  LoginErrorSource:
+  TokensErrorSource:
     description : "returned field and parameter"
     type: object
-    properties: 
+    properties:
       field:
         type: string
         description: "returned field name on which error has occurred"
