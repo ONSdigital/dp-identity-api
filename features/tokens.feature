@@ -162,6 +162,25 @@ Feature: Tokens
         """
 
     Scenario: DELETE /tokens/self
+        Given I set the "Authorization" header to "Bearer InternalError"
+        When I DELETE "/tokens/self"
+        Then I should receive the following JSON response with status "500":
+        """
+        {
+            "errors": [
+                {
+                    "error": "InternalErrorException: Something went wrong",
+                    "message": "",
+                    "source": {
+                        "field": "",
+                        "param": ""
+                    }
+                }
+            ]
+        }
+        """
+
+    Scenario: DELETE /tokens/self
         Given I am authorised
         When I DELETE "/tokens/self"
         Then the HTTP status code should be "204"
