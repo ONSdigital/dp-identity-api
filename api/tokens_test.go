@@ -1,8 +1,12 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"github.com/ONSdigital/dp-identity-api/cognito/mock"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/gorilla/mux"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,6 +15,8 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+const signOutEndPoint = "http://localhost:25600/tokens/self"
 
 func TestPasswordHasBeenProvided(t *testing.T) {
 
@@ -132,5 +138,87 @@ func TestHandleUnexpectedError(t *testing.T) {
 
 		So(resp.Code, ShouldEqual, http.StatusInternalServerError)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
+	})
+}
+
+func TestSignOutHandler(t *testing.T) {
+	var (
+		r = mux.NewRouter()
+		ctx = context.Background()
+		requestType, poolId, clientId, clientSecret string = "DELETE", "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd"
+	)
+
+	m := &mock.MockCognitoIdentityProviderClient{}
+
+	// mock call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
+	m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+		return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
+	}
+
+	api := Setup(ctx, r, m, poolId, clientId, clientSecret)
+
+	Convey("Global Sign Out returns 204: successfully signed out user", t, func() {
+		r := httptest.NewRequest(requestType, signOutEndPoint, bytes.NewReader(nil))
+		r.Header.Set("Authorization", "Bearer zzzz-yyyy-xxxx")
+
+		w := httptest.NewRecorder()
+
+		api.Router.ServeHTTP(w, r)
+
+		So(w.Code, ShouldEqual, http.StatusNoContent)
+	})
+
+	Convey("Global Sign Out returns 400: malformed header", t, func() {
+		r := httptest.NewRequest(requestType, signOutEndPoint, bytes.NewReader(nil))
+		r.Header.Set("Authorization", "Bearerzzzz-yyyy-xxxx")
+
+		w := httptest.NewRecorder()
+
+		api.Router.ServeHTTP(w, r)
+
+		So(w.Code, ShouldEqual, http.StatusBadRequest)
+	})
+
+	Convey("Global Sign Out returns 400: no header value", t, func() {
+		r := httptest.NewRequest(requestType, signOutEndPoint, bytes.NewReader(nil))
+		r.Header.Set("Authorization", "")
+
+		w := httptest.NewRecorder()
+
+		api.Router.ServeHTTP(w, r)
+
+		So(w.Code, ShouldEqual, http.StatusBadRequest)
+	})
+
+	Convey("Global Sign Out returns 500: Cognito internal error", t, func() {
+		r := httptest.NewRequest(requestType, signOutEndPoint, bytes.NewReader(nil))
+		r.Header.Set("Authorization", "Bearer zzzz-yyyy-xxxx")
+
+		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
+		m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+			return nil, errors.New("InternalErrorException: Something went wrong" )
+		}
+
+		w := httptest.NewRecorder()
+
+		api.Router.ServeHTTP(w, r)
+
+		So(w.Code, ShouldEqual, http.StatusInternalServerError)
+	})
+
+	Convey("Global Sign Out returns 500: request error", t, func() {
+		r := httptest.NewRequest(requestType, signOutEndPoint, bytes.NewReader(nil))
+		r.Header.Set("Authorization", "Bearer zzzz-yyyy-xxxx")
+
+		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
+		m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+			return nil, errors.New("NotAuthorizedException: User is not authorized" )
+		}
+
+		w := httptest.NewRecorder()
+
+		api.Router.ServeHTTP(w, r)
+
+		So(w.Code, ShouldEqual, http.StatusBadRequest)
 	})
 }
