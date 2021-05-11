@@ -162,12 +162,18 @@ Feature: Tokens
         """
 
     Scenario: DELETE /tokens/self
-        Given I set the "Authorization" header to "Bearer NotAuthorized"
+        Given I set the "Authorization" header to "Bearer InternalError"
+        When I DELETE "/tokens/self"
+        Then the HTTP status code should be "500"
+
+    Scenario: DELETE /tokens/self
+        Given I set the "Authorization" header to "Bearer xxxx.yyyy.zzzz"
         When I DELETE "/tokens/self"
         Then the HTTP status code should be "400"
 
 
     Scenario: DELETE /tokens/self
-        Given I am authorised
+        Given I have an active session with access token "aaaa.bbbb.cccc"
+        And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
         When I DELETE "/tokens/self"
         Then the HTTP status code should be "204"
