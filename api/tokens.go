@@ -23,8 +23,6 @@ var invalidPasswordError = errors.New("Invalid password")
 var invalidPasswordMessage = "Unable to validate the password in the request"
 var invalidEmailError = errors.New("Invalid email")
 var invalidErrorMessage = "Unable to validate the email in the request"
-var invalidTokenError = errors.New("Invalid token")
-var invalidTokenMessage = "The provided token does not correspond to an active session"
 
 func TokensHandler() http.HandlerFunc {
 
@@ -83,7 +81,7 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 
 		authString := req.Header.Get("Authorization")
 		if authString == "" {
-			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(invalidTokenError, invalidTokenMessage, field, param)
+			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidTokenError, apierrors.MissingTokenMessage, field, param)
 			errorList = append(errorList, invalidTokenErrorBody)
 			log.Event(ctx, "no authorization header provided", log.ERROR)
 			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
@@ -94,7 +92,7 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 		authComponents := strings.Split(authString, " ")
 		if len(authComponents) != 2 {
 			log.Event(ctx, "malformed authorization header provided", log.ERROR)
-			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(invalidTokenError, invalidTokenMessage, field, param)
+			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidTokenError, apierrors.MalformedTokenMessage, field, param)
 			errorList = append(errorList, invalidTokenErrorBody)
 			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
 			writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)

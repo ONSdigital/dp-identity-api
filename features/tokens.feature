@@ -113,7 +113,7 @@ Feature: Tokens
             "errors": [
                 {
                     "error": "Invalid token",
-                    "message": "The provided token does not correspond to an active session",
+                    "message": "No Authorization token was provided",
                     "source": {
                         "field": "",
                         "param": ""
@@ -132,7 +132,7 @@ Feature: Tokens
             "errors": [
                 {
                     "error": "Invalid token",
-                    "message": "The provided token does not correspond to an active session",
+                    "message": "The provided token does not meet the required format",
                     "source": {
                         "field": "",
                         "param": ""
@@ -151,7 +151,7 @@ Feature: Tokens
             "errors": [
                 {
                     "error": "Invalid token",
-                    "message": "The provided token does not correspond to an active session",
+                    "message": "The provided token does not meet the required format",
                     "source": {
                         "field": "",
                         "param": ""
