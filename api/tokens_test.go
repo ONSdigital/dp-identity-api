@@ -6,10 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
-	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -24,7 +22,7 @@ func TestPasswordHasBeenProvided(t *testing.T) {
 		}
 
 		passwordResponse := passwordValidation(body)
-
+		// asstert 1
 		So(passwordResponse, ShouldBeTrue)
 	})
 
@@ -33,6 +31,7 @@ func TestPasswordHasBeenProvided(t *testing.T) {
 		body := AuthParams{}
 
 		passwordResponse := passwordValidation(body)
+		// asstert 2
 		So(passwordResponse, ShouldBeFalse)
 	})
 
@@ -43,6 +42,7 @@ func TestPasswordHasBeenProvided(t *testing.T) {
 		}
 
 		passwordResponse := passwordValidation(body)
+		//asssert 3
 		So(passwordResponse, ShouldBeFalse)
 	})
 }
@@ -56,6 +56,7 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 		}
 
 		emailResponse := emailValidation(body)
+		// assert 4
 		So(emailResponse, ShouldBeTrue)
 	})
 
@@ -66,6 +67,7 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 		}
 
 		emailResponse := emailValidation(body)
+		// assert 5
 		So(emailResponse, ShouldBeFalse)
 	})
 
@@ -144,24 +146,17 @@ func TestCognitoResponseBuild(t *testing.T) {
 			Email:    "email.email@ons.gov.uk",
 			Password: "password",
 		}
-		config := config.Config{
-			BindAddr:                   "localhost:25600",
-			GracefulShutdownTimeout:    20 * time.Second,
-			HealthCheckInterval:        30 * time.Second,
-			HealthCheckCriticalTimeout: 90 * time.Second,
-			AWSRegion:                  "eu-west-1",
-			AWSCognitoUserPoolID:       "",
-			AWSClientId:                "awsclientid",
-			AWSClientSecret:            "",
-			AWSAuthFlow:                "awsauthflow",
-		}
 
-		response := buildCognitoRequest(authParams, config)
+		clientId := "awsclientid"
+		clientSecret := "awsSectret"
+		clientAuthFlow := "authflow"
+
+		response := buildCognitoRequest(authParams, clientId, clientSecret, clientAuthFlow)
 
 		So(*response.AuthParameters["USERNAME"], ShouldEqual, authParams.Email)
 		So(*response.AuthParameters["PASSWORD"], ShouldEqual, authParams.Password)
 		So(*response.AuthParameters["SECRET_HASH"], ShouldNotBeEmpty)
-		So(*response.AuthFlow, ShouldResemble, "awsauthflow")
+		So(*response.AuthFlow, ShouldResemble, "authflow")
 		So(*response.ClientId, ShouldResemble, "awsclientid")
 	})
 }
@@ -173,20 +168,59 @@ func TestCognitoRequestHeaderBuild(t *testing.T) {
 		accessToken := "accessToken"
 		var expiration int64 = 123
 		idToken := "idToken"
-		refreshToken := "refreshToken"
+		Refresh := "refreshToken"
 
 		initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{
 			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
 				AccessToken:  &accessToken,
 				ExpiresIn:    &expiration,
 				IdToken:      &idToken,
-				RefreshToken: &refreshToken,
+				RefreshToken: &Refresh,
 			},
 		}
 
 		buildSucessfulResponse(initiateAuthOutput, w, ctx)
 
 		So(w.Result().StatusCode, ShouldEqual, 201)
+		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
+		So(w.Result().Header["Authorization"], ShouldResemble, []string{"Bearer " + accessToken})
+		So(w.Result().Header["Id"], ShouldResemble, []string{idToken})
+		So(w.Result().Header["Refresh"], ShouldResemble, []string{Refresh})
+
+		//So(reflect.TypeOf(w.Body.String()), ShouldResemble, true)
+	})
+}
+
+func TestBuildJson(t *testing.T) {
+	Convey("build json", t, func() {
+		w := httptest.NewRecorder()
+		ctx := context.Background()
+
+		testBody := map[string]interface{}{"expirationTime": "123"}
+		buildjson(testBody, w, ctx)
+		So(w.Body.String(), ShouldResemble, "{\"expirationTime\":\"123\"}")
 
 	})
+
+	Convey("build json err", t, func() {
+		w := httptest.NewRecorder()
+		ctx := context.Background()
+
+		testBody := map[string]interface{}{
+			"foo": make(chan int),
+		}
+		buildjson(testBody, w, ctx)
+		So(w.Body.String(), ShouldResemble, "failed to marshal the error\n")
+	})
+
+	// Convey("write HttpResponse err", t, func() {
+	// 	w := httptest.NewRecorder()
+	// 	ctx := context.Background()
+	// 	testBody := map[string]interface{}{
+	// 		"foo": "TestString",
+	// 	}
+
+	// 	buildjson(testBody, w, ctx)
+	// 	So(w.Body.String(), ShouldResemble, "failed to write http response\n")
+	// })
 }

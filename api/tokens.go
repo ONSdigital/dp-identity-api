@@ -7,13 +7,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
-	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/validation"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
@@ -58,12 +56,12 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 		validEmailRequest := emailValidation(authParams)
 
 		if validPasswordRequest && validEmailRequest {
-			input := buildCognitoRequest(authParams, config.Config{})
+			input := buildCognitoRequest(authParams, api.ClientId, api.ClientSecret, api.ClientAuthFlow)
 			result, authErr := api.CognitoClient.InitiateAuth(input)
 
 			if authErr != nil {
 				errorMessage := "api endpoint POST login returned an error failed to login to cognito"
-				handleUnexpectedError(ctx, w, err, errorMessage, field, param)
+				handleUnexpectedError(ctx, w, authErr, errorMessage, field, param)
 				return
 			}
 
@@ -144,9 +142,9 @@ func computeSecretHash(clientSecret string, username string, clientId string) st
 	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
 }
 
-func buildCognitoRequest(authParams AuthParams, config config.Config) (authInput *cognitoidentityprovider.InitiateAuthInput) {
+func buildCognitoRequest(authParams AuthParams, clientId string, clientSecret string, clientAuthFlow string) (authInput *cognitoidentityprovider.InitiateAuthInput) {
 
-	secretHash := computeSecretHash(config.AWSClientSecret, authParams.Email, config.AWSClientId)
+	secretHash := computeSecretHash(clientSecret, authParams.Email, clientId)
 
 	authParameters := map[string]*string{
 		"USERNAME":    &authParams.Email,
@@ -156,9 +154,9 @@ func buildCognitoRequest(authParams AuthParams, config config.Config) (authInput
 
 	authInput = &cognitoidentityprovider.InitiateAuthInput{
 		AnalyticsMetadata: &cognitoidentityprovider.AnalyticsMetadataType{},
-		AuthFlow:          &config.AWSAuthFlow,
+		AuthFlow:          &clientAuthFlow,
 		AuthParameters:    authParameters,
-		ClientId:          &config.AWSClientId,
+		ClientId:          &clientId,
 		ClientMetadata:    map[string]*string{},
 		UserContextData:   &cognitoidentityprovider.UserContextDataType{},
 	}
@@ -172,26 +170,37 @@ func buildSucessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, 
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
 		expirationTime := time.Now().Add(time.Second * tokenDuration).String()
 
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Authorization", "Bearer "+*result.AuthenticationResult.AccessToken)
 		w.Header().Set("ID", *result.AuthenticationResult.IdToken)
 		w.Header().Set("Refresh", *result.AuthenticationResult.RefreshToken)
 		w.WriteHeader(http.StatusCreated)
 
-		postBody := map[string]string{"expirationTime": expirationTime}
-		fmt.Println(postBody)
+		postBody := map[string]interface{}{"expirationTime": expirationTime}
 
-		jsonResponse, err := json.Marshal(postBody)
-
-		if err != nil {
-			log.Event(ctx, "failed to marshal the error", log.Error(err), log.ERROR)
-			http.Error(w, "failed to marshal the error", http.StatusInternalServerError)
-			return
-		}
-
-		_, err = w.Write(jsonResponse)
+		buildjson(postBody, w, ctx)
 
 		return
 
 	}
+}
+
+func buildjson(jsonInput map[string]interface{}, w http.ResponseWriter, ctx context.Context) {
+
+	jsonResponse, err := json.Marshal(jsonInput)
+	if err != nil {
+		log.Event(ctx, "failed to marshal the error", log.Error(err), log.ERROR)
+		http.Error(w, "failed to marshal the error", http.StatusInternalServerError)
+		return
+	}
+	_, err = w.Write(jsonResponse)
+	if err != nil {
+		log.Event(ctx, "writing response failed", log.Error(err), log.ERROR)
+		http.Error(w, "failed to write http response", http.StatusInternalServerError)
+		return
+
+	}
+
+	return
+
 }

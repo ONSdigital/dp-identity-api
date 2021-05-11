@@ -28,15 +28,15 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	log.Event(ctx, "running service", log.INFO)
 
 	log.Event(ctx, "using service configuration", log.Data{"config": cfg}, log.INFO)
-	
+
 	r := mux.NewRouter()
 
 	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
 
 	cognitoclient := serviceList.GetCognitoClient(cfg.AWSRegion)
 
-	a := api.Setup(ctx, r, cognitoclient, cfg.AWSCognitoUserPoolID)
-	
+	a := api.Setup(ctx, r, cognitoclient, cfg.AWSCognitoUserPoolID, cfg.AWSClientId, cfg.AWSClientSecret, cfg.AWSAuthFlow)
+
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
 
 	if err != nil {
