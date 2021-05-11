@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
-	"net/http"
-
 	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/ONSdigital/dp-identity-api/validation"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"io/ioutil"
+	"net/http"
+	"strings"
 
 	"github.com/ONSdigital/log.go/log"
 )
@@ -68,6 +69,54 @@ func TokensHandler() http.HandlerFunc {
 		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
 		writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 		return
+	}
+}
+
+func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		ctx := req.Context()
+		var errorList []apierrors.IndividualError
+		field := ""
+		param := ""
+
+		authString := req.Header.Get("Authorization")
+		if authString == "" {
+			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidTokenError, apierrors.MissingTokenMessage, field, param)
+			errorList = append(errorList, invalidTokenErrorBody)
+			log.Event(ctx, "no authorization header provided", log.ERROR)
+			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+			writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+			return
+		}
+
+		authComponents := strings.Split(authString, " ")
+		if len(authComponents) != 2 {
+			log.Event(ctx, "malformed authorization header provided", log.ERROR)
+			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidTokenError, apierrors.MalformedTokenMessage, field, param)
+			errorList = append(errorList, invalidTokenErrorBody)
+			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+			writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+			return
+		}
+
+		_, err := api.CognitoClient.GlobalSignOut(
+			&cognitoidentityprovider.GlobalSignOutInput{
+				AccessToken: &authComponents[1]})
+
+		if err != nil {
+			log.Event(ctx, "From Cognito - "+err.Error(), log.ERROR)
+			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(err, "", field, param)
+			errorList = append(errorList, invalidTokenErrorBody)
+			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+			if strings.Contains(err.Error(), "InternalErrorException") {
+				writeErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
+			} else {
+				writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+			}
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
