@@ -23,9 +23,9 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 	log.Event(ctx, "starting to generate a new user", log.INFO)
 	return func(w http.ResponseWriter, req *http.Request) {
 		defer req.Body.Close()
-		
-		var ( 
-			errorList []models.IndividualError
+
+		var (
+			errorList    []models.IndividualError
 			field, param string = "", ""
 		)
 
@@ -50,15 +50,14 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 
 		username := user.UserName
 		// validate username
-		if len(username) == 0  {
-			errorList = append(errorList, apierrors.IndividualErrorBuilder(errInvalidUserName, invalidUserNameMessage, field, param))
+		if len(username) == 0 {
+			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidUserName, apierrors.InvalidUserNameMessage, field, param))
 		}
 
-
 		email := user.Email
-		// validate email
+		// validate emailq
 		if !validation.IsEmailValid(email) {
-			errorList = append(errorList, apierrors.IndividualErrorBuilder(errInvalidEmail, invalidErrorMessage, field, param))
+			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidEmail, apierrors.InvalidErrorMessage, field, param))
 		}
 
 		// report validation errors in response
@@ -66,7 +65,6 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 			apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, apierrors.ErrorResponseBodyBuilder(errorList))
 			return
 		}
-		
 
 		newUser, err := CreateNewUserModel(ctx, username, tempPassword, email, api.UserPoolId)
 		if err != nil {

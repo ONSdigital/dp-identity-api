@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -21,9 +22,9 @@ const usersEndPoint = "http://localhost:25600/users"
 func TestCreateUserHandler(t *testing.T) {
 
 	var (
-		r = mux.NewRouter()
-		ctx = context.Background()
-		requestType, name,status, email, poolId string = "POST", "Foo_Bar", "UNCONFIRMED", "foo_bar123@foobar.io.me", "us-west-11_bxushuds"
+		r                                               = mux.NewRouter()
+		ctx                                             = context.Background()
+		requestType, name, status, email, poolId string = "POST", "Foo_Bar", "UNCONFIRMED", "foo_bar123@foobar.io.me", "us-west-11_bxushuds"
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
@@ -74,7 +75,7 @@ func TestCreateUserHandler(t *testing.T) {
 
 	Convey("Validation fails 400: validating email and username throws validation errors", t, func() {
 		userValidationTests := []struct {
-			userDetails map[string]interface{}
+			userDetails  map[string]interface{}
 			errorMessage []string
 			httpResponse int
 		}{
@@ -82,15 +83,15 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"username": "", "email": email},
 				[]string{
-					invalidUserNameMessage,
-				},		
+					apierrors.InvalidUserNameMessage,
+				},
 				http.StatusBadRequest,
 			},
 			// missing email
 			{
 				map[string]interface{}{"username": name, "email": ""},
 				[]string{
-					invalidErrorMessage,
+					apierrors.InvalidErrorMessage,
 				},
 				http.StatusBadRequest,
 			},
@@ -98,26 +99,26 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"username": "", "email": ""},
 				[]string{
-					invalidUserNameMessage,
-					invalidErrorMessage,
+					apierrors.InvalidUserNameMessage,
+					apierrors.InvalidErrorMessage,
 				},
 				http.StatusBadRequest,
 			},
 		}
-	
+
 		for _, tt := range userValidationTests {
 			body, _ := json.Marshal(tt.userDetails)
-	
+
 			r := httptest.NewRequest(requestType, usersEndPoint, bytes.NewReader(body))
-	
+
 			w := httptest.NewRecorder()
-	
+
 			api.Router.ServeHTTP(w, r)
-	
+
 			errorBody, _ := ioutil.ReadAll(w.Body)
 			var e models.ErrorStructure
 			json.Unmarshal(errorBody, &e)
-	
+
 			So(w.Code, ShouldEqual, tt.httpResponse)
 			So(len(e.Errors), ShouldEqual, len(tt.errorMessage))
 			So(e.Errors[0].Message, ShouldEqual, tt.errorMessage[0])

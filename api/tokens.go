@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/http"
 
@@ -15,11 +14,6 @@ type AuthParams struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
-
-var errInvalidPassword = errors.New("invalid password")
-var invalidPasswordMessage = "Unable to validate the password in the request"
-var errInvalidEmail = errors.New("invalid email")
-var invalidErrorMessage = "Unable to validate the email in the request"
 
 func TokensHandler() http.HandlerFunc {
 
@@ -50,8 +44,8 @@ func TokensHandler() http.HandlerFunc {
 		validPasswordRequest := passwordValidation(authParams)
 		validEmailRequest := emailValidation(authParams)
 
-		invalidPasswordErrorBody := apierrors.IndividualErrorBuilder(errInvalidPassword, invalidPasswordMessage, field, param)
-		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(errInvalidEmail, invalidErrorMessage, field, param)
+		invalidPasswordErrorBody := apierrors.IndividualErrorBuilder(apierrors.ErrInvalidPassword, apierrors.InvalidPasswordMessage, field, param)
+		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(apierrors.ErrInvalidEmail, apierrors.InvalidErrorMessage, field, param)
 
 		var errorList []models.IndividualError
 
