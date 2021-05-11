@@ -22,46 +22,70 @@ const usersEndPoint = "http://localhost:25600/users"
 func TestCreateUserHandler(t *testing.T) {
 
 	var (
-		r                                               = mux.NewRouter()
-		ctx                                             = context.Background()
-		requestType, name, status, email, poolId string = "POST", "Foo_Bar", "UNCONFIRMED", "foo_bar123@foobar.io.me", "us-west-11_bxushuds"
+		routeMux                          = mux.NewRouter()
+		ctx                               = context.Background()
+		name, status, email, poolId, userException string = "Foo_Bar", "UNCONFIRMED", "foo_bar123@foobar.io.me", "us-west-11_bxushuds", "User account already exists"
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
 
-	// mock call to: AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error)
-	m.AdminCreateUserFunc = func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
-		user := &models.CreateUserOutput{
-			UserOutput: &cognitoidentityprovider.AdminCreateUserOutput{
-				User: &cognitoidentityprovider.UserType{
-					Username:   &name,
-					UserStatus: &status,
+	Convey("Admin create user - check expected responses", t, func() {
+		adminCreateUsersTests := []struct {
+			createUsersFunction func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error)
+			httpResponse int
+		}{
+			{
+				// 201 response - user created
+				func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error){
+					user := &models.CreateUserOutput{
+						UserOutput: &cognitoidentityprovider.AdminCreateUserOutput{
+							User: &cognitoidentityprovider.UserType{
+								Username:   &name,
+								UserStatus: &status,
+							},
+						},
+					}
+					return user.UserOutput, nil
 				},
+				http.StatusCreated,
+			},
+			{
+				// 400 response (converted to 500 response by handler) - user already exists
+				func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error){
+					var userExistsException cognitoidentityprovider.UsernameExistsException
+					userExistsException.Message_ = &userException
+					userExistsException.RespMetadata.StatusCode = http.StatusBadRequest
+		
+					return nil, &userExistsException
+				},
+				http.StatusInternalServerError,
 			},
 		}
-		return user.UserOutput, nil
-	}
 
-	api := Setup(ctx, r, m, poolId)
+		for _, tt := range adminCreateUsersTests {
+			m.AdminCreateUserFunc = tt.createUsersFunction
+			api := Setup(ctx, routeMux, m, poolId)
 
-	Convey("Admin create user returns 201: successfully created user", t, func() {
-		postBody := map[string]interface{}{"username": name, "email": email}
-
-		body, _ := json.Marshal(postBody)
-
-		r := httptest.NewRequest(requestType, usersEndPoint, bytes.NewReader(body))
-
-		w := httptest.NewRecorder()
-
-		api.Router.ServeHTTP(w, r)
-
-		So(w.Code, ShouldEqual, http.StatusCreated)
+			postBody := map[string]interface{}{"username": name, "email": email}
+	
+			body, _ := json.Marshal(postBody)
+	
+			r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
+	
+			w := httptest.NewRecorder()
+	
+			api.Router.ServeHTTP(w, r)
+	
+			So(w.Code, ShouldEqual, tt.httpResponse)
+		}
 	})
 
 	Convey("Admin create user returns 500: error unmarshalling request body", t, func() {
-		r := httptest.NewRequest(requestType, usersEndPoint, bytes.NewReader(nil))
+		r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(nil))
 
 		w := httptest.NewRecorder()
+
+		api := Setup(ctx, routeMux, m, poolId)
 
 		api.Router.ServeHTTP(w, r)
 
@@ -75,7 +99,7 @@ func TestCreateUserHandler(t *testing.T) {
 
 	Convey("Validation fails 400: validating email and username throws validation errors", t, func() {
 		userValidationTests := []struct {
-			userDetails  map[string]interface{}
+			userDetails map[string]interface{}
 			errorMessage []string
 			httpResponse int
 		}{
@@ -84,7 +108,7 @@ func TestCreateUserHandler(t *testing.T) {
 				map[string]interface{}{"username": "", "email": email},
 				[]string{
 					apierrors.InvalidUserNameMessage,
-				},
+				},		
 				http.StatusBadRequest,
 			},
 			// missing email
@@ -105,20 +129,22 @@ func TestCreateUserHandler(t *testing.T) {
 				http.StatusBadRequest,
 			},
 		}
-
+	
 		for _, tt := range userValidationTests {
 			body, _ := json.Marshal(tt.userDetails)
-
-			r := httptest.NewRequest(requestType, usersEndPoint, bytes.NewReader(body))
-
+	
+			r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
+	
 			w := httptest.NewRecorder()
+	
+			api := Setup(ctx, routeMux, m, poolId)
 
 			api.Router.ServeHTTP(w, r)
-
+	
 			errorBody, _ := ioutil.ReadAll(w.Body)
 			var e models.ErrorStructure
 			json.Unmarshal(errorBody, &e)
-
+	
 			So(w.Code, ShouldEqual, tt.httpResponse)
 			So(len(e.Errors), ShouldEqual, len(tt.errorMessage))
 			So(e.Errors[0].Message, ShouldEqual, tt.errorMessage[0])
