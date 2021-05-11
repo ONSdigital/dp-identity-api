@@ -9,15 +9,10 @@ Feature: Tokens
             "password": "Passw0rd!"
         }
         """
-        Then I should receive the following JSON response with status "201":
-        """
-        {
-            "expirationTime":"123"
-        }
-        """
-        And the response header "Authorization" should be "accessToken"
+        Then the HTTP status code should be "201"
+        And the response header "Authorization" should be "Bearer accessToken"
         And the response header "ID" should be "idToken"
-        And the response header "Refresh" should be "RefreshToken"
+        And the response header "Refresh" should be "refreshToken"
 
     Scenario: POST /tokens
         When I POST "/tokens"

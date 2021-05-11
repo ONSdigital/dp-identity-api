@@ -2,13 +2,18 @@ package api
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/ONSdigital/dp-identity-api/validation"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
 	"github.com/ONSdigital/log.go/log"
 )
@@ -23,11 +28,9 @@ var invalidPasswordMessage = "Unable to validate the password in the request"
 var invalidEmailError = errors.New("Invalid email")
 var invalidErrorMessage = "Unable to validate the email in the request"
 
-func TokensHandler() http.HandlerFunc {
+func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, req *http.Request) {
-
-		ctx := req.Context()
 
 		field := ""
 		param := ""
@@ -51,6 +54,32 @@ func TokensHandler() http.HandlerFunc {
 
 		validPasswordRequest := passwordValidation(authParams)
 		validEmailRequest := emailValidation(authParams)
+
+		if validPasswordRequest && validEmailRequest {
+			input := buildCognitoRequest(authParams, api.ClientId, api.ClientSecret, api.ClientAuthFlow)
+			result, authErr := api.CognitoClient.InitiateAuth(input)
+
+			if authErr != nil {
+				switch authErr.Error() {
+				case "NotAuthorizedException: Incorrect username or password.":
+					{
+						notAuthorizedMessage := "Unautheticated used: Unable to autheticate request"
+						notAuthorizedError := apierrors.IndividualErrorBuilder(authErr, notAuthorizedMessage, field, param)
+						writeErrorResponse(ctx, w, http.StatusUnauthorized, notAuthorizedError)
+						return
+					}
+				default:
+					{
+						errorMessage := "api endpoint POST login returned an error failed to login to cognito"
+						handleUnexpectedError(ctx, w, authErr, errorMessage, field, param)
+						return
+					}
+				}
+			}
+
+			buildSucessfulResponse(result, w, ctx)
+			return
+		}
 
 		invalidPasswordErrorBody := apierrors.IndividualErrorBuilder(invalidPasswordError, invalidPasswordMessage, field, param)
 		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(invalidEmailError, invalidErrorMessage, field, param)
@@ -115,4 +144,61 @@ func handleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error
 	log.Event(ctx, message, log.ERROR, log.Error(err))
 	writeErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
 	return
+}
+
+func computeSecretHash(clientSecret string, username string, clientId string) string {
+	mac := hmac.New(sha256.New, []byte(clientSecret))
+	mac.Write([]byte(username + clientId))
+
+	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
+}
+
+func buildCognitoRequest(authParams AuthParams, clientId, clientSecret, clientAuthFlow string) (authInput *cognitoidentityprovider.InitiateAuthInput) {
+
+	secretHash := computeSecretHash(clientSecret, authParams.Email, clientId)
+
+	authParameters := map[string]*string{
+		"USERNAME":    &authParams.Email,
+		"PASSWORD":    &authParams.Password,
+		"SECRET_HASH": &secretHash,
+	}
+	authInput = &cognitoidentityprovider.InitiateAuthInput{
+		AnalyticsMetadata: &cognitoidentityprovider.AnalyticsMetadataType{},
+		AuthFlow:          &clientAuthFlow,
+		AuthParameters:    authParameters,
+		ClientId:          &clientId,
+		ClientMetadata:    map[string]*string{},
+		UserContextData:   &cognitoidentityprovider.UserContextDataType{},
+	}
+
+	return authInput
+}
+
+func buildSucessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, w http.ResponseWriter, ctx context.Context) {
+
+	if result.AuthenticationResult != nil {
+		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
+		expirationTime := time.Now().Add(time.Second * tokenDuration).String()
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Authorization", "Bearer "+*result.AuthenticationResult.AccessToken)
+		w.Header().Set("ID", *result.AuthenticationResult.IdToken)
+		w.Header().Set("Refresh", *result.AuthenticationResult.RefreshToken)
+		w.WriteHeader(http.StatusCreated)
+
+		postBody := map[string]string{"expirationTime": expirationTime}
+
+		jsonResponse, err := json.Marshal(postBody)
+
+		if err != nil {
+			log.Event(ctx, "failed to marshal the error", log.Error(err), log.ERROR)
+			http.Error(w, "failed to marshal the error", http.StatusInternalServerError)
+			return
+		}
+
+		_, err = w.Write(jsonResponse)
+
+		return
+
+	}
 }

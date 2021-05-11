@@ -29,6 +29,7 @@ func TestConfig(t *testing.T) {
 					HealthCheckInterval:        30 * time.Second,
 					HealthCheckCriticalTimeout: 90 * time.Second,
 					AWSRegion:                  "eu-west-1",
+					AWSAuthFlow:                "USER_PASSWORD_AUTH",
 				})
 			})
 

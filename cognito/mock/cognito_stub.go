@@ -2,6 +2,7 @@ package mock
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
@@ -39,15 +40,14 @@ func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityp
 	}
 
 	for _, user := range m.Users {
-		if (user.email == *input.AuthParameters["EMAIL"]) && (user.password == *input.AuthParameters["PASSWORD"]) {
+		if (user.email == *input.AuthParameters["USERNAME"]) && (user.password == *input.AuthParameters["PASSWORD"]) {
 			return initiateAuthOutput, nil
-		} else if (user.email == *input.AuthParameters["EMAIL"]) && (user.password != *input.AuthParameters["PASSWORD"]) {
+		} else if (user.email == *input.AuthParameters["USERNAME"]) && (user.password != *input.AuthParameters["PASSWORD"]) {
+			fmt.Println("I came in here")
 			return nil, errors.New("NotAuthorizedException")
 		} else {
 			return nil, errors.New("NotAuthorizedException")
 		}
 	}
-
 	return nil, errors.New("InternalErrorException")
-
 }
