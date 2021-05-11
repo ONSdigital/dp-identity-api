@@ -111,6 +111,10 @@ paths:
           description: "Invalid request body."
           schema:
             $ref: '#/definitions/LoginErrorList'
+        400:
+          description: "Unable to validate the email in the request"
+          schema:
+            $ref: '#/definitions/LoginErrorList'
 
 responses:
   InternalError:
