@@ -143,8 +143,8 @@ func TestHandleUnexpectedError(t *testing.T) {
 
 func TestSignOutHandler(t *testing.T) {
 	var (
-		r = mux.NewRouter()
-		ctx = context.Background()
+		r                                                  = mux.NewRouter()
+		ctx                                                = context.Background()
 		requestType, poolId, clientId, clientSecret string = "DELETE", "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd"
 	)
 
@@ -196,7 +196,7 @@ func TestSignOutHandler(t *testing.T) {
 
 		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
 		m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
-			return nil, errors.New("InternalErrorException: Something went wrong" )
+			return nil, errors.New("InternalErrorException: Something went wrong")
 		}
 
 		w := httptest.NewRecorder()
@@ -212,7 +212,7 @@ func TestSignOutHandler(t *testing.T) {
 
 		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
 		m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
-			return nil, errors.New("NotAuthorizedException: User is not authorized" )
+			return nil, errors.New("NotAuthorizedException: User is not authorized")
 		}
 
 		w := httptest.NewRecorder()

@@ -1,9 +1,9 @@
 package mock
 
 type Session struct {
-	AccessToken		string
-	IdToken			string
-	RefreshToken	string
+	AccessToken  string
+	IdToken      string
+	RefreshToken string
 }
 
 func (m *CognitoIdentityProviderClientStub) CreateSessionWithAccessToken(accessToken string) {
@@ -13,8 +13,8 @@ func (m *CognitoIdentityProviderClientStub) CreateSessionWithAccessToken(accessT
 
 func (m *CognitoIdentityProviderClientStub) GenerateSession(accessToken string, idToken string, refreshToken string) Session {
 	return Session{
-		AccessToken: accessToken,
-		IdToken: idToken,
+		AccessToken:  accessToken,
+		IdToken:      idToken,
 		RefreshToken: refreshToken,
 	}
 }

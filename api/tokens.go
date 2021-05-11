@@ -74,7 +74,7 @@ func TokensHandler() http.HandlerFunc {
 	}
 }
 
-func (api *API)SignOutHandler(ctx context.Context) http.HandlerFunc {
+func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		var errorList []apierrors.IndividualError

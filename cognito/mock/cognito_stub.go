@@ -9,7 +9,7 @@ import (
 type CognitoIdentityProviderClientStub struct {
 	cognitoidentityprovideriface.CognitoIdentityProviderAPI
 	UserPools []string
-	Sessions []Session
+	Sessions  []Session
 }
 
 func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
@@ -23,7 +23,7 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cogn
 
 func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 	if *signOutInput.AccessToken == "InternalError" {
-		return nil, errors.New("InternalErrorException: Something went wrong" )
+		return nil, errors.New("InternalErrorException: Something went wrong")
 	}
 	for _, session := range m.Sessions {
 		if session.AccessToken == *signOutInput.AccessToken {
