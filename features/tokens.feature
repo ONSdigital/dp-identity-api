@@ -1,60 +1,35 @@
 Feature: Tokens
 
 Scenario: POST /tokens
-    Given a user exists in the database
-    When I post "/tokens"
-        """
-        {
-            "email": "email@ons.gov.uk",
-            "password": "Passw0rd!"
-        }
-        """
+    Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+    When I POST "/tokens"
+    """
+    {
+        "email": "email@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
     Then the HTTP status code should be "201"
-    And the response header "Authorization" should be "VALUE"
-    And the response header "ID" should be "VALUE"
-    And the response header "Refresh" should be "VALUE"
+    And the response header "Authorization" should be "Bearer accessToken"
+    And the response header "ID" should be "idToken"
+    And the response header "Refresh" should be "refreshToken"
 
 Scenario: POST /tokens
-    Given a user does not exists in the database
-    When I post "/tokens"
-        """
-        {
-            "email": "email1@ons.gov.uk",
-            "password": "Passw0rd!"
-        }
-        """
+    Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+    When I POST "/tokens"
+    """
+    {
+        "email": "email1@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
     Then I should receive the following JSON response with status "401":
         """
         {
             "errors": [
                 {
-                 "error": "Unable to autheticate the request",
-                    "message": "Unautheticated user",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
-                }
-            ]
-        }
-        """
-    
-Scenario: POST /tokens
-    Given a user does not exists in the database
-    When I post "/tokens"
-        """
-        {
-            "email": "email1@ons.gov.uk",
-            "password": "Passw0rd!"
-        }
-        """
-    Then I should receive the following JSON response with status "403":
-        """
-        {
-            "errors": [
-                {
-                    "error": "Forbidden",
-                    "message": "Too many login attempts",
+                    "error": "NotAuthorizedException: Incorrect username or password.",
+                    "message": "Unautheticated user: Unable to autheticate request",
                     "source": {
                         "field": "",
                         "param": ""
@@ -65,29 +40,29 @@ Scenario: POST /tokens
         """
 
 Scenario: POST /tokens
-    Given Cognito has an internal server error 
-        When I post "/tokens"
-            """
+    Given an error is returned from Cognito 
+    When I POST "/tokens"
+    """
+    {
+        "email": "email@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
+    Then I should receive the following JSON response with status "500":
+    """
+    {
+        "errors": [
             {
-                "email": "email@ons.gov.uk",
-                "password": "Passw0rd!"
+                "error": "InternalErrorException",
+                "message": "api endpoint POST login returned an error and failed to login to cognito",
+                "source": {
+                    "field": "",
+                    "param": ""
+                }
             }
-            """
-        Then I should receive the following JSON response with status "500":
-            """
-            {
-                "errors": [
-                    {
-                        "error": "Internal Server Error",
-                        "message": "Amazon Cognito has encountered an internal error",
-                        "source": {
-                            "field": "",
-                            "param": ""
-                        }
-                    }
-                ]
-            }
-            """
+        ]
+    }
+    """
 
 Scenario: POST /tokens
     When I POST "/tokens"

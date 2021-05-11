@@ -18,7 +18,7 @@ type API struct {
 }
 
 //Setup function sets up the api and returns an api
-func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, userPoolId string, clientId string, clientSecret string, clientAuthFlow string) *API {
+func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, userPoolId, clientId, clientSecret, clientAuthFlow string) *API {
 	api := &API{
 		Router:         r,
 		CognitoClient:  cognitoClient,

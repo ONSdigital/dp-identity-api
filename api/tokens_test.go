@@ -22,7 +22,6 @@ func TestPasswordHasBeenProvided(t *testing.T) {
 		}
 
 		passwordResponse := passwordValidation(body)
-		// asstert 1
 		So(passwordResponse, ShouldBeTrue)
 	})
 
@@ -31,7 +30,6 @@ func TestPasswordHasBeenProvided(t *testing.T) {
 		body := AuthParams{}
 
 		passwordResponse := passwordValidation(body)
-		// asstert 2
 		So(passwordResponse, ShouldBeFalse)
 	})
 
@@ -42,7 +40,6 @@ func TestPasswordHasBeenProvided(t *testing.T) {
 		}
 
 		passwordResponse := passwordValidation(body)
-		//asssert 3
 		So(passwordResponse, ShouldBeFalse)
 	})
 }
@@ -56,7 +53,6 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 		}
 
 		emailResponse := emailValidation(body)
-		// assert 4
 		So(emailResponse, ShouldBeTrue)
 	})
 
@@ -67,7 +63,6 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 		}
 
 		emailResponse := emailValidation(body)
-		// assert 5
 		So(emailResponse, ShouldBeFalse)
 	})
 
@@ -186,8 +181,6 @@ func TestCognitoRequestHeaderBuild(t *testing.T) {
 		So(w.Result().Header["Authorization"], ShouldResemble, []string{"Bearer " + accessToken})
 		So(w.Result().Header["Id"], ShouldResemble, []string{idToken})
 		So(w.Result().Header["Refresh"], ShouldResemble, []string{Refresh})
-
-		//So(reflect.TypeOf(w.Body.String()), ShouldResemble, true)
 	})
 }
 
@@ -212,15 +205,4 @@ func TestBuildJson(t *testing.T) {
 		buildjson(testBody, w, ctx)
 		So(w.Body.String(), ShouldResemble, "failed to marshal the error\n")
 	})
-
-	// Convey("write HttpResponse err", t, func() {
-	// 	w := httptest.NewRecorder()
-	// 	ctx := context.Background()
-	// 	testBody := map[string]interface{}{
-	// 		"foo": "TestString",
-	// 	}
-
-	// 	buildjson(testBody, w, ctx)
-	// 	So(w.Body.String(), ShouldResemble, "failed to write http response\n")
-	// })
 }

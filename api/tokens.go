@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
@@ -60,9 +61,42 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 			result, authErr := api.CognitoClient.InitiateAuth(input)
 
 			if authErr != nil {
-				errorMessage := "api endpoint POST login returned an error failed to login to cognito"
-				handleUnexpectedError(ctx, w, authErr, errorMessage, field, param)
-				return
+				var errorList []apierrors.IndividualError
+				switch authErr.Error() {
+				case "NotAuthorizedException: Incorrect username or password.":
+					{
+						notAuthorizedMessage := "Unautheticated user: Unable to autheticate request"
+						notAuthorizedError := apierrors.IndividualErrorBuilder(authErr, notAuthorizedMessage, field, param)
+						errorList = append(errorList, notAuthorizedError)
+						errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+						writeErrorResponse(ctx, w, http.StatusUnauthorized, errorResponseBody)
+						return
+					}
+				case "NotAuthorizedException: Password attempts exceeded":
+					{
+						forbiddenMessage := "Exceeded the number of attemps to login in with the provided credentials"
+						forbiddenError := apierrors.IndividualErrorBuilder(authErr, forbiddenMessage, field, param)
+						errorList = append(errorList, forbiddenError)
+						errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+						writeErrorResponse(ctx, w, http.StatusForbidden, errorResponseBody)
+						return
+					}
+				default:
+					{
+						if strings.Contains(authErr.Error(), "InternalErrorException") {
+							errorMessage := "api endpoint POST login returned an error and failed to login to cognito"
+							handleUnexpectedError(ctx, w, authErr, errorMessage, field, param)
+							return
+						} else {
+							loginMessage := "api endpoint POST login returned an error and failed to login to cognito. Please contact an administrator"
+							loginError := apierrors.IndividualErrorBuilder(authErr, loginMessage, field, param)
+							errorList = append(errorList, loginError)
+							errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+							writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+							return
+						}
+					}
+				}
 			}
 
 			buildSucessfulResponse(result, w, ctx)
@@ -188,6 +222,7 @@ func buildSucessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, 
 func buildjson(jsonInput map[string]interface{}, w http.ResponseWriter, ctx context.Context) {
 
 	jsonResponse, err := json.Marshal(jsonInput)
+
 	if err != nil {
 		log.Event(ctx, "failed to marshal the error", log.Error(err), log.ERROR)
 		http.Error(w, "failed to marshal the error", http.StatusInternalServerError)
