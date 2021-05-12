@@ -13,6 +13,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 
 	ctx.Step(`^I should receive a hello-world response$`, c.iShouldReceiveAHelloworldResponse)
 	ctx.Step(`^a user with email "([^"]*)" and password "([^"]*)" exists in the database$`, c.aUserWithEmailAndPasswordExistsInTheDatabase)
+	ctx.Step(`^an internal server error is returned from Cognito$`, c.anInternalServerErrorIsReturnedFromCognito)
 	ctx.Step(`^an error is returned from Cognito$`, c.anErrorIsReturnedFromCognito)
 }
 
@@ -27,6 +28,10 @@ func (c *IdentityComponent) iShouldReceiveAHelloworldResponse() error {
 
 func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(username, password string) error {
 	c.CognitoClient.AddUserWithUsername(username, password)
+	return nil
+}
+
+func (c *IdentityComponent) anInternalServerErrorIsReturnedFromCognito() error {
 	return nil
 }
 

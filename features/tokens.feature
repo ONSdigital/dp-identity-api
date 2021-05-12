@@ -40,12 +40,37 @@ Scenario: POST /tokens
         """
 
 Scenario: POST /tokens
-    Given an error is returned from Cognito 
+    Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
     When I POST "/tokens"
     """
     {
         "email": "email@ons.gov.uk",
-        "password": "Passw0rd!"
+        "password": "TooManyPasswordAttempts"
+    }
+    """
+    Then I should receive the following JSON response with status "403":
+        """
+        {
+            "errors": [
+                {
+                    "error": "NotAuthorizedException: Password attempts exceeded",
+                    "message": "exceeded the number of attemps to login in with the provided credentials",
+                    "source": {
+                        "field": "",
+                        "param": ""
+                    }
+                }
+            ]
+        }
+        """
+
+Scenario: POST /tokens
+    Given an internal server error is returned from Cognito 
+    When I POST "/tokens"
+    """
+    {
+        "email": "email@ons.gov.uk",
+        "password": "internalerrorException"
     }
     """
     Then I should receive the following JSON response with status "500":
@@ -55,6 +80,31 @@ Scenario: POST /tokens
             {
                 "error": "InternalErrorException",
                 "message": "api endpoint POST login returned an error and failed to login to cognito",
+                "source": {
+                    "field": "",
+                    "param": ""
+                }
+            }
+        ]
+    }
+    """
+
+Scenario: POST /tokens
+    Given an error is returned from Cognito 
+    When I POST "/tokens"
+    """
+    {
+        "email": "email@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "error": "InvalidParameterException",
+                "message": "something went wrong, and api endpoint POST login returned an error and failed to login to cognito. Please try again or contact an administrator.",
                 "source": {
                     "field": "",
                     "param": ""

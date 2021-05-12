@@ -41,9 +41,15 @@ func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityp
 	for _, user := range m.Users {
 		if (user.email == *input.AuthParameters["USERNAME"]) && (user.password == *input.AuthParameters["PASSWORD"]) {
 			return initiateAuthOutput, nil
-		} else {
+		} else if user.email != *input.AuthParameters["USERNAME"] {
 			return nil, errors.New("NotAuthorizedException: Incorrect username or password.")
+		} else {
+			return nil, errors.New("NotAuthorizedException: Password attempts exceeded")
 		}
 	}
-	return nil, errors.New("InternalErrorException")
+
+	if *input.AuthParameters["PASSWORD"] == "internalerrorException" {
+		return nil, errors.New("InternalErrorException")
+	}
+	return nil, errors.New("InvalidParameterException")
 }
