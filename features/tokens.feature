@@ -29,7 +29,7 @@ Scenario: POST /tokens
             "errors": [
                 {
                     "error": "NotAuthorizedException: Incorrect username or password.",
-                    "message": "Unautheticated user: Unable to autheticate request",
+                    "message": "unautheticated user: Unable to autheticate request",
                     "source": {
                         "field": "",
                         "param": ""

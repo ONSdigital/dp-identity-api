@@ -65,7 +65,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 				switch authErr.Error() {
 				case "NotAuthorizedException: Incorrect username or password.":
 					{
-						notAuthorizedMessage := "Unautheticated user: Unable to autheticate request"
+						notAuthorizedMessage := "unautheticated user: Unable to autheticate request"
 						notAuthorizedError := apierrors.IndividualErrorBuilder(authErr, notAuthorizedMessage, field, param)
 						errorList = append(errorList, notAuthorizedError)
 						errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
@@ -74,7 +74,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 					}
 				case "NotAuthorizedException: Password attempts exceeded":
 					{
-						forbiddenMessage := "Exceeded the number of attemps to login in with the provided credentials"
+						forbiddenMessage := "exceeded the number of attemps to login in with the provided credentials"
 						forbiddenError := apierrors.IndividualErrorBuilder(authErr, forbiddenMessage, field, param)
 						errorList = append(errorList, forbiddenError)
 						errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
@@ -88,7 +88,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 							handleUnexpectedError(ctx, w, authErr, errorMessage, field, param)
 							return
 						} else {
-							loginMessage := "api endpoint POST login returned an error and failed to login to cognito. Please contact an administrator"
+							loginMessage := "something went wrong, and api endpoint POST login returned an error and failed to login to cognito. Please try again or contact an administrator."
 							loginError := apierrors.IndividualErrorBuilder(authErr, loginMessage, field, param)
 							errorList = append(errorList, loginError)
 							errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
