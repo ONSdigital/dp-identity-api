@@ -202,7 +202,7 @@ func buildSucessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, 
 
 	if result.AuthenticationResult != nil {
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
-		expirationTime := time.Now().Add(time.Second * tokenDuration).String()
+		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Authorization", "Bearer "+*result.AuthenticationResult.AccessToken)
@@ -224,18 +224,18 @@ func buildjson(jsonInput map[string]interface{}, w http.ResponseWriter, ctx cont
 	jsonResponse, err := json.Marshal(jsonInput)
 
 	if err != nil {
-		log.Event(ctx, "failed to marshal the error", log.Error(err), log.ERROR)
-		http.Error(w, "failed to marshal the error", http.StatusInternalServerError)
+		errorMessage := "failed to marshal the error"
+		handleUnexpectedError(ctx, w, err, errorMessage, "", "")
 		return
 	}
+
 	_, err = w.Write(jsonResponse)
 	if err != nil {
-		log.Event(ctx, "writing response failed", log.Error(err), log.ERROR)
-		http.Error(w, "failed to write http response", http.StatusInternalServerError)
+		errorMessage := "writing response failed"
+		handleUnexpectedError(ctx, w, err, errorMessage, "", "")
+
 		return
-
 	}
-
 	return
 
 }

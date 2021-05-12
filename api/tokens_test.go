@@ -2,10 +2,13 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -181,10 +184,33 @@ func TestCognitoRequestHeaderBuild(t *testing.T) {
 		So(w.Result().Header["Authorization"], ShouldResemble, []string{"Bearer " + accessToken})
 		So(w.Result().Header["Id"], ShouldResemble, []string{idToken})
 		So(w.Result().Header["Refresh"], ShouldResemble, []string{Refresh})
+
+		var obj map[string]interface{}
+		_ = json.Unmarshal([]byte(w.Body.String()), &obj)
+
+		//there should be one entry in body
+		So(len(obj), ShouldEqual, 1)
+
+		type kv struct {
+			Key   string
+			Value interface{}
+		}
+
+		var ss []kv
+		for k, v := range obj {
+			ss = append(ss, kv{k, v})
+		}
+		str := fmt.Sprintf("%v", ss[0].Value)
+
+		So(ss[0].Key, ShouldResemble, "expirationTime")
+		So(str[:19], ShouldResemble, time.Now().UTC().Add(time.Second * 123).String()[:19])
+
 	})
 }
 
 func TestBuildJson(t *testing.T) {
+	w := httptest.NewRecorder()
+
 	Convey("build json", t, func() {
 		w := httptest.NewRecorder()
 		ctx := context.Background()
@@ -196,13 +222,16 @@ func TestBuildJson(t *testing.T) {
 	})
 
 	Convey("build json err", t, func() {
-		w := httptest.NewRecorder()
+
 		ctx := context.Background()
 
 		testBody := map[string]interface{}{
 			"foo": make(chan int),
 		}
 		buildjson(testBody, w, ctx)
-		So(w.Body.String(), ShouldResemble, "failed to marshal the error\n")
+		So(w.Body.String(), ShouldResemble, "{\"errors\":[{\"error\":\"json: unsupported type: chan int\",\"message\":\"failed to marshal the error\",\"source\":{\"field\":\"\",\"param\":\"\"}}]}")
+		So(w.Result().StatusCode, ShouldEqual, 500)
+		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
 	})
+
 }
