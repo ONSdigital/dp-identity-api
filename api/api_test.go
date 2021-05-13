@@ -15,10 +15,11 @@ func TestSetup(t *testing.T) {
 	Convey("Given an API instance", t, func() {
 		r := mux.NewRouter()
 		ctx := context.Background()
-		api := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{})
+		api := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, "us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd")
 
 		Convey("When created the following route(s) should have been added", func() {
 			So(hasRoute(api.Router, "/hello", "GET"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/tokens", "POST"), ShouldBeTrue)
 		})
 
 		Convey("Ensure cognito client has been added to api", func() {

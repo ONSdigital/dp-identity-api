@@ -4,15 +4,12 @@ import (
 	"context"
 
 	"github.com/ONSdigital/dp-identity-api/api"
+	cognitoClient "github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/ONSdigital/dp-identity-api/config"
 	health "github.com/ONSdigital/dp-identity-api/service/healthcheck"
 	"github.com/ONSdigital/log.go/log"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-
-	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
 // Service contains all the configs, server and clients to run the dp-identity-api API
@@ -31,17 +28,15 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	log.Event(ctx, "running service", log.INFO)
 
 	log.Event(ctx, "using service configuration", log.Data{"config": cfg}, log.INFO)
-	
+
 	r := mux.NewRouter()
 
 	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
-	
-	cognitoclient := cognito.New(session.Must(session.NewSessionWithOptions(session.Options{
-        SharedConfigState: session.SharedConfigEnable,
-    })), &aws.Config{Region: &cfg.AWSRegion})
 
-	a := api.Setup(ctx, r, cognitoclient)
-	
+	cognitoclient := serviceList.GetCognitoClient(cfg.AWSRegion)
+
+	a := api.Setup(ctx, r, cognitoclient, cfg.AWSCognitoUserPoolID, cfg.AWSClientId, cfg.AWSClientSecret)
+
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
 
 	if err != nil {
@@ -119,7 +114,7 @@ func (svc *Service) Close(ctx context.Context) error {
 	return nil
 }
 
-func registerCheckers(ctx context.Context, hc HealthChecker, client *cognito.CognitoIdentityProvider, userPoolID *string) (err error) {
+func registerCheckers(ctx context.Context, hc HealthChecker, client cognitoClient.Client, userPoolID *string) (err error) {
 	hasErrors := false
 
 	if err := hc.AddCheck("cognito healthchecker", health.CognitoHealthCheck(client, userPoolID)); err != nil {

@@ -1,6 +1,10 @@
 package service
 
 import (
+	cognitoclient "github.com/ONSdigital/dp-identity-api/cognito"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"net/http"
 
 	"github.com/ONSdigital/dp-identity-api/config"
@@ -42,6 +46,12 @@ func (e *ExternalServiceList) GetHealthCheck(cfg *config.Config, buildTime, gitC
 	return hc, nil
 }
 
+// GetCognitoClient creates a cognito client
+func (e *ExternalServiceList) GetCognitoClient(region string) cognitoclient.Client {
+	client := e.Init.DoGetCognitoClient(region)
+	return client
+}
+
 // DoGetHTTPServer creates an HTTP Server with the provided bind address and router
 func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer {
 	s := dphttp.NewServer(bindAddr, router)
@@ -57,4 +67,12 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 	}
 	hc := healthcheck.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
 	return &hc, nil
+}
+
+// DoGetCognitoClient creates a CognitoClient with the provided region
+func (e *Init) DoGetCognitoClient(AWSRegion string) cognitoclient.Client {
+	client := cognito.New(session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	})), &aws.Config{Region: &AWSRegion})
+	return client
 }

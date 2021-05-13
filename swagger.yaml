@@ -27,6 +27,77 @@ paths:
             $ref: "#/definitions/HelloResponse"
         500:
           $ref: '#/responses/InternalError'
+  /tokens:
+    post:
+      tags:
+        - token
+      summary: "Creates tokens for authorisation, ID and refresh for authenticated users"
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: user
+          description: "The email and password for a user"
+          schema:
+            type: object
+            required:
+              - user
+            properties:
+              email:
+                type: string
+              password:
+                type: string
+      responses:
+        201:
+          description: "Created"
+          headers:
+            Authorization:
+              type: string
+              description: "Auth token"
+            ID:
+              type: string
+              description: "ID token"
+            Refresh:
+              type: string
+              description: "Refresh token"
+        400:
+          description: "Invalid request. Empty or invalid email or empty password."
+          schema:
+            $ref: '#/definitions/TokensErrorList'
+        401:
+          description: "Email or password are not authenticated"
+          schema:
+            $ref: '#/definitions/TokensErrorList'
+        403:
+          description: "Forbidden. Too many login attempts"
+          schema:
+            $ref: '#/definitions/TokensErrorList'
+
+        500:
+          description: "Unexpected internal error"
+          schema:
+            $ref: '#/definitions/TokensErrorList'
+    delete:
+      tags:
+        - token
+      summary: "Signs out a user, invalidating their access tokens"
+      consumes:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: "The users access token as bearer token"
+      responses:
+        204:
+          description: "No Content - Successful sign out"
+        400:
+          description: "Invalid request. Missing, malformed or invalid access token provided"
+          schema:
+            $ref: '#/definitions/TokensErrorResponse'
+        500:
+          description: "Unexpected internal error"
+          schema:
+            $ref: '#/definitions/TokensErrorResponse'
 
 responses:
   InternalError:
@@ -40,3 +111,36 @@ definitions:
         type: string
         description: "Message returned by hello world endpoint"
         example: "Hello, world!"
+
+  TokensErrorList:
+    description: "A list of errors"
+    type: object
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/TokensErrorResponse'
+
+  TokensErrorResponse:
+    description: "an individual error"
+    type: object
+    properties:
+      error:
+        type: string
+        description: "returned error description"
+      message:
+        type: string
+        description: "returned message"
+      source:
+        $ref:  '#/definitions/TokensErrorSource'
+
+  TokensErrorSource:
+    description : "returned field and parameter"
+    type: object
+    properties:
+      field:
+        type: string
+        description: "returned field name on which error has occurred"
+      param:
+        type: string
+        description: "returned parameter on which an error has occurred"
