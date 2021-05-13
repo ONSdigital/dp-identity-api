@@ -19,9 +19,15 @@ const ValidUserNameErrorParam        = "error validating username"
 const ValidEmailErrorField           = "validating email"
 const ValidEmailErrorParam           = "error validating email"
 
+const DuplicateEmailFound            = "duplicate email address found"
+
 const NewUserModelErrorMessage       = "Failed to create new user model"
 const NewUserModelErrorField         = "create new user model"
 const NewUserModelErrorParam         = "error creating new user model"
+
+const ListUsersErrorMessage          = "Error in checking duplicate email address"
+const ListUsersErrorField            = "duplicate email address check"
+const ListUsersErrorParam            = "error checking duplicate email address"
 
 const AdminCreateUserErrorMessage    = "Failed to create new user in user pool"
 const AdminCreateUserErrorField      = "create new user pool user"

@@ -12,3 +12,6 @@ type CreateUserInput struct {
 type CreateUserOutput struct {
 	UserOutput *cognitoidentityprovider.AdminCreateUserOutput
 }
+type ListUsersInput struct {
+	ListUsersInput *cognitoidentityprovider.ListUsersInput
+}

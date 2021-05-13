@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -15,6 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/sethvargo/go-password/password"
 )
+
+var errDuplicateEmail = errors.New("duplicate email")
 
 //CreateUserHandler creates a new user and returns a http handler interface
 func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
@@ -58,6 +61,19 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 		if !validation.IsEmailValid(email) {
 			log.Event(ctx, content.ValidEmailErrorField, log.ERROR)
 			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidEmail, apierrors.InvalidErrorMessage, content.ValidEmailErrorField, content.ValidEmailErrorParam))
+		}
+
+		// duplicate email check
+		emailCheckInput, _ := ListUsersModel(ctx, "email = \""+email+"\"", "email", int64(1), &api.UserPoolId) 
+		emailCheckResp, err := api.CognitoClient.ListUsers(emailCheckInput)
+		if err != nil {
+			log.Event(ctx, content.ListUsersErrorMessage, log.ERROR)
+			apierrors.HandleUnexpectedError(ctx, w, err, content.ListUsersErrorMessage, content.ListUsersErrorField, content.ListUsersErrorParam)
+			return
+		}
+		if len(emailCheckResp.Users) > 0 {
+			log.Event(ctx, content.ListUsersErrorMessage, log.ERROR)
+			errorList = append(errorList, apierrors.IndividualErrorBuilder(errDuplicateEmail, content.DuplicateEmailFound, content.ListUsersErrorField, content.ListUsersErrorParam))
 		}
 
 		// report validation errors in response
@@ -106,7 +122,7 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 	}
 }
 
-//CreateNewUserModel creates and returns AdminCreateUserInput
+//CreateNewUserModel creates and returns *AdminCreateUserInput
 func CreateNewUserModel(ctx context.Context, username string, tempPass string, emailId string, userPoolId string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
 	var (
 		deliveryMethod, emailAttrName string = "EMAIL", "email"
@@ -129,4 +145,20 @@ func CreateNewUserModel(ctx context.Context, username string, tempPass string, e
 		},
 	}
 	return user.UserInput, nil
+}
+
+//ListUsersModel creates and returns *ListUsersInput
+func ListUsersModel(ctx context.Context, filterString string, requiredAttribute string, limit int64, userPoolId *string) (*cognitoidentityprovider.ListUsersInput, error) {
+	user := &models.ListUsersInput{
+		ListUsersInput: &cognitoidentityprovider.ListUsersInput{
+			AttributesToGet: []*string{
+				&requiredAttribute,
+			},
+			Filter: &filterString,
+			Limit: &limit,
+			UserPoolId: userPoolId,
+		},
+	}
+
+	return user.ListUsersInput, nil
 }
