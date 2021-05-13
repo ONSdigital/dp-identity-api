@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -109,11 +108,6 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 
 //CreateNewUserModel creates and returns AdminCreateUserInput
 func CreateNewUserModel(ctx context.Context, username string, tempPass string, emailId string, userPoolId string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
-	// Return an error if empty id was passed.
-	if userPoolId == "" {
-		return nil, errors.New(content.UserPoolIdNotFoundMessage)
-	}
-
 	var (
 		deliveryMethod, emailAttrName string = "EMAIL", "email"
 	)

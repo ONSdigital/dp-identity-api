@@ -75,7 +75,7 @@ func TestCreateUserHandler(t *testing.T) {
 
 		for _, tt := range adminCreateUsersTests {
 			m.AdminCreateUserFunc = tt.createUsersFunction
-			api := Setup(ctx, routeMux, m, poolId, clientId, clientSecret)
+			api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret)
 
 			postBody := map[string]interface{}{"username": name, "email": email}
 	
@@ -96,7 +96,7 @@ func TestCreateUserHandler(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		api := Setup(ctx, routeMux, m, poolId, clientId, clientSecret)
+		api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret)
 
 		api.Router.ServeHTTP(w, r)
 
@@ -148,7 +148,7 @@ func TestCreateUserHandler(t *testing.T) {
 	
 			w := httptest.NewRecorder()
 	
-			api := Setup(ctx, routeMux, m, poolId, clientId, clientSecret)
+			api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret)
 
 			api.Router.ServeHTTP(w, r)
 	

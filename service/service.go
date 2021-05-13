@@ -35,7 +35,11 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	cognitoclient := serviceList.GetCognitoClient(cfg.AWSRegion)
 
-	a := api.Setup(ctx, r, cognitoclient, cfg.AWSCognitoUserPoolID, cfg.AWSClientId, cfg.AWSClientSecret)
+	a, err := api.Setup(ctx, r, cognitoclient, cfg.AWSCognitoUserPoolID, cfg.AWSClientId, cfg.AWSClientSecret)
+	if err != nil {
+		log.Event(ctx, "error returned from api setup", log.FATAL, log.Error(err))
+		return nil, err
+	}
 
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
 

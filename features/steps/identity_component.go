@@ -2,9 +2,10 @@ package steps
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/ONSdigital/dp-identity-api/cognito"
 	cognitoMock "github.com/ONSdigital/dp-identity-api/cognito/mock"
-	"net/http"
 
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/service"
@@ -41,6 +42,9 @@ func NewIdentityComponent() (*IdentityComponent, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// set dummy user pool id
+	c.Config.AWSCognitoUserPoolID = "eu-west-18_73289nds8w932"
 
 	initMock := &mock.InitialiserMock{
 		DoGetHealthCheckFunc: c.DoGetHealthcheckOk,

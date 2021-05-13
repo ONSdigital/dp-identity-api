@@ -3,12 +3,13 @@ package api
 import (
 	"context"
 	"errors"
-	"github.com/ONSdigital/dp-identity-api/cognito/mock"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/gorilla/mux"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/ONSdigital/dp-identity-api/cognito/mock"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/gorilla/mux"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
 	errModels "github.com/ONSdigital/dp-identity-api/models"
@@ -155,7 +156,7 @@ func TestSignOutHandler(t *testing.T) {
 		return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
 	}
 
-	api := Setup(ctx, r, m, poolId, clientId, clientSecret)
+	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret)
 
 	Convey("Global Sign Out returns 204: successfully signed out user", t, func() {
 		r := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
