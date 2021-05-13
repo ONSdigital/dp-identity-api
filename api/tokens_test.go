@@ -4,20 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-<<<<<<< HEAD
 	"fmt"
-=======
-	"github.com/ONSdigital/dp-identity-api/cognito/mock"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/gorilla/mux"
->>>>>>> develop
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/gorilla/mux"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -145,7 +141,6 @@ func TestHandleUnexpectedError(t *testing.T) {
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
 	})
 }
-<<<<<<< HEAD
 func TestCognitoResponseBuild(t *testing.T) {
 	Convey("build Cognito Request, an authParams and Config is processed and Cognito Request is built", t, func() {
 
@@ -242,14 +237,13 @@ func TestBuildJson(t *testing.T) {
 		So(w.Result().StatusCode, ShouldEqual, 500)
 		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
 	})
-
-=======
+}
 
 func TestSignOutHandler(t *testing.T) {
 	var (
-		r                                     = mux.NewRouter()
-		ctx                                   = context.Background()
-		poolId, clientId, clientSecret string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd"
+		r                                                     = mux.NewRouter()
+		ctx                                                   = context.Background()
+		poolId, clientId, clientSecret, clientAuthFlow string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "authflow"
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
@@ -259,7 +253,7 @@ func TestSignOutHandler(t *testing.T) {
 		return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
 	}
 
-	api := Setup(ctx, r, m, poolId, clientId, clientSecret)
+	api := Setup(ctx, r, m, poolId, clientId, clientSecret, clientAuthFlow)
 
 	Convey("Global Sign Out returns 204: successfully signed out user", t, func() {
 		r := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
@@ -329,5 +323,4 @@ func TestSignOutHandler(t *testing.T) {
 
 		So(w.Code, ShouldEqual, http.StatusBadRequest)
 	})
->>>>>>> develop
 }
