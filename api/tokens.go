@@ -61,6 +61,15 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 			result, authErr := api.CognitoClient.InitiateAuth(input)
 
 			if authErr != nil {
+
+				isInternalError := apierrors.IdentifyInternalError(authErr)
+
+				if isInternalError {
+					errorMessage := "api endpoint POST login returned an error and failed to login to cognito"
+					handleUnexpectedError(ctx, w, authErr, errorMessage, field, param)
+					return
+				}
+
 				var errorList []apierrors.IndividualError
 				switch authErr.Error() {
 				case "NotAuthorizedException: Incorrect username or password.":
@@ -83,18 +92,12 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 					}
 				default:
 					{
-						if strings.Contains(authErr.Error(), "InternalErrorException") {
-							errorMessage := "api endpoint POST login returned an error and failed to login to cognito"
-							handleUnexpectedError(ctx, w, authErr, errorMessage, field, param)
-							return
-						} else {
-							loginMessage := "something went wrong, and api endpoint POST login returned an error and failed to login to cognito. Please try again or contact an administrator."
-							loginError := apierrors.IndividualErrorBuilder(authErr, loginMessage, field, param)
-							errorList = append(errorList, loginError)
-							errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-							writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
-							return
-						}
+						loginMessage := "something went wrong, and api endpoint POST login returned an error and failed to login to cognito. Please try again or contact an administrator."
+						loginError := apierrors.IndividualErrorBuilder(authErr, loginMessage, field, param)
+						errorList = append(errorList, loginError)
+						errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+						writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+						return
 					}
 				}
 			}

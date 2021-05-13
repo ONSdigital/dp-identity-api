@@ -1,6 +1,9 @@
 package apierrors
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 var InvalidTokenError = errors.New("Invalid token")
 var MissingTokenMessage = "No Authorization token was provided"
@@ -41,4 +44,26 @@ func ErrorResponseBodyBuilder(listOfErrors []IndividualError) (errorResponseBody
 	}
 
 	return errorResponseBody
+}
+
+func IdentifyInternalError(authErr error) (isInternalError bool) {
+	possibleInternalErrors := []string{
+		"InternalErrorException",
+		"SerializationError",
+		"ReadError",
+		"ResponseTimeout",
+		"InvalidPresignExpireError",
+		"RequestCanceled",
+		"RequestError",
+	}
+
+	for _, internalError := range possibleInternalErrors {
+		if strings.Contains(authErr.Error(), internalError) {
+			return true
+		}
+	}
+
+	//strings.Contains(authErr.Error(), "InternalErrorException") internalError == authErr.Error()
+	return false
+
 }
