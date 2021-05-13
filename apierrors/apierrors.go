@@ -10,6 +10,10 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
+var InvalidTokenError = errors.New("Invalid token")
+var MissingTokenMessage = "No Authorization token was provided"
+var MalformedTokenMessage = "The provided token does not meet the required format"
+
 var InvalidUserNameMessage = "Unable to validate the username in the request"
 var ErrInvalidUserName = errors.New("invalid username")
 
@@ -71,5 +75,4 @@ func HandleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error
 
 	log.Event(ctx, message, log.ERROR, log.Error(err))
 	WriteErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
-	return
 }

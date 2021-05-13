@@ -8,4 +8,5 @@ import (
 type Client interface {
 	DescribeUserPool(*cognito.DescribeUserPoolInput) (*cognito.DescribeUserPoolOutput, error)
 	AdminCreateUser(input *cognito.AdminCreateUserInput) (*cognito.AdminCreateUserOutput, error)
+	GlobalSignOut(input *cognito.GlobalSignOutInput) (*cognito.GlobalSignOutOutput, error)
 }

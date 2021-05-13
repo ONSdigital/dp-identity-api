@@ -24,7 +24,7 @@ func TestCreateUserHandler(t *testing.T) {
 	var (
 		routeMux                          = mux.NewRouter()
 		ctx                               = context.Background()
-		name, status, email, poolId, userException string = "Foo_Bar", "UNCONFIRMED", "foo_bar123@foobar.io.me", "us-west-11_bxushuds", "User account already exists"
+		name, status, email, poolId, userException, clientId, clientSecret string = "Foo_Bar", "UNCONFIRMED", "foo_bar123@foobar.io.me", "us-west-11_bxushuds", "User account already exists", "abc123", "bsjahsaj9djsiq"
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
@@ -64,7 +64,7 @@ func TestCreateUserHandler(t *testing.T) {
 
 		for _, tt := range adminCreateUsersTests {
 			m.AdminCreateUserFunc = tt.createUsersFunction
-			api := Setup(ctx, routeMux, m, poolId)
+			api := Setup(ctx, routeMux, m, poolId, clientId, clientSecret)
 
 			postBody := map[string]interface{}{"username": name, "email": email}
 	
@@ -85,7 +85,7 @@ func TestCreateUserHandler(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		api := Setup(ctx, routeMux, m, poolId)
+		api := Setup(ctx, routeMux, m, poolId, clientId, clientSecret)
 
 		api.Router.ServeHTTP(w, r)
 
@@ -137,7 +137,7 @@ func TestCreateUserHandler(t *testing.T) {
 	
 			w := httptest.NewRecorder()
 	
-			api := Setup(ctx, routeMux, m, poolId)
+			api := Setup(ctx, routeMux, m, poolId, clientId, clientSecret)
 
 			api.Router.ServeHTTP(w, r)
 	
