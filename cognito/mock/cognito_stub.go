@@ -27,15 +27,20 @@ func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidenti
 	status := "FORCE_CHANGE_PASSWORD"
 	name := "smileons"
 
-	user := &models.CreateUserOutput{
-		UserOutput: &cognitoidentityprovider.AdminCreateUserOutput{
-			User: &cognitoidentityprovider.UserType{
-				Username:   &name,
-				UserStatus: &status,
+	if (*input.Username == "smileons") { // 201 - created successfully
+		user := &models.CreateUserOutput{
+			UserOutput: &cognitoidentityprovider.AdminCreateUserOutput{
+				User: &cognitoidentityprovider.UserType{
+					Username:   &name,
+					UserStatus: &status,
+				},
 			},
-		},
+		}
+		return user.UserOutput, nil
+	} else if (*input.Username == "bob") { // 400 - already exists
+		return nil, errors.New("UsernameExistsException: User account already exists")
 	}
-	return user.UserOutput, nil
+	return nil, errors.New("InternalErrorException") // 500 - internal exception error
 }
 
 func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {

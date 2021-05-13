@@ -19,7 +19,9 @@ An API used to manage the authorisation of users accessing data publishing servi
 | HEALTHCHECK_INTERVAL         | 30s       | Time between self-healthchecks (`time.Duration` format)
 | HEALTHCHECK_CRITICAL_TIMEOUT | 90s       | Time to wait until an unhealthy dependent propagates its state to make this app unhealthy (`time.Duration` format)
 | AWS_REGION                   | eu-west-1 | The default AWS region for the identity api service
-| AWS_COGNTIO_USER_POOL_ID     | -         | The ID of the user pool to be used
+| AWS_COGNITO_USER_POOL_ID     | -         | The ID of the user pool to be used
+| AWS_CLIENT_ID                | -         | The ID of the cognito client
+| AWS_CLIENT_SECRET            | -         | The secret of cognito client
 
 ### Contributing
 

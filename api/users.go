@@ -6,7 +6,9 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
+	"github.com/ONSdigital/dp-identity-api/api/content"
 	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/validation"
@@ -25,38 +27,38 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 
 		tempPassword, err := password.Generate(14, 1, 1, false, false)
 		if err != nil {
-			log.Event(ctx, passwordErrorMessage, log.ERROR)
-			apierrors.HandleUnexpectedError(ctx, w, err, passwordErrorMessage, passwordErrorField, passwordErrorParam)
+			log.Event(ctx, content.PasswordErrorMessage, log.ERROR)
+			apierrors.HandleUnexpectedError(ctx, w, err, content.PasswordErrorMessage, content.PasswordErrorField, content.PasswordErrorParam)
 			return
 		}
 
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
-			log.Event(ctx, requestErrorMessage, log.ERROR)
-			apierrors.HandleUnexpectedError(ctx, w, err, requestErrorMessage, requestErrorField, requestErrorParam)
+			log.Event(ctx, content.RequestErrorMessage, log.ERROR)
+			apierrors.HandleUnexpectedError(ctx, w, err, content.RequestErrorMessage, content.RequestErrorField, content.RequestErrorParam)
 			return
 		}
 
 		user := models.UserParams{}
 		err = json.Unmarshal(body, &user)
 		if err != nil {
-			log.Event(ctx, unmarshallingErrorMessage, log.ERROR)
-			apierrors.HandleUnexpectedError(ctx, w, err, unmarshallingErrorMessage, unmarshallingErrorField, unmarshallingErrorParam)
+			log.Event(ctx, content.UnmarshallingErrorMessage, log.ERROR)
+			apierrors.HandleUnexpectedError(ctx, w, err, content.UnmarshallingErrorMessage, content.UnmarshallingErrorField, content.UnmarshallingErrorParam)
 			return
 		}
 
 		username := user.UserName
 		// validate username
 		if len(username) == 0  {
-			log.Event(ctx, validUserNameErrorField, log.ERROR)
-			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidUserName, apierrors.InvalidUserNameMessage, validUserNameErrorField, validUserNameErrorParam))
+			log.Event(ctx, content.ValidUserNameErrorField, log.ERROR)
+			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidUserName, apierrors.InvalidUserNameMessage, content.ValidUserNameErrorField, content.ValidUserNameErrorParam))
 		}
 
 		email := user.Email
 		// validate email
 		if !validation.IsEmailValid(email) {
-			log.Event(ctx, validEmailErrorField, log.ERROR)
-			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidEmail, apierrors.InvalidErrorMessage, validEmailErrorField, validEmailErrorParam))
+			log.Event(ctx, content.ValidEmailErrorField, log.ERROR)
+			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidEmail, apierrors.InvalidErrorMessage, content.ValidEmailErrorField, content.ValidEmailErrorParam))
 		}
 
 		// report validation errors in response
@@ -67,32 +69,39 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 
 		newUser, err := CreateNewUserModel(ctx, username, tempPassword, email, api.UserPoolId)
 		if err != nil {
-			log.Event(ctx, newUserModelErrorMessage, log.ERROR)
-			apierrors.HandleUnexpectedError(ctx, w, err, newUserModelErrorMessage, newUserModelErrorField, newUserModelErrorParam)
+			log.Event(ctx, content.NewUserModelErrorMessage, log.ERROR)
+			apierrors.HandleUnexpectedError(ctx, w, err, content.NewUserModelErrorMessage, content.NewUserModelErrorField, content.NewUserModelErrorParam)
 			return
 		}
 
-		//Create user in cognito
+		//Create user in cognito - and handle any errors returned
 		resultUser, err := api.CognitoClient.AdminCreateUser(newUser)
 		if err != nil {
-			log.Event(ctx, adminCreateUserErrorMessage, log.ERROR)
-			apierrors.HandleUnexpectedError(ctx, w, err, adminCreateUserErrorMessage, adminCreateUserErrorField, adminCreateUserErrorParam)
-			return
+			if strings.Contains(err.Error(), content.InternalErrorException) {
+				log.Event(ctx, content.AdminCreateUserErrorMessage, log.ERROR)
+				apierrors.HandleUnexpectedError(ctx, w, err, content.AdminCreateUserErrorMessage, content.AdminCreateUserErrorField, content.AdminCreateUserErrorParam)
+				return
+			} else {
+				log.Event(ctx, err.Error(), log.ERROR)
+				errorList = append(errorList, apierrors.IndividualErrorBuilder(err, err.Error(), content.AdminCreateUserErrorField, content.AdminCreateUserErrorParam))
+				apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, apierrors.ErrorResponseBodyBuilder(errorList))
+				return
+			}
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		jsonResponse, err := json.Marshal(resultUser)
 		if err != nil {
-			log.Event(ctx, marshallingNewUserErrorMessage, log.ERROR)
-			apierrors.HandleUnexpectedError(ctx, w, err, marshallingNewUserErrorMessage, marshallingNewUserErrorField, marshallingNewUserErrorParam)
+			log.Event(ctx, content.MarshallingNewUserErrorMessage, log.ERROR)
+			apierrors.HandleUnexpectedError(ctx, w, err, content.MarshallingNewUserErrorMessage, content.MarshallingNewUserErrorField, content.MarshallingNewUserErrorParam)
 			return
 		}
 
 		w.WriteHeader(http.StatusCreated)
 		_, err = w.Write(jsonResponse)
 		if err != nil {
-			log.Event(ctx, httpResponseErrorMessage, log.ERROR)
-			apierrors.HandleUnexpectedError(ctx, w, err, httpResponseErrorMessage, httpResponseErrorField, httpResponseErrorParam)
+			log.Event(ctx, content.HttpResponseErrorMessage, log.ERROR)
+			apierrors.HandleUnexpectedError(ctx, w, err, content.HttpResponseErrorMessage, content.HttpResponseErrorField, content.HttpResponseErrorParam)
 			return
 		}
 	}
@@ -102,7 +111,7 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 func CreateNewUserModel(ctx context.Context, username string, tempPass string, emailId string, userPoolId string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
 	// Return an error if empty id was passed.
 	if userPoolId == "" {
-		return nil, errors.New(userPoolIdNotFoundMessage)
+		return nil, errors.New(content.UserPoolIdNotFoundMessage)
 	}
 
 	var (
@@ -127,40 +136,3 @@ func CreateNewUserModel(ctx context.Context, username string, tempPass string, e
 	}
 	return user.UserInput, nil
 }
-
-// message, field and param error constants
-const passwordErrorMessage           = "failed to generate password"
-const passwordErrorField             = "temp password"
-const passwordErrorParam             = "error creating temp password"
-
-const requestErrorMessage            = "api endpoint POST user returned an error reading request body"
-const requestErrorField              = "request body"
-const requestErrorParam              = "error in reading request body"
-
-const unmarshallingErrorMessage      = "api endpoint POST user returned an error unmarshalling request body"
-const unmarshallingErrorField        = "unmarshalling"
-const unmarshallingErrorParam        = "error unmarshalling request body"
-
-const validUserNameErrorField        = "validating username"
-const validUserNameErrorParam        = "error validating username"
-
-const validEmailErrorField           = "validating email"
-const validEmailErrorParam           = "error validating email"
-
-const newUserModelErrorMessage       = "Failed to create new user model"
-const newUserModelErrorField         = "create new user model"
-const newUserModelErrorParam         = "error creating new user model"
-
-const adminCreateUserErrorMessage    = "Failed to create new user in user pool"
-const adminCreateUserErrorField      = "create new user pool user"
-const adminCreateUserErrorParam      = "error creating new user pool user"
-
-const marshallingNewUserErrorMessage = "Failed to marshall json response"
-const marshallingNewUserErrorField   = "marshalling"
-const marshallingNewUserErrorParam   = "error marshalling new user response"
-
-const httpResponseErrorMessage       = "Failed to write http response"
-const httpResponseErrorField         = "response"
-const httpResponseErrorParam         = "error writing response"
-
-const userPoolIdNotFoundMessage      = "userPoolId must not be an empty string"

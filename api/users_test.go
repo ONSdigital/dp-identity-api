@@ -24,7 +24,7 @@ func TestCreateUserHandler(t *testing.T) {
 	var (
 		routeMux                          = mux.NewRouter()
 		ctx                               = context.Background()
-		name, status, email, poolId, userException, clientId, clientSecret string = "Foo_Bar", "UNCONFIRMED", "foo_bar123@foobar.io.me", "us-west-11_bxushuds", "User account already exists", "abc123", "bsjahsaj9djsiq"
+		name, status, email, poolId, userException, clientId, clientSecret string = "Foo_Bar", "UNCONFIRMED", "foo_bar123@foobar.io.me", "us-west-11_bxushuds", "UsernameExistsException: User account already exists", "abc123", "bsjahsaj9djsiq"
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
@@ -50,13 +50,24 @@ func TestCreateUserHandler(t *testing.T) {
 				http.StatusCreated,
 			},
 			{
-				// 400 response (converted to 500 response by handler) - user already exists
+				// 400 response - user already exists
 				func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error){
 					var userExistsException cognitoidentityprovider.UsernameExistsException
 					userExistsException.Message_ = &userException
 					userExistsException.RespMetadata.StatusCode = http.StatusBadRequest
 		
 					return nil, &userExistsException
+				},
+				http.StatusBadRequest,
+			},
+			{
+				// 500 response - internal error exception
+				func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error){
+					var internaleErrorException cognitoidentityprovider.InternalErrorException
+					internaleErrorException.Message_ = &userException
+					internaleErrorException.RespMetadata.StatusCode = http.StatusInternalServerError
+		
+					return nil, &internaleErrorException
 				},
 				http.StatusInternalServerError,
 			},

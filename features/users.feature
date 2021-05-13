@@ -103,7 +103,7 @@ Feature: Users
         }
         """
 
- Scenario: POST /users and checking the response status 500
+    Scenario: POST /users and checking the response status 500
         When I POST "/users"
         """
        
@@ -121,5 +121,53 @@ Feature: Users
                     }
                 }
             ]  
+        }
+        """
+
+    Scenario: POST /users with existing user and checking the response status 400
+        When I POST "/users"
+        """
+        {
+            "email": "email@ons.gov.uk",
+            "username":"bob"
+        }
+        """
+        Then I should receive the following JSON response with status "400":
+        """
+        {
+            "errors": [
+                {
+                    "error": "UsernameExistsException: User account already exists",
+                    "message": "UsernameExistsException: User account already exists",
+                    "source": {
+                        "field": "create new user pool user",
+                        "param": "error creating new user pool user"
+                    }
+                }
+            ]
+        }
+        """
+
+    Scenario: POST /users unexpected server error and checking the response status 400
+        When I POST "/users"
+        """
+        {
+            "email": "email@ons.gov.uk",
+            "username":"mike"
+        }
+        """
+        Then I should receive the following JSON response with status "500":
+        """
+        {
+            "errors": [
+                {
+                    "error": "InternalErrorException",
+                    "message": "Failed to create new user in user pool",
+                    "source": {
+                        "field": "create new user pool user",
+                        "param": "error creating new user pool user"
+                    }
+                }
+            ]
         }
         """
