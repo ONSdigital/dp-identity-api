@@ -2,9 +2,6 @@ package api
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -13,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/utilities"
 	"github.com/ONSdigital/dp-identity-api/validation"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
@@ -220,16 +218,9 @@ func handleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error
 	return
 }
 
-func computeSecretHash(clientSecret string, username string, clientId string) string {
-	mac := hmac.New(sha256.New, []byte(clientSecret))
-	mac.Write([]byte(username + clientId))
-
-	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
-}
-
 func buildCognitoRequest(authParams AuthParams, clientId string, clientSecret string, clientAuthFlow string) (authInput *cognitoidentityprovider.InitiateAuthInput) {
 
-	secretHash := computeSecretHash(clientSecret, authParams.Email, clientId)
+	secretHash := utilities.ComputeSecretHash(clientSecret, authParams.Email, clientId)
 
 	authParameters := map[string]*string{
 		"USERNAME":    &authParams.Email,
@@ -266,7 +257,11 @@ func buildSucessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, 
 		buildjson(postBody, w, ctx)
 
 		return
-
+	} else {
+		err := errors.New("unexpected return from cognito")
+		errorMessage := "unexpected response from cognito, there was no authentication result field"
+		handleUnexpectedError(ctx, w, err, errorMessage, "", "")
+		return
 	}
 }
 

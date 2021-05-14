@@ -62,8 +62,5 @@ func IdentifyInternalError(authErr error) (isInternalError bool) {
 			return true
 		}
 	}
-
-	//strings.Contains(authErr.Error(), "InternalErrorException") internalError == authErr.Error()
 	return false
-
 }

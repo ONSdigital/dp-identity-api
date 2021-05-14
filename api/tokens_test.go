@@ -141,7 +141,7 @@ func TestHandleUnexpectedError(t *testing.T) {
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
 	})
 }
-func TestCognitoResponseBuild(t *testing.T) {
+func TestCognitoRequestBuild(t *testing.T) {
 	Convey("build Cognito Request, an authParams and Config is processed and Cognito Request is built", t, func() {
 
 		authParams := AuthParams{
@@ -163,8 +163,8 @@ func TestCognitoResponseBuild(t *testing.T) {
 	})
 }
 
-func TestCognitoRequestHeaderBuild(t *testing.T) {
-	Convey("build Cognito Request, an authParams and Config is processed and Cognito Request is built", t, func() {
+func TestCognitoResponseHeaderBuild(t *testing.T) {
+	Convey("build 201 response using an InitiateAuthOutput from Cognito", t, func() {
 		w := httptest.NewRecorder()
 		ctx := context.Background()
 		accessToken := "accessToken"
@@ -209,6 +209,16 @@ func TestCognitoRequestHeaderBuild(t *testing.T) {
 		So(ss[0].Key, ShouldResemble, "expirationTime")
 		So(str[:19], ShouldResemble, time.Now().UTC().Add(time.Second * 123).String()[:19])
 
+	})
+
+	Convey("build 500 response if the InitiateAuthOutput has an unexpected format", t, func() {
+		w := httptest.NewRecorder()
+		ctx := context.Background()
+
+		initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{}
+		buildSucessfulResponse(initiateAuthOutput, w, ctx)
+
+		So(w.Result().StatusCode, ShouldEqual, 500)
 	})
 }
 
