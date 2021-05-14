@@ -2,6 +2,7 @@ package mock
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -53,4 +54,28 @@ func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoi
 		}
 	}
 	return nil, errors.New("NotAuthorizedException: Access Token has been revoked")
+}
+
+func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+	name := "bob"
+	if strings.Contains(*input.Filter, "email@ext.ons.gov.uk") {
+		users := &models.ListUsersOutput{
+			ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
+				Users: []*cognitoidentityprovider.UserType{
+					{
+					 Username: &name,
+					},
+				},
+			},
+		}
+		return users.ListUsersOutput, nil
+		
+	}
+	// default - email already doesn't exist in user pool
+	users := &models.ListUsersOutput{
+		ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
+			Users: []*cognitoidentityprovider.UserType{},
+		},
+	}
+	return users.ListUsersOutput, nil
 }

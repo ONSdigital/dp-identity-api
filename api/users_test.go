@@ -31,10 +31,20 @@ func TestCreateUserHandler(t *testing.T) {
 
 	Convey("Admin create user - check expected responses", t, func() {
 		adminCreateUsersTests := []struct {
-			createUsersFunction func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error)
-			httpResponse int
+			listUsersFunction   func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
+			createUsersFunction func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error)			
+			httpResponse        int
 		}{
 			{
+				// 200 response - no duplicate emails found
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error){
+					users := &models.ListUsersOutput{
+						ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
+							Users: []*cognitoidentityprovider.UserType{},
+						},
+					}
+					return users.ListUsersOutput, nil
+				},
 				// 201 response - user created
 				func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error){
 					user := &models.CreateUserOutput{
@@ -50,6 +60,15 @@ func TestCreateUserHandler(t *testing.T) {
 				http.StatusCreated,
 			},
 			{
+				// 200 response - no duplicate emails found
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error){
+					users := &models.ListUsersOutput{
+						ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
+							Users: []*cognitoidentityprovider.UserType{},
+						},
+					}
+					return users.ListUsersOutput, nil
+				},
 				// 400 response - user already exists
 				func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error){
 					var userExistsException cognitoidentityprovider.UsernameExistsException
@@ -61,6 +80,32 @@ func TestCreateUserHandler(t *testing.T) {
 				http.StatusBadRequest,
 			},
 			{
+				// 400 response - duplicate email found
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error){
+					users := &models.ListUsersOutput{
+						ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
+							Users: []*cognitoidentityprovider.UserType{
+								{
+								 Username: &name,
+								},
+							},
+						},
+					}
+					return users.ListUsersOutput, nil
+				},
+				nil,
+				http.StatusBadRequest,
+			},
+			{
+				// 200 response - no users found
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error){
+					users := &models.ListUsersOutput{
+						ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
+							Users: []*cognitoidentityprovider.UserType{},
+						},
+					}
+					return users.ListUsersOutput, nil
+				},
 				// 500 response - internal error exception
 				func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error){
 					var internaleErrorException cognitoidentityprovider.InternalErrorException
@@ -75,6 +120,7 @@ func TestCreateUserHandler(t *testing.T) {
 
 		for _, tt := range adminCreateUsersTests {
 			m.AdminCreateUserFunc = tt.createUsersFunction
+			m.ListUsersFunc = tt.listUsersFunction
 			api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret)
 
 			postBody := map[string]interface{}{"username": name, "email": email}

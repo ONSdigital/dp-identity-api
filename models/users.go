@@ -15,3 +15,6 @@ type CreateUserOutput struct {
 type ListUsersInput struct {
 	ListUsersInput *cognitoidentityprovider.ListUsersInput
 }
+type ListUsersOutput struct {
+	ListUsersOutput *cognitoidentityprovider.ListUsersOutput
+}

@@ -170,4 +170,28 @@ Feature: Users
                 }
             ]
         }
+       """
+
+    Scenario: POST /users duplicate email found and checking the response status 400
+        When I POST "/users"
+        """
+        {
+            "email": "email@ext.ons.gov.uk",
+            "username":"mike"
+        }
+        """
+        Then I should receive the following JSON response with status "400":
+        """
+        {
+            "errors": [
+                {
+                    "error": "duplicate email",
+                    "message": "duplicate email address found",
+                    "source": {
+                        "field": "duplicate email address check",
+                        "param": "error checking duplicate email address"
+                    }
+                }
+            ]
+        }
         """
