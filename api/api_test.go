@@ -16,7 +16,7 @@ func TestSetup(t *testing.T) {
 	Convey("Given an API instance", t, func() {
 		r := mux.NewRouter()
 		ctx := context.Background()
-		api, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, "us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd")
+		api, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, "us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow")
 
 		Convey("When created the following route(s) should have been added", func() {
 			So(hasRoute(api.Router, "/hello", "GET"), ShouldBeTrue)
@@ -36,7 +36,7 @@ func TestSetup(t *testing.T) {
 	Convey("Given an API instance with an empty user pool id", t, func() {
 		r := mux.NewRouter()
 		ctx := context.Background()
-		api, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, "", "client-aaa-bbb", "secret-ccc-ddd")
+		api, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, "", "client-aaa-bbb", "secret-ccc-ddd", "authflow")
 
 		Convey("Error should not be nil if user pool id is empty", func() {
 			So(api, ShouldBeNil)

@@ -2,17 +2,19 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/ONSdigital/dp-identity-api/cognito/mock"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/gorilla/mux"
+	"time"
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
-	errModels "github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/cognito/mock"
+	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/gorilla/mux"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -28,7 +30,6 @@ func TestPasswordHasBeenProvided(t *testing.T) {
 		}
 
 		passwordResponse := passwordValidation(body)
-
 		So(passwordResponse, ShouldBeTrue)
 	})
 
@@ -99,9 +100,9 @@ func TestWriteErrorResponse(t *testing.T) {
 
 		errorResponseBodyExample := `{"errors":[{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}},{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}}]}`
 
-		var errorList []errModels.IndividualError
+		var errorList []models.IndividualError
 		errorList = nil
-
+		
 		errInvalidEmail := errors.New("Invalid email")
 		invalidErrorMessage := "Unable to validate the email in the request"
 		field := ""
@@ -141,12 +142,119 @@ func TestHandleUnexpectedError(t *testing.T) {
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
 	})
 }
+func TestCognitoRequestBuild(t *testing.T) {
+	Convey("build Cognito Request, an authParams and Config is processed and Cognito Request is built", t, func() {
+
+		authParams := AuthParams{
+			Email:    "email.email@ons.gov.uk",
+			Password: "password",
+		}
+
+		clientId := "awsclientid"
+		clientSecret := "awsSectret"
+		clientAuthFlow := "authflow"
+
+		response := buildCognitoRequest(authParams, clientId, clientSecret, clientAuthFlow)
+
+		So(*response.AuthParameters["USERNAME"], ShouldEqual, authParams.Email)
+		So(*response.AuthParameters["PASSWORD"], ShouldEqual, authParams.Password)
+		So(*response.AuthParameters["SECRET_HASH"], ShouldNotBeEmpty)
+		So(*response.AuthFlow, ShouldResemble, "authflow")
+		So(*response.ClientId, ShouldResemble, "awsclientid")
+	})
+}
+
+func TestCognitoResponseHeaderBuild(t *testing.T) {
+	Convey("build 201 response using an InitiateAuthOutput from Cognito", t, func() {
+		w := httptest.NewRecorder()
+		ctx := context.Background()
+		accessToken := "accessToken"
+		var expiration int64 = 123
+		idToken := "idToken"
+		Refresh := "refreshToken"
+
+		initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{
+			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
+				AccessToken:  &accessToken,
+				ExpiresIn:    &expiration,
+				IdToken:      &idToken,
+				RefreshToken: &Refresh,
+			},
+		}
+
+		buildSucessfulResponse(initiateAuthOutput, w, ctx)
+
+		So(w.Result().StatusCode, ShouldEqual, 201)
+		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
+		So(w.Result().Header["Authorization"], ShouldResemble, []string{"Bearer " + accessToken})
+		So(w.Result().Header["Id"], ShouldResemble, []string{idToken})
+		So(w.Result().Header["Refresh"], ShouldResemble, []string{Refresh})
+
+		var obj map[string]interface{}
+		_ = json.Unmarshal([]byte(w.Body.String()), &obj)
+
+		//there should be one entry in body
+		So(len(obj), ShouldEqual, 1)
+
+		type kv struct {
+			Key   string
+			Value interface{}
+		}
+
+		var ss []kv
+		for k, v := range obj {
+			ss = append(ss, kv{k, v})
+		}
+		str := fmt.Sprintf("%v", ss[0].Value)
+
+		So(ss[0].Key, ShouldResemble, "expirationTime")
+		So(str[:19], ShouldResemble, time.Now().UTC().Add(time.Second * 123).String()[:19])
+
+	})
+
+	Convey("build 500 response if the InitiateAuthOutput has an unexpected format", t, func() {
+		w := httptest.NewRecorder()
+		ctx := context.Background()
+
+		initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{}
+		buildSucessfulResponse(initiateAuthOutput, w, ctx)
+
+		So(w.Result().StatusCode, ShouldEqual, 500)
+	})
+}
+
+func TestBuildJson(t *testing.T) {
+	w := httptest.NewRecorder()
+
+	Convey("build json", t, func() {
+		w := httptest.NewRecorder()
+		ctx := context.Background()
+
+		testBody := map[string]interface{}{"expirationTime": "123"}
+		buildjson(testBody, w, ctx)
+		So(w.Body.String(), ShouldResemble, "{\"expirationTime\":\"123\"}")
+
+	})
+
+	Convey("build json err", t, func() {
+
+		ctx := context.Background()
+
+		testBody := map[string]interface{}{
+			"foo": make(chan int),
+		}
+		buildjson(testBody, w, ctx)
+		So(w.Body.String(), ShouldResemble, "{\"errors\":[{\"error\":\"json: unsupported type: chan int\",\"message\":\"failed to marshal the error\",\"source\":{\"field\":\"\",\"param\":\"\"}}]}")
+		So(w.Result().StatusCode, ShouldEqual, 500)
+		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
+	})
+}
 
 func TestSignOutHandler(t *testing.T) {
 	var (
-		r                                     = mux.NewRouter()
-		ctx                                   = context.Background()
-		poolId, clientId, clientSecret string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd"
+		r                                                     = mux.NewRouter()
+		ctx                                                   = context.Background()
+		poolId, clientId, clientSecret, clientAuthFlow string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "authflow"
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
@@ -156,7 +264,7 @@ func TestSignOutHandler(t *testing.T) {
 		return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
 	}
 
-	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret)
+	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, clientAuthFlow)
 
 	Convey("Global Sign Out returns 204: successfully signed out user", t, func() {
 		r := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)

@@ -5,23 +5,25 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 
 	errModels "github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/log.go/log"
 )
 
-var InvalidTokenError = errors.New("Invalid token")
+var ErrInvalidToken = errors.New("invalid token")
 var MissingTokenMessage = "No Authorization token was provided"
 var MalformedTokenMessage = "The provided token does not meet the required format"
 
-var InvalidUserNameMessage = "Unable to validate the username in the request"
 var ErrInvalidUserName = errors.New("invalid username")
+var InvalidUserNameMessage = "Unable to validate the username in the request"
 
-var InvalidPasswordMessage = "Unable to validate the password in the request"
 var ErrInvalidPassword = errors.New("invalid password")
+var InvalidPasswordMessage = "Unable to validate the password in the request"
 
-var InvalidErrorMessage = "Unable to validate the email in the request"
 var ErrInvalidEmail = errors.New("invalid email")
+var InvalidErrorMessage = "Unable to validate the email in the request"
+
 
 func IndividualErrorBuilder(err error, message, sourceField, sourceParam string) (individualError errModels.IndividualError) {
 
@@ -75,4 +77,23 @@ func HandleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error
 
 	log.Event(ctx, message, log.ERROR, log.Error(err))
 	WriteErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
+}
+
+func IdentifyInternalError(authErr error) (isInternalError bool) {
+	possibleInternalErrors := []string{
+		"InternalErrorException",
+		"SerializationError",
+		"ReadError",
+		"ResponseTimeout",
+		"InvalidPresignExpireError",
+		"RequestCanceled",
+		"RequestError",
+	}
+
+	for _, internalError := range possibleInternalErrors {
+		if strings.Contains(authErr.Error(), internalError) {
+			return true
+		}
+	}
+	return false
 }

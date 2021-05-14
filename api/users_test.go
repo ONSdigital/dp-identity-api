@@ -24,7 +24,7 @@ func TestCreateUserHandler(t *testing.T) {
 	var (
 		routeMux                          = mux.NewRouter()
 		ctx                               = context.Background()
-		name, status, email, poolId, userException, clientId, clientSecret string = "Foo_Bar", "UNCONFIRMED", "foo_bar123@foobar.io.me", "us-west-11_bxushuds", "UsernameExistsException: User account already exists", "abc123", "bsjahsaj9djsiq"
+		name, status, email, poolId, userException, clientId, clientSecret, authflow string = "Foo_Bar", "UNCONFIRMED", "foo_bar123@foobar.io.me", "us-west-11_bxushuds", "UsernameExistsException: User account already exists", "abc123", "bsjahsaj9djsiq", "authflow"
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
@@ -121,7 +121,7 @@ func TestCreateUserHandler(t *testing.T) {
 		for _, tt := range adminCreateUsersTests {
 			m.AdminCreateUserFunc = tt.createUsersFunction
 			m.ListUsersFunc = tt.listUsersFunction
-			api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret)
+			api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authflow)
 
 			postBody := map[string]interface{}{"username": name, "email": email}
 	
@@ -142,7 +142,7 @@ func TestCreateUserHandler(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret)
+		api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authflow)
 
 		api.Router.ServeHTTP(w, r)
 
@@ -194,7 +194,7 @@ func TestCreateUserHandler(t *testing.T) {
 	
 			w := httptest.NewRecorder()
 	
-			api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret)
+			api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authflow)
 
 			api.Router.ServeHTTP(w, r)
 	

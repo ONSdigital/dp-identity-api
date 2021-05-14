@@ -60,6 +60,9 @@ paths:
             Refresh:
               type: string
               description: "Refresh token"
+          schema:
+            $ref: '#/definitions/ExpirationTime'
+
         400:
           description: "Invalid request. Empty or invalid email or empty password."
           schema:
@@ -149,6 +152,14 @@ definitions:
         type: string
         description: "Message returned by hello world endpoint"
         example: "Hello, world!"
+
+  ExpirationTime:
+    type: object
+    properties:
+      message:
+        type: string
+        description: "Expiration Time, UTC ISO 8601"
+        example: "YYYY-MM-DD hh-mm-ssZ"
 
   TokensErrorList:
     description: "A list of errors"
