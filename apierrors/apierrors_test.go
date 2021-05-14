@@ -60,3 +60,20 @@ func TestBuildingErrorStructure(t *testing.T) {
 		So(errorResponseBody, ShouldResemble, errorResponseBodyExample)
 	})
 }
+
+func TestIdentifyInternalErrors(t *testing.T) {
+	Convey("True is returned if an internal error is identified", t, func() {
+		authError := errors.New("RequestError: send request failed")
+		isInternalError := IdentifyInternalError(authError)
+
+		So(isInternalError, ShouldBeTrue)
+	})
+
+	Convey("False is returned if an internal error is not identified", t, func() {
+
+		authError := errors.New("NotAuthorizedException: Incorrect username or password.")
+		isInternalError := IdentifyInternalError(authError)
+
+		So(isInternalError, ShouldBeFalse)
+	})
+}
