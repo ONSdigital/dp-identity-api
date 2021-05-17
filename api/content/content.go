@@ -44,5 +44,5 @@ const HttpResponseErrorMessage = "Failed to write http response"
 const HttpResponseErrorField = "response"
 const HttpResponseErrorParam = "error writing response"
 
-const UserPoolIdNotFoundMessage = "userPoolId must not be an empty string"
+const RequiredParameterNotFoundMessage = "error in parsing api setup arguments - missing parameter"
 const InternalErrorException = "InternalErrorException"

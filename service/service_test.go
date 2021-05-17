@@ -50,8 +50,11 @@ func TestRun(t *testing.T) {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
-		// set dummy user pool id
+		// set dummy config data
 		cfg.AWSCognitoUserPoolID = "eu-west-18_73289nds8w932"
+		cfg.AWSClientId = "client-aaa-bbb"
+		cfg.AWSClientSecret = "secret-ccc-ddd"
+		cfg.AWSAuthFlow = "authflow"
 
 		hcMock := &serviceMock.HealthCheckerMock{
 			AddCheckFunc: func(name string, checker healthcheck.Checker) error { return nil },
@@ -206,8 +209,11 @@ func TestClose(t *testing.T) {
 
 		cfg, err := config.Get()
 
-		// set dummy user pool id
+		// set dummy config data
 		cfg.AWSCognitoUserPoolID = "eu-west-18_73289nds8w932"
+		cfg.AWSClientId = "client-aaa-bbb"
+		cfg.AWSClientSecret = "secret-ccc-ddd"
+		cfg.AWSAuthFlow = "authflow"
 
 		So(err, ShouldBeNil)
 

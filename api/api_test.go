@@ -33,17 +33,57 @@ func TestSetup(t *testing.T) {
 		})
 	})
 
-	Convey("Given an API instance with an empty user pool id", t, func() {
-		r := mux.NewRouter()
-		ctx := context.Background()
-		api, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, "", "client-aaa-bbb", "secret-ccc-ddd", "authflow")
+	Convey("Given an API instance with an empty required parameter passed", t, func() {
+		paramCheckTests := []struct {
+			testName string
+			userPoolId string
+			clientId string
+			clientSecret string
+			clientAuthFlow string
+		}{
+			// missing userPoolId
+			{
+				"missing userPoolId",
+				"",
+				"client-aaa-bbb",
+				"secret-ccc-ddd",
+				"authflow",
+			},
+			// missing clientId
+			{
+				"missing clientId",
+				"eu-west-22_bdsjhids2",
+				"",
+				"secret-ccc-ddd",
+				"authflow",
+			},
+			// missing clientSecret
+			{
+				"missing clientSecret",
+				"eu-west-22_bdsjhids2",
+				"client-aaa-bbb",
+				"",
+				"authflow",
+			},
+			// missing clientAuthFlow
+			{
+				"missing clientAuthFlow",
+				"eu-west-22_bdsjhids2",
+				"client-aaa-bbb",
+				"secret-ccc-ddd",
+				"",
+			},
+		}
 
-		Convey("Error should not be nil if user pool id is empty", func() {
-			So(api, ShouldBeNil)
-			So(err, ShouldNotBeNil)
-			So(err.Error(), ShouldEqual, content.UserPoolIdNotFoundMessage)
-		})
-
+		for _, tt := range paramCheckTests {
+			r := mux.NewRouter()
+			ctx := context.Background()
+			_, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, tt.userPoolId, tt.clientId, tt.clientSecret, tt.clientAuthFlow)
+	
+			Convey("Error should not be nil if require parameter is empty: "+tt.testName, func() {
+				So(err.Error(), ShouldEqual, content.RequiredParameterNotFoundMessage)
+			})
+		}
 	})
 }
 

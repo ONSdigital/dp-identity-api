@@ -23,10 +23,10 @@ type API struct {
 //Setup function sets up the api and returns an api
 func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, userPoolId string, clientId string, clientSecret string, clientAuthFlow string) (*API, error) {
 
-	// Return an error if empty userPoolId was passed.
-	if userPoolId == "" {
-		log.Event(ctx, content.UserPoolIdNotFoundMessage, log.ERROR)
-		return nil, errors.New(content.UserPoolIdNotFoundMessage)
+	// Return an error if empty required parameter was passed.
+	if userPoolId == "" || clientId == "" || clientSecret == "" || clientAuthFlow == "" {
+		log.Event(ctx, content.RequiredParameterNotFoundMessage, log.ERROR)
+		return nil, errors.New(content.RequiredParameterNotFoundMessage)
 	}
 	
 	api := &API{
