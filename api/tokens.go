@@ -129,7 +129,7 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 
 		authString := req.Header.Get("Authorization")
 		if authString == "" {
-			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.ErrInvalidToken, apierrors.MissingTokenMessage, field, param)
+			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidTokenError, apierrors.MissingTokenMessage, field, param)
 			errorList = append(errorList, invalidTokenErrorBody)
 			log.Event(ctx, "no authorization header provided", log.ERROR)
 			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
@@ -140,7 +140,7 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 		authComponents := strings.Split(authString, " ")
 		if len(authComponents) != 2 {
 			log.Event(ctx, "malformed authorization header provided", log.ERROR)
-			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.ErrInvalidToken, apierrors.MalformedTokenMessage, field, param)
+			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidTokenError, apierrors.MalformedTokenMessage, field, param)
 			errorList = append(errorList, invalidTokenErrorBody)
 			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
 			apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
@@ -156,7 +156,8 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(err, "", field, param)
 			errorList = append(errorList, invalidTokenErrorBody)
 			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-			if strings.Contains(err.Error(), "InternalErrorException") {
+			isInternalError := apierrors.IdentifyInternalError(err)
+			if isInternalError {
 				apierrors.WriteErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
 			} else {
 				apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)

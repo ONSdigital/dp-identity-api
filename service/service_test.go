@@ -52,8 +52,8 @@ func TestRun(t *testing.T) {
 
 		// set dummy config data
 		cfg.AWSCognitoUserPoolID = "eu-west-18_73289nds8w932"
-		cfg.AWSClientId = "client-aaa-bbb"
-		cfg.AWSClientSecret = "secret-ccc-ddd"
+		cfg.AWSCognitoClientId = "client-aaa-bbb"
+		cfg.AWSCognitoClientSecret = "secret-ccc-ddd"
 		cfg.AWSAuthFlow = "authflow"
 
 		hcMock := &serviceMock.HealthCheckerMock{
@@ -211,8 +211,8 @@ func TestClose(t *testing.T) {
 
 		// set dummy config data
 		cfg.AWSCognitoUserPoolID = "eu-west-18_73289nds8w932"
-		cfg.AWSClientId = "client-aaa-bbb"
-		cfg.AWSClientSecret = "secret-ccc-ddd"
+		cfg.AWSCognitoClientId = "client-aaa-bbb"
+		cfg.AWSCognitoClientSecret = "secret-ccc-ddd"
 		cfg.AWSAuthFlow = "authflow"
 
 		So(err, ShouldBeNil)

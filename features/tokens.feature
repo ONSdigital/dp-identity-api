@@ -227,7 +227,7 @@ Scenario: DELETE /tokens/self
         "errors": [
             {
                 "error": "invalid token",
-                "message": "No Authorization token was provided",
+                "message": "no Authorization token was provided",
                 "source": {
                     "field": "",
                     "param": ""
@@ -246,7 +246,7 @@ Scenario: DELETE /tokens/self
         "errors": [
             {
                 "error": "invalid token",
-                "message": "The provided token does not meet the required format",
+                "message": "the provided token does not meet the required format",
                 "source": {
                     "field": "",
                     "param": ""
@@ -265,7 +265,7 @@ Scenario: DELETE /tokens/self
         "errors": [
             {
                 "error": "invalid token",
-                "message": "The provided token does not meet the required format",
+                "message": "the provided token does not meet the required format",
                 "source": {
                     "field": "",
                     "param": ""
