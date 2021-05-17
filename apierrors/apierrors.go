@@ -5,9 +5,9 @@ import (
 	"strings"
 )
 
-var InvalidTokenError = errors.New("Invalid token")
-var MissingTokenMessage = "No Authorization token was provided"
-var MalformedTokenMessage = "The provided token does not meet the required format"
+var InvalidTokenError = errors.New("invalid token")
+var MissingTokenMessage = "no Authorization token was provided"
+var MalformedTokenMessage = "the provided token does not meet the required format"
 
 type ErrorStructure struct {
 	Errors []IndividualError `json:"errors"`

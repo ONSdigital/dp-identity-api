@@ -160,7 +160,8 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(err, "", field, param)
 			errorList = append(errorList, invalidTokenErrorBody)
 			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-			if strings.Contains(err.Error(), "InternalErrorException") {
+			isInternalError := apierrors.IdentifyInternalError(err)
+			if isInternalError {
 				writeErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
 			} else {
 				writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
