@@ -16,7 +16,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/google/uuid v1.2.0 // indirect
+	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-memdb v1.3.2 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect

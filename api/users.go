@@ -14,6 +14,7 @@ import (
 	"github.com/ONSdigital/dp-identity-api/validation"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/google/uuid"
 	"github.com/sethvargo/go-password/password"
 )
 
@@ -24,7 +25,7 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 	log.Event(ctx, "starting to generate a new user", log.INFO)
 	return func(w http.ResponseWriter, req *http.Request) {
 		defer req.Body.Close()
-		
+
 		var errorList []models.IndividualError
 
 		tempPassword, err := password.Generate(14, 1, 1, false, false)
@@ -49,22 +50,29 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 			return
 		}
 
-		username := user.UserName
-		// validate username
-		if len(username) == 0  {
-			log.Event(ctx, content.ValidUserNameErrorField, log.ERROR)
-			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidUserName, apierrors.InvalidUserNameMessage, content.ValidUserNameErrorField, content.ValidUserNameErrorParam))
+		forename := user.Forename
+		// validate forename
+		if forename == "" {
+			log.Event(ctx, apierrors.InvalidForenameErrorMessage, log.ERROR)
+			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidForename, apierrors.InvalidForenameErrorMessage, content.ValidForenameErrorField, content.ValidForenameErrorParam))
+		}
+
+		surname := user.Surname
+		// validate forename
+		if surname == "" {
+			log.Event(ctx, apierrors.InvalidSurnameErrorMessage, log.ERROR)
+			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidSurname, apierrors.InvalidSurnameErrorMessage, content.ValidSurnameErrorField, content.ValidSurnameErrorParam))
 		}
 
 		email := user.Email
 		// validate email
-		if !validation.IsEmailValid(email) {
-			log.Event(ctx, content.ValidEmailErrorField, log.ERROR)
+		if !validation.IsValidateONSEmail(email) {
+			log.Event(ctx, apierrors.InvalidErrorMessage, log.ERROR)
 			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidEmail, apierrors.InvalidErrorMessage, content.ValidEmailErrorField, content.ValidEmailErrorParam))
 		}
 
 		// duplicate email check
-		emailCheckInput, _ := ListUsersModel(ctx, "email = \""+email+"\"", "email", int64(1), &api.UserPoolId) 
+		emailCheckInput, _ := ListUsersModel(ctx, "email = \""+email+"\"", "email", int64(1), &api.UserPoolId)
 		emailCheckResp, err := api.CognitoClient.ListUsers(emailCheckInput)
 		if err != nil {
 			log.Event(ctx, content.ListUsersErrorMessage, log.ERROR)
@@ -82,7 +90,7 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 			return
 		}
 
-		newUser, err := CreateNewUserModel(ctx, username, tempPassword, email, api.UserPoolId)
+		newUser, err := CreateNewUserModel(ctx, forename, surname, uuid.NewString(), email, tempPassword, api.UserPoolId)
 		if err != nil {
 			log.Event(ctx, content.NewUserModelErrorMessage, log.ERROR)
 			apierrors.HandleUnexpectedError(ctx, w, err, content.NewUserModelErrorMessage, content.NewUserModelErrorField, content.NewUserModelErrorParam)
@@ -123,17 +131,25 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 }
 
 //CreateNewUserModel creates and returns *AdminCreateUserInput
-func CreateNewUserModel(ctx context.Context, username string, tempPass string, emailId string, userPoolId string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
+func CreateNewUserModel(ctx context.Context, forename string, surname, userId string, email string, tempPass string, userPoolId string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
 	var (
-		deliveryMethod, emailAttrName string = "EMAIL", "email"
+		deliveryMethod, forenameAttrName, surnameAttrName, emailAttrName string = "EMAIL", "name", "family_name", "email"
 	)
 
 	user := &models.CreateUserInput{
 		UserInput: &cognitoidentityprovider.AdminCreateUserInput{
 			UserAttributes: []*cognitoidentityprovider.AttributeType{
 				{
+					Name:  &forenameAttrName,
+					Value: &forename,
+				},
+				{
+					Name:  &surnameAttrName,
+					Value: &surname,
+				},
+				{
 					Name:  &emailAttrName,
-					Value: &emailId,
+					Value: &email,
 				},
 			},
 			DesiredDeliveryMediums: []*string{
@@ -141,7 +157,7 @@ func CreateNewUserModel(ctx context.Context, username string, tempPass string, e
 			},
 			TemporaryPassword: &tempPass,
 			UserPoolId:        &userPoolId,
-			Username:          &username,
+			Username:          &userId,
 		},
 	}
 	return user.UserInput, nil
@@ -154,8 +170,8 @@ func ListUsersModel(ctx context.Context, filterString string, requiredAttribute 
 			AttributesToGet: []*string{
 				&requiredAttribute,
 			},
-			Filter: &filterString,
-			Limit: &limit,
+			Filter:     &filterString,
+			Limit:      &limit,
 			UserPoolId: userPoolId,
 		},
 	}

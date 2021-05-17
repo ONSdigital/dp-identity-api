@@ -26,21 +26,38 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cogn
 }
 
 func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
-	status := "FORCE_CHANGE_PASSWORD"
-	name := "smileons"
+	var(
+		status, subjectAttrName, forenameAttrName, surnameAttrName, emailAttrName, username, subUUID, forename, surname, email string = "FORCE_CHANGE_PASSWORD", "sub", "name", "family_name", "email", "123e4567-e89b-12d3-a456-426614174000", "f0cf8dd9-755c-4caf-884d-b0c56e7d0704", "smileons", "bobbings", "email@ons.gov.uk"
+	)
 
-	if (*input.Username == "smileons") { // 201 - created successfully
+	if (*input.UserAttributes[0].Value == "smileons") { // 201 - created successfully
 		user := &models.CreateUserOutput{
 			UserOutput: &cognitoidentityprovider.AdminCreateUserOutput{
 				User: &cognitoidentityprovider.UserType{
-					Username:   &name,
+					Attributes: []*cognitoidentityprovider.AttributeType{
+						{
+							Name: &subjectAttrName,
+							Value: &subUUID,
+						},
+						{
+							Name: &forenameAttrName,
+							Value: &forename,
+						},
+						{
+							Name: &surnameAttrName,
+							Value: &surname,
+						},
+						{
+							Name: &emailAttrName,
+							Value: &email,
+						},
+					},
+					Username:   &username,
 					UserStatus: &status,
 				},
 			},
 		}
 		return user.UserOutput, nil
-	} else if (*input.Username == "bob") { // 400 - already exists
-		return nil, errors.New("UsernameExistsException: User account already exists")
 	}
 	return nil, errors.New("InternalErrorException") // 500 - internal exception error
 }
@@ -104,7 +121,7 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 		return users.ListUsersOutput, nil
 		
 	}
-	// default - email already doesn't exist in user pool
+	// default - email doesn't exist in user pool
 	users := &models.ListUsersOutput{
 		ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
 			Users: []*cognitoidentityprovider.UserType{},

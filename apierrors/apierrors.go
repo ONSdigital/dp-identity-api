@@ -21,9 +21,14 @@ var InvalidUserNameMessage = "Unable to validate the username in the request"
 var ErrInvalidPassword = errors.New("invalid password")
 var InvalidPasswordMessage = "Unable to validate the password in the request"
 
+var ErrInvalidForename = errors.New("invalid forename")
+var InvalidForenameErrorMessage = "Unable to validate the user's forename in the request"
+
+var ErrInvalidSurname = errors.New("invalid surname")
+var InvalidSurnameErrorMessage = "Unable to validate the user's surname in the request"
+
 var ErrInvalidEmail = errors.New("invalid email")
 var InvalidErrorMessage = "Unable to validate the email in the request"
-
 
 func IndividualErrorBuilder(err error, message, sourceField, sourceParam string) (individualError errModels.IndividualError) {
 

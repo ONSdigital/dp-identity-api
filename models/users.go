@@ -3,7 +3,8 @@ package models
 import "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
 type UserParams struct {
-	UserName string `json:"username"`
+	Forename string `json:"forename"`
+	Surname  string `json:"surname"`
 	Email    string `json:"email"`
 }
 type CreateUserInput struct {
