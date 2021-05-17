@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -17,8 +16,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/sethvargo/go-password/password"
 )
-
-var errDuplicateEmail = errors.New("duplicate email")
 
 //CreateUserHandler creates a new user and returns a http handler interface
 func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
@@ -66,13 +63,13 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 
 		email := user.Email
 		// validate email
-		if !validation.IsValidateONSEmail(email) {
+		if !validation.ValidateONSEmail(email) {
 			log.Event(ctx, apierrors.InvalidErrorMessage, log.ERROR)
 			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidEmail, apierrors.InvalidErrorMessage, content.ValidEmailErrorField, content.ValidEmailErrorParam))
 		}
 
 		// duplicate email check
-		emailCheckInput, _ := ListUsersModel(ctx, "email = \""+email+"\"", "email", int64(1), &api.UserPoolId)
+		emailCheckInput, _ := ListUsersModel("email = \""+email+"\"", "email", int64(1), &api.UserPoolId)
 		emailCheckResp, err := api.CognitoClient.ListUsers(emailCheckInput)
 		if err != nil {
 			log.Event(ctx, content.ListUsersErrorMessage, log.ERROR)
@@ -81,7 +78,7 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 		}
 		if len(emailCheckResp.Users) > 0 {
 			log.Event(ctx, content.ListUsersErrorMessage, log.ERROR)
-			errorList = append(errorList, apierrors.IndividualErrorBuilder(errDuplicateEmail, content.DuplicateEmailFound, content.ListUsersErrorField, content.ListUsersErrorParam))
+			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrDuplicateEmail, content.DuplicateEmailFound, content.ListUsersErrorField, content.ListUsersErrorParam))
 		}
 
 		// report validation errors in response
@@ -90,7 +87,7 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 			return
 		}
 
-		newUser, err := CreateNewUserModel(ctx, forename, surname, uuid.NewString(), email, tempPassword, api.UserPoolId)
+		newUser, err := CreateNewUserModel(forename, surname, uuid.NewString(), email, tempPassword, api.UserPoolId)
 		if err != nil {
 			log.Event(ctx, content.NewUserModelErrorMessage, log.ERROR)
 			apierrors.HandleUnexpectedError(ctx, w, err, content.NewUserModelErrorMessage, content.NewUserModelErrorField, content.NewUserModelErrorParam)
@@ -131,7 +128,7 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 }
 
 //CreateNewUserModel creates and returns *AdminCreateUserInput
-func CreateNewUserModel(ctx context.Context, forename string, surname, userId string, email string, tempPass string, userPoolId string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
+func CreateNewUserModel(forename string, surname, userId string, email string, tempPass string, userPoolId string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
 	var (
 		deliveryMethod, forenameAttrName, surnameAttrName, emailAttrName string = "EMAIL", "name", "family_name", "email"
 	)
@@ -164,7 +161,7 @@ func CreateNewUserModel(ctx context.Context, forename string, surname, userId st
 }
 
 //ListUsersModel creates and returns *ListUsersInput
-func ListUsersModel(ctx context.Context, filterString string, requiredAttribute string, limit int64, userPoolId *string) (*cognitoidentityprovider.ListUsersInput, error) {
+func ListUsersModel(filterString string, requiredAttribute string, limit int64, userPoolId *string) (*cognitoidentityprovider.ListUsersInput, error) {
 	user := &models.ListUsersInput{
 		ListUsersInput: &cognitoidentityprovider.ListUsersInput{
 			AttributesToGet: []*string{

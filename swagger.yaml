@@ -79,46 +79,8 @@ paths:
         500:
           description: "Unexpected internal error"
           schema:
-            $ref: '#/definitions/LoginErrorList'
-  /users:
-    post:
-      tags:
-        - users
-        - Private
-      summary: "Creates a new user"
-      description: "Creates a new user in cognito"
-      consumes:
-        - application/json
-      produces:
-         - "application/json"
-      parameters:
-        - in: body
-          name: user
-          description: "The email and username for a user."
-          schema:
-            required: ["email","username"]
-            type: object
-            properties:
-              email:
-                type: string
-                example: "email@ons.gov.uk"
-              username:
-                type: string
-                example: "smileons"
-      responses:
-        201:
-          description: "The user is created"
-          schema:
-            $ref: '#/definitions/NewUser'
-        400:
-          description: "Unable to validate the email/username in the request"
-          schema:
-            $ref: '#/definitions/LoginErrorList'
-        500:
-          description: "Invalid request body."
-          schema:
-            $ref: '#/definitions/LoginErrorList'
-  /delete:
+            $ref: '#/definitions/TokensErrorList'
+    delete:
       tags:
         - token
       summary: "Signs out a user, invalidating their access tokens"
@@ -126,6 +88,7 @@ paths:
         - application/json
       parameters:
         - in: header
+          type: string
           name: Authorization
           description: "The users access token as bearer token"
       responses:
@@ -139,6 +102,46 @@ paths:
           description: "Unexpected internal error"
           schema:
             $ref: '#/definitions/TokensErrorResponse'
+  /users:
+    post:
+      tags:
+        - users
+      summary: "Creates a new user"
+      description: "Creates a new user in cognito"
+      consumes:
+        - application/json
+      produces:
+        - "application/json"
+      parameters:
+        - in: body
+          name: user
+          description: "The forename, surname and email for a user."
+          schema:
+            required: ["forename","surname","email"]
+            type: object
+            properties:
+              forename:
+                type: string
+                example: "bob"
+              surname:
+                type: string
+                example: "bobbings"
+              email:
+                type: string
+                example: "email@ons.gov.uk"
+      responses:
+        201:
+          description: "The user is created"
+          schema:
+            $ref: '#/definitions/NewUser'
+        400:
+          description: "Unable to validate the forename, username or email in the request"
+          schema:
+            $ref: '#/definitions/TokensErrorList'
+        500:
+          description: "Invalid request body or unexpected Cognito response"
+          schema:
+            $ref: '#/definitions/TokensErrorList'
 
 responses:
   InternalError:
@@ -202,7 +205,7 @@ definitions:
         description: "Information about list of user type attribute"
         type: array
         items:
-           $ref: '#/definitions/AttributeType'
+            $ref: '#/definitions/AttributeType'
       Enabled:
         description: "Specifies whether the user is enabled"
         type: boolean
@@ -210,7 +213,7 @@ definitions:
         description: "The MFA options for the user."
         type: array
         items: 
-           $ref: '#/definitions/MFAOptionType'
+            $ref: '#/definitions/MFAOptionType'
       UserCreateDate:
         description: "The creation date of the user"
         type: string
@@ -239,7 +242,7 @@ definitions:
       Value:
         description: "value of the attribute"
         type: string
-  
+
   MFAOptionType:
     description: "SMS MFA configuration type"
     type: object

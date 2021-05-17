@@ -30,6 +30,8 @@ var InvalidSurnameErrorMessage = "Unable to validate the user's surname in the r
 var ErrInvalidEmail = errors.New("invalid email")
 var InvalidErrorMessage = "Unable to validate the email in the request"
 
+var ErrDuplicateEmail = errors.New("duplicate email")
+
 func IndividualErrorBuilder(err error, message, sourceField, sourceParam string) (individualError errModels.IndividualError) {
 
 	individualError = errModels.IndividualError{

@@ -108,11 +108,11 @@ func TestCreateUserHandler(t *testing.T) {
 				},
 				// 500 response - internal error exception
 				func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
-					var internaleErrorException cognitoidentityprovider.InternalErrorException
-					internaleErrorException.Message_ = &userException
-					internaleErrorException.RespMetadata.StatusCode = http.StatusInternalServerError
+					var internalErrorException cognitoidentityprovider.InternalErrorException
+					internalErrorException.Message_ = &userException
+					internalErrorException.RespMetadata.StatusCode = http.StatusInternalServerError
 
-					return nil, &internaleErrorException
+					return nil, &internalErrorException
 				},
 				http.StatusInternalServerError,
 			},
