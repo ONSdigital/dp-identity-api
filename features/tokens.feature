@@ -290,3 +290,116 @@ Scenario: DELETE /tokens/self
     And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
     When I DELETE "/tokens/self"
     Then the HTTP status code should be "204"
+
+Scenario: PUT /tokens/self
+    Given I set the "ID" header to ""
+    And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
+    When I PUT "/tokens/self"
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "error": "invalid ID token",
+                "message": "no ID token was provided",
+                "source": {
+                    "field": "",
+                    "param": ""
+                }
+            }
+        ]
+    }
+    """
+
+Scenario: PUT /tokens/self
+    Given I have a valid ID header for user "test@ons.go.uk"
+    And I set the "Refresh" header to ""
+    When I PUT "/tokens/self"
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "error": "invalid refresh token",
+                "message": "no refresh token was provided",
+                "source": {
+                    "field": "",
+                    "param": ""
+                }
+            }
+        ]
+    }
+    """
+
+Scenario: PUT /tokens/self
+    Given I set the "ID" header to ""
+    And I set the "Refresh" header to ""
+    When I PUT "/tokens/self"
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "error": "invalid refresh token",
+                "message": "no refresh token was provided",
+                "source": {
+                    "field": "",
+                    "param": ""
+                }
+            },
+            {
+                "error": "invalid ID token",
+                "message": "no ID token was provided",
+                "source": {
+                    "field": "",
+                    "param": ""
+                }
+            }
+        ]
+    }
+    """
+
+Scenario: PUT /tokens/self
+    Given I set the "ID" header to "zzzz.yyyy.xxxx"
+    And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
+    When I PUT "/tokens/self"
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "error": "invalid id token",
+                "message": "the ID token could not be parsed",
+                "source": {
+                    "field": "",
+                    "param": ""
+                }
+            }
+        ]
+    }
+    """
+
+Scenario: PUT /tokens/self
+    Given I have a valid ID header for user "test@ons.go.uk"
+    And I set the "Refresh" header to "InternalError"
+    When I PUT "/tokens/self"
+    Then the HTTP status code should be "500"
+
+Scenario: PUT /tokens/self
+    Given I have a valid ID header for user "test@ons.go.uk"
+    And I set the "Refresh" header to "ExpiredToken"
+    When I PUT "/tokens/self"
+    Then the HTTP status code should be "403"
+
+Scenario: PUT /tokens/self
+    Given I have a valid ID header for user "test@ons.go.uk"
+    And I set the "Refresh" header to "AnotherUser"
+    When I PUT "/tokens/self"
+    Then the HTTP status code should be "403"
+
+Scenario: PUT /tokens/self
+    Given I have a valid ID header for user "test@ons.go.uk"
+    And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
+    When I PUT "/tokens/self"
+    Then the HTTP status code should be "201"
+    And the response header "Authorization" should be "Bearer llll.mmmm.nnnn"

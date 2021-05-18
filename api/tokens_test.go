@@ -393,6 +393,11 @@ func TestRefreshHandler(t *testing.T) {
 				"aaaa.bbbb.cccc.dddd.eeee",
 				"",
 			},
+			// missing ID and refresh header
+			{
+				"",
+				"",
+			},
 			// malformed ID header
 			{
 				"aaaa.bbbb.cccc.dddd.eeee",
