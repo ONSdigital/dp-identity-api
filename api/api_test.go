@@ -22,6 +22,7 @@ func TestSetup(t *testing.T) {
 			So(hasRoute(api.Router, "/hello", "GET"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/tokens", "POST"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/tokens/self", "DELETE"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/tokens/self", "PUT"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/users", "POST"), ShouldBeTrue)
 		})
 

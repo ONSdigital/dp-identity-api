@@ -23,6 +23,10 @@ type AuthParams struct {
 	Password string `json:"password"`
 }
 
+var (
+	IdTokenHeaderName, AccessTokenHeaderName, RefreshTokenHeaderName string = "ID", "Autherization", "Refresh"
+)
+
 func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, req *http.Request) {
@@ -127,7 +131,7 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 		field := ""
 		param := ""
 
-		authString := req.Header.Get("Authorization")
+		authString := req.Header.Get(AccessTokenHeaderName)
 		if authString == "" {
 			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidTokenError, apierrors.MissingTokenMessage, field, param)
 			errorList = append(errorList, invalidTokenErrorBody)
@@ -211,9 +215,9 @@ func buildSucessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, 
 		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
 
 		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Authorization", "Bearer "+*result.AuthenticationResult.AccessToken)
-		w.Header().Set("ID", *result.AuthenticationResult.IdToken)
-		w.Header().Set("Refresh", *result.AuthenticationResult.RefreshToken)
+		w.Header().Set(AccessTokenHeaderName, "Bearer "+*result.AuthenticationResult.AccessToken)
+		w.Header().Set(IdTokenHeaderName, *result.AuthenticationResult.IdToken)
+		w.Header().Set(RefreshTokenHeaderName, *result.AuthenticationResult.RefreshToken)
 		w.WriteHeader(http.StatusCreated)
 
 		postBody := map[string]interface{}{"expirationTime": expirationTime}
