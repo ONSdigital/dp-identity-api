@@ -1,10 +1,13 @@
 package apierrors
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
-var InvalidTokenError = errors.New("Invalid token")
-var MissingTokenMessage = "No Authorization token was provided"
-var MalformedTokenMessage = "The provided token does not meet the required format"
+var InvalidTokenError = errors.New("invalid token")
+var MissingTokenMessage = "no Authorization token was provided"
+var MalformedTokenMessage = "the provided token does not meet the required format"
 
 type ErrorStructure struct {
 	Errors []IndividualError `json:"errors"`
@@ -41,4 +44,23 @@ func ErrorResponseBodyBuilder(listOfErrors []IndividualError) (errorResponseBody
 	}
 
 	return errorResponseBody
+}
+
+func IdentifyInternalError(authErr error) (isInternalError bool) {
+	possibleInternalErrors := []string{
+		"InternalErrorException",
+		"SerializationError",
+		"ReadError",
+		"ResponseTimeout",
+		"InvalidPresignExpireError",
+		"RequestCanceled",
+		"RequestError",
+	}
+
+	for _, internalError := range possibleInternalErrors {
+		if strings.Contains(authErr.Error(), internalError) {
+			return true
+		}
+	}
+	return false
 }

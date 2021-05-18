@@ -18,7 +18,7 @@ all: audit test build
 
 .PHONY: audit
 audit:
-	go list -m all | nancy sleuth --exclude-vulnerability CVE-2020-26160
+	go list -m all | nancy sleuth
 
 .PHONY: build
 build:
@@ -28,11 +28,11 @@ build:
 .PHONY: debug
 debug:
 	export AWS_COGNITO_USER_POOL_ID=eu-west-1_QKpqp91nJ; \
-	export AWS_CLIENT_ID=`aws cognito-idp list-user-pool-clients --user-pool-id $$AWS_COGNITO_USER_POOL_ID --query 'UserPoolClients[0].ClientId' --output text`; \
-	export AWS_CLIENT_SECRET=`aws cognito-idp describe-user-pool-client --user-pool-id $$AWS_COGNITO_USER_POOL_ID --client-id $$AWS_CLIENT_ID --query 'UserPoolClient.ClientSecret' --output text`; \
+	export AWS_COGNITO_CLIENT_ID=`aws cognito-idp list-user-pool-clients --user-pool-id $$AWS_COGNITO_USER_POOL_ID --query 'UserPoolClients[0].ClientId' --output text`; \
+	export AWS_COGNITO_CLIENT_SECRET=`aws cognito-idp describe-user-pool-client --user-pool-id $$AWS_COGNITO_USER_POOL_ID --client-id $$AWS_COGNITO_CLIENT_ID --query 'UserPoolClient.ClientSecret' --output text`; \
 	echo AWS_COGNITO_USER_POOL_ID= $$AWS_COGNITO_USER_POOL_ID;\
-	echo AWS_CLIENT_ID= $$AWS_CLIENT_ID;\
-	echo AWS_CLIENT_SECRET= $$AWS_CLIENT_SECRET;\
+	echo AWS_COGNITO_CLIENT_ID= $$AWS_COGNITO_CLIENT_ID;\
+	echo AWS_COGNITO_CLIENT_SECRET= $$AWS_COGNITO_CLIENT_SECRET;\
 	HUMAN_LOG=1 go run $(LDFLAGS) -race main.go
 
 .PHONY: acceptance

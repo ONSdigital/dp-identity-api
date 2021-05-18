@@ -15,8 +15,9 @@ type Config struct {
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
 	AWSRegion                  string        `envconfig:"AWS_REGION"`
 	AWSCognitoUserPoolID       string        `envconfig:"AWS_COGNITO_USER_POOL_ID" json:"-"`
-	AWSClientId                string        `envconfig:"AWS_CLIENT_ID" json:"-"`
-	AWSClientSecret            string        `envconfig:"AWS_CLIENT_SECRET" json:"-"`
+	AWSCognitoClientId         string        `envconfig:"AWS_COGNITO_CLIENT_ID" json:"-"`
+	AWSCognitoClientSecret     string        `envconfig:"AWS_COGNITO_CLIENT_SECRET" json:"-"`
+	AWSAuthFlow                string        `envconfig:"AWS_AUTH_FLOW" json:"-"`
 }
 
 var cfg *Config
@@ -34,6 +35,7 @@ func Get() (*Config, error) {
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		AWSRegion:                  "eu-west-1",
+		AWSAuthFlow:                "USER_PASSWORD_AUTH",
 	}
 
 	return cfg, envconfig.Process("", cfg)
