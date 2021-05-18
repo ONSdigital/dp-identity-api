@@ -285,7 +285,6 @@ Scenario: DELETE /tokens/self
     When I DELETE "/tokens/self"
     Then the HTTP status code should be "400"
 
-
 Scenario: DELETE /tokens/self
     Given I have an active session with access token "aaaa.bbbb.cccc"
     And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
