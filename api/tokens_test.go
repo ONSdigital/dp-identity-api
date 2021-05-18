@@ -12,6 +12,7 @@ import (
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
+	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/gorilla/mux"
 
@@ -99,14 +100,14 @@ func TestWriteErrorResponse(t *testing.T) {
 
 		errorResponseBodyExample := `{"errors":[{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}},{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}}]}`
 
-		var errorList []apierrors.IndividualError
+		var errorList []models.IndividualError
 		errorList = nil
-
-		invalidEmailError := errors.New("Invalid email")
+		
+		errInvalidEmail := errors.New("Invalid email")
 		invalidErrorMessage := "Unable to validate the email in the request"
 		field := ""
 		param := ""
-		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(invalidEmailError, invalidErrorMessage, field, param)
+		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(errInvalidEmail, invalidErrorMessage, field, param)
 		errorList = append(errorList, invalidEmailErrorBody)
 		errorList = append(errorList, invalidEmailErrorBody)
 
@@ -115,7 +116,7 @@ func TestWriteErrorResponse(t *testing.T) {
 		statusCode := 400
 		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
 
-		writeErrorResponse(ctx, resp, statusCode, errorResponseBody)
+		apierrors.WriteErrorResponse(ctx, resp, statusCode, errorResponseBody)
 
 		So(resp.Code, ShouldEqual, http.StatusBadRequest)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
@@ -135,7 +136,7 @@ func TestHandleUnexpectedError(t *testing.T) {
 
 		resp := httptest.NewRecorder()
 
-		handleUnexpectedError(ctx, resp, unexpectedError, unexpectedErrorMessage, field, param)
+		apierrors.HandleUnexpectedError(ctx, resp, unexpectedError, unexpectedErrorMessage, field, param)
 
 		So(resp.Code, ShouldEqual, http.StatusInternalServerError)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
@@ -263,7 +264,7 @@ func TestSignOutHandler(t *testing.T) {
 		return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
 	}
 
-	api := Setup(ctx, r, m, poolId, clientId, clientSecret, clientAuthFlow)
+	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, clientAuthFlow)
 
 	Convey("Global Sign Out returns 204: successfully signed out user", t, func() {
 		r := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)

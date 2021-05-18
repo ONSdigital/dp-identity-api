@@ -10,4 +10,5 @@ type Client interface {
 	AdminCreateUser(input *cognito.AdminCreateUserInput) (*cognito.AdminCreateUserOutput, error)
 	InitiateAuth(input *cognito.InitiateAuthInput) (*cognito.InitiateAuthOutput, error)
 	GlobalSignOut(input *cognito.GlobalSignOutInput) (*cognito.GlobalSignOutOutput, error)
+	ListUsers(input *cognito.ListUsersInput) (*cognito.ListUsersOutput, error)
 }

@@ -1,35 +1,43 @@
 package apierrors
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
+	"net/http"
 	"strings"
+
+	errModels "github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/log.go/log"
 )
 
 var InvalidTokenError = errors.New("invalid token")
 var MissingTokenMessage = "no Authorization token was provided"
 var MalformedTokenMessage = "the provided token does not meet the required format"
 
-type ErrorStructure struct {
-	Errors []IndividualError `json:"errors"`
-}
+var ErrInvalidUserName = errors.New("invalid username")
+var InvalidUserNameMessage = "Unable to validate the username in the request"
 
-type IndividualError struct {
-	SpecificError string `json:"error"`
-	Message       string `json:"message"`
-	Source        Source `json:"source"`
-}
+var ErrInvalidPassword = errors.New("invalid password")
+var InvalidPasswordMessage = "Unable to validate the password in the request"
 
-type Source struct {
-	Field string `json:"field"`
-	Param string `json:"param"`
-}
+var ErrInvalidForename = errors.New("invalid forename")
+var InvalidForenameErrorMessage = "Unable to validate the user's forename in the request"
 
-func IndividualErrorBuilder(err error, message, sourceField, sourceParam string) (individualError IndividualError) {
+var ErrInvalidSurname = errors.New("invalid surname")
+var InvalidSurnameErrorMessage = "Unable to validate the user's surname in the request"
 
-	individualError = IndividualError{
+var ErrInvalidEmail = errors.New("invalid email")
+var InvalidErrorMessage = "Unable to validate the email in the request"
+
+var ErrDuplicateEmail = errors.New("duplicate email")
+
+func IndividualErrorBuilder(err error, message, sourceField, sourceParam string) (individualError errModels.IndividualError) {
+
+	individualError = errModels.IndividualError{
 		SpecificError: error.Error(err),
 		Message:       message,
-		Source: Source{
+		Source: errModels.Source{
 			Field: sourceField,
 			Param: sourceParam},
 	}
@@ -37,13 +45,45 @@ func IndividualErrorBuilder(err error, message, sourceField, sourceParam string)
 	return individualError
 }
 
-func ErrorResponseBodyBuilder(listOfErrors []IndividualError) (errorResponseBody ErrorStructure) {
+func ErrorResponseBodyBuilder(listOfErrors []errModels.IndividualError) (errorResponseBody errModels.ErrorStructure) {
 
-	errorResponseBody = ErrorStructure{
+	errorResponseBody = errModels.ErrorStructure{
 		Errors: listOfErrors,
 	}
 
 	return errorResponseBody
+}
+
+func WriteErrorResponse(ctx context.Context, w http.ResponseWriter, status int, errorResponseBody interface{}) {
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+
+	jsonResponse, err := json.Marshal(errorResponseBody)
+	if err != nil {
+		log.Event(ctx, "failed to marshal the error", log.Error(err), log.ERROR)
+		http.Error(w, "failed to marshal the error", http.StatusInternalServerError)
+		return
+	}
+
+	_, err = w.Write(jsonResponse)
+	if err != nil {
+		log.Event(ctx, "writing response failed", log.Error(err), log.ERROR)
+		http.Error(w, "failed to write http response", http.StatusInternalServerError)
+		return
+	}
+}
+
+func HandleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error, message, sourceField, sourceParam string) {
+
+	var errorList []errModels.IndividualError
+
+	internalServerErrorBody := IndividualErrorBuilder(err, message, sourceField, sourceParam)
+	errorList = append(errorList, internalServerErrorBody)
+	errorResponseBody := ErrorResponseBodyBuilder(errorList)
+
+	log.Event(ctx, message, log.ERROR, log.Error(err))
+	WriteErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
 }
 
 func IdentifyInternalError(authErr error) (isInternalError bool) {

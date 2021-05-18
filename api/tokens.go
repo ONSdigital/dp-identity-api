@@ -9,23 +9,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/utilities"
 	"github.com/ONSdigital/dp-identity-api/validation"
+	"github.com/ONSdigital/log.go/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/dp-identity-api/apierrors"
 )
 
 type AuthParams struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
-
-var invalidPasswordError = errors.New("Invalid password")
-var invalidPasswordMessage = "Unable to validate the password in the request"
-var invalidEmailError = errors.New("Invalid email")
-var invalidErrorMessage = "Unable to validate the email in the request"
 
 func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 
@@ -39,7 +35,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			errorMessage := "api endpoint POST login returned an error reading the request body"
-			handleUnexpectedError(ctx, w, err, errorMessage, field, param)
+			apierrors.HandleUnexpectedError(ctx, w, err, errorMessage, field, param)
 			return
 		}
 
@@ -47,7 +43,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 		err = json.Unmarshal(body, &authParams)
 		if err != nil {
 			errorMessage := "api endpoint POST login returned an error unmarshalling the body"
-			handleUnexpectedError(ctx, w, err, errorMessage, field, param)
+			apierrors.HandleUnexpectedError(ctx, w, err, errorMessage, field, param)
 			return
 		}
 
@@ -64,11 +60,11 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 
 				if isInternalError {
 					errorMessage := "api endpoint POST login returned an error and failed to login to cognito"
-					handleUnexpectedError(ctx, w, authErr, errorMessage, field, param)
+					apierrors.HandleUnexpectedError(ctx, w, authErr, errorMessage, field, param)
 					return
 				}
 
-				var errorList []apierrors.IndividualError
+				var errorList []models.IndividualError
 				switch authErr.Error() {
 				case "NotAuthorizedException: Incorrect username or password.":
 					{
@@ -76,7 +72,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 						notAuthorizedError := apierrors.IndividualErrorBuilder(authErr, notAuthorizedMessage, field, param)
 						errorList = append(errorList, notAuthorizedError)
 						errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-						writeErrorResponse(ctx, w, http.StatusUnauthorized, errorResponseBody)
+						apierrors.WriteErrorResponse(ctx, w, http.StatusUnauthorized, errorResponseBody)
 						return
 					}
 				case "NotAuthorizedException: Password attempts exceeded":
@@ -85,7 +81,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 						forbiddenError := apierrors.IndividualErrorBuilder(authErr, forbiddenMessage, field, param)
 						errorList = append(errorList, forbiddenError)
 						errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-						writeErrorResponse(ctx, w, http.StatusForbidden, errorResponseBody)
+						apierrors.WriteErrorResponse(ctx, w, http.StatusForbidden, errorResponseBody)
 						return
 					}
 				default:
@@ -94,7 +90,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 						loginError := apierrors.IndividualErrorBuilder(authErr, loginMessage, field, param)
 						errorList = append(errorList, loginError)
 						errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-						writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+						apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 						return
 					}
 				}
@@ -105,10 +101,10 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 			return
 		}
 
-		invalidPasswordErrorBody := apierrors.IndividualErrorBuilder(invalidPasswordError, invalidPasswordMessage, field, param)
-		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(invalidEmailError, invalidErrorMessage, field, param)
+		invalidPasswordErrorBody := apierrors.IndividualErrorBuilder(apierrors.ErrInvalidPassword, apierrors.InvalidPasswordMessage, field, param)
+		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(apierrors.ErrInvalidEmail, apierrors.InvalidErrorMessage, field, param)
 
-		var errorList []apierrors.IndividualError
+		var errorList []models.IndividualError
 
 		if !validPasswordRequest {
 			errorList = append(errorList, invalidPasswordErrorBody)
@@ -119,15 +115,15 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 		}
 
 		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-		writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
-		return
+		apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+
 	}
 }
 
 func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
-		var errorList []apierrors.IndividualError
+		var errorList []models.IndividualError
 		field := ""
 		param := ""
 
@@ -137,7 +133,7 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 			errorList = append(errorList, invalidTokenErrorBody)
 			log.Event(ctx, "no authorization header provided", log.ERROR)
 			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-			writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+			apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 			return
 		}
 
@@ -147,7 +143,7 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidTokenError, apierrors.MalformedTokenMessage, field, param)
 			errorList = append(errorList, invalidTokenErrorBody)
 			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-			writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+			apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 			return
 		}
 
@@ -162,9 +158,9 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
 			isInternalError := apierrors.IdentifyInternalError(err)
 			if isInternalError {
-				writeErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
+				apierrors.WriteErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
 			} else {
-				writeErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+				apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 			}
 			return
 		}
@@ -184,39 +180,6 @@ func emailValidation(requestBody AuthParams) (isEmailValid bool) {
 	isEmailValid = validation.IsEmailValid(requestBody.Email)
 
 	return isEmailValid
-}
-
-func writeErrorResponse(ctx context.Context, w http.ResponseWriter, status int, errorResponseBody interface{}) {
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-
-	jsonResponse, err := json.Marshal(errorResponseBody)
-	if err != nil {
-		log.Event(ctx, "failed to marshal the error", log.Error(err), log.ERROR)
-		http.Error(w, "failed to marshal the error", http.StatusInternalServerError)
-		return
-	}
-
-	_, err = w.Write(jsonResponse)
-	if err != nil {
-		log.Event(ctx, "writing response failed", log.Error(err), log.ERROR)
-		http.Error(w, "failed to write http response", http.StatusInternalServerError)
-		return
-	}
-}
-
-func handleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error, message, sourceField, sourceParam string) {
-
-	var errorList []apierrors.IndividualError
-
-	internalServerErrorBody := apierrors.IndividualErrorBuilder(err, message, sourceField, sourceParam)
-	errorList = append(errorList, internalServerErrorBody)
-	errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-
-	log.Event(ctx, message, log.ERROR, log.Error(err))
-	writeErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
-	return
 }
 
 func buildCognitoRequest(authParams AuthParams, clientId string, clientSecret string, clientAuthFlow string) (authInput *cognitoidentityprovider.InitiateAuthInput) {
@@ -261,7 +224,7 @@ func buildSucessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, 
 	} else {
 		err := errors.New("unexpected return from cognito")
 		errorMessage := "unexpected response from cognito, there was no authentication result field"
-		handleUnexpectedError(ctx, w, err, errorMessage, "", "")
+		apierrors.HandleUnexpectedError(ctx, w, err, errorMessage, "", "")
 		return
 	}
 }
@@ -272,14 +235,14 @@ func buildjson(jsonInput map[string]interface{}, w http.ResponseWriter, ctx cont
 
 	if err != nil {
 		errorMessage := "failed to marshal the error"
-		handleUnexpectedError(ctx, w, err, errorMessage, "", "")
+		apierrors.HandleUnexpectedError(ctx, w, err, errorMessage, "", "")
 		return
 	}
 
 	_, err = w.Write(jsonResponse)
 	if err != nil {
 		errorMessage := "writing response failed"
-		handleUnexpectedError(ctx, w, err, errorMessage, "", "")
+		apierrors.HandleUnexpectedError(ctx, w, err, errorMessage, "", "")
 
 		return
 	}
