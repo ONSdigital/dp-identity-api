@@ -26,29 +26,29 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cogn
 }
 
 func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
-	var(
+	var (
 		status, subjectAttrName, forenameAttrName, surnameAttrName, emailAttrName, username, subUUID, forename, surname, email string = "FORCE_CHANGE_PASSWORD", "sub", "name", "family_name", "email", "123e4567-e89b-12d3-a456-426614174000", "f0cf8dd9-755c-4caf-884d-b0c56e7d0704", "smileons", "bobbings", "email@ons.gov.uk"
 	)
 
-	if (*input.UserAttributes[0].Value == "smileons") { // 201 - created successfully
+	if *input.UserAttributes[0].Value == "smileons" { // 201 - created successfully
 		user := &models.CreateUserOutput{
 			UserOutput: &cognitoidentityprovider.AdminCreateUserOutput{
 				User: &cognitoidentityprovider.UserType{
 					Attributes: []*cognitoidentityprovider.AttributeType{
 						{
-							Name: &subjectAttrName,
+							Name:  &subjectAttrName,
 							Value: &subUUID,
 						},
 						{
-							Name: &forenameAttrName,
+							Name:  &forenameAttrName,
 							Value: &forename,
 						},
 						{
-							Name: &surnameAttrName,
+							Name:  &surnameAttrName,
 							Value: &surname,
 						},
 						{
-							Name: &emailAttrName,
+							Name:  &emailAttrName,
 							Value: &email,
 						},
 					},
@@ -63,35 +63,57 @@ func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidenti
 }
 
 func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
-
-	accessToken := "accessToken"
 	var expiration int64 = 123
-	idToken := "idToken"
-	refreshToken := "refreshToken"
+	if *input.AuthFlow == "USER_PASSWORD_AUTH" {
+		accessToken := "accessToken"
+		idToken := "idToken"
+		refreshToken := "refreshToken"
 
-	initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{
-		AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
-			AccessToken:  &accessToken,
-			ExpiresIn:    &expiration,
-			IdToken:      &idToken,
-			RefreshToken: &refreshToken,
-		},
-	}
-
-	for _, user := range m.Users {
-		if (user.email == *input.AuthParameters["USERNAME"]) && (user.password == *input.AuthParameters["PASSWORD"]) {
-			return initiateAuthOutput, nil
-		} else if user.email != *input.AuthParameters["USERNAME"] {
-			return nil, errors.New("NotAuthorizedException: Incorrect username or password.")
-		} else {
-			return nil, errors.New("NotAuthorizedException: Password attempts exceeded")
+		initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{
+			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
+				AccessToken:  &accessToken,
+				ExpiresIn:    &expiration,
+				IdToken:      &idToken,
+				RefreshToken: &refreshToken,
+			},
 		}
-	}
 
-	if *input.AuthParameters["PASSWORD"] == "internalerrorException" {
-		return nil, errors.New("InternalErrorException")
+		for _, user := range m.Users {
+			if (user.email == *input.AuthParameters["USERNAME"]) && (user.password == *input.AuthParameters["PASSWORD"]) {
+				return initiateAuthOutput, nil
+			} else if user.email != *input.AuthParameters["USERNAME"] {
+				return nil, errors.New("NotAuthorizedException: Incorrect username or password.")
+			} else {
+				return nil, errors.New("NotAuthorizedException: Password attempts exceeded")
+			}
+		}
+
+		if *input.AuthParameters["PASSWORD"] == "internalerrorException" {
+			return nil, errors.New("InternalErrorException")
+		}
+		return nil, errors.New("InvalidParameterException")
+	} else if *input.AuthFlow == "REFRESH_TOKEN_AUTH" {
+		if *input.AuthParameters["REFRESH_TOKEN"] == "InternalError" {
+			return nil, errors.New("InternalErrorException: Something went wrong")
+		} else if *input.AuthParameters["REFRESH_TOKEN"] == "ExpiredToken" {
+			return nil, errors.New("NotAuthorizedException: Refresh Token has expired")
+		} else if *input.AuthParameters["REFRESH_TOKEN"] == "AnotherUser" {
+			return nil, errors.New("NotAuthorizedException: Refresh Token invalid")
+		} else {
+			accessToken := "llll.mmmm.nnnn"
+			idToken := "zzzz.yyyy.xxxx"
+			initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{
+				AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
+					AccessToken: &accessToken,
+					ExpiresIn:   &expiration,
+					IdToken:     &idToken,
+				},
+			}
+			return initiateAuthOutput, nil
+		}
+	} else {
+		return nil, errors.New("InvalidParameterException: Unknown Auth Flow")
 	}
-	return nil, errors.New("InvalidParameterException")
 }
 
 func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
@@ -113,13 +135,13 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 			ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
 				Users: []*cognitoidentityprovider.UserType{
 					{
-					 Username: &name,
+						Username: &name,
 					},
 				},
 			},
 		}
 		return users.ListUsersOutput, nil
-		
+
 	}
 	// default - email doesn't exist in user pool
 	users := &models.ListUsersOutput{

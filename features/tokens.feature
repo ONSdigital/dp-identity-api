@@ -312,7 +312,7 @@ Scenario: PUT /tokens/self
     """
 
 Scenario: PUT /tokens/self
-    Given I have a valid ID header for user "test@ons.go.uk"
+    Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to ""
     When I PUT "/tokens/self"
     Then I should receive the following JSON response with status "400":
@@ -380,25 +380,25 @@ Scenario: PUT /tokens/self
     """
 
 Scenario: PUT /tokens/self
-    Given I have a valid ID header for user "test@ons.go.uk"
+    Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to "InternalError"
     When I PUT "/tokens/self"
     Then the HTTP status code should be "500"
 
 Scenario: PUT /tokens/self
-    Given I have a valid ID header for user "test@ons.go.uk"
+    Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to "ExpiredToken"
     When I PUT "/tokens/self"
     Then the HTTP status code should be "403"
 
 Scenario: PUT /tokens/self
-    Given I have a valid ID header for user "test@ons.go.uk"
+    Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to "AnotherUser"
     When I PUT "/tokens/self"
     Then the HTTP status code should be "403"
 
 Scenario: PUT /tokens/self
-    Given I have a valid ID header for user "test@ons.go.uk"
+    Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
     When I PUT "/tokens/self"
     Then the HTTP status code should be "201"
