@@ -11,9 +11,15 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-var InvalidTokenError = errors.New("invalid token")
-var MissingTokenMessage = "no Authorization token was provided"
+var InvalidAuthorizationTokenError = errors.New("invalid token")
+var MissingAuthorizationTokenMessage = "no Authorization token was provided"
 var MalformedTokenMessage = "the provided token does not meet the required format"
+
+var InvalidRefreshTokenError = errors.New("invalid refresh token")
+var MissingRefreshTokenMessage = "no refresh token was provided"
+
+var InvalidIDTokenError = errors.New("invalid ID token")
+var MissingIDTokenMessage = "no ID token was provided"
 
 var ErrInvalidUserName = errors.New("invalid username")
 var InvalidUserNameMessage = "Unable to validate the username in the request"

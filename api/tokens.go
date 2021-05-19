@@ -24,7 +24,9 @@ type AuthParams struct {
 }
 
 var (
-	IdTokenHeaderName, AccessTokenHeaderName, RefreshTokenHeaderName string = "ID", "Autherization", "Refresh"
+	IdTokenHeaderName      = "ID"
+	AccessTokenHeaderName  = "Authorization"
+	RefreshTokenHeaderName = "Refresh"
 )
 
 func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
@@ -126,14 +128,14 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 
 func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		ctx := req.Context()
 		var errorList []models.IndividualError
 		field := ""
 		param := ""
 
 		authString := req.Header.Get(AccessTokenHeaderName)
 		if authString == "" {
-			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidTokenError, apierrors.MissingTokenMessage, field, param)
+			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidAuthorizationTokenError,
+				apierrors.MissingAuthorizationTokenMessage, field, param)
 			errorList = append(errorList, invalidTokenErrorBody)
 			log.Event(ctx, "no authorization header provided", log.ERROR)
 			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
@@ -144,7 +146,8 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 		authComponents := strings.Split(authString, " ")
 		if len(authComponents) != 2 {
 			log.Event(ctx, "malformed authorization header provided", log.ERROR)
-			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidTokenError, apierrors.MalformedTokenMessage, field, param)
+			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidAuthorizationTokenError,
+				apierrors.MalformedTokenMessage, field, param)
 			errorList = append(errorList, invalidTokenErrorBody)
 			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
 			apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
@@ -170,6 +173,36 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		var errorList []models.IndividualError
+		field := ""
+		param := ""
+
+		refreshToken := req.Header.Get(RefreshTokenHeaderName)
+		if refreshToken == "" {
+			invalidRefreshTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidRefreshTokenError,
+				apierrors.MissingRefreshTokenMessage, field, param)
+			errorList = append(errorList, invalidRefreshTokenErrorBody)
+			log.Event(ctx, apierrors.MissingRefreshTokenMessage, log.ERROR)
+		}
+
+		idTokenString := req.Header.Get(IdTokenHeaderName)
+		if idTokenString == "" {
+			invalidIDTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidIDTokenError,
+				apierrors.MissingIDTokenMessage, field, param)
+			errorList = append(errorList, invalidIDTokenErrorBody)
+			log.Event(ctx, apierrors.MissingRefreshTokenMessage, log.ERROR)
+		}
+
+		if len(errorList) > 0 {
+			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+			apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+			return
+		}
 	}
 }
 

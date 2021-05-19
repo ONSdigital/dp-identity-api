@@ -291,7 +291,7 @@ Scenario: DELETE /tokens/self
     When I DELETE "/tokens/self"
     Then the HTTP status code should be "204"
 
-Scenario: PUT /tokens/self
+Scenario: PUT /tokens/self with no ID token
     Given I set the "ID" header to ""
     And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
     When I PUT "/tokens/self"
@@ -314,7 +314,7 @@ Scenario: PUT /tokens/self
     }
     """
 
-Scenario: PUT /tokens/self
+Scenario: PUT /tokens/self with no refresh token
     Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to ""
     When I PUT "/tokens/self"
@@ -337,7 +337,7 @@ Scenario: PUT /tokens/self
     }
     """
 
-Scenario: PUT /tokens/self
+Scenario: PUT /tokens/self with no tokens
     Given I set the "ID" header to ""
     And I set the "Refresh" header to ""
     When I PUT "/tokens/self"
@@ -368,7 +368,7 @@ Scenario: PUT /tokens/self
     }
     """
 
-Scenario: PUT /tokens/self
+Scenario: PUT /tokens/self with badly formatted ID token
     Given I set the "ID" header to "zzzz.yyyy.xxxx"
     And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
     When I PUT "/tokens/self"
@@ -391,7 +391,7 @@ Scenario: PUT /tokens/self
     }
     """
 
-Scenario: PUT /tokens/self
+Scenario: PUT /tokens/self internal Cognito error
     Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to "InternalError"
     When I PUT "/tokens/self"
@@ -400,7 +400,7 @@ Scenario: PUT /tokens/self
     """
     Then the HTTP status code should be "500"
 
-Scenario: PUT /tokens/self
+Scenario: PUT /tokens/self with expired refresh token
     Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to "ExpiredToken"
     When I PUT "/tokens/self"
@@ -409,7 +409,7 @@ Scenario: PUT /tokens/self
     """
     Then the HTTP status code should be "403"
 
-Scenario: PUT /tokens/self
+Scenario: PUT /tokens/self with tokens from different users
     Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to "AnotherUser"
     When I PUT "/tokens/self"
@@ -418,7 +418,7 @@ Scenario: PUT /tokens/self
     """
     Then the HTTP status code should be "403"
 
-Scenario: PUT /tokens/self
+Scenario: PUT /tokens/self success
     Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
     When I PUT "/tokens/self"
