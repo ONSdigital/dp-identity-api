@@ -1,5 +1,9 @@
 package mock
 
+import (
+	"github.com/ONSdigital/dp-identity-api/models"
+)
+
 type Session struct {
 	AccessToken  string
 	IdToken      string
@@ -17,4 +21,29 @@ func (m *CognitoIdentityProviderClientStub) GenerateSession(accessToken string, 
 		IdToken:      idToken,
 		RefreshToken: refreshToken,
 	}
+}
+
+func (m *CognitoIdentityProviderClientStub) CreateIdTokenForEmail(email string) string {
+	testSigningKey := []byte("TestSigningKey")
+	idToken := models.IdToken{
+		Claims: models.IdClaims{
+			Sub:           "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+			Aud:           "xxxxxxxxxxxxexample",
+			EmailVerified: true,
+			TokenUse:      "id",
+			AuthTime:      1500009400,
+			Iss:           "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_example",
+			CognitoUser:   "TestONS",
+			Exp:           1500013000,
+			GivenName:     "Test",
+			Iat:           1500009400,
+			Email:         email,
+		},
+	}
+
+	signedString, err := idToken.SignToken(testSigningKey)
+	if err != nil {
+		return ""
+	}
+	return signedString
 }
