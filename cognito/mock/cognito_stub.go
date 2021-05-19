@@ -97,8 +97,6 @@ func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityp
 			return nil, errors.New("InternalErrorException: Something went wrong")
 		} else if *input.AuthParameters["REFRESH_TOKEN"] == "ExpiredToken" {
 			return nil, errors.New("NotAuthorizedException: Refresh Token has expired")
-		} else if *input.AuthParameters["REFRESH_TOKEN"] == "AnotherUser" {
-			return nil, errors.New("NotAuthorizedException: Refresh Token invalid")
 		} else {
 			accessToken := "llll.mmmm.nnnn"
 			idToken := "zzzz.yyyy.xxxx"

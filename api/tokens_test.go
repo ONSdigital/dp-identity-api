@@ -351,14 +351,16 @@ func TestRefreshHandler(t *testing.T) {
 
 	Convey("Refresh returns 201: successfully refreshed access token", t, func() {
 		var expiration int64 = 123
-		var accessToken, idToken, refreshToken string = "llll.mmmm.nnnn", "zzzz.yyyy.xxxx", "aaaa.bbbb.cccc.dddd.eeee"
+		idToken := mock.GenerateMockIDToken("test@ons.gov.uk")
+		So(idToken, ShouldNotEqual, "")
+		var accessToken, refreshToken = "llll.mmmm.nnnn", "aaaa.bbbb.cccc.dddd.eeee"
 
 		r := httptest.NewRequest(http.MethodPut, tokenRefreshEndPoint, nil)
 		r.Header.Set(IdTokenHeaderName, idToken)
 		r.Header.Set(RefreshTokenHeaderName, refreshToken)
 
 		// mock successful call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-		m.InitiateAuthFunc = func(signOutInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+		m.InitiateAuthFunc = func(refreshInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{
 				AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
 					AccessToken:  &accessToken,
@@ -375,7 +377,7 @@ func TestRefreshHandler(t *testing.T) {
 		api.Router.ServeHTTP(w, r)
 
 		So(w.Code, ShouldEqual, http.StatusCreated)
-		So(w.Result().Header.Get(AccessTokenHeaderName), ShouldResemble, []string{"Bearer " + accessToken})
+		So(w.Result().Header.Get(AccessTokenHeaderName), ShouldResemble, "Bearer "+accessToken)
 	})
 
 	Convey("Refresh returns 400: validate headers structure", t, func() {
@@ -419,14 +421,16 @@ func TestRefreshHandler(t *testing.T) {
 	})
 
 	Convey("Refresh returns 403: refresh failed refresh token has expired", t, func() {
-		var idToken, refreshToken string = "zzzz.yyyy.xxxx", "aaaa.bbbb.cccc.dddd.eeee"
+		idToken := mock.GenerateMockIDToken("test@ons.gov.uk")
+		So(idToken, ShouldNotEqual, "")
+		refreshToken := "aaaa.bbbb.cccc.dddd.eeee"
 		r := httptest.NewRequest(http.MethodPut, tokenRefreshEndPoint, nil)
 		r.Header.Set(IdTokenHeaderName, idToken)
 		r.Header.Set(RefreshTokenHeaderName, refreshToken)
 
 		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-		m.InitiateAuthFunc = func(signOutInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
-			return nil, errors.New("NotAuthorizedException: User is not authorized")
+		m.InitiateAuthFunc = func(refreshInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+			return nil, errors.New("NotAuthorizedException: Refresh Token has expired")
 		}
 
 		w := httptest.NewRecorder()
@@ -437,13 +441,15 @@ func TestRefreshHandler(t *testing.T) {
 	})
 
 	Convey("Refresh returns 500: Cognito internal error", t, func() {
-		var idToken, refreshToken string = "zzzz.yyyy.xxxx", "aaaa.bbbb.cccc.dddd.eeee"
-		r := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		idToken := mock.GenerateMockIDToken("test@ons.gov.uk")
+		So(idToken, ShouldNotEqual, "")
+		refreshToken := "aaaa.bbbb.cccc.dddd.eeee"
+		r := httptest.NewRequest(http.MethodPut, tokenRefreshEndPoint, nil)
 		r.Header.Set(IdTokenHeaderName, idToken)
 		r.Header.Set(RefreshTokenHeaderName, refreshToken)
 
 		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-		m.InitiateAuthFunc = func(signOutInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+		m.InitiateAuthFunc = func(refreshInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			return nil, errors.New("InternalErrorException: Something went wrong")
 		}
 

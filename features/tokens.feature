@@ -409,15 +409,6 @@ Scenario: PUT /tokens/self with expired refresh token
     """
     Then the HTTP status code should be "403"
 
-Scenario: PUT /tokens/self with tokens from different users
-    Given I have a valid ID header for user "test@ons.gov.uk"
-    And I set the "Refresh" header to "AnotherUser"
-    When I PUT "/tokens/self"
-    """
-    {}
-    """
-    Then the HTTP status code should be "403"
-
 Scenario: PUT /tokens/self success
     Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"

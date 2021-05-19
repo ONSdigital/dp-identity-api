@@ -230,6 +230,7 @@ func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
 		result, authErr := api.CognitoClient.InitiateAuth(authInput)
 
 		if authErr != nil {
+			log.Event(ctx, authErr.Error(), log.ERROR)
 			if authErr.Error() == "NotAuthorizedException: Refresh Token has expired" {
 				expiredTokenError := apierrors.IndividualErrorBuilder(authErr, apierrors.TokenExpiredMessage, field, param)
 				errorList = append(errorList, expiredTokenError)

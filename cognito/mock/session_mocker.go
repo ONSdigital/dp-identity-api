@@ -24,6 +24,10 @@ func (m *CognitoIdentityProviderClientStub) GenerateSession(accessToken string, 
 }
 
 func (m *CognitoIdentityProviderClientStub) CreateIdTokenForEmail(email string) string {
+	return GenerateMockIDToken(email)
+}
+
+func GenerateMockIDToken(email string) string {
 	testSigningKey := []byte("TestSigningKey")
 	idToken := models.IdToken{
 		Claims: models.IdClaims{
