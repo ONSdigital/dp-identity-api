@@ -147,7 +147,7 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 		if len(authComponents) != 2 {
 			log.Event(ctx, "malformed authorization header provided", log.ERROR)
 			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidAuthorizationTokenError,
-				apierrors.MalformedTokenMessage, field, param)
+				apierrors.MalformedHeaderMessage, field, param)
 			errorList = append(errorList, invalidTokenErrorBody)
 			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
 			apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
@@ -196,6 +196,15 @@ func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
 				apierrors.MissingIDTokenMessage, field, param)
 			errorList = append(errorList, invalidIDTokenErrorBody)
 			log.Event(ctx, apierrors.MissingRefreshTokenMessage, log.ERROR)
+		} else {
+			idToken := models.IdToken{}
+			parsingErr := idToken.ParseWithoutValidating(idTokenString)
+			if parsingErr != nil {
+				invalidIDTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidIDTokenError,
+					apierrors.MalformedIDTokenMessage, field, param)
+				errorList = append(errorList, invalidIDTokenErrorBody)
+				log.Event(ctx, parsingErr.Error(), log.ERROR)
+			}
 		}
 
 		if len(errorList) > 0 {

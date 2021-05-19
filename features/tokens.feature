@@ -380,7 +380,7 @@ Scenario: PUT /tokens/self with badly formatted ID token
     {
         "errors": [
             {
-                "error": "invalid id token",
+                "error": "invalid ID token",
                 "message": "the ID token could not be parsed",
                 "source": {
                     "field": "",
