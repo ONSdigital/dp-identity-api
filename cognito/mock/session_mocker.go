@@ -2,6 +2,7 @@ package mock
 
 import (
 	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/dgrijalva/jwt-go"
 )
 
 type Session struct {
@@ -29,23 +30,22 @@ func (m *CognitoIdentityProviderClientStub) CreateIdTokenForEmail(email string) 
 
 func GenerateMockIDToken(email string) string {
 	testSigningKey := []byte("TestSigningKey")
-	idToken := models.IdToken{
-		Claims: models.IdClaims{
-			Sub:           "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-			Aud:           "xxxxxxxxxxxxexample",
-			EmailVerified: true,
-			TokenUse:      "id",
-			AuthTime:      1500009400,
-			Iss:           "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_example",
-			CognitoUser:   "TestONS",
-			Exp:           1500013000,
-			GivenName:     "Test",
-			Iat:           1500009400,
-			Email:         email,
-		},
+	idClaims := models.IdClaims{
+		Sub:           "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+		Aud:           "xxxxxxxxxxxxexample",
+		EmailVerified: true,
+		TokenUse:      "id",
+		AuthTime:      1500009400,
+		Iss:           "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_example",
+		CognitoUser:   "TestONS",
+		Exp:           1500013000,
+		GivenName:     "Test",
+		Iat:           1500009400,
+		Email:         email,
 	}
 
-	signedString, err := idToken.SignToken(testSigningKey)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, idClaims)
+	signedString, err := token.SignedString(testSigningKey)
 	if err != nil {
 		return ""
 	}
