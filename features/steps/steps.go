@@ -12,6 +12,10 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	c.apiFeature.RegisterSteps(ctx)
 
 	ctx.Step(`^I should receive a hello-world response$`, c.iShouldReceiveAHelloworldResponse)
+
+	ctx.Step(`^a user with email "([^"]*)" and password "([^"]*)" exists in the database$`, c.aUserWithEmailAndPasswordExistsInTheDatabase)
+	ctx.Step(`^an internal server error is returned from Cognito$`, c.anInternalServerErrorIsReturnedFromCognito)
+	ctx.Step(`^an error is returned from Cognito$`, c.anErrorIsReturnedFromCognito)
 	ctx.Step(`^I have an active session with access token "([^"]*)"$`, c.iHaveAnActiveSessionWithAccessToken)
 }
 
@@ -22,6 +26,19 @@ func (c *IdentityComponent) iShouldReceiveAHelloworldResponse() error {
 	assert.Equal(&c.ErrorFeature, `{"message":"Hello, World!"}`, strings.TrimSpace(string(body)))
 
 	return c.ErrorFeature.StepError()
+}
+
+func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(username, password string) error {
+	c.CognitoClient.AddUserWithUsername(username, password)
+	return nil
+}
+
+func (c *IdentityComponent) anInternalServerErrorIsReturnedFromCognito() error {
+	return nil
+}
+
+func (c *IdentityComponent) anErrorIsReturnedFromCognito() error {
+	return nil
 }
 
 func (c *IdentityComponent) iHaveAnActiveSessionWithAccessToken(accessToken string) error {
