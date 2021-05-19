@@ -102,7 +102,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 				}
 			}
 
-			buildSucessfulResponse(result, w, ctx)
+			buildSuccessfulResponse(result, w, ctx)
 
 			return
 		}
@@ -250,7 +250,7 @@ func buildCognitoRequest(authParams AuthParams, clientId string, clientSecret st
 	return authInput
 }
 
-func buildSucessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, w http.ResponseWriter, ctx context.Context) {
+func buildSuccessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, w http.ResponseWriter, ctx context.Context) {
 
 	if result.AuthenticationResult != nil {
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)

@@ -184,7 +184,7 @@ func TestCognitoResponseHeaderBuild(t *testing.T) {
 			},
 		}
 
-		buildSucessfulResponse(initiateAuthOutput, w, ctx)
+		buildSuccessfulResponse(initiateAuthOutput, w, ctx)
 
 		So(w.Result().StatusCode, ShouldEqual, 201)
 		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
@@ -219,7 +219,7 @@ func TestCognitoResponseHeaderBuild(t *testing.T) {
 		ctx := context.Background()
 
 		initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{}
-		buildSucessfulResponse(initiateAuthOutput, w, ctx)
+		buildSuccessfulResponse(initiateAuthOutput, w, ctx)
 
 		So(w.Result().StatusCode, ShouldEqual, 500)
 	})
