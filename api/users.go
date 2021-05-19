@@ -19,8 +19,8 @@ import (
 
 //CreateUserHandler creates a new user and returns a http handler interface
 func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
-	log.Event(ctx, "starting to generate a new user", log.INFO)
 	return func(w http.ResponseWriter, req *http.Request) {
+		log.Event(ctx, "starting to generate a new user", log.INFO)
 		defer req.Body.Close()
 
 		var errorList []models.IndividualError
