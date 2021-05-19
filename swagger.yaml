@@ -88,6 +88,7 @@ paths:
         - application/json
       parameters:
         - in: header
+          type: string
           name: Authorization
           description: "The users access token as bearer token"
       responses:
@@ -101,6 +102,46 @@ paths:
           description: "Unexpected internal error"
           schema:
             $ref: '#/definitions/TokensErrorResponse'
+  /users:
+    post:
+      tags:
+        - users
+      summary: "Creates a new user"
+      description: "Creates a new user in cognito"
+      consumes:
+        - application/json
+      produces:
+        - "application/json"
+      parameters:
+        - in: body
+          name: user
+          description: "The forename, surname and email for a user."
+          schema:
+            required: ["forename","surname","email"]
+            type: object
+            properties:
+              forename:
+                type: string
+                example: "bob"
+              surname:
+                type: string
+                example: "bobbings"
+              email:
+                type: string
+                example: "email@ons.gov.uk"
+      responses:
+        201:
+          description: "The user is created"
+          schema:
+            $ref: '#/definitions/NewUser'
+        400:
+          description: "Unable to validate the forename, username or email in the request"
+          schema:
+            $ref: '#/definitions/TokensErrorList'
+        500:
+          description: "Invalid request body or unexpected Cognito response"
+          schema:
+            $ref: '#/definitions/TokensErrorList'
 
 responses:
   InternalError:
@@ -155,3 +196,60 @@ definitions:
       param:
         type: string
         description: "returned parameter on which an error has occurred"
+
+  NewUser:
+    description: "A model for the response body creating the user"
+    type: object
+    properties:
+      Attributes:
+        description: "Information about list of user type attribute"
+        type: array
+        items:
+            $ref: '#/definitions/AttributeType'
+      Enabled:
+        description: "Specifies whether the user is enabled"
+        type: boolean
+      MFAOptions:
+        description: "The MFA options for the user."
+        type: array
+        items: 
+            $ref: '#/definitions/MFAOptionType'
+      UserCreateDate:
+        description: "The creation date of the user"
+        type: string
+        format: date-time
+      UserLastModifiedDate:
+        description: "The last modified date of the user."
+        type: string
+        format: date-time
+      UserStatus: 
+        description: "The current status of the user"
+        type: string
+        enum: [UNCONFIRMED, CONFIRMED, ARCHIVED, COMPROMISED, UNKNOWN, RESET_REQUIRED, FORCE_CHANGE_PASSWORD]
+        example: "CONFIRMED"
+      Username:
+        description: "The username of the user"    
+        type: string
+        example: "smileons"
+
+  AttributeType:
+    description: "Specifies the attribute type standard or custom."
+    type: object
+    properties:
+      Name:
+        description: "The name of the attribute."
+        type: string
+      Value:
+        description: "value of the attribute"
+        type: string
+
+  MFAOptionType:
+    description: "SMS MFA configuration type"
+    type: object
+    properties:
+      AttributeName:
+        description: "The attribute name of the MFA option type. The only valid value is phone_number."
+        type: string
+      DeliveryMedium:
+        description: "Parameter for SMS delivery medium value."
+        type: string

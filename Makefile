@@ -34,7 +34,7 @@ debug:
 	echo AWS_COGNITO_CLIENT_ID= $$AWS_COGNITO_CLIENT_ID;\
 	echo AWS_COGNITO_CLIENT_SECRET= $$AWS_COGNITO_CLIENT_SECRET;\
 	HUMAN_LOG=1 go run $(LDFLAGS) -race main.go
-
+	
 .PHONY: acceptance
 acceptance:
 	MONGODB_IMPORTS_DATABASE=test HUMAN_LOG=1 go run $(LDFLAGS) -race main.go

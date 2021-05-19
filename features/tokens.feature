@@ -127,7 +127,7 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "Invalid password",
+                    "error": "invalid password",
                     "message": "Unable to validate the password in the request",
                     "source": {
                         "field": "",
@@ -151,7 +151,7 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "Invalid email",
+                    "error": "invalid email",
                     "message": "Unable to validate the email in the request",
                     "source": {
                         "field": "",
@@ -175,7 +175,7 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "Invalid email",
+                    "error": "invalid email",
                     "message": "Unable to validate the email in the request",
                     "source": {
                         "field": "",
@@ -199,7 +199,7 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "Invalid password",
+                    "error": "invalid password",
                     "message": "Unable to validate the password in the request",
                     "source": {
                         "field": "",
@@ -207,7 +207,7 @@ Scenario: POST /tokens
                     }
                 },
                 {
-                    "error": "Invalid email",
+                    "error": "invalid email",
                     "message": "Unable to validate the email in the request",
                     "source": {
                         "field": "",
