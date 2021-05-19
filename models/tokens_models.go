@@ -1,6 +1,9 @@
 package models
 
-import "github.com/dgrijalva/jwt-go"
+import (
+	"errors"
+	"github.com/dgrijalva/jwt-go"
+)
 
 type IdClaims struct {
 	Sub           string `json:"sub"`
@@ -28,11 +31,17 @@ func (t *IdToken) SignToken(signingKey []byte) (string, error) {
 
 func (t *IdToken) ParseWithoutValidating(tokenString string) error {
 	parser := new(jwt.Parser)
+
 	idToken, _, parsingErr := parser.ParseUnverified(tokenString, &IdClaims{})
 	if parsingErr != nil {
 		return parsingErr
 	}
-	idClaims := idToken.Claims.(*IdClaims)
+
+	idClaims, ok := idToken.Claims.(*IdClaims)
+	if !ok {
+		return errors.New("the ID token could not be parsed")
+	}
+
 	t.Claims = *idClaims
 	return nil
 }

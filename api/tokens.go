@@ -181,6 +181,7 @@ func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
 		var errorList []models.IndividualError
 		field := ""
 		param := ""
+		refreshAuthFlow := "REFRESH_TOKEN_AUTH"
 
 		refreshToken := req.Header.Get(RefreshTokenHeaderName)
 		if refreshToken == "" {
@@ -191,13 +192,13 @@ func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
 		}
 
 		idTokenString := req.Header.Get(IdTokenHeaderName)
+		idToken := models.IdToken{}
 		if idTokenString == "" {
 			invalidIDTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidIDTokenError,
 				apierrors.MissingIDTokenMessage, field, param)
 			errorList = append(errorList, invalidIDTokenErrorBody)
 			log.Event(ctx, apierrors.MissingRefreshTokenMessage, log.ERROR)
 		} else {
-			idToken := models.IdToken{}
 			parsingErr := idToken.ParseWithoutValidating(idTokenString)
 			if parsingErr != nil {
 				invalidIDTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidIDTokenError,
@@ -212,6 +213,40 @@ func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
 			apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 			return
 		}
+
+		secretHash := utilities.ComputeSecretHash(api.ClientSecret, idToken.Claims.CognitoUser, api.ClientId)
+
+		authParams := map[string]*string{
+			"REFRESH_TOKEN": &refreshToken,
+			"SECRET_HASH":   &secretHash,
+		}
+
+		authInput := &cognitoidentityprovider.InitiateAuthInput{
+			AuthFlow:       &refreshAuthFlow,
+			AuthParameters: authParams,
+			ClientId:       &api.ClientId,
+		}
+
+		result, authErr := api.CognitoClient.InitiateAuth(authInput)
+
+		if authErr != nil {
+			if authErr.Error() == "NotAuthorizedException: Refresh Token has expired" {
+				expiredTokenError := apierrors.IndividualErrorBuilder(authErr, apierrors.TokenExpiredMessage, field, param)
+				errorList = append(errorList, expiredTokenError)
+				errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+				apierrors.WriteErrorResponse(ctx, w, http.StatusForbidden, errorResponseBody)
+				return
+			} else {
+				apierrors.HandleUnexpectedError(ctx, w, authErr, apierrors.InternalErrorMessage, field, param)
+				return
+			}
+		}
+
+		result.AuthenticationResult.RefreshToken = &refreshToken
+
+		buildSuccessfulResponse(result, w, ctx)
+
+		return
 	}
 }
 

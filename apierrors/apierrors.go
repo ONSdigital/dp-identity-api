@@ -11,12 +11,14 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
+var InternalErrorMessage = "an internal error has occurred"
 var InvalidAuthorizationTokenError = errors.New("invalid token")
 var MissingAuthorizationTokenMessage = "no Authorization token was provided"
 var MalformedHeaderMessage = "the provided token does not meet the required format"
 
 var InvalidRefreshTokenError = errors.New("invalid refresh token")
 var MissingRefreshTokenMessage = "no refresh token was provided"
+var TokenExpiredMessage = "refresh token has expired"
 
 var InvalidIDTokenError = errors.New("invalid ID token")
 var MissingIDTokenMessage = "no ID token was provided"
