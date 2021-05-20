@@ -22,8 +22,8 @@ const usersEndPoint = "http://localhost:25600/users"
 func TestCreateUserHandler(t *testing.T) {
 
 	var (
-		routeMux                                                                                     = mux.NewRouter()
-		ctx                                                                                          = context.Background()
+		routeMux                                                                                                   = mux.NewRouter()
+		ctx                                                                                                        = context.Background()
 		name, surname, status, email, poolId, userException, clientId, clientSecret, authflow, invalidEmail string = "bob", "bobbings", "UNCONFIRMED", "foo_bar123@ext.ons.gov.uk", "us-west-11_bxushuds", "UsernameExistsException: User account already exists", "abc123", "bsjahsaj9djsiq", "authflow", "foo_bar123@test.ons.gov.ie"
 	)
 

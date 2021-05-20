@@ -146,7 +146,6 @@ func (mock *InitialiserMock) DoGetHealthCheckCalls() []struct {
 	return calls
 }
 
-
 // DoGetCognitoClient creates a CognitoClient with the provided region
 func (mock *InitialiserMock) DoGetCognitoClient(AWSRegion string) cognitoclient.Client {
 	return mock.DoGetCognitoClientFunc(AWSRegion)

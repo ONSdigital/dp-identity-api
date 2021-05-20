@@ -35,10 +35,10 @@ func TestSetup(t *testing.T) {
 
 	Convey("Given an API instance with an empty required parameter passed", t, func() {
 		paramCheckTests := []struct {
-			testName string
-			userPoolId string
-			clientId string
-			clientSecret string
+			testName       string
+			userPoolId     string
+			clientId       string
+			clientSecret   string
 			clientAuthFlow string
 		}{
 			// missing userPoolId
@@ -79,7 +79,7 @@ func TestSetup(t *testing.T) {
 			r := mux.NewRouter()
 			ctx := context.Background()
 			_, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, tt.userPoolId, tt.clientId, tt.clientSecret, tt.clientAuthFlow)
-	
+
 			Convey("Error should not be nil if require parameter is empty: "+tt.testName, func() {
 				So(err.Error(), ShouldEqual, content.RequiredParameterNotFoundMessage)
 			})

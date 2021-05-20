@@ -28,7 +28,7 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 		log.Event(ctx, content.RequiredParameterNotFoundMessage, log.ERROR)
 		return nil, errors.New(content.RequiredParameterNotFoundMessage)
 	}
-	
+
 	api := &API{
 		Router:         r,
 		CognitoClient:  cognitoClient,

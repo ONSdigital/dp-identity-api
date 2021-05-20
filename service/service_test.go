@@ -91,8 +91,8 @@ func TestRun(t *testing.T) {
 		Convey("Given that initialising healthcheck returns an error", func() {
 			// setup (run before each `Convey` at this scope / indentation):
 			initMock := &serviceMock.InitialiserMock{
-				DoGetHTTPServerFunc:  funcDoGetHTTPServerNil,
-				DoGetHealthCheckFunc: funcDoGetHealthcheckErr,
+				DoGetHTTPServerFunc:    funcDoGetHTTPServerNil,
+				DoGetHealthCheckFunc:   funcDoGetHealthcheckErr,
 				DoGetCognitoClientFunc: DoGetCognitoClient,
 			}
 			svcErrors := make(chan error, 1)
@@ -113,8 +113,8 @@ func TestRun(t *testing.T) {
 
 			// setup (run before each `Convey` at this scope / indentation):
 			initMock := &serviceMock.InitialiserMock{
-				DoGetHTTPServerFunc:  funcDoGetHTTPServer,
-				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
+				DoGetHTTPServerFunc:    funcDoGetHTTPServer,
+				DoGetHealthCheckFunc:   funcDoGetHealthcheckOk,
 				DoGetCognitoClientFunc: DoGetCognitoClient,
 			}
 			svcErrors := make(chan error, 1)
@@ -180,8 +180,8 @@ func TestRun(t *testing.T) {
 
 			// setup (run before each `Convey` at this scope / indentation):
 			initMock := &serviceMock.InitialiserMock{
-				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
-				DoGetHTTPServerFunc:  funcDoGetFailingHTTPSerer,
+				DoGetHealthCheckFunc:   funcDoGetHealthcheckOk,
+				DoGetHTTPServerFunc:    funcDoGetFailingHTTPSerer,
 				DoGetCognitoClientFunc: DoGetCognitoClient,
 			}
 			svcErrors := make(chan error, 1)
@@ -314,6 +314,6 @@ func TestClose(t *testing.T) {
 	})
 }
 
-func DoGetCognitoClient(AWSRegion string) cognito.Client  {
-	return  &cognitoMock.CognitoIdentityProviderClientStub{}
+func DoGetCognitoClient(AWSRegion string) cognito.Client {
+	return &cognitoMock.CognitoIdentityProviderClientStub{}
 }
