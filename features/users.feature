@@ -55,12 +55,8 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "error": "invalid email",
-                        "message": "Unable to validate the email in the request",
-                        "source": {
-                            "field": "validating email",
-                            "param": "error validating email"
-                        }
+                        "code": "invalid email",
+                        "description": "Unable to validate the email in the request"
                     }
                 ]
             }
@@ -80,12 +76,8 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "error": "invalid forename",
-                        "message": "Unable to validate the user's forename in the request",
-                        "source": {
-                            "field": "validating forename",
-                            "param": "error validating username"
-                        }
+                        "code": "invalid forename",
+                        "description": "Unable to validate the user's forename in the request"
                     }
                 ]
             }
@@ -105,12 +97,8 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "error": "invalid surname",
-                        "message": "Unable to validate the user's surname in the request",
-                        "source": {
-                            "field": "validating surname",
-                            "param": "error validating surname"
-                        }
+                        "code": "invalid surname",
+                        "description": "Unable to validate the user's surname in the request"
                     }
                 ]
             }
@@ -130,28 +118,16 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "error": "invalid forename",
-                        "message": "Unable to validate the user's forename in the request",
-                        "source": {
-                            "field": "validating forename",
-                            "param": "error validating username"
-                        }
+                        "code": "invalid forename",
+                        "description": "Unable to validate the user's forename in the request"
                     },
                     {
-                        "error": "invalid surname",
-                        "message": "Unable to validate the user's surname in the request",
-                        "source": {
-                            "field": "validating surname",
-                            "param": "error validating surname"
-                        }
+                        "code": "invalid surname",
+                        "description": "Unable to validate the user's surname in the request"
                     },
                     {
-                        "error": "invalid email",
-                        "message": "Unable to validate the email in the request",
-                        "source": {
-                            "field": "validating email",
-                            "param": "error validating email"
-                        }
+                        "code": "invalid email",
+                        "description": "Unable to validate the email in the request"
                     }
                 ]
             }
@@ -167,12 +143,8 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "error": "unexpected end of JSON input",
-                        "message": "api endpoint POST user returned an error unmarshalling request body",
-                        "source": {
-                            "field": "unmarshalling",
-                            "param": "error unmarshalling request body"
-                        }
+                        "code": "unexpected end of JSON input",
+                        "description": "api endpoint POST user returned an error unmarshalling request body"
                     }
                 ]
             }
@@ -192,12 +164,8 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "error": "InternalErrorException",
-                        "message": "Failed to create new user in user pool",
-                        "source": {
-                            "field": "create new user pool user",
-                            "param": "error creating new user pool user"
-                        }
+                        "code": "InternalErrorException",
+                        "description": "Failed to create new user in user pool"
                     }
                 ]
             }
@@ -217,12 +185,8 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "error": "duplicate email",
-                        "message": "duplicate email address found",
-                        "source": {
-                            "field": "duplicate email address check",
-                            "param": "error checking duplicate email address"
-                        }
+                        "code": "duplicate email",
+                        "description": "duplicate email address found"
                     }
                 ]
             }

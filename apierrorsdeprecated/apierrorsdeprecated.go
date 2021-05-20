@@ -11,43 +11,54 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
+const (
+	MissingTokenDescription         = "no Authorization token was provided"
+	MalformedTokenDescription       = "the provided token does not meet the required format"
+	InvalidUserNameDescription      = "Unable to validate the username in the request"
+	InvalidPasswordDescription      = "Unable to validate the password in the request"
+	InvalidForenameErrorDescription = "Unable to validate the user's forename in the request"
+	InvalidSurnameErrorDescription  = "Unable to validate the user's surname in the request"
+	InvalidErrorDescription         = "Unable to validate the email in the request"
+	PasswordErrorDescription             = "failed to generate password"
+	RequestErrorDescription              = "api endpoint POST user returned an error reading request body"
+	UnmarshallingErrorDescription        = "api endpoint POST user returned an error unmarshalling request body"
+	DuplicateEmailFound                  = "duplicate email address found"
+	NewUserModelErrorDescription         = "Failed to create new user model"
+	ListUsersErrorDescription            = "Error in checking duplicate email address"
+	AdminCreateUserErrorDescription      = "Failed to create new user in user pool"
+	MarshallingNewUserErrorDescription   = "Failed to marshall json response"
+	HttpResponseErrorDescription         = "Failed to write http response"
+	RequiredParameterNotFoundDescription = "error in parsing api setup arguments - missing parameter"
+	InternalErrorException               = "InternalErrorException"
+)
+
 var InvalidTokenError = errors.New("invalid token")
-var MissingTokenMessage = "no Authorization token was provided"
-var MalformedTokenMessage = "the provided token does not meet the required format"
 
 var ErrInvalidUserName = errors.New("invalid username")
-var InvalidUserNameMessage = "Unable to validate the username in the request"
 
 var ErrInvalidPassword = errors.New("invalid password")
-var InvalidPasswordMessage = "Unable to validate the password in the request"
 
 var ErrInvalidForename = errors.New("invalid forename")
-var InvalidForenameErrorMessage = "Unable to validate the user's forename in the request"
 
 var ErrInvalidSurname = errors.New("invalid surname")
-var InvalidSurnameErrorMessage = "Unable to validate the user's surname in the request"
 
 var ErrInvalidEmail = errors.New("invalid email")
-var InvalidErrorMessage = "Unable to validate the email in the request"
 
 var ErrDuplicateEmail = errors.New("duplicate email")
 
-func IndividualErrorBuilder(err error, message, sourceField, sourceParam string) (individualError errModels.IndividualError) {
+func IndividualErrorBuilder(err error, description string) (Error errModels.Error) {
 
-	individualError = errModels.IndividualError{
-		SpecificError: error.Error(err),
-		Message:       message,
-		Source: errModels.Source{
-			Field: sourceField,
-			Param: sourceParam},
+	Error = errModels.Error{
+		Code:        error.Error(err),
+		Description: description,
 	}
 
-	return individualError
+	return Error
 }
 
-func ErrorResponseBodyBuilder(listOfErrors []errModels.IndividualError) (errorResponseBody errModels.ErrorStructure) {
+func ErrorResponseBodyBuilder(listOfErrors []errModels.Error) (errorResponseBody errModels.ErrorList) {
 
-	errorResponseBody = errModels.ErrorStructure{
+	errorResponseBody = errModels.ErrorList{
 		Errors: listOfErrors,
 	}
 
@@ -74,15 +85,15 @@ func WriteErrorResponse(ctx context.Context, w http.ResponseWriter, status int, 
 	}
 }
 
-func HandleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error, message, sourceField, sourceParam string) {
+func HandleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error, description string) {
 
-	var errorList []errModels.IndividualError
+	var errorList []errModels.Error
 
-	internalServerErrorBody := IndividualErrorBuilder(err, message, sourceField, sourceParam)
+	internalServerErrorBody := IndividualErrorBuilder(err, description)
 	errorList = append(errorList, internalServerErrorBody)
 	errorResponseBody := ErrorResponseBodyBuilder(errorList)
 
-	log.Event(ctx, message, log.ERROR, log.Error(err))
+	log.Event(ctx, description, log.ERROR, log.Error(err))
 	WriteErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
 }
 

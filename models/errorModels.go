@@ -1,16 +1,10 @@
 package models
 
-type ErrorStructure struct {
-	Errors []IndividualError `json:"errors"`
+type ErrorList struct {
+	Errors []Error `json:"errors"`
 }
 
-type IndividualError struct {
-	SpecificError string `json:"error"`
-	Message       string `json:"message"`
-	Source        Source `json:"source"`
-}
-
-type Source struct {
-	Field string `json:"field"`
-	Param string `json:"param"`
+type Error struct {
+	Code        string `json:"code"`
+	Description string `json:"description"`
 }

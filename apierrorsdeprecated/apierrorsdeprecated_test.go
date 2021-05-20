@@ -12,22 +12,17 @@ func TestBuildingIndividualErrors(t *testing.T) {
 
 	Convey("The individual error conforms to the expected structure", t, func() {
 
-		err := errors.New("string, unchanging so devs can use this in code")
-		message := "detailed explanation of error"
-		sourceField := "reference to field like some.field or something"
-		sourceParam := "query param causing issue"
+		err := errors.New("SomeError")
+		description := "detailed explanation of error"
 
-		individualErrorExample := errModels.IndividualError{
-			SpecificError: "string, unchanging so devs can use this in code",
-			Message:       "detailed explanation of error",
-			Source: errModels.Source{
-				Field: "reference to field like some.field or something",
-				Param: "query param causing issue"},
+		individualErrorExample := errModels.Error{
+			Code:        "SomeError",
+			Description: "detailed explanation of error",
 		}
 
-		individualError := IndividualErrorBuilder(err, message, sourceField, sourceParam)
+		Error := IndividualErrorBuilder(err, description)
 
-		So(individualError, ShouldResemble, individualErrorExample)
+		So(Error, ShouldResemble, individualErrorExample)
 
 	})
 }
@@ -35,24 +30,19 @@ func TestBuildingIndividualErrors(t *testing.T) {
 func TestBuildingErrorStructure(t *testing.T) {
 	Convey("An error structure is created from a list of errors", t, func() {
 
-		listOfErrors := []errModels.IndividualError{
+		listOfErrors := []errModels.Error{
 			{
-				SpecificError: "string, unchanging so devs can use this in code",
-				Message:       "detailed explanation of error",
-				Source: errModels.Source{
-					Field: "reference to field like some.field or something",
-					Param: "query param causing issue"},
+				Code:        "SomeError",
+				Description: "detailed explanation of error",
 			},
 		}
 
-		errorResponseBodyExample := errModels.ErrorStructure{
-			Errors: []errModels.IndividualError{
+		errorResponseBodyExample := errModels.ErrorList{
+			Errors: []errModels.Error{
 				{
-					SpecificError: "string, unchanging so devs can use this in code",
-					Message:       "detailed explanation of error",
-					Source: errModels.Source{
-						Field: "reference to field like some.field or something",
-						Param: "query param causing issue"}},
+					Code:        "SomeError",
+					Description: "detailed explanation of error",
+				},
 			},
 		}
 

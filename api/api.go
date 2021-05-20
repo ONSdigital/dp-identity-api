@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/ONSdigital/dp-identity-api/api/content"
+	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
@@ -25,8 +25,8 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 
 	// Return an error if empty required parameter was passed.
 	if userPoolId == "" || clientId == "" || clientSecret == "" || clientAuthFlow == "" {
-		log.Event(ctx, content.RequiredParameterNotFoundMessage, log.ERROR)
-		return nil, errors.New(content.RequiredParameterNotFoundMessage)
+		log.Event(ctx, apierrorsdeprecated.RequiredParameterNotFoundDescription, log.ERROR)
+		return nil, errors.New(apierrorsdeprecated.RequiredParameterNotFoundDescription)
 	}
 
 	api := &API{

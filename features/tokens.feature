@@ -28,12 +28,8 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "NotAuthorizedException: Incorrect username or password.",
-                    "message": "unautheticated user: Unable to autheticate request",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
+                    "code": "NotAuthorizedException: Incorrect username or password.",
+                    "description": "unautheticated user: Unable to autheticate request"
                 }
             ]
         }
@@ -53,19 +49,15 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "NotAuthorizedException: Password attempts exceeded",
-                    "message": "exceeded the number of attemps to login in with the provided credentials",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
+                    "code": "NotAuthorizedException: Password attempts exceeded",
+                    "description": "exceeded the number of attemps to login in with the provided credentials"
                 }
             ]
         }
         """
 
 Scenario: POST /tokens
-    Given an internal server error is returned from Cognito 
+    Given an internal server error is returned from Cognito
     When I POST "/tokens"
     """
     {
@@ -78,19 +70,15 @@ Scenario: POST /tokens
     {
         "errors": [
             {
-                "error": "InternalErrorException",
-                "message": "api endpoint POST login returned an error and failed to login to cognito",
-                "source": {
-                    "field": "",
-                    "param": ""
-                }
+                "code": "InternalErrorException",
+                "description": "api endpoint POST login returned an error and failed to login to cognito"
             }
         ]
     }
     """
 
 Scenario: POST /tokens
-    Given an error is returned from Cognito 
+    Given an error is returned from Cognito
     When I POST "/tokens"
     """
     {
@@ -103,12 +91,8 @@ Scenario: POST /tokens
     {
         "errors": [
             {
-                "error": "InvalidParameterException",
-                "message": "something went wrong, and api endpoint POST login returned an error and failed to login to cognito. Please try again or contact an administrator.",
-                "source": {
-                    "field": "",
-                    "param": ""
-                }
+                "code": "InvalidParameterException",
+                "description": "something went wrong, and api endpoint POST login returned an error and failed to login to cognito. Please try again or contact an administrator."
             }
         ]
     }
@@ -127,12 +111,8 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "invalid password",
-                    "message": "Unable to validate the password in the request",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
+                    "code": "invalid password",
+                    "description": "Unable to validate the password in the request"
                 }
             ]
         }
@@ -151,12 +131,8 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "invalid email",
-                    "message": "Unable to validate the email in the request",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
+                    "code": "invalid email",
+                    "description": "Unable to validate the email in the request"
                 }
             ]
         }
@@ -175,12 +151,8 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "invalid email",
-                    "message": "Unable to validate the email in the request",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
+                    "code": "invalid email",
+                    "description": "Unable to validate the email in the request"
                 }
             ]
         }
@@ -199,20 +171,12 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "invalid password",
-                    "message": "Unable to validate the password in the request",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
+                    "code": "invalid password",
+                    "description": "Unable to validate the password in the request"
                 },
                 {
-                    "error": "invalid email",
-                    "message": "Unable to validate the email in the request",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
+                    "code": "invalid email",
+                    "description": "Unable to validate the email in the request"
                 }
             ]
         }
@@ -226,12 +190,8 @@ Scenario: DELETE /tokens/self
     {
         "errors": [
             {
-                "error": "invalid token",
-                "message": "no Authorization token was provided",
-                "source": {
-                    "field": "",
-                    "param": ""
-                }
+                "code": "invalid token",
+                "description": "no Authorization token was provided"
             }
         ]
     }
@@ -245,12 +205,8 @@ Scenario: DELETE /tokens/self
     {
         "errors": [
             {
-                "error": "invalid token",
-                "message": "the provided token does not meet the required format",
-                "source": {
-                    "field": "",
-                    "param": ""
-                }
+                "code": "invalid token",
+                "description": "the provided token does not meet the required format"
             }
         ]
     }
@@ -264,12 +220,8 @@ Scenario: DELETE /tokens/self
     {
         "errors": [
             {
-                "error": "invalid token",
-                "message": "the provided token does not meet the required format",
-                "source": {
-                    "field": "",
-                    "param": ""
-                }
+                "code": "invalid token",
+                "description": "the provided token does not meet the required format"
             }
         ]
     }
