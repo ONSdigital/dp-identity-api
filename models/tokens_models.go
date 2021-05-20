@@ -1,8 +1,13 @@
 package models
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/utilities"
+	"github.com/ONSdigital/log.go/log"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -22,7 +27,8 @@ type IdClaims struct {
 }
 
 type IdToken struct {
-	Claims IdClaims
+	TokenString string
+	Claims      IdClaims
 }
 
 func (t *IdToken) ParseWithoutValidating(tokenString string) error {
@@ -41,4 +47,58 @@ func (t *IdToken) ParseWithoutValidating(tokenString string) error {
 
 	t.Claims = *idClaims
 	return nil
+}
+
+func (t *IdToken) Validate(ctx context.Context, errorList *[]apierrors.IndividualError) {
+	field := ""
+	param := ""
+
+	if t.TokenString == "" {
+		invalidIDTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidIDTokenError,
+			apierrors.MissingIDTokenMessage, field, param)
+		*errorList = append(*errorList, invalidIDTokenErrorBody)
+		log.Event(ctx, apierrors.MissingRefreshTokenMessage, log.ERROR)
+	} else {
+		parsingErr := t.ParseWithoutValidating(t.TokenString)
+		if parsingErr != nil {
+			invalidIDTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidIDTokenError,
+				apierrors.MalformedIDTokenMessage, field, param)
+			*errorList = append(*errorList, invalidIDTokenErrorBody)
+			log.Event(ctx, parsingErr.Error(), log.ERROR)
+		}
+	}
+}
+
+type RefreshToken struct {
+	TokenString string
+}
+
+func (t *RefreshToken) GenerateRefreshRequest(clientSecret string, username string, clientId string) *cognitoidentityprovider.InitiateAuthInput {
+	refreshAuthFlow := "REFRESH_TOKEN_AUTH"
+
+	secretHash := utilities.ComputeSecretHash(clientSecret, username, clientId)
+
+	authParams := map[string]*string{
+		"REFRESH_TOKEN": &t.TokenString,
+		"SECRET_HASH":   &secretHash,
+	}
+
+	authInput := &cognitoidentityprovider.InitiateAuthInput{
+		AuthFlow:       &refreshAuthFlow,
+		AuthParameters: authParams,
+		ClientId:       &clientId,
+	}
+	return authInput
+}
+
+func (t *RefreshToken) Validate(ctx context.Context, errorList *[]apierrors.IndividualError) {
+	field := ""
+	param := ""
+
+	if t.TokenString == "" {
+		invalidRefreshTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidRefreshTokenError,
+			apierrors.MissingRefreshTokenMessage, field, param)
+		*errorList = append(*errorList, invalidRefreshTokenErrorBody)
+		log.Event(ctx, apierrors.MissingRefreshTokenMessage, log.ERROR)
+	}
 }

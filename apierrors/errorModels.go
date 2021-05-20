@@ -1,4 +1,4 @@
-package models
+package apierrors
 
 type ErrorStructure struct {
 	Errors []IndividualError `json:"errors"`

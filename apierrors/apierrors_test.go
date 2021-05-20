@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	errModels "github.com/ONSdigital/dp-identity-api/models"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -17,10 +16,10 @@ func TestBuildingIndividualErrors(t *testing.T) {
 		sourceField := "reference to field like some.field or something"
 		sourceParam := "query param causing issue"
 
-		individualErrorExample := errModels.IndividualError{
+		individualErrorExample := IndividualError{
 			SpecificError: "string, unchanging so devs can use this in code",
 			Message:       "detailed explanation of error",
-			Source: errModels.Source{
+			Source: Source{
 				Field: "reference to field like some.field or something",
 				Param: "query param causing issue"},
 		}
@@ -35,22 +34,22 @@ func TestBuildingIndividualErrors(t *testing.T) {
 func TestBuildingErrorStructure(t *testing.T) {
 	Convey("An error structure is created from a list of errors", t, func() {
 
-		listOfErrors := []errModels.IndividualError{
+		listOfErrors := []IndividualError{
 			{
 				SpecificError: "string, unchanging so devs can use this in code",
 				Message:       "detailed explanation of error",
-				Source: errModels.Source{
+				Source: Source{
 					Field: "reference to field like some.field or something",
 					Param: "query param causing issue"},
 			},
 		}
 
-		errorResponseBodyExample := errModels.ErrorStructure{
-			Errors: []errModels.IndividualError{
+		errorResponseBodyExample := ErrorStructure{
+			Errors: []IndividualError{
 				{
 					SpecificError: "string, unchanging so devs can use this in code",
 					Message:       "detailed explanation of error",
-					Source: errModels.Source{
+					Source: Source{
 						Field: "reference to field like some.field or something",
 						Param: "query param causing issue"}},
 			},

@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 
-	errModels "github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/log.go/log"
 )
 
@@ -41,12 +40,12 @@ var InvalidErrorMessage = "Unable to validate the email in the request"
 
 var ErrDuplicateEmail = errors.New("duplicate email")
 
-func IndividualErrorBuilder(err error, message, sourceField, sourceParam string) (individualError errModels.IndividualError) {
+func IndividualErrorBuilder(err error, message, sourceField, sourceParam string) (individualError IndividualError) {
 
-	individualError = errModels.IndividualError{
+	individualError = IndividualError{
 		SpecificError: error.Error(err),
 		Message:       message,
-		Source: errModels.Source{
+		Source: Source{
 			Field: sourceField,
 			Param: sourceParam},
 	}
@@ -54,9 +53,9 @@ func IndividualErrorBuilder(err error, message, sourceField, sourceParam string)
 	return individualError
 }
 
-func ErrorResponseBodyBuilder(listOfErrors []errModels.IndividualError) (errorResponseBody errModels.ErrorStructure) {
+func ErrorResponseBodyBuilder(listOfErrors []IndividualError) (errorResponseBody ErrorStructure) {
 
-	errorResponseBody = errModels.ErrorStructure{
+	errorResponseBody = ErrorStructure{
 		Errors: listOfErrors,
 	}
 
@@ -85,7 +84,7 @@ func WriteErrorResponse(ctx context.Context, w http.ResponseWriter, status int, 
 
 func HandleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error, message, sourceField, sourceParam string) {
 
-	var errorList []errModels.IndividualError
+	var errorList []IndividualError
 
 	internalServerErrorBody := IndividualErrorBuilder(err, message, sourceField, sourceParam)
 	errorList = append(errorList, internalServerErrorBody)

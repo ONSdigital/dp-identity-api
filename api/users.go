@@ -23,7 +23,7 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 		log.Event(ctx, "starting to generate a new user", log.INFO)
 		defer req.Body.Close()
 
-		var errorList []models.IndividualError
+		var errorList []apierrors.IndividualError
 
 		tempPassword, err := password.Generate(14, 1, 1, false, false)
 		if err != nil {

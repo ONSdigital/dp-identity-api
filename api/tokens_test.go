@@ -12,7 +12,6 @@ import (
 
 	"github.com/ONSdigital/dp-identity-api/apierrors"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
-	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/gorilla/mux"
 
@@ -101,7 +100,7 @@ func TestWriteErrorResponse(t *testing.T) {
 
 		errorResponseBodyExample := `{"errors":[{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}},{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}}]}`
 
-		var errorList []models.IndividualError
+		var errorList []apierrors.IndividualError
 		errorList = nil
 
 		errInvalidEmail := errors.New("Invalid email")

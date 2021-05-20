@@ -70,7 +70,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 					return
 				}
 
-				var errorList []models.IndividualError
+				var errorList []apierrors.IndividualError
 				switch authErr.Error() {
 				case "NotAuthorizedException: Incorrect username or password.":
 					{
@@ -110,7 +110,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 		invalidPasswordErrorBody := apierrors.IndividualErrorBuilder(apierrors.ErrInvalidPassword, apierrors.InvalidPasswordMessage, field, param)
 		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(apierrors.ErrInvalidEmail, apierrors.InvalidErrorMessage, field, param)
 
-		var errorList []models.IndividualError
+		var errorList []apierrors.IndividualError
 
 		if !validPasswordRequest {
 			errorList = append(errorList, invalidPasswordErrorBody)
@@ -128,7 +128,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 
 func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		var errorList []models.IndividualError
+		var errorList []apierrors.IndividualError
 		field := ""
 		param := ""
 
@@ -178,35 +178,19 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 
 func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		var errorList []models.IndividualError
+		var errorList []apierrors.IndividualError
 		field := ""
 		param := ""
-		refreshAuthFlow := "REFRESH_TOKEN_AUTH"
 
-		refreshToken := req.Header.Get(RefreshTokenHeaderName)
-		if refreshToken == "" {
-			invalidRefreshTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidRefreshTokenError,
-				apierrors.MissingRefreshTokenMessage, field, param)
-			errorList = append(errorList, invalidRefreshTokenErrorBody)
-			log.Event(ctx, apierrors.MissingRefreshTokenMessage, log.ERROR)
+		refreshToken := models.RefreshToken{
+			TokenString: req.Header.Get(RefreshTokenHeaderName),
 		}
+		refreshToken.Validate(ctx, &errorList)
 
-		idTokenString := req.Header.Get(IdTokenHeaderName)
-		idToken := models.IdToken{}
-		if idTokenString == "" {
-			invalidIDTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidIDTokenError,
-				apierrors.MissingIDTokenMessage, field, param)
-			errorList = append(errorList, invalidIDTokenErrorBody)
-			log.Event(ctx, apierrors.MissingRefreshTokenMessage, log.ERROR)
-		} else {
-			parsingErr := idToken.ParseWithoutValidating(idTokenString)
-			if parsingErr != nil {
-				invalidIDTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidIDTokenError,
-					apierrors.MalformedIDTokenMessage, field, param)
-				errorList = append(errorList, invalidIDTokenErrorBody)
-				log.Event(ctx, parsingErr.Error(), log.ERROR)
-			}
+		idToken := models.IdToken{
+			TokenString: req.Header.Get(IdTokenHeaderName),
 		}
+		idToken.Validate(ctx, &errorList)
 
 		if len(errorList) > 0 {
 			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
@@ -214,19 +198,7 @@ func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
 			return
 		}
 
-		secretHash := utilities.ComputeSecretHash(api.ClientSecret, idToken.Claims.CognitoUser, api.ClientId)
-
-		authParams := map[string]*string{
-			"REFRESH_TOKEN": &refreshToken,
-			"SECRET_HASH":   &secretHash,
-		}
-
-		authInput := &cognitoidentityprovider.InitiateAuthInput{
-			AuthFlow:       &refreshAuthFlow,
-			AuthParameters: authParams,
-			ClientId:       &api.ClientId,
-		}
-
+		authInput := refreshToken.GenerateRefreshRequest(api.ClientSecret, idToken.Claims.CognitoUser, api.ClientId)
 		result, authErr := api.CognitoClient.InitiateAuth(authInput)
 
 		if authErr != nil {
@@ -243,7 +215,7 @@ func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
 			}
 		}
 
-		result.AuthenticationResult.RefreshToken = &refreshToken
+		result.AuthenticationResult.RefreshToken = &refreshToken.TokenString
 
 		buildSuccessfulResponse(result, w, ctx)
 
