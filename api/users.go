@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/ONSdigital/dp-identity-api/api/content"
-	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/validation"
 	"github.com/ONSdigital/log.go/log"
@@ -28,14 +28,14 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 		tempPassword, err := password.Generate(14, 1, 1, false, false)
 		if err != nil {
 			log.Event(ctx, content.PasswordErrorMessage, log.ERROR)
-			apierrors.HandleUnexpectedError(ctx, w, err, content.PasswordErrorMessage, content.PasswordErrorField, content.PasswordErrorParam)
+			apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, content.PasswordErrorMessage, content.PasswordErrorField, content.PasswordErrorParam)
 			return
 		}
 
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			log.Event(ctx, content.RequestErrorMessage, log.ERROR)
-			apierrors.HandleUnexpectedError(ctx, w, err, content.RequestErrorMessage, content.RequestErrorField, content.RequestErrorParam)
+			apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, content.RequestErrorMessage, content.RequestErrorField, content.RequestErrorParam)
 			return
 		}
 
@@ -43,29 +43,29 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 		err = json.Unmarshal(body, &user)
 		if err != nil {
 			log.Event(ctx, content.UnmarshallingErrorMessage, log.ERROR)
-			apierrors.HandleUnexpectedError(ctx, w, err, content.UnmarshallingErrorMessage, content.UnmarshallingErrorField, content.UnmarshallingErrorParam)
+			apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, content.UnmarshallingErrorMessage, content.UnmarshallingErrorField, content.UnmarshallingErrorParam)
 			return
 		}
 
 		forename := user.Forename
 		// validate forename
 		if forename == "" {
-			log.Event(ctx, apierrors.InvalidForenameErrorMessage, log.ERROR)
-			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidForename, apierrors.InvalidForenameErrorMessage, content.ValidForenameErrorField, content.ValidForenameErrorParam))
+			log.Event(ctx, apierrorsdeprecated.InvalidForenameErrorMessage, log.ERROR)
+			errorList = append(errorList, apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.ErrInvalidForename, apierrorsdeprecated.InvalidForenameErrorMessage, content.ValidForenameErrorField, content.ValidForenameErrorParam))
 		}
 
 		surname := user.Surname
 		// validate forename
 		if surname == "" {
-			log.Event(ctx, apierrors.InvalidSurnameErrorMessage, log.ERROR)
-			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidSurname, apierrors.InvalidSurnameErrorMessage, content.ValidSurnameErrorField, content.ValidSurnameErrorParam))
+			log.Event(ctx, apierrorsdeprecated.InvalidSurnameErrorMessage, log.ERROR)
+			errorList = append(errorList, apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.ErrInvalidSurname, apierrorsdeprecated.InvalidSurnameErrorMessage, content.ValidSurnameErrorField, content.ValidSurnameErrorParam))
 		}
 
 		email := user.Email
 		// validate email
 		if !validation.ValidateONSEmail(email) {
-			log.Event(ctx, apierrors.InvalidErrorMessage, log.ERROR)
-			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrInvalidEmail, apierrors.InvalidErrorMessage, content.ValidEmailErrorField, content.ValidEmailErrorParam))
+			log.Event(ctx, apierrorsdeprecated.InvalidErrorMessage, log.ERROR)
+			errorList = append(errorList, apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.ErrInvalidEmail, apierrorsdeprecated.InvalidErrorMessage, content.ValidEmailErrorField, content.ValidEmailErrorParam))
 		}
 
 		// duplicate email check
@@ -73,24 +73,24 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 		emailCheckResp, err := api.CognitoClient.ListUsers(emailCheckInput)
 		if err != nil {
 			log.Event(ctx, content.ListUsersErrorMessage, log.ERROR)
-			apierrors.HandleUnexpectedError(ctx, w, err, content.ListUsersErrorMessage, content.ListUsersErrorField, content.ListUsersErrorParam)
+			apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, content.ListUsersErrorMessage, content.ListUsersErrorField, content.ListUsersErrorParam)
 			return
 		}
 		if len(emailCheckResp.Users) > 0 {
 			log.Event(ctx, content.ListUsersErrorMessage, log.ERROR)
-			errorList = append(errorList, apierrors.IndividualErrorBuilder(apierrors.ErrDuplicateEmail, content.DuplicateEmailFound, content.ListUsersErrorField, content.ListUsersErrorParam))
+			errorList = append(errorList, apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.ErrDuplicateEmail, content.DuplicateEmailFound, content.ListUsersErrorField, content.ListUsersErrorParam))
 		}
 
 		// report validation errors in response
 		if len(errorList) != 0 {
-			apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, apierrors.ErrorResponseBodyBuilder(errorList))
+			apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, apierrorsdeprecated.ErrorResponseBodyBuilder(errorList))
 			return
 		}
 
 		newUser, err := CreateNewUserModel(forename, surname, uuid.NewString(), email, tempPassword, api.UserPoolId)
 		if err != nil {
 			log.Event(ctx, content.NewUserModelErrorMessage, log.ERROR)
-			apierrors.HandleUnexpectedError(ctx, w, err, content.NewUserModelErrorMessage, content.NewUserModelErrorField, content.NewUserModelErrorParam)
+			apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, content.NewUserModelErrorMessage, content.NewUserModelErrorField, content.NewUserModelErrorParam)
 			return
 		}
 
@@ -99,12 +99,12 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 		if err != nil {
 			if strings.Contains(err.Error(), content.InternalErrorException) {
 				log.Event(ctx, content.AdminCreateUserErrorMessage, log.ERROR)
-				apierrors.HandleUnexpectedError(ctx, w, err, content.AdminCreateUserErrorMessage, content.AdminCreateUserErrorField, content.AdminCreateUserErrorParam)
+				apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, content.AdminCreateUserErrorMessage, content.AdminCreateUserErrorField, content.AdminCreateUserErrorParam)
 				return
 			} else {
 				log.Event(ctx, err.Error(), log.ERROR)
-				errorList = append(errorList, apierrors.IndividualErrorBuilder(err, err.Error(), content.AdminCreateUserErrorField, content.AdminCreateUserErrorParam))
-				apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, apierrors.ErrorResponseBodyBuilder(errorList))
+				errorList = append(errorList, apierrorsdeprecated.IndividualErrorBuilder(err, err.Error(), content.AdminCreateUserErrorField, content.AdminCreateUserErrorParam))
+				apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, apierrorsdeprecated.ErrorResponseBodyBuilder(errorList))
 				return
 			}
 		}
@@ -113,7 +113,7 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 		jsonResponse, err := json.Marshal(resultUser)
 		if err != nil {
 			log.Event(ctx, content.MarshallingNewUserErrorMessage, log.ERROR)
-			apierrors.HandleUnexpectedError(ctx, w, err, content.MarshallingNewUserErrorMessage, content.MarshallingNewUserErrorField, content.MarshallingNewUserErrorParam)
+			apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, content.MarshallingNewUserErrorMessage, content.MarshallingNewUserErrorField, content.MarshallingNewUserErrorParam)
 			return
 		}
 
@@ -121,7 +121,7 @@ func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
 		_, err = w.Write(jsonResponse)
 		if err != nil {
 			log.Event(ctx, content.HttpResponseErrorMessage, log.ERROR)
-			apierrors.HandleUnexpectedError(ctx, w, err, content.HttpResponseErrorMessage, content.HttpResponseErrorField, content.HttpResponseErrorParam)
+			apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, content.HttpResponseErrorMessage, content.HttpResponseErrorField, content.HttpResponseErrorParam)
 			return
 		}
 	}

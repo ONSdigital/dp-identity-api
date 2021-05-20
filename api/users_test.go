@@ -9,7 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -164,7 +164,7 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": name, "surname": surname, "email": ""},
 				[]string{
-					apierrors.InvalidErrorMessage,
+					apierrorsdeprecated.InvalidErrorMessage,
 				},
 				http.StatusBadRequest,
 			},
@@ -172,8 +172,8 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": "", "surname": "", "email": email},
 				[]string{
-					apierrors.InvalidForenameErrorMessage,
-					apierrors.InvalidSurnameErrorMessage,
+					apierrorsdeprecated.InvalidForenameErrorMessage,
+					apierrorsdeprecated.InvalidSurnameErrorMessage,
 				},
 				http.StatusBadRequest,
 			},
@@ -181,7 +181,7 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": name, "surname": "", "email": email},
 				[]string{
-					apierrors.InvalidSurnameErrorMessage,
+					apierrorsdeprecated.InvalidSurnameErrorMessage,
 				},
 				http.StatusBadRequest,
 			},
@@ -189,7 +189,7 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": "", "surname": surname, "email": email},
 				[]string{
-					apierrors.InvalidForenameErrorMessage,
+					apierrorsdeprecated.InvalidForenameErrorMessage,
 				},
 				http.StatusBadRequest,
 			},
@@ -197,9 +197,9 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": "", "surname": "", "email": ""},
 				[]string{
-					apierrors.InvalidForenameErrorMessage,
-					apierrors.InvalidSurnameErrorMessage,
-					apierrors.InvalidErrorMessage,
+					apierrorsdeprecated.InvalidForenameErrorMessage,
+					apierrorsdeprecated.InvalidSurnameErrorMessage,
+					apierrorsdeprecated.InvalidErrorMessage,
 				},
 				http.StatusBadRequest,
 			},
@@ -207,7 +207,7 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": name, "surname": surname, "email": invalidEmail},
 				[]string{
-					apierrors.InvalidErrorMessage,
+					apierrorsdeprecated.InvalidErrorMessage,
 				},
 				http.StatusBadRequest,
 			},

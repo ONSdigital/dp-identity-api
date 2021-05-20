@@ -15,7 +15,7 @@ import (
 	"github.com/ONSdigital/log.go/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
-	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 )
 
 type AuthParams struct {
@@ -35,7 +35,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			errorMessage := "api endpoint POST login returned an error reading the request body"
-			apierrors.HandleUnexpectedError(ctx, w, err, errorMessage, field, param)
+			apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, errorMessage, field, param)
 			return
 		}
 
@@ -43,7 +43,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 		err = json.Unmarshal(body, &authParams)
 		if err != nil {
 			errorMessage := "api endpoint POST login returned an error unmarshalling the body"
-			apierrors.HandleUnexpectedError(ctx, w, err, errorMessage, field, param)
+			apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, errorMessage, field, param)
 			return
 		}
 
@@ -56,11 +56,11 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 
 			if authErr != nil {
 
-				isInternalError := apierrors.IdentifyInternalError(authErr)
+				isInternalError := apierrorsdeprecated.IdentifyInternalError(authErr)
 
 				if isInternalError {
 					errorMessage := "api endpoint POST login returned an error and failed to login to cognito"
-					apierrors.HandleUnexpectedError(ctx, w, authErr, errorMessage, field, param)
+					apierrorsdeprecated.HandleUnexpectedError(ctx, w, authErr, errorMessage, field, param)
 					return
 				}
 
@@ -69,28 +69,28 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 				case "NotAuthorizedException: Incorrect username or password.":
 					{
 						notAuthorizedMessage := "unautheticated user: Unable to autheticate request"
-						notAuthorizedError := apierrors.IndividualErrorBuilder(authErr, notAuthorizedMessage, field, param)
+						notAuthorizedError := apierrorsdeprecated.IndividualErrorBuilder(authErr, notAuthorizedMessage, field, param)
 						errorList = append(errorList, notAuthorizedError)
-						errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-						apierrors.WriteErrorResponse(ctx, w, http.StatusUnauthorized, errorResponseBody)
+						errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
+						apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusUnauthorized, errorResponseBody)
 						return
 					}
 				case "NotAuthorizedException: Password attempts exceeded":
 					{
 						forbiddenMessage := "exceeded the number of attemps to login in with the provided credentials"
-						forbiddenError := apierrors.IndividualErrorBuilder(authErr, forbiddenMessage, field, param)
+						forbiddenError := apierrorsdeprecated.IndividualErrorBuilder(authErr, forbiddenMessage, field, param)
 						errorList = append(errorList, forbiddenError)
-						errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-						apierrors.WriteErrorResponse(ctx, w, http.StatusForbidden, errorResponseBody)
+						errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
+						apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusForbidden, errorResponseBody)
 						return
 					}
 				default:
 					{
 						loginMessage := "something went wrong, and api endpoint POST login returned an error and failed to login to cognito. Please try again or contact an administrator."
-						loginError := apierrors.IndividualErrorBuilder(authErr, loginMessage, field, param)
+						loginError := apierrorsdeprecated.IndividualErrorBuilder(authErr, loginMessage, field, param)
 						errorList = append(errorList, loginError)
-						errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-						apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+						errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
+						apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 						return
 					}
 				}
@@ -101,8 +101,8 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 			return
 		}
 
-		invalidPasswordErrorBody := apierrors.IndividualErrorBuilder(apierrors.ErrInvalidPassword, apierrors.InvalidPasswordMessage, field, param)
-		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(apierrors.ErrInvalidEmail, apierrors.InvalidErrorMessage, field, param)
+		invalidPasswordErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.ErrInvalidPassword, apierrorsdeprecated.InvalidPasswordMessage, field, param)
+		invalidEmailErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.ErrInvalidEmail, apierrorsdeprecated.InvalidErrorMessage, field, param)
 
 		var errorList []models.IndividualError
 
@@ -114,8 +114,8 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 			errorList = append(errorList, invalidEmailErrorBody)
 		}
 
-		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-		apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+		errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
+		apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 
 	}
 }
@@ -129,21 +129,21 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 
 		authString := req.Header.Get("Authorization")
 		if authString == "" {
-			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidTokenError, apierrors.MissingTokenMessage, field, param)
+			invalidTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.InvalidTokenError, apierrorsdeprecated.MissingTokenMessage, field, param)
 			errorList = append(errorList, invalidTokenErrorBody)
 			log.Event(ctx, "no authorization header provided", log.ERROR)
-			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-			apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+			errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
+			apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 			return
 		}
 
 		authComponents := strings.Split(authString, " ")
 		if len(authComponents) != 2 {
 			log.Event(ctx, "malformed authorization header provided", log.ERROR)
-			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidTokenError, apierrors.MalformedTokenMessage, field, param)
+			invalidTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.InvalidTokenError, apierrorsdeprecated.MalformedTokenMessage, field, param)
 			errorList = append(errorList, invalidTokenErrorBody)
-			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-			apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+			errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
+			apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 			return
 		}
 
@@ -153,14 +153,14 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 
 		if err != nil {
 			log.Event(ctx, "From Cognito - "+err.Error(), log.ERROR)
-			invalidTokenErrorBody := apierrors.IndividualErrorBuilder(err, "", field, param)
+			invalidTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(err, "", field, param)
 			errorList = append(errorList, invalidTokenErrorBody)
-			errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-			isInternalError := apierrors.IdentifyInternalError(err)
+			errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
+			isInternalError := apierrorsdeprecated.IdentifyInternalError(err)
 			if isInternalError {
-				apierrors.WriteErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
+				apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
 			} else {
-				apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+				apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 			}
 			return
 		}
@@ -224,7 +224,7 @@ func buildSucessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, 
 	} else {
 		err := errors.New("unexpected return from cognito")
 		errorMessage := "unexpected response from cognito, there was no authentication result field"
-		apierrors.HandleUnexpectedError(ctx, w, err, errorMessage, "", "")
+		apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, errorMessage, "", "")
 		return
 	}
 }
@@ -235,14 +235,14 @@ func buildjson(jsonInput map[string]interface{}, w http.ResponseWriter, ctx cont
 
 	if err != nil {
 		errorMessage := "failed to marshal the error"
-		apierrors.HandleUnexpectedError(ctx, w, err, errorMessage, "", "")
+		apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, errorMessage, "", "")
 		return
 	}
 
 	_, err = w.Write(jsonResponse)
 	if err != nil {
 		errorMessage := "writing response failed"
-		apierrors.HandleUnexpectedError(ctx, w, err, errorMessage, "", "")
+		apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, errorMessage, "", "")
 
 		return
 	}

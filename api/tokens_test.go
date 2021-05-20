@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -102,21 +102,21 @@ func TestWriteErrorResponse(t *testing.T) {
 
 		var errorList []models.IndividualError
 		errorList = nil
-		
+
 		errInvalidEmail := errors.New("Invalid email")
 		invalidErrorMessage := "Unable to validate the email in the request"
 		field := ""
 		param := ""
-		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(errInvalidEmail, invalidErrorMessage, field, param)
+		invalidEmailErrorBody := apierrorsdeprecated.IndividualErrorBuilder(errInvalidEmail, invalidErrorMessage, field, param)
 		errorList = append(errorList, invalidEmailErrorBody)
 		errorList = append(errorList, invalidEmailErrorBody)
 
 		ctx := context.Background()
 		resp := httptest.NewRecorder()
 		statusCode := 400
-		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+		errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
 
-		apierrors.WriteErrorResponse(ctx, resp, statusCode, errorResponseBody)
+		apierrorsdeprecated.WriteErrorResponse(ctx, resp, statusCode, errorResponseBody)
 
 		So(resp.Code, ShouldEqual, http.StatusBadRequest)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
@@ -136,7 +136,7 @@ func TestHandleUnexpectedError(t *testing.T) {
 
 		resp := httptest.NewRecorder()
 
-		apierrors.HandleUnexpectedError(ctx, resp, unexpectedError, unexpectedErrorMessage, field, param)
+		apierrorsdeprecated.HandleUnexpectedError(ctx, resp, unexpectedError, unexpectedErrorMessage, field, param)
 
 		So(resp.Code, ShouldEqual, http.StatusInternalServerError)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
