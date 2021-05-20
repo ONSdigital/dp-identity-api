@@ -9,7 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -147,24 +147,25 @@ func TestCreateUserHandler(t *testing.T) {
 		api.Router.ServeHTTP(w, r)
 
 		errorBody, _ := ioutil.ReadAll(w.Body)
-		var e apierrors.ErrorStructure
+		var e apierrorsdeprecated.ErrorList
+
 		json.Unmarshal(errorBody, &e)
 
 		So(w.Code, ShouldEqual, http.StatusInternalServerError)
-		So(e.Errors[0].Message, ShouldEqual, "api endpoint POST user returned an error unmarshalling request body")
+		So(e.Errors[0].Description, ShouldEqual, "api endpoint POST user returned an error unmarshalling request body")
 	})
 
 	Convey("Validation fails 400: validating email and username throws validation errors", t, func() {
 		userValidationTests := []struct {
-			userDetails  map[string]interface{}
-			errorMessage []string
-			httpResponse int
+			userDetails      map[string]interface{}
+			errorDescription []string
+			httpResponse     int
 		}{
 			// missing email
 			{
 				map[string]interface{}{"forename": name, "surname": surname, "email": ""},
 				[]string{
-					apierrors.InvalidErrorMessage,
+					apierrorsdeprecated.InvalidErrorDescription,
 				},
 				http.StatusBadRequest,
 			},
@@ -172,8 +173,8 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": "", "surname": "", "email": email},
 				[]string{
-					apierrors.InvalidForenameErrorMessage,
-					apierrors.InvalidSurnameErrorMessage,
+					apierrorsdeprecated.InvalidForenameErrorDescription,
+					apierrorsdeprecated.InvalidSurnameErrorDescription,
 				},
 				http.StatusBadRequest,
 			},
@@ -181,7 +182,7 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": name, "surname": "", "email": email},
 				[]string{
-					apierrors.InvalidSurnameErrorMessage,
+					apierrorsdeprecated.InvalidSurnameErrorDescription,
 				},
 				http.StatusBadRequest,
 			},
@@ -189,7 +190,7 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": "", "surname": surname, "email": email},
 				[]string{
-					apierrors.InvalidForenameErrorMessage,
+					apierrorsdeprecated.InvalidForenameErrorDescription,
 				},
 				http.StatusBadRequest,
 			},
@@ -197,9 +198,9 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": "", "surname": "", "email": ""},
 				[]string{
-					apierrors.InvalidForenameErrorMessage,
-					apierrors.InvalidSurnameErrorMessage,
-					apierrors.InvalidErrorMessage,
+					apierrorsdeprecated.InvalidForenameErrorDescription,
+					apierrorsdeprecated.InvalidSurnameErrorDescription,
+					apierrorsdeprecated.InvalidErrorDescription,
 				},
 				http.StatusBadRequest,
 			},
@@ -207,7 +208,7 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": name, "surname": surname, "email": invalidEmail},
 				[]string{
-					apierrors.InvalidErrorMessage,
+					apierrorsdeprecated.InvalidErrorDescription,
 				},
 				http.StatusBadRequest,
 			},
@@ -225,14 +226,15 @@ func TestCreateUserHandler(t *testing.T) {
 			api.Router.ServeHTTP(w, r)
 
 			errorBody, _ := ioutil.ReadAll(w.Body)
-			var e apierrors.ErrorStructure
+			var e apierrorsdeprecated.ErrorList
+
 			json.Unmarshal(errorBody, &e)
 
 			So(w.Code, ShouldEqual, tt.httpResponse)
-			So(len(e.Errors), ShouldEqual, len(tt.errorMessage))
-			So(e.Errors[0].Message, ShouldEqual, tt.errorMessage[0])
+			So(len(e.Errors), ShouldEqual, len(tt.errorDescription))
+			So(e.Errors[0].Description, ShouldEqual, tt.errorDescription[0])
 			if len(e.Errors) > 1 {
-				So(e.Errors[1].Message, ShouldEqual, tt.errorMessage[1])
+				So(e.Errors[1].Description, ShouldEqual, tt.errorDescription[1])
 			}
 		}
 	})

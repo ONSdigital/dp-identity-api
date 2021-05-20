@@ -2,7 +2,7 @@ package models_test
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/utilities"
 
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
@@ -39,37 +39,37 @@ func TestIdToken_Validate(t *testing.T) {
 	var ctx = context.Background()
 
 	Convey("adds a missing token error if no token string is set", t, func() {
-		var errorList []apierrors.IndividualError
+		var errorList []apierrorsdeprecated.Error
 		idToken := models.IdToken{}
 
 		idToken.Validate(ctx, &errorList)
 
 		So(len(errorList), ShouldEqual, 1)
-		So(errorList[0].Message, ShouldEqual, apierrors.MissingIDTokenMessage)
+		So(errorList[0].Description, ShouldEqual, apierrorsdeprecated.MissingIDTokenMessage)
 	})
 
 	Convey("adds a missing token error if token string is set as empty string", t, func() {
-		var errorList []apierrors.IndividualError
+		var errorList []apierrorsdeprecated.Error
 		idToken := models.IdToken{TokenString: ""}
 
 		idToken.Validate(ctx, &errorList)
 
 		So(len(errorList), ShouldEqual, 1)
-		So(errorList[0].Message, ShouldEqual, apierrors.MissingIDTokenMessage)
+		So(errorList[0].Description, ShouldEqual, apierrorsdeprecated.MissingIDTokenMessage)
 	})
 
 	Convey("adds a malformed token error if token string is not parsable", t, func() {
-		var errorList []apierrors.IndividualError
+		var errorList []apierrorsdeprecated.Error
 		idToken := models.IdToken{TokenString: "aaaa.bbbb.cccc"}
 
 		idToken.Validate(ctx, &errorList)
 
 		So(len(errorList), ShouldEqual, 1)
-		So(errorList[0].Message, ShouldEqual, apierrors.MalformedIDTokenMessage)
+		So(errorList[0].Description, ShouldEqual, apierrorsdeprecated.MalformedIDTokenMessage)
 	})
 
 	Convey("does not add any errors and sets claims if token string valid", t, func() {
-		var errorList []apierrors.IndividualError
+		var errorList []apierrorsdeprecated.Error
 		testEmailAddress := "test@ons.gov.uk"
 
 		idTokenString := mock.GenerateMockIDToken(testEmailAddress)
@@ -86,27 +86,27 @@ func TestRefreshToken_Validate(t *testing.T) {
 	var ctx = context.Background()
 
 	Convey("adds a missing token error if no token string is set", t, func() {
-		var errorList []apierrors.IndividualError
+		var errorList []apierrorsdeprecated.Error
 		refreshToken := models.RefreshToken{}
 
 		refreshToken.Validate(ctx, &errorList)
 
 		So(len(errorList), ShouldEqual, 1)
-		So(errorList[0].Message, ShouldEqual, apierrors.MissingRefreshTokenMessage)
+		So(errorList[0].Description, ShouldEqual, apierrorsdeprecated.MissingRefreshTokenMessage)
 	})
 
 	Convey("adds a missing token error if token string is set as empty string", t, func() {
-		var errorList []apierrors.IndividualError
+		var errorList []apierrorsdeprecated.Error
 		refreshToken := models.RefreshToken{TokenString: ""}
 
 		refreshToken.Validate(ctx, &errorList)
 
 		So(len(errorList), ShouldEqual, 1)
-		So(errorList[0].Message, ShouldEqual, apierrors.MissingRefreshTokenMessage)
+		So(errorList[0].Description, ShouldEqual, apierrorsdeprecated.MissingRefreshTokenMessage)
 	})
 
 	Convey("does not add any errors token string is set", t, func() {
-		var errorList []apierrors.IndividualError
+		var errorList []apierrorsdeprecated.Error
 		refreshToken := models.RefreshToken{TokenString: "aaaa.bbbb.cccc.dddd.eeee"}
 
 		refreshToken.Validate(ctx, &errorList)

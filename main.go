@@ -20,6 +20,7 @@ var (
 	GitCommit string
 	// Version represents the version of the service that is running
 	Version string
+
 /* NOTE: replace the above with the below to run code with for example vscode debugger.
 BuildTime string = "1601119818"
 GitCommit string = "6584b786caac36b6214ffe04bf62f058d4021538"

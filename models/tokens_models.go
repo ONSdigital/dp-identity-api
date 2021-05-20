@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/utilities"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -49,20 +49,17 @@ func (t *IdToken) ParseWithoutValidating(tokenString string) error {
 	return nil
 }
 
-func (t *IdToken) Validate(ctx context.Context, errorList *[]apierrors.IndividualError) {
-	field := ""
-	param := ""
-
+func (t *IdToken) Validate(ctx context.Context, errorList *[]apierrorsdeprecated.Error) {
 	if t.TokenString == "" {
-		invalidIDTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidIDTokenError,
-			apierrors.MissingIDTokenMessage, field, param)
+		invalidIDTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.InvalidIDTokenError,
+			apierrorsdeprecated.MissingIDTokenMessage)
 		*errorList = append(*errorList, invalidIDTokenErrorBody)
-		log.Event(ctx, apierrors.MissingRefreshTokenMessage, log.ERROR)
+		log.Event(ctx, apierrorsdeprecated.MissingRefreshTokenMessage, log.ERROR)
 	} else {
 		parsingErr := t.ParseWithoutValidating(t.TokenString)
 		if parsingErr != nil {
-			invalidIDTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidIDTokenError,
-				apierrors.MalformedIDTokenMessage, field, param)
+			invalidIDTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.InvalidIDTokenError,
+				apierrorsdeprecated.MalformedIDTokenMessage)
 			*errorList = append(*errorList, invalidIDTokenErrorBody)
 			log.Event(ctx, parsingErr.Error(), log.ERROR)
 		}
@@ -91,14 +88,11 @@ func (t *RefreshToken) GenerateRefreshRequest(clientSecret string, username stri
 	return authInput
 }
 
-func (t *RefreshToken) Validate(ctx context.Context, errorList *[]apierrors.IndividualError) {
-	field := ""
-	param := ""
-
+func (t *RefreshToken) Validate(ctx context.Context, errorList *[]apierrorsdeprecated.Error) {
 	if t.TokenString == "" {
-		invalidRefreshTokenErrorBody := apierrors.IndividualErrorBuilder(apierrors.InvalidRefreshTokenError,
-			apierrors.MissingRefreshTokenMessage, field, param)
+		invalidRefreshTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.InvalidRefreshTokenError,
+			apierrorsdeprecated.MissingRefreshTokenMessage)
 		*errorList = append(*errorList, invalidRefreshTokenErrorBody)
-		log.Event(ctx, apierrors.MissingRefreshTokenMessage, log.ERROR)
+		log.Event(ctx, apierrorsdeprecated.MissingRefreshTokenMessage, log.ERROR)
 	}
 }

@@ -56,7 +56,7 @@ func IsEmailValid(e string) bool {
 
 // ValidateONSEmail - validates email address for ons domain
 // valid if match found, else invalid
-func ValidateONSEmail (e string) bool {
+func ValidateONSEmail(e string) bool {
 	if !emailLengthValid(len(e)) {
 		return false
 	}

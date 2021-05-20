@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/ONSdigital/dp-identity-api/api/content"
+	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 )
 
@@ -19,7 +19,6 @@ func TestSetup(t *testing.T) {
 		api, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, "us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow")
 
 		Convey("When created the following route(s) should have been added", func() {
-			So(hasRoute(api.Router, "/hello", "GET"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/tokens", "POST"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/tokens/self", "DELETE"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/tokens/self", "PUT"), ShouldBeTrue)
@@ -83,7 +82,7 @@ func TestSetup(t *testing.T) {
 			_, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, tt.userPoolId, tt.clientId, tt.clientSecret, tt.clientAuthFlow)
 
 			Convey("Error should not be nil if require parameter is empty: "+tt.testName, func() {
-				So(err.Error(), ShouldEqual, content.RequiredParameterNotFoundMessage)
+				So(err.Error(), ShouldEqual, apierrorsdeprecated.RequiredParameterNotFoundDescription)
 			})
 		}
 	})
