@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
@@ -124,52 +123,37 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 }
 
 //SignOutHandler invalidates a users access token signing them out and returns a http handler interface
-func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		var errorList []apierrorsdeprecated.Error
+func (api *API) signOutHandler(w http.ResponseWriter, req *http.Request, errorList *models.ErrorList) {
+	ctx := req.Context()
 
-		authString := req.Header.Get(AccessTokenHeaderName)
-		if authString == "" {
-			invalidTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.InvalidTokenError,
-				apierrorsdeprecated.MissingTokenDescription)
-			errorList = append(errorList, invalidTokenErrorBody)
-			log.Event(ctx, "no authorization header provided", log.ERROR)
-			errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
-			apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
-			return
-		}
-
-		authComponents := strings.Split(authString, " ")
-		if len(authComponents) != 2 {
-			log.Event(ctx, "malformed authorization header provided", log.ERROR)
-			invalidTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.InvalidTokenError,
-				apierrorsdeprecated.MalformedTokenDescription)
-			errorList = append(errorList, invalidTokenErrorBody)
-			errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
-			apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
-			return
-		}
-
-		_, err := api.CognitoClient.GlobalSignOut(
-			&cognitoidentityprovider.GlobalSignOutInput{
-				AccessToken: &authComponents[1]})
-
-		if err != nil {
-			log.Event(ctx, "From Cognito - "+err.Error(), log.ERROR)
-			invalidTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(err, "")
-			errorList = append(errorList, invalidTokenErrorBody)
-			errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
-			isInternalError := apierrorsdeprecated.IdentifyInternalError(err)
-			if isInternalError {
-				apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusInternalServerError, errorResponseBody)
-			} else {
-				apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
-			}
-			return
-		}
-
-		w.WriteHeader(http.StatusNoContent)
+	accessToken := models.AccessToken{
+		AuthHeader: req.Header.Get(AccessTokenHeaderName),
 	}
+	validationErr := accessToken.Validate(ctx)
+	if validationErr != nil {
+		errorList.Errors = append(errorList.Errors, validationErr)
+	}
+
+	if len(errorList.Errors) > 0 {
+		errorList.Status = http.StatusBadRequest
+		return
+	}
+
+	_, err := api.CognitoClient.GlobalSignOut(accessToken.GenerateSignOutRequest())
+
+	if err != nil {
+		responseErr := models.NewCognitoError(ctx, err, "Cognito GlobalSignOut request for signout")
+		errorList.Errors = append(errorList.Errors, &responseErr)
+		if responseErr.Code == models.NotFoundError || responseErr.Code == models.NotAuthorisedError {
+			errorList.Status = http.StatusBadRequest
+		} else {
+			errorList.Status = http.StatusInternalServerError
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+	return
 }
 
 //RefreshHandler refreshes a users access token and returns new access and ID tokens, expiration time and the refresh token
