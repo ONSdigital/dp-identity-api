@@ -246,21 +246,6 @@ func TestBuildJson(t *testing.T) {
 	})
 }
 
-func TestBuildAdminSignoutRequest(t *testing.T) {
-	Convey("build AdminSignout Request, an authParams and userPoolId is processed and AdminSignout Request is built", t, func() {
-		authParams := AuthParams{
-			Email:    "email.email@ons.gov.uk",
-			Password: "password",
-		}
-		userPoolId := "userPoolId"
-
-		response := buildAdminSignoutRequest(authParams, userPoolId)
-
-		So(*response.Username, ShouldEqual, authParams.Email)
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
-	})
-}
-
 func TestAdminUserGlobalSignOut(t *testing.T) {
 	m := &mock.MockCognitoIdentityProviderClient{}
 	authParams := AuthParams{
@@ -276,7 +261,7 @@ func TestAdminUserGlobalSignOut(t *testing.T) {
 			return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 		}
 
-		err := adminUserGlobalSignOut(authParams, userPoolId, m)
+		err := terminateExistingSession(authParams, userPoolId, m)
 
 		So(err, ShouldBeNil)
 	})
@@ -288,7 +273,7 @@ func TestAdminUserGlobalSignOut(t *testing.T) {
 			return nil, errors.New("InternalErrorException: Something went wrong")
 		}
 
-		err := adminUserGlobalSignOut(authParams, userPoolId, m)
+		err := terminateExistingSession(authParams, userPoolId, m)
 
 		So(err, ShouldNotBeNil)
 	})

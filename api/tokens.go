@@ -48,7 +48,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 
 		if validPasswordRequest && validEmailRequest {
 
-			err = adminUserGlobalSignOut(authParams, api.UserPoolId, api.CognitoClient)
+			err = terminateExistingSession(authParams, api.UserPoolId, api.CognitoClient)
 
 			if err != nil {
 				isInternalError := apierrorsdeprecated.IdentifyInternalError(err)
@@ -183,8 +183,13 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 	}
 }
 
-func adminUserGlobalSignOut(authParams AuthParams, userPoolId string, cognitoClient cognito.Client) (err error) {
-	adminUserGlobalSignOutInput := buildAdminSignoutRequest(authParams, userPoolId)
+func terminateExistingSession(authParams AuthParams, userPoolId string, cognitoClient cognito.Client) (err error) {
+
+	adminUserGlobalSignOutInput := &cognitoidentityprovider.AdminUserGlobalSignOutInput{
+		Username:   &authParams.Email,
+		UserPoolId: &userPoolId,
+	}
+
 	_, err = cognitoClient.AdminUserGlobalSignOut(adminUserGlobalSignOutInput)
 	if err != nil {
 		return err
@@ -225,16 +230,6 @@ func buildCognitoRequest(authParams AuthParams, clientId string, clientSecret st
 	}
 
 	return authInput
-}
-
-func buildAdminSignoutRequest(authParams AuthParams, userPoolId string) (adminSignoutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) {
-
-	adminSignoutInput = &cognitoidentityprovider.AdminUserGlobalSignOutInput{
-		Username:   &authParams.Email,
-		UserPoolId: &userPoolId,
-	}
-
-	return adminSignoutInput
 }
 
 func buildSucessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, w http.ResponseWriter, ctx context.Context) {
