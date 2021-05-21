@@ -182,7 +182,7 @@ Scenario: POST /tokens
         }
         """
 
-Scenario: DELETE /tokens/self
+Scenario: DELETE /tokens/self no Authorization header
     Given I am not authorised
     When I DELETE "/tokens/self"
     Then I should receive the following JSON response with status "400":
@@ -190,14 +190,14 @@ Scenario: DELETE /tokens/self
     {
         "errors": [
             {
-                "code": "invalid token",
+                "code": "InvalidToken",
                 "description": "no Authorization token was provided"
             }
         ]
     }
     """
 
-Scenario: DELETE /tokens/self
+Scenario: DELETE /tokens/self Authorization header missing JWT
     Given I set the "Authorization" header to "Bearer"
     When I DELETE "/tokens/self"
     Then I should receive the following JSON response with status "400":
@@ -205,14 +205,14 @@ Scenario: DELETE /tokens/self
     {
         "errors": [
             {
-                "code": "invalid token",
-                "description": "the provided token does not meet the required format"
+                "code": "InvalidToken",
+                "description": "the authorization token does not meet the required format"
             }
         ]
     }
     """
 
-Scenario: DELETE /tokens/self
+Scenario: DELETE /tokens/self malformed Authorization header
     Given I set the "Authorization" header to "BearerSomeToken"
     When I DELETE "/tokens/self"
     Then I should receive the following JSON response with status "400":
@@ -220,24 +220,44 @@ Scenario: DELETE /tokens/self
     {
         "errors": [
             {
-                "code": "invalid token",
-                "description": "the provided token does not meet the required format"
+                "code": "InvalidToken",
+                "description": "the authorization token does not meet the required format"
             }
         ]
     }
     """
 
-Scenario: DELETE /tokens/self
+Scenario: DELETE /tokens/self Cognito internal error
     Given I set the "Authorization" header to "Bearer InternalError"
     When I DELETE "/tokens/self"
-    Then the HTTP status code should be "500"
+    Then I should receive the following JSON response with status "500":
+    """
+    {
+        "errors": [
+            {
+                "code": "InternalServerError",
+                "description": "Something went wrong"
+            }
+        ]
+    }
+    """
 
-Scenario: DELETE /tokens/self
+Scenario: DELETE /tokens/self access token not valid in Cognito
     Given I set the "Authorization" header to "Bearer xxxx.yyyy.zzzz"
     When I DELETE "/tokens/self"
-    Then the HTTP status code should be "400"
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "code": "NotAuthorised",
+                "description": "Access Token has been revoked"
+            }
+        ]
+    }
+    """
 
-Scenario: DELETE /tokens/self
+Scenario: DELETE /tokens/self success
     Given I have an active session with access token "aaaa.bbbb.cccc"
     And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
     When I DELETE "/tokens/self"

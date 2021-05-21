@@ -2,6 +2,7 @@ package mock
 
 import (
 	"errors"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"strings"
 
 	"github.com/ONSdigital/dp-identity-api/models"
@@ -116,14 +117,14 @@ func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityp
 
 func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 	if *signOutInput.AccessToken == "InternalError" {
-		return nil, errors.New("InternalErrorException: Something went wrong")
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	}
 	for _, session := range m.Sessions {
 		if session.AccessToken == *signOutInput.AccessToken {
 			return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
 		}
 	}
-	return nil, errors.New("NotAuthorizedException: Access Token has been revoked")
+	return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Access Token has been revoked", nil)
 }
 
 func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
