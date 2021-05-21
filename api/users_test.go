@@ -147,7 +147,8 @@ func TestCreateUserHandler(t *testing.T) {
 		api.Router.ServeHTTP(w, r)
 
 		errorBody, _ := ioutil.ReadAll(w.Body)
-		var e models.ErrorList
+		var e apierrorsdeprecated.ErrorList
+
 		json.Unmarshal(errorBody, &e)
 
 		So(w.Code, ShouldEqual, http.StatusInternalServerError)
@@ -156,9 +157,9 @@ func TestCreateUserHandler(t *testing.T) {
 
 	Convey("Validation fails 400: validating email and username throws validation errors", t, func() {
 		userValidationTests := []struct {
-			userDetails  map[string]interface{}
+			userDetails      map[string]interface{}
 			errorDescription []string
-			httpResponse int
+			httpResponse     int
 		}{
 			// missing email
 			{
@@ -225,7 +226,8 @@ func TestCreateUserHandler(t *testing.T) {
 			api.Router.ServeHTTP(w, r)
 
 			errorBody, _ := ioutil.ReadAll(w.Body)
-			var e models.ErrorList
+			var e apierrorsdeprecated.ErrorList
+
 			json.Unmarshal(errorBody, &e)
 
 			So(w.Code, ShouldEqual, tt.httpResponse)

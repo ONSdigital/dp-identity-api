@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/utilities"
 	"github.com/ONSdigital/dp-identity-api/validation"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 )
 
 type AuthParams struct {
@@ -22,6 +22,13 @@ type AuthParams struct {
 	Password string `json:"password"`
 }
 
+var (
+	IdTokenHeaderName      = "ID"
+	AccessTokenHeaderName  = "Authorization"
+	RefreshTokenHeaderName = "Refresh"
+)
+
+//TokensHandler uses submitted email address and password to sign a user in against Cognito and returns a http handler interface
 func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, req *http.Request) {
@@ -59,7 +66,8 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 					return
 				}
 
-				var errorList []models.Error
+				var errorList []apierrorsdeprecated.Error
+
 				switch authErr.Error() {
 				case "NotAuthorizedException: Incorrect username or password.":
 					{
@@ -91,7 +99,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 				}
 			}
 
-			buildSucessfulResponse(result, w, ctx)
+			buildSuccessfulResponse(result, w, ctx)
 
 			return
 		}
@@ -99,7 +107,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 		invalidPasswordErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.ErrInvalidPassword, apierrorsdeprecated.InvalidPasswordDescription)
 		invalidEmailErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.ErrInvalidEmail, apierrorsdeprecated.InvalidErrorDescription)
 
-		var errorList []models.Error
+		var errorList []apierrorsdeprecated.Error
 
 		if !validPasswordRequest {
 			errorList = append(errorList, invalidPasswordErrorBody)
@@ -115,14 +123,15 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 	}
 }
 
+//SignOutHandler invalidates a users access token signing them out and returns a http handler interface
 func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		ctx := req.Context()
-		var errorList []models.Error
+		var errorList []apierrorsdeprecated.Error
 
-		authString := req.Header.Get("Authorization")
+		authString := req.Header.Get(AccessTokenHeaderName)
 		if authString == "" {
-			invalidTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.InvalidTokenError, apierrorsdeprecated.MissingTokenDescription)
+			invalidTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.InvalidTokenError,
+				apierrorsdeprecated.MissingTokenDescription)
 			errorList = append(errorList, invalidTokenErrorBody)
 			log.Event(ctx, "no authorization header provided", log.ERROR)
 			errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
@@ -133,7 +142,8 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 		authComponents := strings.Split(authString, " ")
 		if len(authComponents) != 2 {
 			log.Event(ctx, "malformed authorization header provided", log.ERROR)
-			invalidTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.InvalidTokenError, apierrorsdeprecated.MalformedTokenDescription)
+			invalidTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.InvalidTokenError,
+				apierrorsdeprecated.MalformedTokenDescription)
 			errorList = append(errorList, invalidTokenErrorBody)
 			errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
 			apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
@@ -159,6 +169,49 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+//RefreshHandler refreshes a users access token and returns new access and ID tokens, expiration time and the refresh token
+func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		var errorList []apierrorsdeprecated.Error
+
+		refreshToken := models.RefreshToken{
+			TokenString: req.Header.Get(RefreshTokenHeaderName),
+		}
+		errorList = refreshToken.Validate(ctx, errorList)
+
+		idToken := models.IdToken{
+			TokenString: req.Header.Get(IdTokenHeaderName),
+		}
+		errorList = idToken.Validate(ctx, errorList)
+
+		if len(errorList) > 0 {
+			errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
+			apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+			return
+		}
+
+		authInput := refreshToken.GenerateRefreshRequest(api.ClientSecret, idToken.Claims.CognitoUser, api.ClientId)
+		result, authErr := api.CognitoClient.InitiateAuth(authInput)
+
+		if authErr != nil {
+			log.Event(ctx, "Cognito InitiateAuth request for token refresh - "+authErr.Error(), log.ERROR)
+			if authErr.Error() == "NotAuthorizedException: Refresh Token has expired" {
+				expiredTokenError := apierrorsdeprecated.IndividualErrorBuilder(authErr, apierrorsdeprecated.TokenExpiredMessage)
+				errorList = append(errorList, expiredTokenError)
+				errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
+				apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusForbidden, errorResponseBody)
+			} else {
+				apierrorsdeprecated.HandleUnexpectedError(ctx, w, authErr, apierrorsdeprecated.InternalErrorMessage)
+			}
+			return
+		}
+
+		buildSuccessfulResponse(result, w, ctx)
+
+		return
 	}
 }
 
@@ -197,16 +250,18 @@ func buildCognitoRequest(authParams AuthParams, clientId string, clientSecret st
 	return authInput
 }
 
-func buildSucessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, w http.ResponseWriter, ctx context.Context) {
+func buildSuccessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, w http.ResponseWriter, ctx context.Context) {
 
 	if result.AuthenticationResult != nil {
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
 		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
 
 		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Authorization", "Bearer "+*result.AuthenticationResult.AccessToken)
-		w.Header().Set("ID", *result.AuthenticationResult.IdToken)
-		w.Header().Set("Refresh", *result.AuthenticationResult.RefreshToken)
+		w.Header().Set(AccessTokenHeaderName, "Bearer "+*result.AuthenticationResult.AccessToken)
+		w.Header().Set(IdTokenHeaderName, *result.AuthenticationResult.IdToken)
+		if result.AuthenticationResult.RefreshToken != nil {
+			w.Header().Set(RefreshTokenHeaderName, *result.AuthenticationResult.RefreshToken)
+		}
 		w.WriteHeader(http.StatusCreated)
 
 		postBody := map[string]interface{}{"expirationTime": expirationTime}

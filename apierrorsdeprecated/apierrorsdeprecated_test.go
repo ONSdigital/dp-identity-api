@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	errModels "github.com/ONSdigital/dp-identity-api/models"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -15,7 +14,7 @@ func TestBuildingIndividualErrors(t *testing.T) {
 		err := errors.New("SomeError")
 		description := "detailed explanation of error"
 
-		individualErrorExample := errModels.Error{
+		individualErrorExample := Error{
 			Code:        "SomeError",
 			Description: "detailed explanation of error",
 		}
@@ -30,15 +29,15 @@ func TestBuildingIndividualErrors(t *testing.T) {
 func TestBuildingErrorStructure(t *testing.T) {
 	Convey("An error structure is created from a list of errors", t, func() {
 
-		listOfErrors := []errModels.Error{
+		listOfErrors := []Error{
 			{
 				Code:        "SomeError",
 				Description: "detailed explanation of error",
 			},
 		}
 
-		errorResponseBodyExample := errModels.ErrorList{
-			Errors: []errModels.Error{
+		errorResponseBodyExample := ErrorList{
+			Errors: []Error{
 				{
 					Code:        "SomeError",
 					Description: "detailed explanation of error",

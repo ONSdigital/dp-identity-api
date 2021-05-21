@@ -1,6 +1,8 @@
 package steps
 
 import (
+	"errors"
+	"github.com/ONSdigital/dp-identity-api/api"
 	"io/ioutil"
 	"strings"
 
@@ -17,6 +19,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^an internal server error is returned from Cognito$`, c.anInternalServerErrorIsReturnedFromCognito)
 	ctx.Step(`^an error is returned from Cognito$`, c.anErrorIsReturnedFromCognito)
 	ctx.Step(`^I have an active session with access token "([^"]*)"$`, c.iHaveAnActiveSessionWithAccessToken)
+	ctx.Step(`I have a valid ID header for user "([^"]*)"$`, c.iHaveAValidIDHeaderForUser)
 }
 
 func (c *IdentityComponent) iShouldReceiveAHelloworldResponse() error {
@@ -44,4 +47,13 @@ func (c *IdentityComponent) anErrorIsReturnedFromCognito() error {
 func (c *IdentityComponent) iHaveAnActiveSessionWithAccessToken(accessToken string) error {
 	c.CognitoClient.CreateSessionWithAccessToken(accessToken)
 	return nil
+}
+
+func (c *IdentityComponent) iHaveAValidIDHeaderForUser(email string) error {
+	idToken := c.CognitoClient.CreateIdTokenForEmail(email)
+	if idToken == "" {
+		return errors.New("id token generation failed")
+	}
+	err := c.apiFeature.ISetTheHeaderTo(api.IdTokenHeaderName, idToken)
+	return err
 }
