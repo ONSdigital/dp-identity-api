@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/utilities"
 	"github.com/ONSdigital/dp-identity-api/validation"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 )
 
 type AuthParams struct {
@@ -51,19 +51,19 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 			err = adminUserGlobalSignOut(authParams, api.UserPoolId, api.CognitoClient)
 
 			if err != nil {
-				isInternalError := apierrors.IdentifyInternalError(err)
+				isInternalError := apierrorsdeprecated.IdentifyInternalError(err)
 				if isInternalError {
 					errorMessage := "api endpoint POST login returned an error and failed to connect to cognito logout"
-					apierrors.HandleUnexpectedError(ctx, w, err, errorMessage, field, param)
+					apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, errorMessage)
 					return
 				}
 
-				var errorList []models.IndividualError
+				var errorList []models.Error
 				adminLogoutMessage := "something went wrong, and api endpoint POST login returned an error and failed to connect to cognito logout. Please try again or contact an administrator."
-				adminLogoutError := apierrors.IndividualErrorBuilder(err, adminLogoutMessage, field, param)
+				adminLogoutError := apierrorsdeprecated.IndividualErrorBuilder(err, adminLogoutMessage)
 				errorList = append(errorList, adminLogoutError)
-				errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
-				apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+				errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
+				apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
 				return
 			}
 

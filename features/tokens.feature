@@ -292,12 +292,8 @@ Scenario: POST /tokens
     {
         "errors": [
             {
-                "error": "InternalErrorException: Something went wrong",
-                "message": "api endpoint POST login returned an error and failed to connect to cognito logout",
-                "source": {
-                    "field": "",
-                    "param": ""
-                }
+                "code": "InternalErrorException: Something went wrong",
+                "description": "api endpoint POST login returned an error and failed to connect to cognito logout"
             }
         ]
     }
@@ -319,12 +315,8 @@ Scenario: POST /tokens
     {
         "errors": [
             {
-                "error": "ClientError: Something went wrong",
-                "message": "something went wrong, and api endpoint POST login returned an error and failed to connect to cognito logout. Please try again or contact an administrator.",
-                "source": {
-                    "field": "",
-                    "param": ""
-                }
+                "code": "ClientError: Something went wrong",
+                "description": "something went wrong, and api endpoint POST login returned an error and failed to connect to cognito logout. Please try again or contact an administrator."
             }
         ]
     }
