@@ -50,8 +50,8 @@ func NewIdentityComponent() (*IdentityComponent, error) {
 	c.Config.AWSAuthFlow = "authflow"
 
 	initMock := &mock.InitialiserMock{
-		DoGetHealthCheckFunc: c.DoGetHealthcheckOk,
-		DoGetHTTPServerFunc:  c.DoGetHTTPServer,
+		DoGetHealthCheckFunc:   c.DoGetHealthcheckOk,
+		DoGetHTTPServerFunc:    c.DoGetHTTPServer,
 		DoGetCognitoClientFunc: c.DoGetCognitoClient,
 	}
 
@@ -99,7 +99,7 @@ func (c *IdentityComponent) DoGetHTTPServer(bindAddr string, router http.Handler
 	return c.HTTPServer
 }
 
-func (c *IdentityComponent) DoGetCognitoClient(AWSRegion string) cognito.Client  {
+func (c *IdentityComponent) DoGetCognitoClient(AWSRegion string) cognito.Client {
 	c.CognitoClient = &cognitoMock.CognitoIdentityProviderClientStub{}
 	return c.CognitoClient
 }

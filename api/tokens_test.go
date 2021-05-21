@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ONSdigital/dp-identity-api/apierrors"
+	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -98,25 +98,23 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 func TestWriteErrorResponse(t *testing.T) {
 	Convey("A status code and an error body with two errors is written to a http response", t, func() {
 
-		errorResponseBodyExample := `{"errors":[{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}},{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}}]}`
+		errorResponseBodyExample := `{"errors":[{"code":"Invalid email","description":"Unable to validate the email in the request"},{"code":"Invalid email","description":"Unable to validate the email in the request"}]}`
 
-		var errorList []models.IndividualError
+		var errorList []models.Error
 		errorList = nil
 
 		errInvalidEmail := errors.New("Invalid email")
-		invalidErrorMessage := "Unable to validate the email in the request"
-		field := ""
-		param := ""
-		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(errInvalidEmail, invalidErrorMessage, field, param)
+		invalidErrorDescription := "Unable to validate the email in the request"
+		invalidEmailErrorBody := apierrorsdeprecated.IndividualErrorBuilder(errInvalidEmail, invalidErrorDescription)
 		errorList = append(errorList, invalidEmailErrorBody)
 		errorList = append(errorList, invalidEmailErrorBody)
 
 		ctx := context.Background()
 		resp := httptest.NewRecorder()
 		statusCode := 400
-		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+		errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
 
-		apierrors.WriteErrorResponse(ctx, resp, statusCode, errorResponseBody)
+		apierrorsdeprecated.WriteErrorResponse(ctx, resp, statusCode, errorResponseBody)
 
 		So(resp.Code, ShouldEqual, http.StatusBadRequest)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
@@ -124,19 +122,17 @@ func TestWriteErrorResponse(t *testing.T) {
 }
 
 func TestHandleUnexpectedError(t *testing.T) {
-	Convey("An error, an error message, a field and a param is logged and written to a http response", t, func() {
+	Convey("An error and an error description is logged and written to a http response", t, func() {
 
-		errorResponseBodyExample := `{"errors":[{"error":"unexpected error","message":"something unexpected has happened","source":{"field":"","param":""}}]}`
+		errorResponseBodyExample := `{"errors":[{"code":"unexpected error","description":"something unexpected has happened"}]}`
 
 		ctx := context.Background()
 		unexpectedError := errors.New("unexpected error")
-		unexpectedErrorMessage := "something unexpected has happened"
-		field := ""
-		param := ""
+		unexpectedErrorDescription := "something unexpected has happened"
 
 		resp := httptest.NewRecorder()
 
-		apierrors.HandleUnexpectedError(ctx, resp, unexpectedError, unexpectedErrorMessage, field, param)
+		apierrorsdeprecated.HandleUnexpectedError(ctx, resp, unexpectedError, unexpectedErrorDescription)
 
 		So(resp.Code, ShouldEqual, http.StatusInternalServerError)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
@@ -244,7 +240,7 @@ func TestBuildJson(t *testing.T) {
 			"foo": make(chan int),
 		}
 		buildjson(testBody, w, ctx)
-		So(w.Body.String(), ShouldResemble, "{\"errors\":[{\"error\":\"json: unsupported type: chan int\",\"message\":\"failed to marshal the error\",\"source\":{\"field\":\"\",\"param\":\"\"}}]}")
+		So(w.Body.String(), ShouldResemble, "{\"errors\":[{\"code\":\"json: unsupported type: chan int\",\"description\":\"failed to marshal the error\"}]}")
 		So(w.Result().StatusCode, ShouldEqual, 500)
 		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
 	})
