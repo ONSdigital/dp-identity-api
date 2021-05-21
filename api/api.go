@@ -68,15 +68,15 @@ func WriteErrorResponse(ctx context.Context, w http.ResponseWriter, errorList mo
 
 	jsonResponse, err := json.Marshal(errorList)
 	if err != nil {
-		log.Event(ctx, "failed to marshal the error", log.Error(err), log.ERROR)
-		http.Error(w, "failed to marshal the error", http.StatusInternalServerError)
+		responseErr := models.NewError(ctx, err, models.JSONMarshalError, models.ErrorMarshalFailedDescription)
+		http.Error(w, responseErr.Description, http.StatusInternalServerError)
 		return
 	}
 
 	_, err = w.Write(jsonResponse)
 	if err != nil {
-		log.Event(ctx, "writing response failed", log.Error(err), log.ERROR)
-		http.Error(w, "failed to write http response", http.StatusInternalServerError)
+		responseErr := models.NewError(ctx, err, models.WriteResponseError, models.WriteResponseFailedDescription)
+		http.Error(w, responseErr.Description, http.StatusInternalServerError)
 		return
 	}
 }

@@ -29,7 +29,8 @@ func (e *Error) Error() string {
 	return e.Code + ": " + e.Description
 }
 
-func NewError(cause error, code string, description string) BaseError {
+func NewError(ctx context.Context, cause error, code string, description string) *Error {
+	log.Event(ctx, description, log.Error(cause), log.ERROR)
 	return &Error{
 		Cause:       cause,
 		Code:        code,
@@ -37,7 +38,7 @@ func NewError(cause error, code string, description string) BaseError {
 	}
 }
 
-func NewValidationError(ctx context.Context, code string, description string) BaseError {
+func NewValidationError(ctx context.Context, code string, description string) *Error {
 	log.Event(ctx, code+": "+description, log.ERROR)
 	return &Error{
 		Cause:       errors.New(code),
