@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/utilities"
 	"github.com/ONSdigital/dp-identity-api/validation"
@@ -51,6 +52,26 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 		validEmailRequest := emailValidation(authParams)
 
 		if validPasswordRequest && validEmailRequest {
+
+			err = adminUserGlobalSignOut(authParams, api.UserPoolId, api.CognitoClient)
+
+			if err != nil {
+				isInternalError := apierrors.IdentifyInternalError(err)
+				if isInternalError {
+					errorMessage := "api endpoint POST login returned an error and failed to connect to cognito logout"
+					apierrors.HandleUnexpectedError(ctx, w, err, errorMessage, field, param)
+					return
+				}
+
+				var errorList []models.IndividualError
+				adminLogoutMessage := "something went wrong, and api endpoint POST login returned an error and failed to connect to cognito logout. Please try again or contact an administrator."
+				adminLogoutError := apierrors.IndividualErrorBuilder(err, adminLogoutMessage, field, param)
+				errorList = append(errorList, adminLogoutError)
+				errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+				apierrors.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+				return
+			}
+
 			input := buildCognitoRequest(authParams, api.ClientId, api.ClientSecret, api.ClientAuthFlow)
 			result, authErr := api.CognitoClient.InitiateAuth(input)
 
@@ -169,6 +190,15 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 	}
 }
 
+func adminUserGlobalSignOut(authParams AuthParams, userPoolId string, cognitoClient cognito.Client) (err error) {
+	adminUserGlobalSignOutInput := buildAdminSignoutRequest(authParams, userPoolId)
+	_, err = cognitoClient.AdminUserGlobalSignOut(adminUserGlobalSignOutInput)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func passwordValidation(requestBody AuthParams) (isPasswordValid bool) {
 
 	return len(requestBody.Password) > 0
@@ -202,6 +232,16 @@ func buildCognitoRequest(authParams AuthParams, clientId string, clientSecret st
 	}
 
 	return authInput
+}
+
+func buildAdminSignoutRequest(authParams AuthParams, userPoolId string) (adminSignoutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) {
+
+	adminSignoutInput = &cognitoidentityprovider.AdminUserGlobalSignOutInput{
+		Username:   &authParams.Email,
+		UserPoolId: &userPoolId,
+	}
+
+	return adminSignoutInput
 }
 
 func buildSucessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, w http.ResponseWriter, ctx context.Context) {

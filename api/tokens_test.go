@@ -102,7 +102,7 @@ func TestWriteErrorResponse(t *testing.T) {
 
 		var errorList []models.IndividualError
 		errorList = nil
-		
+
 		errInvalidEmail := errors.New("Invalid email")
 		invalidErrorMessage := "Unable to validate the email in the request"
 		field := ""
@@ -247,6 +247,54 @@ func TestBuildJson(t *testing.T) {
 		So(w.Body.String(), ShouldResemble, "{\"errors\":[{\"error\":\"json: unsupported type: chan int\",\"message\":\"failed to marshal the error\",\"source\":{\"field\":\"\",\"param\":\"\"}}]}")
 		So(w.Result().StatusCode, ShouldEqual, 500)
 		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
+	})
+}
+
+func TestBuildAdminSignoutRequest(t *testing.T) {
+	Convey("build AdminSignout Request, an authParams and userPoolId is processed and AdminSignout Request is built", t, func() {
+		authParams := AuthParams{
+			Email:    "email.email@ons.gov.uk",
+			Password: "password",
+		}
+		userPoolId := "userPoolId"
+
+		response := buildAdminSignoutRequest(authParams, userPoolId)
+
+		So(*response.Username, ShouldEqual, authParams.Email)
+		So(*response.UserPoolId, ShouldEqual, userPoolId)
+	})
+}
+
+func TestAdminUserGlobalSignOut(t *testing.T) {
+	m := &mock.MockCognitoIdentityProviderClient{}
+	authParams := AuthParams{
+		Email:    "email.email@ons.gov.uk",
+		Password: "password",
+	}
+	userPoolId := "userPoolId"
+
+	Convey("Admin user global sign out returns an empty body signalling a 200 so no error is returned from the function", t, func() {
+
+		// mock call to: AdminUserGlobalSignOut(adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
+		m.AdminUserGlobalSignOutFunc = func(adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+			return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
+		}
+
+		err := adminUserGlobalSignOut(authParams, userPoolId, m)
+
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Admin user global sign out returns an error so an error is returned from the function", t, func() {
+
+		// mock call to: AdminUserGlobalSignOut(adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
+		m.AdminUserGlobalSignOutFunc = func(adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+			return nil, errors.New("InternalErrorException: Something went wrong")
+		}
+
+		err := adminUserGlobalSignOut(authParams, userPoolId, m)
+
+		So(err, ShouldNotBeNil)
 	})
 }
 

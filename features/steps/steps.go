@@ -17,6 +17,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^an internal server error is returned from Cognito$`, c.anInternalServerErrorIsReturnedFromCognito)
 	ctx.Step(`^an error is returned from Cognito$`, c.anErrorIsReturnedFromCognito)
 	ctx.Step(`^I have an active session with access token "([^"]*)"$`, c.iHaveAnActiveSessionWithAccessToken)
+	ctx.Step(`^the AdminUserGlobalSignOut endpoint in cognito returns an internal server error$`, c.theAdminUserGlobalSignOutEndpointInCognitoReturnsAnInternalServerError)
 }
 
 func (c *IdentityComponent) iShouldReceiveAHelloworldResponse() error {
@@ -43,5 +44,9 @@ func (c *IdentityComponent) anErrorIsReturnedFromCognito() error {
 
 func (c *IdentityComponent) iHaveAnActiveSessionWithAccessToken(accessToken string) error {
 	c.CognitoClient.CreateSessionWithAccessToken(accessToken)
+	return nil
+}
+
+func (c *IdentityComponent) theAdminUserGlobalSignOutEndpointInCognitoReturnsAnInternalServerError() error {
 	return nil
 }

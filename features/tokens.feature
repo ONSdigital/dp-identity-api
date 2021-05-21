@@ -291,3 +291,89 @@ Scenario: DELETE /tokens/self
     And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
     When I DELETE "/tokens/self"
     Then the HTTP status code should be "204"
+
+Scenario: POST /tokens
+    Given I have an active session with access token "aaaa.bbbb.cccc"
+    And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
+    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+    When I POST "/tokens"
+    """
+    {
+        "email": "email@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
+    Then the HTTP status code should be "201"
+    And the response header "Authorization" should be "Bearer accessToken"
+    And the response header "ID" should be "idToken"
+    And the response header "Refresh" should be "refreshToken"
+
+
+Scenario: POST /tokens
+    Given I am not authorised
+    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+    When I POST "/tokens"
+    """
+    {
+        "email": "email@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
+    Then the HTTP status code should be "201"
+    And the response header "Authorization" should be "Bearer accessToken"
+    And the response header "ID" should be "idToken"
+    And the response header "Refresh" should be "refreshToken"
+
+Scenario: POST /tokens
+    Given the AdminUserGlobalSignOut endpoint in cognito returns an internal server error
+    And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
+    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+    When I POST "/tokens"
+    """
+    {
+        "email": "internalservererror@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
+    Then I should receive the following JSON response with status "500":
+    """
+    {
+        "errors": [
+            {
+                "error": "InternalErrorException: Something went wrong",
+                "message": "api endpoint POST login returned an error and failed to connect to cognito logout",
+                "source": {
+                    "field": "",
+                    "param": ""
+                }
+            }
+        ]
+    }
+    """
+
+Scenario: POST /tokens
+    Given the AdminUserGlobalSignOut endpoint in cognito returns an internal server error
+    And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
+    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+    When I POST "/tokens"
+    """
+    {
+        "email": "clienterror@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "error": "ClientError: Something went wrong",
+                "message": "something went wrong, and api endpoint POST login returned an error and failed to connect to cognito logout. Please try again or contact an administrator.",
+                "source": {
+                    "field": "",
+                    "param": ""
+                }
+            }
+        ]
+    }
+    """

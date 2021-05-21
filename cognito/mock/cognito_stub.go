@@ -26,29 +26,29 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cogn
 }
 
 func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
-	var(
+	var (
 		status, subjectAttrName, forenameAttrName, surnameAttrName, emailAttrName, username, subUUID, forename, surname, email string = "FORCE_CHANGE_PASSWORD", "sub", "name", "family_name", "email", "123e4567-e89b-12d3-a456-426614174000", "f0cf8dd9-755c-4caf-884d-b0c56e7d0704", "smileons", "bobbings", "email@ons.gov.uk"
 	)
 
-	if (*input.UserAttributes[0].Value == "smileons") { // 201 - created successfully
+	if *input.UserAttributes[0].Value == "smileons" { // 201 - created successfully
 		user := &models.CreateUserOutput{
 			UserOutput: &cognitoidentityprovider.AdminCreateUserOutput{
 				User: &cognitoidentityprovider.UserType{
 					Attributes: []*cognitoidentityprovider.AttributeType{
 						{
-							Name: &subjectAttrName,
+							Name:  &subjectAttrName,
 							Value: &subUUID,
 						},
 						{
-							Name: &forenameAttrName,
+							Name:  &forenameAttrName,
 							Value: &forename,
 						},
 						{
-							Name: &surnameAttrName,
+							Name:  &surnameAttrName,
 							Value: &surname,
 						},
 						{
-							Name: &emailAttrName,
+							Name:  &emailAttrName,
 							Value: &email,
 						},
 					},
@@ -106,6 +106,15 @@ func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoi
 	return nil, errors.New("NotAuthorizedException: Access Token has been revoked")
 }
 
+func (m *CognitoIdentityProviderClientStub) AdminUserGlobalSignOut(adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+	if *adminUserGlobalSignOutInput.Username == "internalservererror@ons.gov.uk" {
+		return nil, errors.New("InternalErrorException: Something went wrong")
+	} else if *adminUserGlobalSignOutInput.Username == "clienterror@ons.gov.uk" {
+		return nil, errors.New("ClientError: Something went wrong")
+	}
+	return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
+}
+
 func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 	name := "bob"
 	if strings.Contains(*input.Filter, "email@ext.ons.gov.uk") {
@@ -113,13 +122,13 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 			ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
 				Users: []*cognitoidentityprovider.UserType{
 					{
-					 Username: &name,
+						Username: &name,
 					},
 				},
 			},
 		}
 		return users.ListUsersOutput, nil
-		
+
 	}
 	// default - email doesn't exist in user pool
 	users := &models.ListUsersOutput{
