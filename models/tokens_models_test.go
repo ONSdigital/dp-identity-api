@@ -42,7 +42,7 @@ func TestIdToken_Validate(t *testing.T) {
 		var errorList []apierrorsdeprecated.Error
 		idToken := models.IdToken{}
 
-		idToken.Validate(ctx, &errorList)
+		errorList = idToken.Validate(ctx, errorList)
 
 		So(len(errorList), ShouldEqual, 1)
 		So(errorList[0].Description, ShouldEqual, apierrorsdeprecated.MissingIDTokenMessage)
@@ -52,7 +52,7 @@ func TestIdToken_Validate(t *testing.T) {
 		var errorList []apierrorsdeprecated.Error
 		idToken := models.IdToken{TokenString: ""}
 
-		idToken.Validate(ctx, &errorList)
+		errorList = idToken.Validate(ctx, errorList)
 
 		So(len(errorList), ShouldEqual, 1)
 		So(errorList[0].Description, ShouldEqual, apierrorsdeprecated.MissingIDTokenMessage)
@@ -62,7 +62,7 @@ func TestIdToken_Validate(t *testing.T) {
 		var errorList []apierrorsdeprecated.Error
 		idToken := models.IdToken{TokenString: "aaaa.bbbb.cccc"}
 
-		idToken.Validate(ctx, &errorList)
+		errorList = idToken.Validate(ctx, errorList)
 
 		So(len(errorList), ShouldEqual, 1)
 		So(errorList[0].Description, ShouldEqual, apierrorsdeprecated.MalformedIDTokenMessage)
@@ -75,7 +75,7 @@ func TestIdToken_Validate(t *testing.T) {
 		idTokenString := mock.GenerateMockIDToken(testEmailAddress)
 		idToken := models.IdToken{TokenString: idTokenString}
 
-		idToken.Validate(ctx, &errorList)
+		errorList = idToken.Validate(ctx, errorList)
 
 		So(len(errorList), ShouldEqual, 0)
 		So(idToken.Claims.Email, ShouldEqual, testEmailAddress)
@@ -89,7 +89,7 @@ func TestRefreshToken_Validate(t *testing.T) {
 		var errorList []apierrorsdeprecated.Error
 		refreshToken := models.RefreshToken{}
 
-		refreshToken.Validate(ctx, &errorList)
+		errorList = refreshToken.Validate(ctx, errorList)
 
 		So(len(errorList), ShouldEqual, 1)
 		So(errorList[0].Description, ShouldEqual, apierrorsdeprecated.MissingRefreshTokenMessage)
@@ -99,7 +99,7 @@ func TestRefreshToken_Validate(t *testing.T) {
 		var errorList []apierrorsdeprecated.Error
 		refreshToken := models.RefreshToken{TokenString: ""}
 
-		refreshToken.Validate(ctx, &errorList)
+		errorList = refreshToken.Validate(ctx, errorList)
 
 		So(len(errorList), ShouldEqual, 1)
 		So(errorList[0].Description, ShouldEqual, apierrorsdeprecated.MissingRefreshTokenMessage)
@@ -109,7 +109,7 @@ func TestRefreshToken_Validate(t *testing.T) {
 		var errorList []apierrorsdeprecated.Error
 		refreshToken := models.RefreshToken{TokenString: "aaaa.bbbb.cccc.dddd.eeee"}
 
-		refreshToken.Validate(ctx, &errorList)
+		errorList = refreshToken.Validate(ctx, errorList)
 
 		So(len(errorList), ShouldEqual, 0)
 	})

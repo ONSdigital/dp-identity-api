@@ -39,6 +39,7 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 	}
 
 	r.HandleFunc("/tokens", api.TokensHandler(ctx)).Methods("POST")
+	// self used in paths rather than identifier as the identifier is JWT tokens passed in the request headers
 	r.HandleFunc("/tokens/self", api.SignOutHandler(ctx)).Methods("DELETE")
 	r.HandleFunc("/tokens/self", api.RefreshHandler(ctx)).Methods("PUT")
 	r.HandleFunc("/users", api.CreateUserHandler(ctx)).Methods("POST")

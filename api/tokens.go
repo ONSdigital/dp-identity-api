@@ -28,6 +28,7 @@ var (
 	RefreshTokenHeaderName = "Refresh"
 )
 
+//TokensHandler uses submitted email address and password to sign a user in against Cognito and returns a http handler interface
 func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, req *http.Request) {
@@ -122,6 +123,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 	}
 }
 
+//SignOutHandler invalidates a users access token signing them out and returns a http handler interface
 func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		var errorList []apierrorsdeprecated.Error
@@ -170,6 +172,7 @@ func (api *API) SignOutHandler(ctx context.Context) http.HandlerFunc {
 	}
 }
 
+//RefreshHandler refreshes a users access token and returns new access and ID tokens, expiration time and the refresh token
 func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		var errorList []apierrorsdeprecated.Error
@@ -177,12 +180,12 @@ func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
 		refreshToken := models.RefreshToken{
 			TokenString: req.Header.Get(RefreshTokenHeaderName),
 		}
-		refreshToken.Validate(ctx, &errorList)
+		errorList = refreshToken.Validate(ctx, errorList)
 
 		idToken := models.IdToken{
 			TokenString: req.Header.Get(IdTokenHeaderName),
 		}
-		idToken.Validate(ctx, &errorList)
+		errorList = idToken.Validate(ctx, errorList)
 
 		if len(errorList) > 0 {
 			errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
@@ -194,20 +197,17 @@ func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
 		result, authErr := api.CognitoClient.InitiateAuth(authInput)
 
 		if authErr != nil {
-			log.Event(ctx, authErr.Error(), log.ERROR)
+			log.Event(ctx, "Cognito InitiateAuth request for token refresh - "+authErr.Error(), log.ERROR)
 			if authErr.Error() == "NotAuthorizedException: Refresh Token has expired" {
 				expiredTokenError := apierrorsdeprecated.IndividualErrorBuilder(authErr, apierrorsdeprecated.TokenExpiredMessage)
 				errorList = append(errorList, expiredTokenError)
 				errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
 				apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusForbidden, errorResponseBody)
-				return
 			} else {
 				apierrorsdeprecated.HandleUnexpectedError(ctx, w, authErr, apierrorsdeprecated.InternalErrorMessage)
-				return
 			}
+			return
 		}
-
-		result.AuthenticationResult.RefreshToken = &refreshToken.TokenString
 
 		buildSuccessfulResponse(result, w, ctx)
 
@@ -259,7 +259,9 @@ func buildSuccessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput,
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set(AccessTokenHeaderName, "Bearer "+*result.AuthenticationResult.AccessToken)
 		w.Header().Set(IdTokenHeaderName, *result.AuthenticationResult.IdToken)
-		w.Header().Set(RefreshTokenHeaderName, *result.AuthenticationResult.RefreshToken)
+		if result.AuthenticationResult.RefreshToken != nil {
+			w.Header().Set(RefreshTokenHeaderName, *result.AuthenticationResult.RefreshToken)
+		}
 		w.WriteHeader(http.StatusCreated)
 
 		postBody := map[string]interface{}{"expirationTime": expirationTime}
