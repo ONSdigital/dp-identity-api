@@ -20,6 +20,8 @@ func TestSetup(t *testing.T) {
 
 		Convey("When created the following route(s) should have been added", func() {
 			So(hasRoute(api.Router, "/tokens", "POST"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/tokens/self", "DELETE"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/tokens/self", "PUT"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/users", "POST"), ShouldBeTrue)
 		})
 

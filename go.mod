@@ -13,6 +13,7 @@ require (
 	github.com/aws/aws-sdk-go v1.38.34
 	github.com/coreos/etcd v3.3.25+incompatible // indirect
 	github.com/cucumber/godog v0.11.0
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect

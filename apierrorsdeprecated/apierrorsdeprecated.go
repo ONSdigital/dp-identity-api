@@ -7,18 +7,17 @@ import (
 	"net/http"
 	"strings"
 
-	errModels "github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/log.go/log"
 )
 
 const (
-	MissingTokenDescription         = "no Authorization token was provided"
-	MalformedTokenDescription       = "the provided token does not meet the required format"
-	InvalidUserNameDescription      = "Unable to validate the username in the request"
-	InvalidPasswordDescription      = "Unable to validate the password in the request"
-	InvalidForenameErrorDescription = "Unable to validate the user's forename in the request"
-	InvalidSurnameErrorDescription  = "Unable to validate the user's surname in the request"
-	InvalidErrorDescription         = "Unable to validate the email in the request"
+	MissingTokenDescription              = "no Authorization token was provided"
+	MalformedTokenDescription            = "the provided token does not meet the required format"
+	InvalidUserNameDescription           = "Unable to validate the username in the request"
+	InvalidPasswordDescription           = "Unable to validate the password in the request"
+	InvalidForenameErrorDescription      = "Unable to validate the user's forename in the request"
+	InvalidSurnameErrorDescription       = "Unable to validate the user's surname in the request"
+	InvalidErrorDescription              = "Unable to validate the email in the request"
 	PasswordErrorDescription             = "failed to generate password"
 	RequestErrorDescription              = "api endpoint POST user returned an error reading request body"
 	UnmarshallingErrorDescription        = "api endpoint POST user returned an error unmarshalling request body"
@@ -30,9 +29,18 @@ const (
 	HttpResponseErrorDescription         = "Failed to write http response"
 	RequiredParameterNotFoundDescription = "error in parsing api setup arguments - missing parameter"
 	InternalErrorException               = "InternalErrorException"
+	MissingRefreshTokenMessage           = "no refresh token was provided"
+	TokenExpiredMessage                  = "refresh token has expired"
+	MissingIDTokenMessage                = "no ID token was provided"
+	MalformedIDTokenMessage              = "the ID token could not be parsed"
+	InternalErrorMessage                 = "an internal error has occurred"
 )
 
 var InvalidTokenError = errors.New("invalid token")
+
+var InvalidRefreshTokenError = errors.New("invalid refresh token")
+
+var InvalidIDTokenError = errors.New("invalid ID token")
 
 var ErrInvalidUserName = errors.New("invalid username")
 
@@ -46,19 +54,19 @@ var ErrInvalidEmail = errors.New("invalid email")
 
 var ErrDuplicateEmail = errors.New("duplicate email")
 
-func IndividualErrorBuilder(err error, description string) (Error errModels.Error) {
+func IndividualErrorBuilder(err error, description string) (apiErr Error) {
 
-	Error = errModels.Error{
+	apiErr = Error{
 		Code:        error.Error(err),
 		Description: description,
 	}
 
-	return Error
+	return apiErr
 }
 
-func ErrorResponseBodyBuilder(listOfErrors []errModels.Error) (errorResponseBody errModels.ErrorList) {
+func ErrorResponseBodyBuilder(listOfErrors []Error) (errorResponseBody ErrorList) {
 
-	errorResponseBody = errModels.ErrorList{
+	errorResponseBody = ErrorList{
 		Errors: listOfErrors,
 	}
 
@@ -87,7 +95,7 @@ func WriteErrorResponse(ctx context.Context, w http.ResponseWriter, status int, 
 
 func HandleUnexpectedError(ctx context.Context, w http.ResponseWriter, err error, description string) {
 
-	var errorList []errModels.Error
+	var errorList []Error
 
 	internalServerErrorBody := IndividualErrorBuilder(err, description)
 	errorList = append(errorList, internalServerErrorBody)

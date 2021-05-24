@@ -30,7 +30,7 @@ paths:
   /tokens:
     post:
       tags:
-        - token
+        - tokens
       summary: "Creates tokens for authorisation, ID and refresh for authenticated users"
       consumes:
         - application/json
@@ -80,9 +80,52 @@ paths:
           description: "Unexpected internal error"
           schema:
             $ref: '#/definitions/TokensErrorList'
+  /tokens/self:
+    put:
+      tags:
+        - tokens
+      summary: "Refreshs a users access token using the refresh and ID tokens"
+      consumes:
+        - application/json
+      parameters:
+        - in: header
+          type: string
+          name: ID
+          description: "The users ID token"
+        - in: header
+          type: string
+          name: Refresh
+          description: "The users refresh token"
+      responses:
+        201:
+          description: "Created"
+          headers:
+            Authorization:
+              type: string
+              description: "Auth token"
+            ID:
+              type: string
+              description: "ID token"
+            Refresh:
+              type: string
+              description: "Refresh token"
+          schema:
+            $ref: '#/definitions/ExpirationTime'
+        400:
+          description: "Invalid request. Missing or malformed ID token or missing Refresh token provided"
+          schema:
+            $ref: '#/definitions/TokensErrorList'
+        403:
+          description: "Forbidden. Expired or invalid refresh token"
+          schema:
+            $ref: '#/definitions/TokensErrorList'
+        500:
+          description: "Unexpected internal error"
+          schema:
+            $ref: '#/definitions/TokensErrorList'
     delete:
       tags:
-        - token
+        - tokens
       summary: "Signs out a user, invalidating their access tokens"
       consumes:
         - application/json
@@ -205,15 +248,15 @@ definitions:
         description: "Information about list of user type attribute"
         type: array
         items:
-            $ref: '#/definitions/AttributeType'
+          $ref: '#/definitions/AttributeType'
       Enabled:
         description: "Specifies whether the user is enabled"
         type: boolean
       MFAOptions:
         description: "The MFA options for the user."
         type: array
-        items: 
-            $ref: '#/definitions/MFAOptionType'
+        items:
+          $ref: '#/definitions/MFAOptionType'
       UserCreateDate:
         description: "The creation date of the user"
         type: string
@@ -222,13 +265,13 @@ definitions:
         description: "The last modified date of the user."
         type: string
         format: date-time
-      UserStatus: 
+      UserStatus:
         description: "The current status of the user"
         type: string
         enum: [UNCONFIRMED, CONFIRMED, ARCHIVED, COMPROMISED, UNKNOWN, RESET_REQUIRED, FORCE_CHANGE_PASSWORD]
         example: "CONFIRMED"
       Username:
-        description: "The username of the user"    
+        description: "The username of the user"
         type: string
         example: "smileons"
 

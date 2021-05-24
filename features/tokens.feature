@@ -237,7 +237,6 @@ Scenario: DELETE /tokens/self
     When I DELETE "/tokens/self"
     Then the HTTP status code should be "400"
 
-
 Scenario: DELETE /tokens/self
     Given I have an active session with access token "aaaa.bbbb.cccc"
     And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
@@ -321,3 +320,111 @@ Scenario: POST /tokens
         ]
     }
     """
+
+Scenario: PUT /tokens/self with no ID token
+    Given I set the "ID" header to ""
+    And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
+    When I PUT "/tokens/self"
+    """
+    {}
+    """
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "code": "invalid ID token",
+                "description": "no ID token was provided"
+            }
+        ]
+    }
+    """
+
+Scenario: PUT /tokens/self with no refresh token
+    Given I have a valid ID header for user "test@ons.gov.uk"
+    And I set the "Refresh" header to ""
+    When I PUT "/tokens/self"
+    """
+    {}
+    """
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "code": "invalid refresh token",
+                "description": "no refresh token was provided"
+            }
+        ]
+    }
+    """
+
+Scenario: PUT /tokens/self with no tokens
+    Given I set the "ID" header to ""
+    And I set the "Refresh" header to ""
+    When I PUT "/tokens/self"
+    """
+    {}
+    """
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "code": "invalid refresh token",
+                "description": "no refresh token was provided"
+            },
+            {
+                "code": "invalid ID token",
+                "description": "no ID token was provided"
+            }
+        ]
+    }
+    """
+
+Scenario: PUT /tokens/self with badly formatted ID token
+    Given I set the "ID" header to "zzzz.yyyy.xxxx"
+    And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
+    When I PUT "/tokens/self"
+    """
+    {}
+    """
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "code": "invalid ID token",
+                "description": "the ID token could not be parsed"
+            }
+        ]
+    }
+    """
+
+Scenario: PUT /tokens/self internal Cognito error
+    Given I have a valid ID header for user "test@ons.gov.uk"
+    And I set the "Refresh" header to "InternalError"
+    When I PUT "/tokens/self"
+    """
+    {}
+    """
+    Then the HTTP status code should be "500"
+
+Scenario: PUT /tokens/self with expired refresh token
+    Given I have a valid ID header for user "test@ons.gov.uk"
+    And I set the "Refresh" header to "ExpiredToken"
+    When I PUT "/tokens/self"
+    """
+    {}
+    """
+    Then the HTTP status code should be "403"
+
+Scenario: PUT /tokens/self success
+    Given I have a valid ID header for user "test@ons.gov.uk"
+    And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
+    When I PUT "/tokens/self"
+    """
+    {}
+    """
+    Then the HTTP status code should be "201"
+    And the response header "Authorization" should be "Bearer llll.mmmm.nnnn"

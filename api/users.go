@@ -18,11 +18,11 @@ import (
 
 //CreateUserHandler creates a new user and returns a http handler interface
 func (api *API) CreateUserHandler(ctx context.Context) http.HandlerFunc {
-	log.Event(ctx, "starting to generate a new user", log.INFO)
 	return func(w http.ResponseWriter, req *http.Request) {
+		log.Event(ctx, "starting to generate a new user", log.INFO)
 		defer req.Body.Close()
 
-		var errorList []models.Error
+		var errorList []apierrorsdeprecated.Error
 
 		tempPassword, err := password.Generate(14, 1, 1, false, false)
 		if err != nil {

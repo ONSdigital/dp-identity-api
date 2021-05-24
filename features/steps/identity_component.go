@@ -47,7 +47,7 @@ func NewIdentityComponent() (*IdentityComponent, error) {
 	c.Config.AWSCognitoUserPoolID = "eu-west-18_73289nds8w932"
 	c.Config.AWSCognitoClientId = "client-aaa-bbb"
 	c.Config.AWSCognitoClientSecret = "secret-ccc-ddd"
-	c.Config.AWSAuthFlow = "authflow"
+	c.Config.AWSAuthFlow = "USER_PASSWORD_AUTH"
 
 	initMock := &mock.InitialiserMock{
 		DoGetHealthCheckFunc:   c.DoGetHealthcheckOk,
