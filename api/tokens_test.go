@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ONSdigital/dp-identity-api/cognito/mock"
+	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/gorilla/mux"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -92,7 +96,7 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 	})
 }
 
-func TestWriteErrorResponse(t *testing.T) {
+func TestDeprecatedWriteErrorResponse(t *testing.T) {
 	Convey("A status code and an error body with two errors is written to a http response", t, func() {
 
 		errorResponseBodyExample := `{"errors":[{"code":"Invalid email","description":"Unable to validate the email in the request"},{"code":"Invalid email","description":"Unable to validate the email in the request"}]}`
@@ -242,5 +246,90 @@ func TestBuildJson(t *testing.T) {
 		So(w.Body.String(), ShouldResemble, "{\"errors\":[{\"code\":\"json: unsupported type: chan int\",\"description\":\"failed to marshal the error\"}]}")
 		So(w.Result().StatusCode, ShouldEqual, 500)
 		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
+	})
+}
+
+func TestSignOutHandler(t *testing.T) {
+	var (
+		r                                               = mux.NewRouter()
+		ctx                                             = context.Background()
+		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "USER_PASSWORD_AUTH"
+	)
+
+	m := &mock.MockCognitoIdentityProviderClient{}
+
+	// mock call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
+	m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+		return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
+	}
+
+	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow)
+
+	Convey("Global Sign Out success: no errors added to ErrorResponse Errors list", t, func() {
+		w := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		request.Header.Set("Authorization", "Bearer zzzz-yyyy-xxxx")
+		var errorResponse models.ErrorResponse
+
+		api.SignOutHandler(w, request, ctx, &errorResponse)
+
+		So(len(errorResponse.Errors), ShouldEqual, 0)
+	})
+
+	Convey("Global Sign Out validation error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
+		w := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		request.Header.Set("Authorization", "")
+		var errorResponse models.ErrorResponse
+
+		api.SignOutHandler(w, request, ctx, &errorResponse)
+
+		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+		So(len(errorResponse.Errors), ShouldEqual, 1)
+		So(errorResponse.Errors[0].Error(), ShouldEqual, models.InvalidTokenError)
+	})
+
+	Convey("Global Sign Out Cognito internal error: adds an error to the ErrorResponse and sets its Status to 500", t, func() {
+		awsErrCode := "InternalErrorException"
+		awsErrMessage := "Something strange happened"
+		awsOrigErr := errors.New(awsErrCode)
+		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
+		m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+			return nil, awsErr
+		}
+
+		w := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		request.Header.Set("Authorization", "Bearer zzzz-yyyy-xxxx")
+		var errorResponse models.ErrorResponse
+
+		api.SignOutHandler(w, request, ctx, &errorResponse)
+
+		So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+		So(len(errorResponse.Errors), ShouldEqual, 1)
+		So(errorResponse.Errors[0].Error(), ShouldEqual, awsErr.Error())
+	})
+
+	Convey("Global Sign Out Cognito request error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
+		awsErrCode := "NotAuthorizedException"
+		awsErrMessage := "User is not authorized"
+		awsOrigErr := errors.New(awsErrCode)
+		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
+		m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+			return nil, awsErr
+		}
+
+		w := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		request.Header.Set("Authorization", "Bearer zzzz-yyyy-xxxx")
+		var errorResponse models.ErrorResponse
+
+		api.SignOutHandler(w, request, ctx, &errorResponse)
+
+		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+		So(len(errorResponse.Errors), ShouldEqual, 1)
+		So(errorResponse.Errors[0].Error(), ShouldEqual, awsErr.Error())
 	})
 }

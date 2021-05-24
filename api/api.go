@@ -56,18 +56,18 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 
 	r.HandleFunc("/tokens", api.TokensHandler(ctx)).Methods("POST")
 	// self used in paths rather than identifier as the identifier is JWT tokens passed in the request headers
-	r.HandleFunc("/tokens/self", baseHandler(api.signOutHandler).ServeHTTP).Methods("DELETE")
+	r.HandleFunc("/tokens/self", baseHandler(api.SignOutHandler).ServeHTTP).Methods("DELETE")
 	r.HandleFunc("/tokens/self", api.RefreshHandler(ctx)).Methods("PUT")
 	r.HandleFunc("/users", api.CreateUserHandler(ctx)).Methods("POST")
 	return api, nil
 }
 
-func WriteErrorResponse(ctx context.Context, w http.ResponseWriter, errorList models.ErrorResponse) {
+func WriteErrorResponse(ctx context.Context, w http.ResponseWriter, errorResponse models.ErrorResponse) {
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(errorList.Status)
+	w.WriteHeader(errorResponse.Status)
 
-	jsonResponse, err := json.Marshal(errorList)
+	jsonResponse, err := json.Marshal(errorResponse)
 	if err != nil {
 		responseErr := models.NewError(ctx, err, models.JSONMarshalError, models.ErrorMarshalFailedDescription)
 		http.Error(w, responseErr.Description, http.StatusInternalServerError)
