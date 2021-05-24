@@ -123,17 +123,17 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 }
 
 //SignOutHandler invalidates a users access token signing them out and returns a http handler interface
-func (api *API) signOutHandler(w http.ResponseWriter, req *http.Request, ctx context.Context, errorList *models.ErrorList) {
+func (api *API) signOutHandler(w http.ResponseWriter, req *http.Request, ctx context.Context, errorResponse *models.ErrorResponse) {
 	accessToken := models.AccessToken{
 		AuthHeader: req.Header.Get(AccessTokenHeaderName),
 	}
 	validationErr := accessToken.Validate(ctx)
 	if validationErr != nil {
-		errorList.Errors = append(errorList.Errors, validationErr)
+		errorResponse.Errors = append(errorResponse.Errors, validationErr)
 	}
 
-	if len(errorList.Errors) > 0 {
-		errorList.Status = http.StatusBadRequest
+	if len(errorResponse.Errors) > 0 {
+		errorResponse.Status = http.StatusBadRequest
 		return
 	}
 
@@ -141,11 +141,11 @@ func (api *API) signOutHandler(w http.ResponseWriter, req *http.Request, ctx con
 
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "Cognito GlobalSignOut request for signout")
-		errorList.Errors = append(errorList.Errors, &responseErr)
+		errorResponse.Errors = append(errorResponse.Errors, &responseErr)
 		if responseErr.Code == models.NotFoundError || responseErr.Code == models.NotAuthorisedError {
-			errorList.Status = http.StatusBadRequest
+			errorResponse.Status = http.StatusBadRequest
 		} else {
-			errorList.Status = http.StatusInternalServerError
+			errorResponse.Status = http.StatusInternalServerError
 		}
 		return
 	}

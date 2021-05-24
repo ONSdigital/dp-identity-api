@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 )
 
-type ErrorList struct {
+type ErrorResponse struct {
 	Errors []BaseError `json:"errors"`
 	Status int         `json:"-"`
 }
