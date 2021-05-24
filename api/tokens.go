@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
+	"github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/utilities"
 	"github.com/ONSdigital/dp-identity-api/validation"
@@ -53,6 +54,26 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 		validEmailRequest := emailValidation(authParams)
 
 		if validPasswordRequest && validEmailRequest {
+
+			err = terminateExistingSession(authParams, api.UserPoolId, api.CognitoClient)
+
+			if err != nil {
+				isInternalError := apierrorsdeprecated.IdentifyInternalError(err)
+				if isInternalError {
+					errorMessage := "api endpoint POST login returned an error and failed to connect to cognito logout"
+					apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, errorMessage)
+					return
+				}
+
+				var errorList []apierrorsdeprecated.Error
+				adminLogoutMessage := "something went wrong, and api endpoint POST login returned an error and failed to connect to cognito logout. Please try again or contact an administrator."
+				adminLogoutError := apierrorsdeprecated.IndividualErrorBuilder(err, adminLogoutMessage)
+				errorList = append(errorList, adminLogoutError)
+				errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
+				apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
+				return
+			}
+
 			input := buildCognitoRequest(authParams, api.ClientId, api.ClientSecret, api.ClientAuthFlow)
 			result, authErr := api.CognitoClient.InitiateAuth(input)
 
@@ -213,6 +234,20 @@ func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
 
 		return
 	}
+}
+
+func terminateExistingSession(authParams AuthParams, userPoolId string, cognitoClient cognito.Client) (err error) {
+
+	adminUserGlobalSignOutInput := &cognitoidentityprovider.AdminUserGlobalSignOutInput{
+		Username:   &authParams.Email,
+		UserPoolId: &userPoolId,
+	}
+
+	_, err = cognitoClient.AdminUserGlobalSignOut(adminUserGlobalSignOutInput)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func passwordValidation(requestBody AuthParams) (isPasswordValid bool) {

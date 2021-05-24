@@ -2,9 +2,10 @@ package steps
 
 import (
 	"errors"
-	"github.com/ONSdigital/dp-identity-api/api"
 	"io/ioutil"
 	"strings"
+
+	"github.com/ONSdigital/dp-identity-api/api"
 
 	"github.com/cucumber/godog"
 	"github.com/stretchr/testify/assert"
@@ -20,6 +21,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^an error is returned from Cognito$`, c.anErrorIsReturnedFromCognito)
 	ctx.Step(`^I have an active session with access token "([^"]*)"$`, c.iHaveAnActiveSessionWithAccessToken)
 	ctx.Step(`I have a valid ID header for user "([^"]*)"$`, c.iHaveAValidIDHeaderForUser)
+	ctx.Step(`^the AdminUserGlobalSignOut endpoint in cognito returns an internal server error$`, c.theAdminUserGlobalSignOutEndpointInCognitoReturnsAnInternalServerError)
 }
 
 func (c *IdentityComponent) iShouldReceiveAHelloworldResponse() error {
@@ -56,4 +58,8 @@ func (c *IdentityComponent) iHaveAValidIDHeaderForUser(email string) error {
 	}
 	err := c.apiFeature.ISetTheHeaderTo(api.IdTokenHeaderName, idToken)
 	return err
+}
+
+func (c *IdentityComponent) theAdminUserGlobalSignOutEndpointInCognitoReturnsAnInternalServerError() error {
+	return nil
 }
