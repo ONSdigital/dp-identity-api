@@ -30,6 +30,7 @@ const (
 	MalformedAuthorizationTokenDescription = "the authorization token does not meet the required format"
 	ErrorMarshalFailedDescription          = "failed to marshal the error"
 	WriteResponseFailedDescription         = "failed to write http response"
+	CastingAWSErrorFailedDescription       = "failed to cast error to AWS error"
 )
 
 // Mapping Cognito error codes to API error codes

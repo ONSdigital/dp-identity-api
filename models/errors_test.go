@@ -124,15 +124,30 @@ func TestNewCognitoError(t *testing.T) {
 		So(err.Code, ShouldEqual, expectedErrorCode)
 		So(err.Description, ShouldEqual, awsErrMessage)
 	})
+
+	Convey("constructs a internal error CognitoError object if cast to AWS error fails", t, func() {
+		originalErr := errors.New("TestError")
+		errorContext := "dp-identity-api calling AWS Cognito"
+
+		err := models.NewCognitoError(ctx, originalErr, errorContext)
+
+		So(err, ShouldNotBeNil)
+		So(reflect.TypeOf(err), ShouldEqual, reflect.TypeOf(models.CognitoError{}))
+		So(err.Error(), ShouldEqual, originalErr.Error())
+		So(err.Code, ShouldEqual, models.InternalError)
+		So(err.Description, ShouldEqual, models.CastingAWSErrorFailedDescription)
+	})
 }
 
 func TestMapCognitoErrorToLocalError(t *testing.T) {
+	var ctx = context.Background()
+
 	Convey("correctly maps the Cognito error code to the ONS error code", t, func() {
 		for cognitoCode, expectedONSCode := range models.CognitoErrorMapping {
 			awsErrMessage := "an error occurred"
 			awsOrigErr := errors.New(cognitoCode)
 			awsErr := awserr.New(cognitoCode, awsErrMessage, awsOrigErr)
-			actualONSCode := models.MapCognitoErrorToLocalError(awsErr)
+			actualONSCode := models.MapCognitoErrorToLocalError(ctx, awsErr)
 
 			So(actualONSCode, ShouldEqual, expectedONSCode)
 		}
@@ -143,7 +158,7 @@ func TestMapCognitoErrorToLocalError(t *testing.T) {
 		awsErrMessage := "an error occurred"
 		awsOrigErr := errors.New(cognitoCode)
 		awsErr := awserr.New(cognitoCode, awsErrMessage, awsOrigErr)
-		actualONSCode := models.MapCognitoErrorToLocalError(awsErr)
+		actualONSCode := models.MapCognitoErrorToLocalError(ctx, awsErr)
 
 		So(actualONSCode, ShouldEqual, models.InternalError)
 	})
