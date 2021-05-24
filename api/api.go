@@ -23,11 +23,12 @@ type API struct {
 	ClientAuthFlow string
 }
 
-type baseHandler func(w http.ResponseWriter, r *http.Request, errorList *models.ErrorList)
+type baseHandler func(w http.ResponseWriter, r *http.Request, ctx context.Context, errorList *models.ErrorList)
 
 func (handler baseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var errorList models.ErrorList
-	handler(w, r, &errorList)
+	handler(w, r, ctx, &errorList)
 
 	if len(errorList.Errors) > 0 {
 		ctx := r.Context()

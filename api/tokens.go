@@ -123,9 +123,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 }
 
 //SignOutHandler invalidates a users access token signing them out and returns a http handler interface
-func (api *API) signOutHandler(w http.ResponseWriter, req *http.Request, errorList *models.ErrorList) {
-	ctx := req.Context()
-
+func (api *API) signOutHandler(w http.ResponseWriter, req *http.Request, ctx context.Context, errorList *models.ErrorList) {
 	accessToken := models.AccessToken{
 		AuthHeader: req.Header.Get(AccessTokenHeaderName),
 	}
