@@ -63,16 +63,16 @@ func (e *CognitoError) Error() string {
 func NewCognitoError(ctx context.Context, err error, errContext string) CognitoError {
 	log.Event(ctx, errContext+" - "+err.Error(), log.ERROR)
 	cognitoErr := err.(awserr.Error)
-	code := mapCognitoErrorToLocalError(cognitoErr)
+	code := MapCognitoErrorToLocalError(cognitoErr)
 	return CognitoError{
-		Cause:       err,
+		Cause:       cognitoErr,
 		Code:        code,
 		Description: cognitoErr.Message(),
 	}
 }
 
-func mapCognitoErrorToLocalError(cognitoErr awserr.Error) string {
-	if val, ok := cognitoErrorMapping[cognitoErr.Code()]; ok {
+func MapCognitoErrorToLocalError(cognitoErr awserr.Error) string {
+	if val, ok := CognitoErrorMapping[cognitoErr.Code()]; ok {
 		return val
 	}
 	return InternalError

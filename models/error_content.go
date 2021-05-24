@@ -33,7 +33,7 @@ const (
 )
 
 // Mapping Cognito error codes to API error codes
-var cognitoErrorMapping = map[string]string{
+var CognitoErrorMapping = map[string]string{
 	cognitoidentityprovider.ErrCodeInternalErrorException:          InternalError,
 	cognitoidentityprovider.ErrCodeCodeDeliveryFailureException:    DeliveryFailureError,
 	cognitoidentityprovider.ErrCodeCodeMismatchException:           InvalidCodeError,
