@@ -65,7 +65,7 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 					return
 				}
 
-				var errorList []models.Error
+				var errorList []apierrorsdeprecated.Error
 				adminLogoutMessage := "something went wrong, and api endpoint POST login returned an error and failed to connect to cognito logout. Please try again or contact an administrator."
 				adminLogoutError := apierrorsdeprecated.IndividualErrorBuilder(err, adminLogoutMessage)
 				errorList = append(errorList, adminLogoutError)
