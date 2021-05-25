@@ -23,13 +23,13 @@ type API struct {
 	ClientAuthFlow string
 }
 
-type baseHandler func(w http.ResponseWriter, r *http.Request, ctx context.Context) models.ErrorResponse
+type baseHandler func(w http.ResponseWriter, r *http.Request, ctx context.Context) *models.ErrorResponse
 
 func (handler baseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	errorResponse := handler(w, r, ctx)
 
-	if len(errorResponse.Errors) > 0 {
+	if errorResponse != nil {
 		ctx := r.Context()
 		WriteErrorResponse(ctx, w, errorResponse)
 	}
@@ -61,7 +61,7 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 	return api, nil
 }
 
-func WriteErrorResponse(ctx context.Context, w http.ResponseWriter, errorResponse models.ErrorResponse) {
+func WriteErrorResponse(ctx context.Context, w http.ResponseWriter, errorResponse *models.ErrorResponse) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(errorResponse.Status)
