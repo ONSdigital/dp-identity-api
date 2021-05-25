@@ -272,7 +272,7 @@ func TestSignOutHandler(t *testing.T) {
 
 		errorResponse := api.SignOutHandler(w, request, ctx)
 
-		So(len(errorResponse.Errors), ShouldEqual, 0)
+		So(errorResponse, ShouldBeNil)
 	})
 
 	Convey("Global Sign Out validation error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
