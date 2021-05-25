@@ -43,19 +43,19 @@ func NewValidationError(ctx context.Context, code string, description string) *E
 	}
 }
 
-func NewCognitoError(ctx context.Context, err error, errContext string) Error {
+func NewCognitoError(ctx context.Context, err error, errContext string) *Error {
 	log.Event(ctx, errContext, log.Error(err), log.ERROR)
 	var cognitoErr awserr.Error
 	if !errors.As(err, &cognitoErr) {
 		log.Event(ctx, CastingAWSErrorFailedDescription, log.Error(err), log.ERROR)
-		return Error{
+		return &Error{
 			Cause:       err,
 			Code:        InternalError,
 			Description: CastingAWSErrorFailedDescription,
 		}
 	}
 	code := MapCognitoErrorToLocalError(ctx, cognitoErr)
-	return Error{
+	return &Error{
 		Cause:       cognitoErr,
 		Code:        code,
 		Description: cognitoErr.Message(),
