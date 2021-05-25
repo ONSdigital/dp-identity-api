@@ -69,3 +69,10 @@ func emailLengthValid(l int) bool {
 	}
 	return true
 }
+
+func IsPasswordValid(p string) bool {
+	if len(p) == 0 {
+		return false
+	}
+	return true
+}
