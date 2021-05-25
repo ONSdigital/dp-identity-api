@@ -73,37 +73,6 @@ func TestNewValidationError(t *testing.T) {
 	})
 }
 
-func TestCognitoError_Error(t *testing.T) {
-	Convey("returns the cause Error value when a cause is set", t, func() {
-		awsErrCode := "InternalErrorException"
-		awsErrMessage := "Something strange happened"
-		awsOrigErr := errors.New(awsErrCode)
-		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
-		errorCode := "TestErrorCode"
-		errorDescription := "description of the error"
-
-		err := models.CognitoError{
-			Cause:       awsErr,
-			Code:        errorCode,
-			Description: errorDescription,
-		}
-
-		So(err.Error(), ShouldEqual, awsErr.Error())
-	})
-
-	Convey("returns the Code and Description when a cause is not set", t, func() {
-		errorCode := "TestErrorCode"
-		errorDescription := "description of the error"
-
-		err := models.CognitoError{
-			Code:        errorCode,
-			Description: errorDescription,
-		}
-
-		So(err.Error(), ShouldEqual, errorCode+": "+errorDescription)
-	})
-}
-
 func TestNewCognitoError(t *testing.T) {
 	var ctx = context.Background()
 
@@ -119,7 +88,7 @@ func TestNewCognitoError(t *testing.T) {
 		expectedErrorCode := models.CognitoErrorMapping[awsErrCode]
 
 		So(err, ShouldNotBeNil)
-		So(reflect.TypeOf(err), ShouldEqual, reflect.TypeOf(models.CognitoError{}))
+		So(reflect.TypeOf(err), ShouldEqual, reflect.TypeOf(models.Error{}))
 		So(err.Error(), ShouldEqual, awsErr.Error())
 		So(err.Code, ShouldEqual, expectedErrorCode)
 		So(err.Description, ShouldEqual, awsErrMessage)
@@ -132,7 +101,7 @@ func TestNewCognitoError(t *testing.T) {
 		err := models.NewCognitoError(ctx, originalErr, errorContext)
 
 		So(err, ShouldNotBeNil)
-		So(reflect.TypeOf(err), ShouldEqual, reflect.TypeOf(models.CognitoError{}))
+		So(reflect.TypeOf(err), ShouldEqual, reflect.TypeOf(models.Error{}))
 		So(err.Error(), ShouldEqual, originalErr.Error())
 		So(err.Code, ShouldEqual, models.InternalError)
 		So(err.Description, ShouldEqual, models.CastingAWSErrorFailedDescription)

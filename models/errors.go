@@ -8,12 +8,8 @@ import (
 )
 
 type ErrorResponse struct {
-	Errors []BaseError `json:"errors"`
-	Status int         `json:"-"`
-}
-
-type BaseError interface {
-	Error() string
+	Errors []error `json:"errors"`
+	Status int     `json:"-"`
 }
 
 type Error struct {
@@ -47,32 +43,19 @@ func NewValidationError(ctx context.Context, code string, description string) *E
 	}
 }
 
-type CognitoError struct {
-	Cause       error  `json:"-"`
-	Code        string `json:"code"`
-	Description string `json:"description"`
-}
-
-func (e *CognitoError) Error() string {
-	if e.Cause != nil {
-		return e.Cause.Error()
-	}
-	return e.Code + ": " + e.Description
-}
-
-func NewCognitoError(ctx context.Context, err error, errContext string) CognitoError {
+func NewCognitoError(ctx context.Context, err error, errContext string) Error {
 	log.Event(ctx, errContext, log.Error(err), log.ERROR)
 	var cognitoErr awserr.Error
 	if !errors.As(err, &cognitoErr) {
 		log.Event(ctx, CastingAWSErrorFailedDescription, log.Error(err), log.ERROR)
-		return CognitoError{
+		return Error{
 			Cause:       err,
 			Code:        InternalError,
 			Description: CastingAWSErrorFailedDescription,
 		}
 	}
 	code := MapCognitoErrorToLocalError(ctx, cognitoErr)
-	return CognitoError{
+	return Error{
 		Cause:       cognitoErr,
 		Code:        code,
 		Description: cognitoErr.Message(),

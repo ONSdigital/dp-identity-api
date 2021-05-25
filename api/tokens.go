@@ -123,35 +123,37 @@ func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
 }
 
 //SignOutHandler invalidates a users access token signing them out and returns a http handler interface
-func (api *API) SignOutHandler(w http.ResponseWriter, req *http.Request, ctx context.Context, errorResponse *models.ErrorResponse) {
+func (api *API) SignOutHandler(w http.ResponseWriter, req *http.Request, ctx context.Context) models.ErrorResponse {
 	accessToken := models.AccessToken{
 		AuthHeader: req.Header.Get(AccessTokenHeaderName),
 	}
 	validationErr := accessToken.Validate(ctx)
 	if validationErr != nil {
-		errorResponse.Errors = append(errorResponse.Errors, validationErr)
-	}
-
-	if len(errorResponse.Errors) > 0 {
-		errorResponse.Status = http.StatusBadRequest
-		return
+		return models.ErrorResponse{
+			Errors: []error{validationErr},
+			Status: http.StatusBadRequest,
+		}
 	}
 
 	_, err := api.CognitoClient.GlobalSignOut(accessToken.GenerateSignOutRequest())
 
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "Cognito GlobalSignOut request for signout")
-		errorResponse.Errors = append(errorResponse.Errors, &responseErr)
 		if responseErr.Code == models.NotFoundError || responseErr.Code == models.NotAuthorisedError {
-			errorResponse.Status = http.StatusBadRequest
+			return models.ErrorResponse{
+				Errors: []error{&responseErr},
+				Status: http.StatusBadRequest,
+			}
 		} else {
-			errorResponse.Status = http.StatusInternalServerError
+			return models.ErrorResponse{
+				Errors: []error{&responseErr},
+				Status: http.StatusInternalServerError,
+			}
 		}
-		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-	return
+	return models.ErrorResponse{}
 }
 
 //RefreshHandler refreshes a users access token and returns new access and ID tokens, expiration time and the refresh token

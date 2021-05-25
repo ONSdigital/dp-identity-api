@@ -269,9 +269,8 @@ func TestSignOutHandler(t *testing.T) {
 		w := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
 		request.Header.Set("Authorization", "Bearer zzzz-yyyy-xxxx")
-		var errorResponse models.ErrorResponse
 
-		api.SignOutHandler(w, request, ctx, &errorResponse)
+		errorResponse := api.SignOutHandler(w, request, ctx)
 
 		So(len(errorResponse.Errors), ShouldEqual, 0)
 	})
@@ -280,9 +279,8 @@ func TestSignOutHandler(t *testing.T) {
 		w := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
 		request.Header.Set("Authorization", "")
-		var errorResponse models.ErrorResponse
 
-		api.SignOutHandler(w, request, ctx, &errorResponse)
+		errorResponse := api.SignOutHandler(w, request, ctx)
 
 		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
 		So(len(errorResponse.Errors), ShouldEqual, 1)
@@ -304,7 +302,7 @@ func TestSignOutHandler(t *testing.T) {
 		request.Header.Set("Authorization", "Bearer zzzz-yyyy-xxxx")
 		var errorResponse models.ErrorResponse
 
-		api.SignOutHandler(w, request, ctx, &errorResponse)
+		errorResponse = api.SignOutHandler(w, request, ctx)
 
 		So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
 		So(len(errorResponse.Errors), ShouldEqual, 1)
@@ -324,9 +322,8 @@ func TestSignOutHandler(t *testing.T) {
 		w := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
 		request.Header.Set("Authorization", "Bearer zzzz-yyyy-xxxx")
-		var errorResponse models.ErrorResponse
 
-		api.SignOutHandler(w, request, ctx, &errorResponse)
+		errorResponse := api.SignOutHandler(w, request, ctx)
 
 		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
 		So(len(errorResponse.Errors), ShouldEqual, 1)
