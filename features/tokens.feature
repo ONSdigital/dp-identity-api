@@ -28,12 +28,8 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "NotAuthorizedException: Incorrect username or password.",
-                    "message": "unautheticated user: Unable to autheticate request",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
+                    "code": "NotAuthorizedException: Incorrect username or password.",
+                    "description": "unautheticated user: Unable to autheticate request"
                 }
             ]
         }
@@ -53,19 +49,15 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "NotAuthorizedException: Password attempts exceeded",
-                    "message": "exceeded the number of attemps to login in with the provided credentials",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
+                    "code": "NotAuthorizedException: Password attempts exceeded",
+                    "description": "exceeded the number of attemps to login in with the provided credentials"
                 }
             ]
         }
         """
 
 Scenario: POST /tokens
-    Given an internal server error is returned from Cognito 
+    Given an internal server error is returned from Cognito
     When I POST "/tokens"
     """
     {
@@ -78,19 +70,15 @@ Scenario: POST /tokens
     {
         "errors": [
             {
-                "error": "InternalErrorException",
-                "message": "api endpoint POST login returned an error and failed to login to cognito",
-                "source": {
-                    "field": "",
-                    "param": ""
-                }
+                "code": "InternalErrorException",
+                "description": "api endpoint POST login returned an error and failed to login to cognito"
             }
         ]
     }
     """
 
 Scenario: POST /tokens
-    Given an error is returned from Cognito 
+    Given an error is returned from Cognito
     When I POST "/tokens"
     """
     {
@@ -103,12 +91,8 @@ Scenario: POST /tokens
     {
         "errors": [
             {
-                "error": "InvalidParameterException",
-                "message": "something went wrong, and api endpoint POST login returned an error and failed to login to cognito. Please try again or contact an administrator.",
-                "source": {
-                    "field": "",
-                    "param": ""
-                }
+                "code": "InvalidParameterException",
+                "description": "something went wrong, and api endpoint POST login returned an error and failed to login to cognito. Please try again or contact an administrator."
             }
         ]
     }
@@ -127,12 +111,8 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "Invalid password",
-                    "message": "Unable to validate the password in the request",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
+                    "code": "invalid password",
+                    "description": "Unable to validate the password in the request"
                 }
             ]
         }
@@ -151,12 +131,8 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "Invalid email",
-                    "message": "Unable to validate the email in the request",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
+                    "code": "invalid email",
+                    "description": "Unable to validate the email in the request"
                 }
             ]
         }
@@ -175,12 +151,8 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "Invalid email",
-                    "message": "Unable to validate the email in the request",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
+                    "code": "invalid email",
+                    "description": "Unable to validate the email in the request"
                 }
             ]
         }
@@ -199,20 +171,12 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "error": "Invalid password",
-                    "message": "Unable to validate the password in the request",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
+                    "code": "invalid password",
+                    "description": "Unable to validate the password in the request"
                 },
                 {
-                    "error": "Invalid email",
-                    "message": "Unable to validate the email in the request",
-                    "source": {
-                        "field": "",
-                        "param": ""
-                    }
+                    "code": "invalid email",
+                    "description": "Unable to validate the email in the request"
                 }
             ]
         }
@@ -226,12 +190,8 @@ Scenario: DELETE /tokens/self
     {
         "errors": [
             {
-                "error": "invalid token",
-                "message": "no Authorization token was provided",
-                "source": {
-                    "field": "",
-                    "param": ""
-                }
+                "code": "invalid token",
+                "description": "no Authorization token was provided"
             }
         ]
     }
@@ -245,12 +205,8 @@ Scenario: DELETE /tokens/self
     {
         "errors": [
             {
-                "error": "invalid token",
-                "message": "the provided token does not meet the required format",
-                "source": {
-                    "field": "",
-                    "param": ""
-                }
+                "code": "invalid token",
+                "description": "the provided token does not meet the required format"
             }
         ]
     }
@@ -264,12 +220,8 @@ Scenario: DELETE /tokens/self
     {
         "errors": [
             {
-                "error": "invalid token",
-                "message": "the provided token does not meet the required format",
-                "source": {
-                    "field": "",
-                    "param": ""
-                }
+                "code": "invalid token",
+                "description": "the provided token does not meet the required format"
             }
         ]
     }
@@ -285,9 +237,194 @@ Scenario: DELETE /tokens/self
     When I DELETE "/tokens/self"
     Then the HTTP status code should be "400"
 
-
 Scenario: DELETE /tokens/self
     Given I have an active session with access token "aaaa.bbbb.cccc"
     And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
     When I DELETE "/tokens/self"
     Then the HTTP status code should be "204"
+
+Scenario: POST /tokens
+    Given I have an active session with access token "aaaa.bbbb.cccc"
+    And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
+    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+    When I POST "/tokens"
+    """
+    {
+        "email": "email@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
+    Then the HTTP status code should be "201"
+    And the response header "Authorization" should be "Bearer accessToken"
+    And the response header "ID" should be "idToken"
+    And the response header "Refresh" should be "refreshToken"
+
+
+Scenario: POST /tokens
+    Given I am not authorised
+    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+    When I POST "/tokens"
+    """
+    {
+        "email": "email@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
+    Then the HTTP status code should be "201"
+    And the response header "Authorization" should be "Bearer accessToken"
+    And the response header "ID" should be "idToken"
+    And the response header "Refresh" should be "refreshToken"
+
+Scenario: POST /tokens
+    Given the AdminUserGlobalSignOut endpoint in cognito returns an internal server error
+    And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
+    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+    When I POST "/tokens"
+    """
+    {
+        "email": "internalservererror@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
+    Then I should receive the following JSON response with status "500":
+    """
+    {
+        "errors": [
+            {
+                "code": "InternalErrorException: Something went wrong",
+                "description": "api endpoint POST login returned an error and failed to connect to cognito logout"
+            }
+        ]
+    }
+    """
+
+Scenario: POST /tokens
+    Given the AdminUserGlobalSignOut endpoint in cognito returns an internal server error
+    And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
+    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+    When I POST "/tokens"
+    """
+    {
+        "email": "clienterror@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "code": "ClientError: Something went wrong",
+                "description": "something went wrong, and api endpoint POST login returned an error and failed to connect to cognito logout. Please try again or contact an administrator."
+            }
+        ]
+    }
+    """
+
+Scenario: PUT /tokens/self with no ID token
+    Given I set the "ID" header to ""
+    And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
+    When I PUT "/tokens/self"
+    """
+    {}
+    """
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "code": "invalid ID token",
+                "description": "no ID token was provided"
+            }
+        ]
+    }
+    """
+
+Scenario: PUT /tokens/self with no refresh token
+    Given I have a valid ID header for user "test@ons.gov.uk"
+    And I set the "Refresh" header to ""
+    When I PUT "/tokens/self"
+    """
+    {}
+    """
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "code": "invalid refresh token",
+                "description": "no refresh token was provided"
+            }
+        ]
+    }
+    """
+
+Scenario: PUT /tokens/self with no tokens
+    Given I set the "ID" header to ""
+    And I set the "Refresh" header to ""
+    When I PUT "/tokens/self"
+    """
+    {}
+    """
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "code": "invalid refresh token",
+                "description": "no refresh token was provided"
+            },
+            {
+                "code": "invalid ID token",
+                "description": "no ID token was provided"
+            }
+        ]
+    }
+    """
+
+Scenario: PUT /tokens/self with badly formatted ID token
+    Given I set the "ID" header to "zzzz.yyyy.xxxx"
+    And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
+    When I PUT "/tokens/self"
+    """
+    {}
+    """
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "code": "invalid ID token",
+                "description": "the ID token could not be parsed"
+            }
+        ]
+    }
+    """
+
+Scenario: PUT /tokens/self internal Cognito error
+    Given I have a valid ID header for user "test@ons.gov.uk"
+    And I set the "Refresh" header to "InternalError"
+    When I PUT "/tokens/self"
+    """
+    {}
+    """
+    Then the HTTP status code should be "500"
+
+Scenario: PUT /tokens/self with expired refresh token
+    Given I have a valid ID header for user "test@ons.gov.uk"
+    And I set the "Refresh" header to "ExpiredToken"
+    When I PUT "/tokens/self"
+    """
+    {}
+    """
+    Then the HTTP status code should be "403"
+
+Scenario: PUT /tokens/self success
+    Given I have a valid ID header for user "test@ons.gov.uk"
+    And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
+    When I PUT "/tokens/self"
+    """
+    {}
+    """
+    Then the HTTP status code should be "201"
+    And the response header "Authorization" should be "Bearer llll.mmmm.nnnn"

@@ -3,12 +3,13 @@ package service_test
 import (
 	"context"
 	"fmt"
-	"github.com/ONSdigital/dp-identity-api/cognito"
-	cognitoMock "github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"net/http"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/ONSdigital/dp-identity-api/cognito"
+	cognitoMock "github.com/ONSdigital/dp-identity-api/cognito/mock"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 
@@ -49,6 +50,12 @@ func TestRun(t *testing.T) {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
+		// set dummy config data
+		cfg.AWSCognitoUserPoolID = "eu-west-18_73289nds8w932"
+		cfg.AWSCognitoClientId = "client-aaa-bbb"
+		cfg.AWSCognitoClientSecret = "secret-ccc-ddd"
+		cfg.AWSAuthFlow = "authflow"
+
 		hcMock := &serviceMock.HealthCheckerMock{
 			AddCheckFunc: func(name string, checker healthcheck.Checker) error { return nil },
 			StartFunc:    func(ctx context.Context) {},
@@ -84,8 +91,8 @@ func TestRun(t *testing.T) {
 		Convey("Given that initialising healthcheck returns an error", func() {
 			// setup (run before each `Convey` at this scope / indentation):
 			initMock := &serviceMock.InitialiserMock{
-				DoGetHTTPServerFunc:  funcDoGetHTTPServerNil,
-				DoGetHealthCheckFunc: funcDoGetHealthcheckErr,
+				DoGetHTTPServerFunc:    funcDoGetHTTPServerNil,
+				DoGetHealthCheckFunc:   funcDoGetHealthcheckErr,
 				DoGetCognitoClientFunc: DoGetCognitoClient,
 			}
 			svcErrors := make(chan error, 1)
@@ -106,8 +113,8 @@ func TestRun(t *testing.T) {
 
 			// setup (run before each `Convey` at this scope / indentation):
 			initMock := &serviceMock.InitialiserMock{
-				DoGetHTTPServerFunc:  funcDoGetHTTPServer,
-				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
+				DoGetHTTPServerFunc:    funcDoGetHTTPServer,
+				DoGetHealthCheckFunc:   funcDoGetHealthcheckOk,
 				DoGetCognitoClientFunc: DoGetCognitoClient,
 			}
 			svcErrors := make(chan error, 1)
@@ -173,8 +180,8 @@ func TestRun(t *testing.T) {
 
 			// setup (run before each `Convey` at this scope / indentation):
 			initMock := &serviceMock.InitialiserMock{
-				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
-				DoGetHTTPServerFunc:  funcDoGetFailingHTTPSerer,
+				DoGetHealthCheckFunc:   funcDoGetHealthcheckOk,
+				DoGetHTTPServerFunc:    funcDoGetFailingHTTPSerer,
 				DoGetCognitoClientFunc: DoGetCognitoClient,
 			}
 			svcErrors := make(chan error, 1)
@@ -201,6 +208,13 @@ func TestClose(t *testing.T) {
 	Convey("Having a correctly initialised service", t, func() {
 
 		cfg, err := config.Get()
+
+		// set dummy config data
+		cfg.AWSCognitoUserPoolID = "eu-west-18_73289nds8w932"
+		cfg.AWSCognitoClientId = "client-aaa-bbb"
+		cfg.AWSCognitoClientSecret = "secret-ccc-ddd"
+		cfg.AWSAuthFlow = "authflow"
+
 		So(err, ShouldBeNil)
 
 		hcStopped := false
@@ -300,6 +314,6 @@ func TestClose(t *testing.T) {
 	})
 }
 
-func DoGetCognitoClient(AWSRegion string) cognito.Client  {
-	return  &cognitoMock.CognitoIdentityProviderClientStub{}
+func DoGetCognitoClient(AWSRegion string) cognito.Client {
+	return &cognitoMock.CognitoIdentityProviderClientStub{}
 }

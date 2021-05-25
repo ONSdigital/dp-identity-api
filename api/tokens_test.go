@@ -10,15 +10,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ONSdigital/dp-identity-api/apierrors"
-	"github.com/ONSdigital/dp-identity-api/cognito/mock"
+	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/gorilla/mux"
-
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 const signOutEndPoint = "http://localhost:25600/tokens/self"
+const tokenRefreshEndPoint = "http://localhost:25600/tokens/self"
 
 func TestPasswordHasBeenProvided(t *testing.T) {
 
@@ -97,25 +95,24 @@ func TestEmailConformsToExpectedFormat(t *testing.T) {
 func TestWriteErrorResponse(t *testing.T) {
 	Convey("A status code and an error body with two errors is written to a http response", t, func() {
 
-		errorResponseBodyExample := `{"errors":[{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}},{"error":"Invalid email","message":"Unable to validate the email in the request","source":{"field":"","param":""}}]}`
+		errorResponseBodyExample := `{"errors":[{"code":"Invalid email","description":"Unable to validate the email in the request"},{"code":"Invalid email","description":"Unable to validate the email in the request"}]}`
 
-		var errorList []apierrors.IndividualError
+		var errorList []apierrorsdeprecated.Error
+
 		errorList = nil
 
-		invalidEmailError := errors.New("Invalid email")
-		invalidErrorMessage := "Unable to validate the email in the request"
-		field := ""
-		param := ""
-		invalidEmailErrorBody := apierrors.IndividualErrorBuilder(invalidEmailError, invalidErrorMessage, field, param)
+		errInvalidEmail := errors.New("Invalid email")
+		invalidErrorDescription := "Unable to validate the email in the request"
+		invalidEmailErrorBody := apierrorsdeprecated.IndividualErrorBuilder(errInvalidEmail, invalidErrorDescription)
 		errorList = append(errorList, invalidEmailErrorBody)
 		errorList = append(errorList, invalidEmailErrorBody)
 
 		ctx := context.Background()
 		resp := httptest.NewRecorder()
 		statusCode := 400
-		errorResponseBody := apierrors.ErrorResponseBodyBuilder(errorList)
+		errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
 
-		writeErrorResponse(ctx, resp, statusCode, errorResponseBody)
+		apierrorsdeprecated.WriteErrorResponse(ctx, resp, statusCode, errorResponseBody)
 
 		So(resp.Code, ShouldEqual, http.StatusBadRequest)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
@@ -123,24 +120,23 @@ func TestWriteErrorResponse(t *testing.T) {
 }
 
 func TestHandleUnexpectedError(t *testing.T) {
-	Convey("An error, an error message, a field and a param is logged and written to a http response", t, func() {
+	Convey("An error and an error description is logged and written to a http response", t, func() {
 
-		errorResponseBodyExample := `{"errors":[{"error":"unexpected error","message":"something unexpected has happened","source":{"field":"","param":""}}]}`
+		errorResponseBodyExample := `{"errors":[{"code":"unexpected error","description":"something unexpected has happened"}]}`
 
 		ctx := context.Background()
 		unexpectedError := errors.New("unexpected error")
-		unexpectedErrorMessage := "something unexpected has happened"
-		field := ""
-		param := ""
+		unexpectedErrorDescription := "something unexpected has happened"
 
 		resp := httptest.NewRecorder()
 
-		handleUnexpectedError(ctx, resp, unexpectedError, unexpectedErrorMessage, field, param)
+		apierrorsdeprecated.HandleUnexpectedError(ctx, resp, unexpectedError, unexpectedErrorDescription)
 
 		So(resp.Code, ShouldEqual, http.StatusInternalServerError)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
 	})
 }
+
 func TestCognitoRequestBuild(t *testing.T) {
 	Convey("build Cognito Request, an authParams and Config is processed and Cognito Request is built", t, func() {
 
@@ -181,7 +177,7 @@ func TestCognitoResponseHeaderBuild(t *testing.T) {
 			},
 		}
 
-		buildSucessfulResponse(initiateAuthOutput, w, ctx)
+		buildSuccessfulResponse(initiateAuthOutput, w, ctx)
 
 		So(w.Result().StatusCode, ShouldEqual, 201)
 		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
@@ -216,7 +212,7 @@ func TestCognitoResponseHeaderBuild(t *testing.T) {
 		ctx := context.Background()
 
 		initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{}
-		buildSucessfulResponse(initiateAuthOutput, w, ctx)
+		buildSuccessfulResponse(initiateAuthOutput, w, ctx)
 
 		So(w.Result().StatusCode, ShouldEqual, 500)
 	})
@@ -243,94 +239,8 @@ func TestBuildJson(t *testing.T) {
 			"foo": make(chan int),
 		}
 		buildjson(testBody, w, ctx)
-		So(w.Body.String(), ShouldResemble, "{\"errors\":[{\"error\":\"json: unsupported type: chan int\",\"message\":\"failed to marshal the error\",\"source\":{\"field\":\"\",\"param\":\"\"}}]}")
+		So(w.Body.String(), ShouldResemble, "{\"errors\":[{\"code\":\"json: unsupported type: chan int\",\"description\":\"failed to marshal the error\"}]}")
 		So(w.Result().StatusCode, ShouldEqual, 500)
 		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
-	})
-}
-
-func TestSignOutHandler(t *testing.T) {
-	var (
-		r                                                     = mux.NewRouter()
-		ctx                                                   = context.Background()
-		poolId, clientId, clientSecret, clientAuthFlow string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "authflow"
-	)
-
-	m := &mock.MockCognitoIdentityProviderClient{}
-
-	// mock call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
-	m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
-		return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
-	}
-
-	api := Setup(ctx, r, m, poolId, clientId, clientSecret, clientAuthFlow)
-
-	Convey("Global Sign Out returns 204: successfully signed out user", t, func() {
-		r := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
-		r.Header.Set("Authorization", "Bearer zzzz-yyyy-xxxx")
-
-		w := httptest.NewRecorder()
-
-		api.Router.ServeHTTP(w, r)
-
-		So(w.Code, ShouldEqual, http.StatusNoContent)
-	})
-
-	Convey("Global Sign Out returns 400: validate header structure", t, func() {
-		headerValidationTests := []struct {
-			authHeader string
-		}{
-			// missing Authorization header
-			{
-				"",
-			},
-			// malformed Authorization header
-			{
-				"Bearerzzzz-yyyy-xxxx",
-			},
-		}
-
-		for _, tt := range headerValidationTests {
-			r := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
-			r.Header.Set("Authorization", tt.authHeader)
-
-			w := httptest.NewRecorder()
-
-			api.Router.ServeHTTP(w, r)
-
-			So(w.Code, ShouldEqual, http.StatusBadRequest)
-		}
-	})
-
-	Convey("Global Sign Out returns 500: Cognito internal error", t, func() {
-		r := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
-		r.Header.Set("Authorization", "Bearer zzzz-yyyy-xxxx")
-
-		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
-		m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
-			return nil, errors.New("InternalErrorException: Something went wrong")
-		}
-
-		w := httptest.NewRecorder()
-
-		api.Router.ServeHTTP(w, r)
-
-		So(w.Code, ShouldEqual, http.StatusInternalServerError)
-	})
-
-	Convey("Global Sign Out returns 400: request error", t, func() {
-		r := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
-		r.Header.Set("Authorization", "Bearer zzzz-yyyy-xxxx")
-
-		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
-		m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
-			return nil, errors.New("NotAuthorizedException: User is not authorized")
-		}
-
-		w := httptest.NewRecorder()
-
-		api.Router.ServeHTTP(w, r)
-
-		So(w.Code, ShouldEqual, http.StatusBadRequest)
 	})
 }
