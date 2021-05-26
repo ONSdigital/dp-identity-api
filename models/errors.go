@@ -7,11 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 )
 
-type ErrorResponse struct {
-	Errors []error `json:"errors"`
-	Status int     `json:"-"`
-}
-
 type Error struct {
 	Cause       error  `json:"-"`
 	Code        string `json:"code"`
