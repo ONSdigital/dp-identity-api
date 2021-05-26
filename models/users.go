@@ -34,7 +34,7 @@ type UserSignIn struct {
 
 func (p *UserSignIn) ValidateCredentials(ctx context.Context) *[]error {
 	var validationErrors []error
-	if validation.IsPasswordValid(p.Password) {
+	if !validation.IsPasswordValid(p.Password) {
 		validationErrors = append(validationErrors, NewValidationError(ctx, InvalidPasswordError, InvalidPasswordDescription))
 	}
 	if !validation.IsEmailValid(p.Email) {

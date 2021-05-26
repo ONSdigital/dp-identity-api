@@ -3,18 +3,21 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"time"
+
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"time"
+	//"time"
 
 	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
-	"github.com/ONSdigital/dp-identity-api/cognito"
+	//"github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/ONSdigital/dp-identity-api/models"
-	"github.com/ONSdigital/dp-identity-api/utilities"
-	"github.com/ONSdigital/dp-identity-api/validation"
+	//"github.com/ONSdigital/dp-identity-api/utilities"
+	//"github.com/ONSdigital/dp-identity-api/validation"
 	"github.com/ONSdigital/log.go/log"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	//"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
 //TokensHandler uses submitted email address and password to sign a user in against Cognito and returns a http handler interface
@@ -157,55 +160,56 @@ func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
 	}
 }
 
-func terminateExistingSession(authParams AuthParams, userPoolId string, cognitoClient cognito.Client) (err error) {
-
-	adminUserGlobalSignOutInput := &cognitoidentityprovider.AdminUserGlobalSignOutInput{
-		Username:   &authParams.Email,
-		UserPoolId: &userPoolId,
-	}
-
-	_, err = cognitoClient.AdminUserGlobalSignOut(adminUserGlobalSignOutInput)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func passwordValidation(requestBody AuthParams) (isPasswordValid bool) {
-
-	return len(requestBody.Password) > 0
-}
-
-//emailValidation checks for both a valid email address and an empty email address
-func emailValidation(requestBody AuthParams) (isEmailValid bool) {
-
-	isEmailValid = validation.IsEmailValid(requestBody.Email)
-
-	return isEmailValid
-}
-
-func buildCognitoRequest(authParams AuthParams, clientId string, clientSecret string, clientAuthFlow string) (authInput *cognitoidentityprovider.InitiateAuthInput) {
-
-	secretHash := utilities.ComputeSecretHash(clientSecret, authParams.Email, clientId)
-
-	authParameters := map[string]*string{
-		"USERNAME":    &authParams.Email,
-		"PASSWORD":    &authParams.Password,
-		"SECRET_HASH": &secretHash,
-	}
-
-	authInput = &cognitoidentityprovider.InitiateAuthInput{
-		AnalyticsMetadata: &cognitoidentityprovider.AnalyticsMetadataType{},
-		AuthFlow:          &clientAuthFlow,
-		AuthParameters:    authParameters,
-		ClientId:          &clientId,
-		ClientMetadata:    map[string]*string{},
-		UserContextData:   &cognitoidentityprovider.UserContextDataType{},
-	}
-
-	return authInput
-}
-
+//
+//func terminateExistingSession(authParams AuthParams, userPoolId string, cognitoClient cognito.Client) (err error) {
+//
+//	adminUserGlobalSignOutInput := &cognitoidentityprovider.AdminUserGlobalSignOutInput{
+//		Username:   &authParams.Email,
+//		UserPoolId: &userPoolId,
+//	}
+//
+//	_, err = cognitoClient.AdminUserGlobalSignOut(adminUserGlobalSignOutInput)
+//	if err != nil {
+//		return err
+//	}
+//	return nil
+//}
+//
+//func passwordValidation(requestBody AuthParams) (isPasswordValid bool) {
+//
+//	return len(requestBody.Password) > 0
+//}
+//
+////emailValidation checks for both a valid email address and an empty email address
+//func emailValidation(requestBody AuthParams) (isEmailValid bool) {
+//
+//	isEmailValid = validation.IsEmailValid(requestBody.Email)
+//
+//	return isEmailValid
+//}
+//
+//func buildCognitoRequest(authParams AuthParams, clientId string, clientSecret string, clientAuthFlow string) (authInput *cognitoidentityprovider.InitiateAuthInput) {
+//
+//	secretHash := utilities.ComputeSecretHash(clientSecret, authParams.Email, clientId)
+//
+//	authParameters := map[string]*string{
+//		"USERNAME":    &authParams.Email,
+//		"PASSWORD":    &authParams.Password,
+//		"SECRET_HASH": &secretHash,
+//	}
+//
+//	authInput = &cognitoidentityprovider.InitiateAuthInput{
+//		AnalyticsMetadata: &cognitoidentityprovider.AnalyticsMetadataType{},
+//		AuthFlow:          &clientAuthFlow,
+//		AuthParameters:    authParameters,
+//		ClientId:          &clientId,
+//		ClientMetadata:    map[string]*string{},
+//		UserContextData:   &cognitoidentityprovider.UserContextDataType{},
+//	}
+//
+//	return authInput
+//}
+//
 func buildSuccessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, w http.ResponseWriter, ctx context.Context) {
 
 	if result.AuthenticationResult != nil {

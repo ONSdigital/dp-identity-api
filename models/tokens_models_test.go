@@ -19,11 +19,8 @@ func TestAccessToken_Validate(t *testing.T) {
 
 		err := accessToken.Validate(ctx)
 
-		castErr, ok := err.(*models.Error)
-
-		So(ok, ShouldEqual, true)
-		So(castErr.Code, ShouldEqual, models.InvalidTokenError)
-		So(castErr.Description, ShouldEqual, models.MissingAuthorizationTokenDescription)
+		So(err.Code, ShouldEqual, models.InvalidTokenError)
+		So(err.Description, ShouldEqual, models.MissingAuthorizationTokenDescription)
 	})
 
 	Convey("returns InvalidToken error if auth header string is set as empty string", t, func() {
@@ -31,11 +28,8 @@ func TestAccessToken_Validate(t *testing.T) {
 
 		err := accessToken.Validate(ctx)
 
-		castErr, ok := err.(*models.Error)
-
-		So(ok, ShouldEqual, true)
-		So(castErr.Code, ShouldEqual, models.InvalidTokenError)
-		So(castErr.Description, ShouldEqual, models.MissingAuthorizationTokenDescription)
+		So(err.Code, ShouldEqual, models.InvalidTokenError)
+		So(err.Description, ShouldEqual, models.MissingAuthorizationTokenDescription)
 	})
 
 	Convey("returns InvalidToken error if auth header string cannot be split", t, func() {
@@ -43,11 +37,8 @@ func TestAccessToken_Validate(t *testing.T) {
 
 		err := accessToken.Validate(ctx)
 
-		castErr, ok := err.(*models.Error)
-
-		So(ok, ShouldEqual, true)
-		So(castErr.Code, ShouldEqual, models.InvalidTokenError)
-		So(castErr.Description, ShouldEqual, models.MalformedAuthorizationTokenDescription)
+		So(err.Code, ShouldEqual, models.InvalidTokenError)
+		So(err.Description, ShouldEqual, models.MalformedAuthorizationTokenDescription)
 	})
 
 	Convey("returns nil if auth header string is valid", t, func() {

@@ -83,16 +83,16 @@ func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityp
 			if (user.email == *input.AuthParameters["USERNAME"]) && (user.password == *input.AuthParameters["PASSWORD"]) {
 				return initiateAuthOutput, nil
 			} else if user.email != *input.AuthParameters["USERNAME"] {
-				return nil, errors.New("NotAuthorizedException: Incorrect username or password.")
+				return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Incorrect username or password", nil)
 			} else {
-				return nil, errors.New("NotAuthorizedException: Password attempts exceeded")
+				return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Password attempts exceeded", nil)
 			}
 		}
 
 		if *input.AuthParameters["PASSWORD"] == "internalerrorException" {
-			return nil, errors.New("InternalErrorException")
+			return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 		}
-		return nil, errors.New("InvalidParameterException")
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInvalidParameterException, "A parameter was invalid", nil)
 	} else if *input.AuthFlow == "REFRESH_TOKEN_AUTH" {
 		if *input.AuthParameters["REFRESH_TOKEN"] == "InternalError" {
 			return nil, errors.New("InternalErrorException: Something went wrong")
@@ -129,9 +129,9 @@ func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoi
 
 func (m *CognitoIdentityProviderClientStub) AdminUserGlobalSignOut(adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 	if *adminUserGlobalSignOutInput.Username == "internalservererror@ons.gov.uk" {
-		return nil, errors.New("InternalErrorException: Something went wrong")
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	} else if *adminUserGlobalSignOutInput.Username == "clienterror@ons.gov.uk" {
-		return nil, errors.New("ClientError: Something went wrong")
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Something went wrong", nil)
 	}
 	return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 }

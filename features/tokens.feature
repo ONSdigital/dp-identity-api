@@ -28,8 +28,8 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "code": "NotAuthorizedException: Incorrect username or password.",
-                    "description": "unautheticated user: Unable to autheticate request"
+                    "code": "NotAuthorised",
+                    "description": "Incorrect username or password"
                 }
             ]
         }
@@ -49,8 +49,8 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "code": "NotAuthorizedException: Password attempts exceeded",
-                    "description": "exceeded the number of attemps to login in with the provided credentials"
+                    "code": "TooManyFailedAttempts",
+                    "description": "Password attempts exceeded"
                 }
             ]
         }
@@ -70,8 +70,8 @@ Scenario: POST /tokens
     {
         "errors": [
             {
-                "code": "InternalErrorException",
-                "description": "api endpoint POST login returned an error and failed to login to cognito"
+                "code": "InternalServerError",
+                "description": "Something went wrong"
             }
         ]
     }
@@ -91,8 +91,8 @@ Scenario: POST /tokens
     {
         "errors": [
             {
-                "code": "InvalidParameterException",
-                "description": "something went wrong, and api endpoint POST login returned an error and failed to login to cognito. Please try again or contact an administrator."
+                "code": "InvalidField",
+                "description": "A parameter was invalid"
             }
         ]
     }
@@ -111,8 +111,8 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "code": "invalid password",
-                    "description": "Unable to validate the password in the request"
+                    "code": "InvalidPassword",
+                    "description": "the submitted password could not be validated"
                 }
             ]
         }
@@ -131,8 +131,8 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "code": "invalid email",
-                    "description": "Unable to validate the email in the request"
+                    "code": "InvalidEmail",
+                    "description": "the submitted email could not be validated"
                 }
             ]
         }
@@ -151,8 +151,8 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "code": "invalid email",
-                    "description": "Unable to validate the email in the request"
+                    "code": "InvalidEmail",
+                    "description": "the submitted email could not be validated"
                 }
             ]
         }
@@ -171,16 +171,90 @@ Scenario: POST /tokens
         {
             "errors": [
                 {
-                    "code": "invalid password",
-                    "description": "Unable to validate the password in the request"
+                    "code": "InvalidPassword",
+                    "description": "the submitted password could not be validated"
                 },
                 {
-                    "code": "invalid email",
-                    "description": "Unable to validate the email in the request"
+                    "code": "InvalidEmail",
+                    "description": "the submitted email could not be validated"
                 }
             ]
         }
         """
+
+Scenario: POST /tokens
+    Given I have an active session with access token "aaaa.bbbb.cccc"
+    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+    When I POST "/tokens"
+    """
+    {
+        "email": "email@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
+    Then the HTTP status code should be "201"
+    And the response header "Authorization" should be "Bearer accessToken"
+    And the response header "ID" should be "idToken"
+    And the response header "Refresh" should be "refreshToken"
+
+Scenario: POST /tokens
+    Given I am not authorised
+    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+    When I POST "/tokens"
+    """
+    {
+        "email": "email@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
+    Then the HTTP status code should be "201"
+    And the response header "Authorization" should be "Bearer accessToken"
+    And the response header "ID" should be "idToken"
+    And the response header "Refresh" should be "refreshToken"
+
+Scenario: POST /tokens
+    Given the AdminUserGlobalSignOut endpoint in cognito returns an internal server error
+    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+    When I POST "/tokens"
+    """
+    {
+        "email": "internalservererror@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
+    Then I should receive the following JSON response with status "500":
+    """
+    {
+        "errors": [
+            {
+                "code": "InternalServerError",
+                "description": "Something went wrong"
+            }
+        ]
+    }
+    """
+
+Scenario: POST /tokens
+    Given the AdminUserGlobalSignOut endpoint in cognito returns an internal server error
+    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+    When I POST "/tokens"
+    """
+    {
+        "email": "clienterror@ons.gov.uk",
+        "password": "Passw0rd!"
+    }
+    """
+    Then I should receive the following JSON response with status "400":
+    """
+    {
+        "errors": [
+            {
+                "code": "NotAuthorised",
+                "description": "Something went wrong"
+            }
+        ]
+    }
+    """
 
 Scenario: DELETE /tokens/self no Authorization header
     Given I am not authorised
@@ -262,84 +336,6 @@ Scenario: DELETE /tokens/self success
     And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
     When I DELETE "/tokens/self"
     Then the HTTP status code should be "204"
-
-Scenario: POST /tokens
-    Given I have an active session with access token "aaaa.bbbb.cccc"
-    And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
-    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
-    When I POST "/tokens"
-    """
-    {
-        "email": "email@ons.gov.uk",
-        "password": "Passw0rd!"
-    }
-    """
-    Then the HTTP status code should be "201"
-    And the response header "Authorization" should be "Bearer accessToken"
-    And the response header "ID" should be "idToken"
-    And the response header "Refresh" should be "refreshToken"
-
-
-Scenario: POST /tokens
-    Given I am not authorised
-    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
-    When I POST "/tokens"
-    """
-    {
-        "email": "email@ons.gov.uk",
-        "password": "Passw0rd!"
-    }
-    """
-    Then the HTTP status code should be "201"
-    And the response header "Authorization" should be "Bearer accessToken"
-    And the response header "ID" should be "idToken"
-    And the response header "Refresh" should be "refreshToken"
-
-Scenario: POST /tokens
-    Given the AdminUserGlobalSignOut endpoint in cognito returns an internal server error
-    And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
-    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
-    When I POST "/tokens"
-    """
-    {
-        "email": "internalservererror@ons.gov.uk",
-        "password": "Passw0rd!"
-    }
-    """
-    Then I should receive the following JSON response with status "500":
-    """
-    {
-        "errors": [
-            {
-                "code": "InternalErrorException: Something went wrong",
-                "description": "api endpoint POST login returned an error and failed to connect to cognito logout"
-            }
-        ]
-    }
-    """
-
-Scenario: POST /tokens
-    Given the AdminUserGlobalSignOut endpoint in cognito returns an internal server error
-    And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
-    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
-    When I POST "/tokens"
-    """
-    {
-        "email": "clienterror@ons.gov.uk",
-        "password": "Passw0rd!"
-    }
-    """
-    Then I should receive the following JSON response with status "400":
-    """
-    {
-        "errors": [
-            {
-                "code": "ClientError: Something went wrong",
-                "description": "something went wrong, and api endpoint POST login returned an error and failed to connect to cognito logout. Please try again or contact an administrator."
-            }
-        ]
-    }
-    """
 
 Scenario: PUT /tokens/self with no ID token
     Given I set the "ID" header to ""

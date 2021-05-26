@@ -37,6 +37,7 @@ func contextAndErrors(h baseHandler) http.HandlerFunc {
 		response, err := h(w, req, ctx)
 		if err != nil {
 			writeErrorResponse(ctx, w, err)
+			return
 		}
 		writeSuccessResponse(ctx, w, response)
 	}
