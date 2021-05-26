@@ -22,80 +22,6 @@ import (
 const signOutEndPoint = "http://localhost:25600/tokens/self"
 const tokenRefreshEndPoint = "http://localhost:25600/tokens/self"
 
-//func TestPasswordHasBeenProvided(t *testing.T) {
-//
-//	Convey("A password has been provided", t, func() {
-//
-//		signIn := models.UserSignIn{
-//			Password: "password",
-//		}
-//
-//		passwordResponse := passwordValidation(signIn)
-//		So(passwordResponse, ShouldBeTrue)
-//	})
-//
-//	Convey("There isn't a password field in the body and the password isn't validated", t, func() {
-//
-//		body := AuthParams{}
-//
-//		passwordResponse := passwordValidation(body)
-//		So(passwordResponse, ShouldBeFalse)
-//	})
-//
-//	Convey("There isn't a password value in the body and the password isn't validated", t, func() {
-//
-//		body := AuthParams{
-//			Password: "",
-//		}
-//
-//		passwordResponse := passwordValidation(body)
-//		So(passwordResponse, ShouldBeFalse)
-//	})
-//}
-
-//func TestEmailConformsToExpectedFormat(t *testing.T) {
-//
-//	Convey("The email conforms to the expected format and is validated", t, func() {
-//
-//		body := AuthParams{
-//			Email: "email.email@ons.gov.uk",
-//		}
-//
-//		emailResponse := emailValidation(body)
-//		So(emailResponse, ShouldBeTrue)
-//	})
-//
-//	Convey("There isn't an email field in the body and the email isn't validated", t, func() {
-//
-//		body := AuthParams{
-//			Password: "password",
-//		}
-//
-//		emailResponse := emailValidation(body)
-//		So(emailResponse, ShouldBeFalse)
-//	})
-//
-//	Convey("There isn't a email value in the body and the email isn't validated", t, func() {
-//
-//		body := AuthParams{
-//			Email: "",
-//		}
-//
-//		emailResponse := emailValidation(body)
-//		So(emailResponse, ShouldBeFalse)
-//	})
-//
-//	Convey("The email doesn't conform to the expected format and it isn't validated", t, func() {
-//
-//		body := AuthParams{
-//			Email: "email",
-//		}
-//
-//		emailResponse := emailValidation(body)
-//		So(emailResponse, ShouldBeFalse)
-//	})
-//}
-
 func TestDeprecatedWriteErrorResponse(t *testing.T) {
 	Convey("A status code and an error body with two errors is written to a http response", t, func() {
 
@@ -140,28 +66,6 @@ func TestHandleUnexpectedError(t *testing.T) {
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
 	})
 }
-
-//func TestCognitoRequestBuild(t *testing.T) {
-//	Convey("build Cognito Request, an authParams and Config is processed and Cognito Request is built", t, func() {
-//
-//		authParams := AuthParams{
-//			Email:    "email.email@ons.gov.uk",
-//			Password: "password",
-//		}
-//
-//		clientId := "awsclientid"
-//		clientSecret := "awsSectret"
-//		clientAuthFlow := "authflow"
-//
-//		response := buildCognitoRequest(authParams, clientId, clientSecret, clientAuthFlow)
-//
-//		So(*response.AuthParameters["USERNAME"], ShouldEqual, authParams.Email)
-//		So(*response.AuthParameters["PASSWORD"], ShouldEqual, authParams.Password)
-//		So(*response.AuthParameters["SECRET_HASH"], ShouldNotBeEmpty)
-//		So(*response.AuthFlow, ShouldResemble, "authflow")
-//		So(*response.ClientId, ShouldResemble, "awsclientid")
-//	})
-//}
 
 func TestCognitoResponseHeaderBuild(t *testing.T) {
 	Convey("build 201 response using an InitiateAuthOutput from Cognito", t, func() {
