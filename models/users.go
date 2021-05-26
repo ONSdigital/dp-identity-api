@@ -24,18 +24,18 @@ type ListUsersOutput struct {
 	ListUsersOutput *cognitoidentityprovider.ListUsersOutput
 }
 
-type AuthParams struct {
+type UserSignIn struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-func (p *AuthParams) ValidateCredentials(ctx context.Context) *[]Error {
-	var validationErrors []Error
+func (p *UserSignIn) ValidateCredentials(ctx context.Context) *[]error {
+	var validationErrors []error
 	if validation.IsPasswordValid(p.Password) {
-		validationErrors = append(validationErrors, *NewValidationError(ctx, InvalidPasswordError, InvalidPasswordDescription))
+		validationErrors = append(validationErrors, NewValidationError(ctx, InvalidPasswordError, InvalidPasswordDescription))
 	}
 	if !validation.IsEmailValid(p.Email) {
-		validationErrors = append(validationErrors, *NewValidationError(ctx, InvalidPasswordError, InvalidPasswordDescription))
+		validationErrors = append(validationErrors, NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription))
 	}
 	if len(validationErrors) == 0 {
 		return nil
