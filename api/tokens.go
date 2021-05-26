@@ -17,140 +17,78 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
-type AuthParams struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-var (
-	IdTokenHeaderName      = "ID"
-	AccessTokenHeaderName  = "Authorization"
-	RefreshTokenHeaderName = "Refresh"
-)
-
 //TokensHandler uses submitted email address and password to sign a user in against Cognito and returns a http handler interface
-func (api *API) TokensHandler(ctx context.Context) http.HandlerFunc {
+func (api *API) TokensHandler(w http.ResponseWriter, req *http.Request, ctx context.Context) (*models.SuccessResponse, *models.ErrorResponse) {
+	defer req.Body.Close()
 
-	return func(w http.ResponseWriter, req *http.Request) {
-		defer req.Body.Close()
-
-		body, err := ioutil.ReadAll(req.Body)
-		if err != nil {
-			errorDescription := "api endpoint POST login returned an error reading the request body"
-			apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, errorDescription)
-			return
-		}
-
-		var authParams AuthParams
-		err = json.Unmarshal(body, &authParams)
-		if err != nil {
-			errorDescription := "api endpoint POST login returned an error unmarshalling the body"
-			apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, errorDescription)
-			return
-		}
-
-		validPasswordRequest := passwordValidation(authParams)
-		validEmailRequest := emailValidation(authParams)
-
-		if validPasswordRequest && validEmailRequest {
-
-			err = terminateExistingSession(authParams, api.UserPoolId, api.CognitoClient)
-
-			if err != nil {
-				isInternalError := apierrorsdeprecated.IdentifyInternalError(err)
-				if isInternalError {
-					errorMessage := "api endpoint POST login returned an error and failed to connect to cognito logout"
-					apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, errorMessage)
-					return
-				}
-
-				var errorList []apierrorsdeprecated.Error
-				adminLogoutMessage := "something went wrong, and api endpoint POST login returned an error and failed to connect to cognito logout. Please try again or contact an administrator."
-				adminLogoutError := apierrorsdeprecated.IndividualErrorBuilder(err, adminLogoutMessage)
-				errorList = append(errorList, adminLogoutError)
-				errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
-				apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
-				return
-			}
-
-			input := buildCognitoRequest(authParams, api.ClientId, api.ClientSecret, api.ClientAuthFlow)
-			result, authErr := api.CognitoClient.InitiateAuth(input)
-
-			if authErr != nil {
-
-				isInternalError := apierrorsdeprecated.IdentifyInternalError(authErr)
-
-				if isInternalError {
-					errorDescription := "api endpoint POST login returned an error and failed to login to cognito"
-					apierrorsdeprecated.HandleUnexpectedError(ctx, w, authErr, errorDescription)
-					return
-				}
-
-				var errorList []apierrorsdeprecated.Error
-
-				switch authErr.Error() {
-				case "NotAuthorizedException: Incorrect username or password.":
-					{
-						notAuthorizedDescription := "unautheticated user: Unable to autheticate request"
-						notAuthorizedError := apierrorsdeprecated.IndividualErrorBuilder(authErr, notAuthorizedDescription)
-						errorList = append(errorList, notAuthorizedError)
-						errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
-						apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusUnauthorized, errorResponseBody)
-						return
-					}
-				case "NotAuthorizedException: Password attempts exceeded":
-					{
-						forbiddenDescription := "exceeded the number of attemps to login in with the provided credentials"
-						forbiddenError := apierrorsdeprecated.IndividualErrorBuilder(authErr, forbiddenDescription)
-						errorList = append(errorList, forbiddenError)
-						errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
-						apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusForbidden, errorResponseBody)
-						return
-					}
-				default:
-					{
-						loginDescription := "something went wrong, and api endpoint POST login returned an error and failed to login to cognito. Please try again or contact an administrator."
-						loginError := apierrorsdeprecated.IndividualErrorBuilder(authErr, loginDescription)
-						errorList = append(errorList, loginError)
-						errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
-						apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
-						return
-					}
-				}
-			}
-
-			buildSuccessfulResponse(result, w, ctx)
-
-			return
-		}
-
-		invalidPasswordErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.ErrInvalidPassword, apierrorsdeprecated.InvalidPasswordDescription)
-		invalidEmailErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.ErrInvalidEmail, apierrorsdeprecated.InvalidErrorDescription)
-
-		var errorList []apierrorsdeprecated.Error
-
-		if !validPasswordRequest {
-			errorList = append(errorList, invalidPasswordErrorBody)
-		}
-
-		if !validEmailRequest {
-			errorList = append(errorList, invalidEmailErrorBody)
-		}
-
-		errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
-		apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
-
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, handleBodyReadError(ctx, err)
 	}
+
+	var userSignIn models.UserSignIn
+	err = json.Unmarshal(body, &userSignIn)
+	if err != nil {
+		return nil, handleBodyUnmarshalError(ctx, err)
+	}
+
+	validationErrs := userSignIn.ValidateCredentials(ctx)
+	if validationErrs != nil {
+		return nil, models.NewErrorResponse(*validationErrs, http.StatusBadRequest)
+	}
+
+	terminationRequest := userSignIn.BuildOldSessionTerminationRequest(api.UserPoolId)
+	_, err = api.CognitoClient.AdminUserGlobalSignOut(terminationRequest)
+
+	if err != nil {
+		responseErr := models.NewCognitoError(ctx, err, "Cognito AdminUserGlobalSignOut request from sign in handler")
+		if responseErr.Code == models.InternalError {
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError)
+		}
+
+		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusBadRequest)
+	}
+
+	input := userSignIn.BuildCognitoRequest(api.ClientId, api.ClientSecret, api.ClientAuthFlow)
+	result, authErr := api.CognitoClient.InitiateAuth(input)
+
+	if authErr != nil {
+		responseErr := models.NewCognitoError(ctx, authErr, "Cognito InitiateAuth request from sign in handler")
+		if responseErr.Code == models.InternalError {
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError)
+		}
+
+		switch responseErr.Description {
+		case models.SignInFailedDescription:
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusUnauthorized)
+		case models.SignInAttemptsExceededDescription:
+			// Cognito returns the same Code for invalid credentials and too many attempts errors, changing our Error.Code to enable differentiation in the client
+			responseErr.Code = models.TooManyFailedAttemptsError
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusForbidden)
+		default:
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusBadRequest)
+		}
+	}
+
+	jsonResponse, responseErr := userSignIn.BuildSuccessfulJsonResponse(ctx, result)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError)
+	}
+
+	w.Header().Set(AccessTokenHeaderName, "Bearer "+*result.AuthenticationResult.AccessToken)
+	w.Header().Set(IdTokenHeaderName, *result.AuthenticationResult.IdToken)
+	w.Header().Set(RefreshTokenHeaderName, *result.AuthenticationResult.RefreshToken)
+	return models.NewSuccessResponse(jsonResponse, http.StatusCreated), nil
 }
 
 //SignOutHandler invalidates a users access token signing them out and returns a http handler interface
-func (api *API) SignOutHandler(w http.ResponseWriter, req *http.Request, ctx context.Context) *models.ErrorResponse {
+func (api *API) SignOutHandler(w http.ResponseWriter, req *http.Request, ctx context.Context) (*models.SuccessResponse, *models.ErrorResponse) {
 	accessToken := models.AccessToken{
 		AuthHeader: req.Header.Get(AccessTokenHeaderName),
 	}
 	validationErr := accessToken.Validate(ctx)
 	if validationErr != nil {
-		return &models.ErrorResponse{
+		return nil, &models.ErrorResponse{
 			Errors: []error{validationErr},
 			Status: http.StatusBadRequest,
 		}
@@ -161,20 +99,19 @@ func (api *API) SignOutHandler(w http.ResponseWriter, req *http.Request, ctx con
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "Cognito GlobalSignOut request for signout")
 		if responseErr.Code == models.NotFoundError || responseErr.Code == models.NotAuthorisedError {
-			return &models.ErrorResponse{
-				Errors: []error{&responseErr},
+			return nil, &models.ErrorResponse{
+				Errors: []error{responseErr},
 				Status: http.StatusBadRequest,
 			}
 		} else {
-			return &models.ErrorResponse{
-				Errors: []error{&responseErr},
+			return nil, &models.ErrorResponse{
+				Errors: []error{responseErr},
 				Status: http.StatusInternalServerError,
 			}
 		}
 	}
 
-	w.WriteHeader(http.StatusNoContent)
-	return nil
+	return models.NewSuccessResponse(nil, http.StatusNoContent), nil
 }
 
 //RefreshHandler refreshes a users access token and returns new access and ID tokens, expiration time and the refresh token
