@@ -127,6 +127,15 @@ func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoi
 	return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Access Token has been revoked", nil)
 }
 
+func (m *CognitoIdentityProviderClientStub) AdminUserGlobalSignOut(adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+	if *adminUserGlobalSignOutInput.Username == "internalservererror@ons.gov.uk" {
+		return nil, errors.New("InternalErrorException: Something went wrong")
+	} else if *adminUserGlobalSignOutInput.Username == "clienterror@ons.gov.uk" {
+		return nil, errors.New("ClientError: Something went wrong")
+	}
+	return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
+}
+
 func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 	name := "bob"
 	if strings.Contains(*input.Filter, "email@ext.ons.gov.uk") {
