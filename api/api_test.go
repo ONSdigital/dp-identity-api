@@ -113,7 +113,7 @@ func TestWriteErrorResponse(t *testing.T) {
 
 		resp := httptest.NewRecorder()
 
-		WriteErrorResponse(ctx, resp, &errorResponse)
+		writeErrorResponse(ctx, resp, &errorResponse)
 
 		So(resp.Code, ShouldEqual, http.StatusBadRequest)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)

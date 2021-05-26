@@ -25,13 +25,12 @@ type API struct {
 
 type baseHandler func(w http.ResponseWriter, r *http.Request, ctx context.Context) *models.ErrorResponse
 
-func (handler baseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	errorResponse := handler(w, r, ctx)
-
-	if errorResponse != nil {
-		ctx := r.Context()
-		WriteErrorResponse(ctx, w, errorResponse)
+func contextAndErrors(h baseHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		ctx := req.Context()
+		if err := h(w, req, ctx); err != nil {
+			writeErrorResponse(ctx, w, err)
+		}
 	}
 }
 
@@ -55,13 +54,13 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 
 	r.HandleFunc("/tokens", api.TokensHandler(ctx)).Methods("POST")
 	// self used in paths rather than identifier as the identifier is JWT tokens passed in the request headers
-	r.HandleFunc("/tokens/self", baseHandler(api.SignOutHandler).ServeHTTP).Methods("DELETE")
+	r.HandleFunc("/tokens/self", contextAndErrors(api.SignOutHandler)).Methods("DELETE")
 	r.HandleFunc("/tokens/self", api.RefreshHandler(ctx)).Methods("PUT")
 	r.HandleFunc("/users", api.CreateUserHandler(ctx)).Methods("POST")
 	return api, nil
 }
 
-func WriteErrorResponse(ctx context.Context, w http.ResponseWriter, errorResponse *models.ErrorResponse) {
+func writeErrorResponse(ctx context.Context, w http.ResponseWriter, errorResponse *models.ErrorResponse) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(errorResponse.Status)
