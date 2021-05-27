@@ -2,9 +2,12 @@ package models_test
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/utilities"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"reflect"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -175,5 +178,39 @@ func TestRefreshToken_GenerateRefreshRequest(t *testing.T) {
 		So(*initiateAuthInput.AuthParameters["REFRESH_TOKEN"], ShouldEqual, refreshTokenString)
 		So(*initiateAuthInput.AuthParameters["SECRET_HASH"], ShouldEqual, expectedSecretHash)
 		So(*initiateAuthInput.ClientId, ShouldEqual, clientId)
+	})
+}
+
+func TestRefreshToken_BuildSuccessfulJsonResponse(t *testing.T) {
+	ctx := context.Background()
+
+	Convey("returns an InternalServerError if the Cognito response does not meet expected format", t, func() {
+		refreshToken := models.RefreshToken{}
+		result := cognitoidentityprovider.InitiateAuthOutput{}
+
+		response, err := refreshToken.BuildSuccessfulJsonResponse(ctx, &result)
+
+		So(response, ShouldBeNil)
+		castErr := err.(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InternalError)
+		So(castErr.Description, ShouldEqual, models.UnrecognisedCognitoResponseDescription)
+	})
+
+	Convey("returns a byte array of the response JSON", t, func() {
+		var expirationLength int64 = 300
+		refreshToken := models.RefreshToken{}
+		result := cognitoidentityprovider.InitiateAuthOutput{
+			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
+				ExpiresIn: &expirationLength,
+			},
+		}
+
+		response, err := refreshToken.BuildSuccessfulJsonResponse(ctx, &result)
+
+		So(err, ShouldBeNil)
+		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
+		var body map[string]interface{}
+		err = json.Unmarshal(response, &body)
+		So(body["expirationTime"], ShouldNotBeNil)
 	})
 }
