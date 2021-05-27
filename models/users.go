@@ -6,6 +6,7 @@ import (
 	"github.com/ONSdigital/dp-identity-api/utilities"
 	"github.com/ONSdigital/dp-identity-api/validation"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/sethvargo/go-password/password"
 	"time"
 )
 
@@ -13,7 +14,88 @@ type UserParams struct {
 	Forename string `json:"forename"`
 	Surname  string `json:"surname"`
 	Email    string `json:"email"`
+	Password string `json:"-"`
 }
+
+func (p UserParams) GeneratePassword() error {
+	tempPassword, err := password.Generate(14, 1, 1, false, false)
+	if err != nil {
+		return err
+	}
+	p.Password = tempPassword
+	return nil
+}
+
+func (p UserParams) ValidateRegistration(ctx context.Context) []error {
+	var validationErrs []error
+	if p.Forename == "" {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidFieldError, InvalidForenameErrorDescription))
+	}
+
+	if p.Surname == "" {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidFieldError, InvalidSurnameErrorDescription))
+	}
+
+	if !validation.ValidateONSEmail(p.Email) {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidFieldError, InvalidEmailDescription))
+	}
+	return validationErrs
+}
+
+func (p UserParams) CheckForDuplicateEmail(ctx context.Context, listUserResp *cognitoidentityprovider.ListUsersOutput) error {
+	if len(listUserResp.Users) == 0 {
+		return nil
+	}
+	return NewValidationError(ctx, InvalidFieldError, DuplicateEmailDescription)
+}
+
+func (p UserParams) BuildListUserRequest(filterString string, requiredAttribute string, limit int64, userPoolId *string) *cognitoidentityprovider.ListUsersInput {
+	return &cognitoidentityprovider.ListUsersInput{
+		AttributesToGet: []*string{
+			&requiredAttribute,
+		},
+		Filter:     &filterString,
+		Limit:      &limit,
+		UserPoolId: userPoolId,
+	}
+}
+
+func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *cognitoidentityprovider.AdminCreateUserInput {
+	var (
+		deliveryMethod, forenameAttrName, surnameAttrName, emailAttrName string = "EMAIL", "name", "family_name", "email"
+	)
+	return &cognitoidentityprovider.AdminCreateUserInput{
+		UserAttributes: []*cognitoidentityprovider.AttributeType{
+			{
+				Name:  &forenameAttrName,
+				Value: &p.Forename,
+			},
+			{
+				Name:  &surnameAttrName,
+				Value: &p.Surname,
+			},
+			{
+				Name:  &emailAttrName,
+				Value: &p.Email,
+			},
+		},
+		DesiredDeliveryMediums: []*string{
+			&deliveryMethod,
+		},
+		TemporaryPassword: &p.Password,
+		UserPoolId:        &userPoolId,
+		Username:          &userId,
+	}
+}
+
+func (p UserParams) BuildSuccessfulJsonResponse(ctx context.Context, createdUser *cognitoidentityprovider.AdminCreateUserOutput) ([]byte, error) {
+	jsonResponse, err := json.Marshal(createdUser)
+	if err != nil {
+		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
+	}
+	return jsonResponse, nil
+}
+
 type CreateUserInput struct {
 	UserInput *cognitoidentityprovider.AdminCreateUserInput
 }
@@ -81,12 +163,10 @@ func (p *UserSignIn) BuildSuccessfulJsonResponse(ctx context.Context, result *co
 
 		jsonResponse, err := json.Marshal(postBody)
 		if err != nil {
-			responseErr := NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
-			return nil, responseErr
+			return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
 		}
 		return jsonResponse, nil
 	} else {
-		responseErr := NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
-		return nil, responseErr
+		return nil, NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
 	}
 }

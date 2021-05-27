@@ -44,7 +44,10 @@ const (
 	UnrecognisedCognitoResponseDescription = "unexpected response from cognito"
 	BodyReadFailedDescription              = "endpoint returned an error reading the request body"
 	InvalidPasswordDescription             = "the submitted password could not be validated"
+	InvalidForenameErrorDescription        = "the submitted user's forename could not be validated"
+	InvalidSurnameErrorDescription         = "the submitted user's surname could not be validated"
 	InvalidEmailDescription                = "the submitted email could not be validated"
+	DuplicateEmailDescription              = "account using email address found"
 	SignInFailedDescription                = "Incorrect username or password"
 	SignInAttemptsExceededDescription      = "Password attempts exceeded"
 )
