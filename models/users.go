@@ -29,15 +29,15 @@ func (p UserParams) GeneratePassword() error {
 func (p UserParams) ValidateRegistration(ctx context.Context) []error {
 	var validationErrs []error
 	if p.Forename == "" {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidFieldError, InvalidForenameErrorDescription))
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidForenameError, InvalidForenameErrorDescription))
 	}
 
 	if p.Surname == "" {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidFieldError, InvalidSurnameErrorDescription))
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidSurnameError, InvalidSurnameErrorDescription))
 	}
 
 	if !validation.ValidateONSEmail(p.Email) {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidFieldError, InvalidEmailDescription))
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription))
 	}
 	return validationErrs
 }
@@ -46,7 +46,7 @@ func (p UserParams) CheckForDuplicateEmail(ctx context.Context, listUserResp *co
 	if len(listUserResp.Users) == 0 {
 		return nil
 	}
-	return NewValidationError(ctx, InvalidFieldError, DuplicateEmailDescription)
+	return NewValidationError(ctx, InvalidEmailError, DuplicateEmailDescription)
 }
 
 func (p UserParams) BuildListUserRequest(filterString string, requiredAttribute string, limit int64, userPoolId *string) *cognitoidentityprovider.ListUsersInput {

@@ -11,6 +11,8 @@ const (
 	JSONMarshalError           = "JSONMarshalError"
 	JSONUnmarshalError         = "JSONUnmarshalError"
 	WriteResponseError         = "WriteResponseError"
+	InvalidForenameError       = "InvalidForename"
+	InvalidSurnameError        = "InvalidSurname"
 	InvalidEmailError          = "InvalidEmail"
 	InvalidTokenError          = "InvalidToken"
 	InternalError              = "InternalServerError"

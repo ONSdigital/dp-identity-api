@@ -60,7 +60,7 @@ func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidenti
 		}
 		return user.UserOutput, nil
 	}
-	return nil, errors.New("InternalErrorException") // 500 - internal exception error
+	return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Failed to create new user in user pool", nil) // 500 - internal exception error
 }
 
 func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {

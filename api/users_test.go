@@ -152,20 +152,21 @@ func TestCreateUserHandler(t *testing.T) {
 		json.Unmarshal(errorBody, &e)
 
 		So(w.Code, ShouldEqual, http.StatusInternalServerError)
-		So(e.Errors[0].Description, ShouldEqual, "api endpoint POST user returned an error unmarshalling request body")
+		So(e.Errors[0].Code, ShouldEqual, models.JSONUnmarshalError)
+		So(e.Errors[0].Description, ShouldEqual, models.ErrorUnmarshalFailedDescription)
 	})
 
 	Convey("Validation fails 400: validating email and username throws validation errors", t, func() {
 		userValidationTests := []struct {
-			userDetails      map[string]interface{}
-			errorDescription []string
-			httpResponse     int
+			userDetails  map[string]interface{}
+			errorCodes   []string
+			httpResponse int
 		}{
 			// missing email
 			{
 				map[string]interface{}{"forename": name, "surname": surname, "email": ""},
 				[]string{
-					apierrorsdeprecated.InvalidErrorDescription,
+					models.InvalidEmailError,
 				},
 				http.StatusBadRequest,
 			},
@@ -173,8 +174,8 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": "", "surname": "", "email": email},
 				[]string{
-					apierrorsdeprecated.InvalidForenameErrorDescription,
-					apierrorsdeprecated.InvalidSurnameErrorDescription,
+					models.InvalidForenameError,
+					models.InvalidSurnameError,
 				},
 				http.StatusBadRequest,
 			},
@@ -182,7 +183,7 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": name, "surname": "", "email": email},
 				[]string{
-					apierrorsdeprecated.InvalidSurnameErrorDescription,
+					models.InvalidSurnameError,
 				},
 				http.StatusBadRequest,
 			},
@@ -190,7 +191,7 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": "", "surname": surname, "email": email},
 				[]string{
-					apierrorsdeprecated.InvalidForenameErrorDescription,
+					models.InvalidForenameError,
 				},
 				http.StatusBadRequest,
 			},
@@ -198,9 +199,9 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": "", "surname": "", "email": ""},
 				[]string{
-					apierrorsdeprecated.InvalidForenameErrorDescription,
-					apierrorsdeprecated.InvalidSurnameErrorDescription,
-					apierrorsdeprecated.InvalidErrorDescription,
+					models.InvalidForenameError,
+					models.InvalidSurnameError,
+					models.InvalidEmailError,
 				},
 				http.StatusBadRequest,
 			},
@@ -208,7 +209,7 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": name, "surname": surname, "email": invalidEmail},
 				[]string{
-					apierrorsdeprecated.InvalidErrorDescription,
+					models.InvalidEmailError,
 				},
 				http.StatusBadRequest,
 			},
@@ -231,10 +232,10 @@ func TestCreateUserHandler(t *testing.T) {
 			json.Unmarshal(errorBody, &e)
 
 			So(w.Code, ShouldEqual, tt.httpResponse)
-			So(len(e.Errors), ShouldEqual, len(tt.errorDescription))
-			So(e.Errors[0].Description, ShouldEqual, tt.errorDescription[0])
+			So(len(e.Errors), ShouldEqual, len(tt.errorCodes))
+			So(e.Errors[0].Code, ShouldEqual, tt.errorCodes[0])
 			if len(e.Errors) > 1 {
-				So(e.Errors[1].Description, ShouldEqual, tt.errorDescription[1])
+				So(e.Errors[1].Code, ShouldEqual, tt.errorCodes[1])
 			}
 		}
 	})
