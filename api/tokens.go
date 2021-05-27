@@ -3,14 +3,9 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"time"
-
-	"errors"
 	"io/ioutil"
 	"net/http"
 
-	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/models"
 )
 
@@ -141,52 +136,4 @@ func (api *API) RefreshHandler(w http.ResponseWriter, req *http.Request, ctx con
 	w.Header().Set(AccessTokenHeaderName, "Bearer "+*result.AuthenticationResult.AccessToken)
 	w.Header().Set(IdTokenHeaderName, *result.AuthenticationResult.IdToken)
 	return models.NewSuccessResponse(jsonResponse, http.StatusCreated), nil
-}
-
-func buildSuccessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, w http.ResponseWriter, ctx context.Context) {
-
-	if result.AuthenticationResult != nil {
-		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
-		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set(AccessTokenHeaderName, "Bearer "+*result.AuthenticationResult.AccessToken)
-		w.Header().Set(IdTokenHeaderName, *result.AuthenticationResult.IdToken)
-		if result.AuthenticationResult.RefreshToken != nil {
-			w.Header().Set(RefreshTokenHeaderName, *result.AuthenticationResult.RefreshToken)
-		}
-		w.WriteHeader(http.StatusCreated)
-
-		postBody := map[string]interface{}{"expirationTime": expirationTime}
-
-		buildjson(postBody, w, ctx)
-
-		return
-	} else {
-		err := errors.New("unexpected return from cognito")
-		errorDescription := "unexpected response from cognito, there was no authentication result field"
-		apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, errorDescription)
-		return
-	}
-}
-
-func buildjson(jsonInput map[string]interface{}, w http.ResponseWriter, ctx context.Context) {
-
-	jsonResponse, err := json.Marshal(jsonInput)
-
-	if err != nil {
-		errorDescription := "failed to marshal the error"
-		apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, errorDescription)
-		return
-	}
-
-	_, err = w.Write(jsonResponse)
-	if err != nil {
-		errorDescription := "writing response failed"
-		apierrorsdeprecated.HandleUnexpectedError(ctx, w, err, errorDescription)
-
-		return
-	}
-	return
-
 }

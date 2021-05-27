@@ -5,19 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/gorilla/mux"
+	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
-
-	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 const signInEndPoint = "http://localhost:25600/tokens"
@@ -66,92 +63,6 @@ func TestHandleUnexpectedError(t *testing.T) {
 
 		So(resp.Code, ShouldEqual, http.StatusInternalServerError)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
-	})
-}
-
-func TestCognitoResponseHeaderBuild(t *testing.T) {
-	Convey("build 201 response using an InitiateAuthOutput from Cognito", t, func() {
-		w := httptest.NewRecorder()
-		ctx := context.Background()
-		accessToken := "accessToken"
-		var expiration int64 = 123
-		idToken := "idToken"
-		Refresh := "refreshToken"
-
-		initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{
-			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
-				AccessToken:  &accessToken,
-				ExpiresIn:    &expiration,
-				IdToken:      &idToken,
-				RefreshToken: &Refresh,
-			},
-		}
-
-		buildSuccessfulResponse(initiateAuthOutput, w, ctx)
-
-		So(w.Result().StatusCode, ShouldEqual, 201)
-		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
-		So(w.Result().Header["Authorization"], ShouldResemble, []string{"Bearer " + accessToken})
-		So(w.Result().Header["Id"], ShouldResemble, []string{idToken})
-		So(w.Result().Header["Refresh"], ShouldResemble, []string{Refresh})
-
-		var obj map[string]interface{}
-		_ = json.Unmarshal([]byte(w.Body.String()), &obj)
-
-		//there should be one entry in body
-		So(len(obj), ShouldEqual, 1)
-
-		type kv struct {
-			Key   string
-			Value interface{}
-		}
-
-		var ss []kv
-		for k, v := range obj {
-			ss = append(ss, kv{k, v})
-		}
-		str := fmt.Sprintf("%v", ss[0].Value)
-
-		So(ss[0].Key, ShouldResemble, "expirationTime")
-		So(str[:19], ShouldResemble, time.Now().UTC().Add(time.Second * 123).String()[:19])
-
-	})
-
-	Convey("build 500 response if the InitiateAuthOutput has an unexpected format", t, func() {
-		w := httptest.NewRecorder()
-		ctx := context.Background()
-
-		initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{}
-		buildSuccessfulResponse(initiateAuthOutput, w, ctx)
-
-		So(w.Result().StatusCode, ShouldEqual, 500)
-	})
-}
-
-func TestBuildJson(t *testing.T) {
-	w := httptest.NewRecorder()
-
-	Convey("build json", t, func() {
-		w := httptest.NewRecorder()
-		ctx := context.Background()
-
-		testBody := map[string]interface{}{"expirationTime": "123"}
-		buildjson(testBody, w, ctx)
-		So(w.Body.String(), ShouldResemble, "{\"expirationTime\":\"123\"}")
-
-	})
-
-	Convey("build json err", t, func() {
-
-		ctx := context.Background()
-
-		testBody := map[string]interface{}{
-			"foo": make(chan int),
-		}
-		buildjson(testBody, w, ctx)
-		So(w.Body.String(), ShouldResemble, "{\"errors\":[{\"code\":\"json: unsupported type: chan int\",\"description\":\"failed to marshal the error\"}]}")
-		So(w.Result().StatusCode, ShouldEqual, 500)
-		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
 	})
 }
 
