@@ -8,7 +8,30 @@ import (
 	"github.com/ONSdigital/log.go/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/dgrijalva/jwt-go"
+	"strings"
 )
+
+type AccessToken struct {
+	AuthHeader  string
+	TokenString string
+}
+
+func (t *AccessToken) Validate(ctx context.Context) error {
+	if t.AuthHeader == "" {
+		return NewValidationError(ctx, InvalidTokenError, MissingAuthorizationTokenDescription)
+	}
+	authComponents := strings.Split(t.AuthHeader, " ")
+	if len(authComponents) != 2 {
+		return NewValidationError(ctx, InvalidTokenError, MalformedAuthorizationTokenDescription)
+	}
+	t.TokenString = authComponents[1]
+	return nil
+}
+
+func (t *AccessToken) GenerateSignOutRequest() *cognitoidentityprovider.GlobalSignOutInput {
+	return &cognitoidentityprovider.GlobalSignOutInput{
+		AccessToken: &t.TokenString}
+}
 
 type IdClaims struct {
 	Sub           string `json:"sub"`

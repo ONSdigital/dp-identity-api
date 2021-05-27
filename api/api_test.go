@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"github.com/ONSdigital/dp-identity-api/models"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -92,4 +94,28 @@ func hasRoute(r *mux.Router, path, method string) bool {
 	req := httptest.NewRequest(method, path, nil)
 	match := &mux.RouteMatch{}
 	return r.Match(req, match)
+}
+
+func TestWriteErrorResponse(t *testing.T) {
+	Convey("the status code and the list of errors from the ErrorResponse object are written to a http response", t, func() {
+		ctx := context.Background()
+
+		errorResponseBodyExample := `{"errors":[{"code":"TestError","description":"a error generated for testing purposes"},{"code":"TestError","description":"a error generated for testing purposes"}]}`
+		var errorResponse models.ErrorResponse
+
+		errCode := "TestError"
+		errDescription := "a error generated for testing purposes"
+		statusCode := http.StatusBadRequest
+
+		errorResponse.Errors = append(errorResponse.Errors, models.NewValidationError(ctx, errCode, errDescription))
+		errorResponse.Errors = append(errorResponse.Errors, models.NewValidationError(ctx, errCode, errDescription))
+		errorResponse.Status = statusCode
+
+		resp := httptest.NewRecorder()
+
+		writeErrorResponse(ctx, resp, &errorResponse)
+
+		So(resp.Code, ShouldEqual, http.StatusBadRequest)
+		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
+	})
 }

@@ -3,14 +3,72 @@ package models_test
 import (
 	"context"
 	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
-	"github.com/ONSdigital/dp-identity-api/utilities"
-
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/utilities"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+func TestAccessToken_Validate(t *testing.T) {
+	var ctx = context.Background()
+
+	Convey("returns InvalidToken error if no auth header string is set", t, func() {
+		accessToken := models.AccessToken{}
+
+		err := accessToken.Validate(ctx)
+
+		castErr, ok := err.(*models.Error)
+
+		So(ok, ShouldEqual, true)
+		So(castErr.Code, ShouldEqual, models.InvalidTokenError)
+		So(castErr.Description, ShouldEqual, models.MissingAuthorizationTokenDescription)
+	})
+
+	Convey("returns InvalidToken error if auth header string is set as empty string", t, func() {
+		accessToken := models.AccessToken{AuthHeader: ""}
+
+		err := accessToken.Validate(ctx)
+
+		castErr, ok := err.(*models.Error)
+
+		So(ok, ShouldEqual, true)
+		So(castErr.Code, ShouldEqual, models.InvalidTokenError)
+		So(castErr.Description, ShouldEqual, models.MissingAuthorizationTokenDescription)
+	})
+
+	Convey("returns InvalidToken error if auth header string cannot be split", t, func() {
+		accessToken := models.AccessToken{AuthHeader: "Beareraaaa.bbbb.cccc"}
+
+		err := accessToken.Validate(ctx)
+
+		castErr, ok := err.(*models.Error)
+
+		So(ok, ShouldEqual, true)
+		So(castErr.Code, ShouldEqual, models.InvalidTokenError)
+		So(castErr.Description, ShouldEqual, models.MalformedAuthorizationTokenDescription)
+	})
+
+	Convey("returns nil if auth header string is valid", t, func() {
+		accessToken := models.AccessToken{AuthHeader: "Bearer aaaa.bbbb.cccc"}
+
+		err := accessToken.Validate(ctx)
+
+		So(err, ShouldBeNil)
+	})
+}
+
+func TestAccessToken_GenerateSignOutRequest(t *testing.T) {
+	Convey("returns a sign out request input with the access token set", t, func() {
+		accessTokenString := "aaaa.bbbb.cccc"
+		accessToken := models.AccessToken{TokenString: accessTokenString}
+
+		requestInput := accessToken.GenerateSignOutRequest()
+
+		So(*requestInput.AccessToken, ShouldEqual, accessTokenString)
+	})
+}
 
 func TestIdToken_ParseWithoutValidating(t *testing.T) {
 
