@@ -12,7 +12,6 @@ import (
 
 	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/models"
-	"github.com/ONSdigital/log.go/log"
 )
 
 //TokensHandler uses submitted email address and password to sign a user in against Cognito and returns a http handler interface
@@ -86,26 +85,17 @@ func (api *API) SignOutHandler(w http.ResponseWriter, req *http.Request, ctx con
 	}
 	validationErr := accessToken.Validate(ctx)
 	if validationErr != nil {
-		return nil, &models.ErrorResponse{
-			Errors: []error{validationErr},
-			Status: http.StatusBadRequest,
-		}
+		return nil, models.NewErrorResponse([]error{validationErr}, http.StatusBadRequest)
 	}
 
 	_, err := api.CognitoClient.GlobalSignOut(accessToken.GenerateSignOutRequest())
 
 	if err != nil {
-		responseErr := models.NewCognitoError(ctx, err, "Cognito GlobalSignOut request for signout")
+		responseErr := models.NewCognitoError(ctx, err, "Cognito GlobalSignOut request for sign out")
 		if responseErr.Code == models.NotFoundError || responseErr.Code == models.NotAuthorisedError {
-			return nil, &models.ErrorResponse{
-				Errors: []error{responseErr},
-				Status: http.StatusBadRequest,
-			}
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusBadRequest)
 		} else {
-			return nil, &models.ErrorResponse{
-				Errors: []error{responseErr},
-				Status: http.StatusInternalServerError,
-			}
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError)
 		}
 	}
 
@@ -113,46 +103,44 @@ func (api *API) SignOutHandler(w http.ResponseWriter, req *http.Request, ctx con
 }
 
 //RefreshHandler refreshes a users access token and returns new access and ID tokens, expiration time and the refresh token
-func (api *API) RefreshHandler(ctx context.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		var errorList []apierrorsdeprecated.Error
-
-		refreshToken := models.RefreshToken{
-			TokenString: req.Header.Get(RefreshTokenHeaderName),
-		}
-		errorList = refreshToken.Validate(ctx, errorList)
-
-		idToken := models.IdToken{
-			TokenString: req.Header.Get(IdTokenHeaderName),
-		}
-		errorList = idToken.Validate(ctx, errorList)
-
-		if len(errorList) > 0 {
-			errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
-			apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusBadRequest, errorResponseBody)
-			return
-		}
-
-		authInput := refreshToken.GenerateRefreshRequest(api.ClientSecret, idToken.Claims.CognitoUser, api.ClientId)
-		result, authErr := api.CognitoClient.InitiateAuth(authInput)
-
-		if authErr != nil {
-			log.Event(ctx, "Cognito InitiateAuth request for token refresh - "+authErr.Error(), log.ERROR)
-			if authErr.Error() == "NotAuthorizedException: Refresh Token has expired" {
-				expiredTokenError := apierrorsdeprecated.IndividualErrorBuilder(authErr, apierrorsdeprecated.TokenExpiredMessage)
-				errorList = append(errorList, expiredTokenError)
-				errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
-				apierrorsdeprecated.WriteErrorResponse(ctx, w, http.StatusForbidden, errorResponseBody)
-			} else {
-				apierrorsdeprecated.HandleUnexpectedError(ctx, w, authErr, apierrorsdeprecated.InternalErrorMessage)
-			}
-			return
-		}
-
-		buildSuccessfulResponse(result, w, ctx)
-
-		return
+func (api *API) RefreshHandler(w http.ResponseWriter, req *http.Request, ctx context.Context) (*models.SuccessResponse, *models.ErrorResponse) {
+	var validationErrs []error
+	refreshToken := models.RefreshToken{TokenString: req.Header.Get(RefreshTokenHeaderName)}
+	validationErr := refreshToken.Validate(ctx)
+	if validationErr != nil {
+		validationErrs = append(validationErrs, validationErr)
 	}
+
+	idToken := models.IdToken{TokenString: req.Header.Get(IdTokenHeaderName)}
+	validationErr = idToken.Validate(ctx)
+	if validationErr != nil {
+		validationErrs = append(validationErrs, validationErr)
+	}
+
+	if len(validationErrs) > 0 {
+		return nil, models.NewErrorResponse(validationErrs, http.StatusBadRequest)
+	}
+
+	authInput := refreshToken.GenerateRefreshRequest(api.ClientSecret, idToken.Claims.CognitoUser, api.ClientId)
+	result, authErr := api.CognitoClient.InitiateAuth(authInput)
+
+	if authErr != nil {
+		responseErr := models.NewCognitoError(ctx, authErr, "Cognito InitiateAuth request for token refresh")
+		if responseErr.Code == models.NotAuthorisedError {
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusForbidden)
+		} else {
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError)
+		}
+	}
+
+	jsonResponse, responseErr := refreshToken.BuildSuccessfulJsonResponse(ctx, result)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError)
+	}
+
+	w.Header().Set(AccessTokenHeaderName, "Bearer "+*result.AuthenticationResult.AccessToken)
+	w.Header().Set(IdTokenHeaderName, *result.AuthenticationResult.IdToken)
+	return models.NewSuccessResponse(jsonResponse, http.StatusCreated), nil
 }
 
 func buildSuccessfulResponse(result *cognitoidentityprovider.InitiateAuthOutput, w http.ResponseWriter, ctx context.Context) {
