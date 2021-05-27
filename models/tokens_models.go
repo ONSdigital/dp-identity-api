@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"github.com/ONSdigital/dp-identity-api/utilities"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/dgrijalva/jwt-go"
@@ -54,17 +53,17 @@ type IdToken struct {
 }
 
 //ParseWithoutValidating parses the claims in an ID token JWT in to a IdClaims struct without validating the token
-func (t *IdToken) ParseWithoutValidating(tokenString string) error {
+func (t *IdToken) ParseWithoutValidating(ctx context.Context, tokenString string) *Error {
 	parser := new(jwt.Parser)
 
 	idToken, _, parsingErr := parser.ParseUnverified(tokenString, &IdClaims{})
 	if parsingErr != nil {
-		return parsingErr
+		return NewError(ctx, parsingErr, InvalidTokenError, MalformedIDTokenDescription)
 	}
 
 	idClaims, ok := idToken.Claims.(*IdClaims)
 	if !ok {
-		return errors.New("the ID token could not be parsed")
+		return NewValidationError(ctx, InvalidTokenError, MalformedIDTokenDescription)
 	}
 
 	t.Claims = *idClaims
@@ -76,9 +75,9 @@ func (t *IdToken) Validate(ctx context.Context) *Error {
 	if t.TokenString == "" {
 		return NewValidationError(ctx, InvalidTokenError, MissingIDTokenDescription)
 	}
-	parsingErr := t.ParseWithoutValidating(t.TokenString)
+	parsingErr := t.ParseWithoutValidating(ctx, t.TokenString)
 	if parsingErr != nil {
-		return NewValidationError(ctx, InvalidTokenError, MalformedIDTokenDescription)
+		return parsingErr
 	}
 	return nil
 }
