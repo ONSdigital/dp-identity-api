@@ -17,10 +17,10 @@ type UserParams struct {
 	Password string `json:"-"`
 }
 
-func (p UserParams) GeneratePassword() error {
+func (p UserParams) GeneratePassword(ctx context.Context) error {
 	tempPassword, err := password.Generate(14, 1, 1, false, false)
 	if err != nil {
-		return err
+		return NewError(ctx, err, InternalError, PasswordGenerationErrorDescription)
 	}
 	p.Password = tempPassword
 	return nil

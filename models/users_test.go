@@ -11,6 +11,127 @@ import (
 	"testing"
 )
 
+func TestUserParams_GeneratePassword(t *testing.T) {
+	Convey("adds a password to the UserParams object", t, func() {
+		ctx := context.Background()
+
+		user := models.UserParams{}
+
+		err := user.GeneratePassword(ctx)
+
+		So(err, ShouldBeNil)
+		So(user.Password, ShouldNotBeNil)
+	})
+}
+
+func TestUserParams_ValidateRegistration(t *testing.T) {
+	ctx := context.Background()
+
+	Convey("returns an InvalidForename error if an invalid forename is submitted", t, func() {
+		user := models.UserParams{
+			Email:    "email.email@ons.gov.uk",
+			Forename: "",
+			Surname:  "Smith",
+		}
+
+		errs := user.ValidateRegistration(ctx)
+
+		So(len(errs), ShouldEqual, 1)
+		castErr := errs[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidForenameError)
+		So(castErr.Description, ShouldEqual, models.InvalidForenameErrorDescription)
+	})
+
+	Convey("returns an InvalidSurname error if an invalid surname is submitted", t, func() {
+		user := models.UserParams{
+			Email:    "email.email@ons.gov.uk",
+			Forename: "Stan",
+			Surname:  "",
+		}
+
+		errs := user.ValidateRegistration(ctx)
+
+		So(len(errs), ShouldEqual, 1)
+		castErr := errs[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidSurnameError)
+		So(castErr.Description, ShouldEqual, models.InvalidSurnameErrorDescription)
+	})
+
+	Convey("returns an InvalidEmail error if an invalid email is submitted", t, func() {
+		user := models.UserParams{
+			Email:    "email",
+			Forename: "Stan",
+			Surname:  "Smith",
+		}
+
+		errs := user.ValidateRegistration(ctx)
+
+		So(len(errs), ShouldEqual, 1)
+		castErr := errs[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidEmailError)
+		So(castErr.Description, ShouldEqual, models.InvalidEmailDescription)
+	})
+
+	Convey("returns an InvalidEmail error if a non ONS email is submitted", t, func() {
+		user := models.UserParams{
+			Email:    "email@gmail.com",
+			Forename: "Stan",
+			Surname:  "Smith",
+		}
+
+		errs := user.ValidateRegistration(ctx)
+
+		So(len(errs), ShouldEqual, 1)
+		castErr := errs[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidEmailError)
+		So(castErr.Description, ShouldEqual, models.InvalidEmailDescription)
+	})
+}
+
+func TestUserParams_CheckForDuplicateEmail(t *testing.T) {
+	ctx := context.Background()
+
+	Convey("returns nothing if there is no user returned from the ListUser request", t, func() {
+		user := models.UserParams{
+			Email:    "email.email@ons.gov.uk",
+			Forename: "Stan",
+			Surname:  "Smith",
+		}
+
+		listUserResponse := cognitoidentityprovider.ListUsersOutput{
+			Users: []*cognitoidentityprovider.UserType{},
+		}
+
+		err := user.CheckForDuplicateEmail(ctx, &listUserResponse)
+
+		So(err, ShouldBeNil)
+	})
+
+	Convey("returns an InvalidEmail error if there is a user returned from the ListUser request", t, func() {
+		user := models.UserParams{
+			Email:    "email.email@ons.gov.uk",
+			Forename: "Stan",
+			Surname:  "Smith",
+		}
+
+		name, status := "abcd-efgh-ijkl-mnop", "UNCONFIRMED"
+		listUserResponse := cognitoidentityprovider.ListUsersOutput{
+			Users: []*cognitoidentityprovider.UserType{
+				{
+					Username:   &name,
+					UserStatus: &status,
+				},
+			},
+		}
+
+		err := user.CheckForDuplicateEmail(ctx, &listUserResponse)
+
+		castErr := err.(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidEmailError)
+		So(castErr.Description, ShouldEqual, models.DuplicateEmailDescription)
+	})
+}
+
 func TestUserParams_BuildListUserRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito ListUsers request body", t, func() {
 
@@ -29,9 +150,9 @@ func TestUserParams_BuildListUserRequest(t *testing.T) {
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInput{}))
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
-		So(*response.UserAttributes[0].Value, ShouldEqual, user.Forename)
-		So(*response.UserAttributes[1].Value, ShouldEqual, user.Surname)
-		So(*response.UserAttributes[2].Value, ShouldEqual, user.Email)
+		So(*response.Limit, ShouldEqual, limit)
+		So(*response.Filter, ShouldEqual, filterString)
+		So(*response.AttributesToGet[0], ShouldEqual, requiredAttribute)
 	})
 }
 

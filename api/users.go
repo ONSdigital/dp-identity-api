@@ -27,7 +27,7 @@ func (api *API) CreateUserHandler(w http.ResponseWriter, req *http.Request, ctx 
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
 
-	err = user.GeneratePassword()
+	err = user.GeneratePassword(ctx)
 	if err != nil {
 		return nil, models.NewErrorResponse([]error{err}, http.StatusInternalServerError)
 	}
