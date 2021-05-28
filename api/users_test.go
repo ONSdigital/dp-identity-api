@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -24,10 +22,13 @@ func TestCreateUserHandler(t *testing.T) {
 	var (
 		routeMux                                                                                                   = mux.NewRouter()
 		ctx                                                                                                        = context.Background()
-		name, surname, status, email, poolId, userException, clientId, clientSecret, authflow, invalidEmail string = "bob", "bobbings", "UNCONFIRMED", "foo_bar123@ext.ons.gov.uk", "us-west-11_bxushuds", "UsernameExistsException: User account already exists", "abc123", "bsjahsaj9djsiq", "authflow", "foo_bar123@test.ons.gov.ie"
+		name, surname, status, email, poolId, userException, clientId, clientSecret, authFlow, invalidEmail string = "bob", "bobbings", "UNCONFIRMED", "foo_bar123@ext.ons.gov.uk", "us-west-11_bxushuds", "UsernameExistsException: User account already exists", "abc123", "bsjahsaj9djsiq", "authflow", "foo_bar123@test.ons.gov.ie"
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
+
+	api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authFlow)
+	w := httptest.NewRecorder()
 
 	Convey("Admin create user - check expected responses", t, func() {
 		adminCreateUsersTests := []struct {
@@ -121,51 +122,46 @@ func TestCreateUserHandler(t *testing.T) {
 		for _, tt := range adminCreateUsersTests {
 			m.AdminCreateUserFunc = tt.createUsersFunction
 			m.ListUsersFunc = tt.listUsersFunction
-			api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authflow)
 
 			postBody := map[string]interface{}{"forename": name, "surname": surname, "email": email}
-
 			body, _ := json.Marshal(postBody)
-
 			r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
 
-			w := httptest.NewRecorder()
+			successResponse, errorResponse := api.CreateUserHandler(w, r, ctx)
 
-			api.Router.ServeHTTP(w, r)
-
-			So(w.Code, ShouldEqual, tt.httpResponse)
+			// Check whether testing a success or error case
+			if tt.httpResponse > 399 {
+				So(successResponse, ShouldBeNil)
+				So(errorResponse.Status, ShouldEqual, tt.httpResponse)
+			} else {
+				So(successResponse.Status, ShouldEqual, tt.httpResponse)
+				So(errorResponse, ShouldBeNil)
+			}
 		}
 	})
 
 	Convey("Admin create user returns 500: error unmarshalling request body", t, func() {
 		r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(nil))
 
-		w := httptest.NewRecorder()
+		successResponse, errorResponse := api.CreateUserHandler(w, r, ctx)
 
-		api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authflow)
-
-		api.Router.ServeHTTP(w, r)
-
-		errorBody, _ := ioutil.ReadAll(w.Body)
-		var e apierrorsdeprecated.ErrorList
-
-		json.Unmarshal(errorBody, &e)
-
-		So(w.Code, ShouldEqual, http.StatusInternalServerError)
-		So(e.Errors[0].Description, ShouldEqual, "api endpoint POST user returned an error unmarshalling request body")
+		So(successResponse, ShouldBeNil)
+		castErr := errorResponse.Errors[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.JSONUnmarshalError)
+		So(castErr.Description, ShouldEqual, models.ErrorUnmarshalFailedDescription)
 	})
 
 	Convey("Validation fails 400: validating email and username throws validation errors", t, func() {
 		userValidationTests := []struct {
-			userDetails      map[string]interface{}
-			errorDescription []string
-			httpResponse     int
+			userDetails  map[string]interface{}
+			errorCodes   []string
+			httpResponse int
 		}{
 			// missing email
 			{
 				map[string]interface{}{"forename": name, "surname": surname, "email": ""},
 				[]string{
-					apierrorsdeprecated.InvalidErrorDescription,
+					models.InvalidEmailError,
 				},
 				http.StatusBadRequest,
 			},
@@ -173,8 +169,8 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": "", "surname": "", "email": email},
 				[]string{
-					apierrorsdeprecated.InvalidForenameErrorDescription,
-					apierrorsdeprecated.InvalidSurnameErrorDescription,
+					models.InvalidForenameError,
+					models.InvalidSurnameError,
 				},
 				http.StatusBadRequest,
 			},
@@ -182,7 +178,7 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": name, "surname": "", "email": email},
 				[]string{
-					apierrorsdeprecated.InvalidSurnameErrorDescription,
+					models.InvalidSurnameError,
 				},
 				http.StatusBadRequest,
 			},
@@ -190,7 +186,7 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": "", "surname": surname, "email": email},
 				[]string{
-					apierrorsdeprecated.InvalidForenameErrorDescription,
+					models.InvalidForenameError,
 				},
 				http.StatusBadRequest,
 			},
@@ -198,9 +194,9 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": "", "surname": "", "email": ""},
 				[]string{
-					apierrorsdeprecated.InvalidForenameErrorDescription,
-					apierrorsdeprecated.InvalidSurnameErrorDescription,
-					apierrorsdeprecated.InvalidErrorDescription,
+					models.InvalidForenameError,
+					models.InvalidSurnameError,
+					models.InvalidEmailError,
 				},
 				http.StatusBadRequest,
 			},
@@ -208,7 +204,7 @@ func TestCreateUserHandler(t *testing.T) {
 			{
 				map[string]interface{}{"forename": name, "surname": surname, "email": invalidEmail},
 				[]string{
-					apierrorsdeprecated.InvalidErrorDescription,
+					models.InvalidEmailError,
 				},
 				http.StatusBadRequest,
 			},
@@ -216,25 +212,18 @@ func TestCreateUserHandler(t *testing.T) {
 
 		for _, tt := range userValidationTests {
 			body, _ := json.Marshal(tt.userDetails)
-
 			r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
 
-			w := httptest.NewRecorder()
+			successResponse, errorResponse := api.CreateUserHandler(w, r, ctx)
 
-			api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authflow)
-
-			api.Router.ServeHTTP(w, r)
-
-			errorBody, _ := ioutil.ReadAll(w.Body)
-			var e apierrorsdeprecated.ErrorList
-
-			json.Unmarshal(errorBody, &e)
-
-			So(w.Code, ShouldEqual, tt.httpResponse)
-			So(len(e.Errors), ShouldEqual, len(tt.errorDescription))
-			So(e.Errors[0].Description, ShouldEqual, tt.errorDescription[0])
-			if len(e.Errors) > 1 {
-				So(e.Errors[1].Description, ShouldEqual, tt.errorDescription[1])
+			So(successResponse, ShouldBeNil)
+			So(errorResponse.Status, ShouldEqual, tt.httpResponse)
+			So(len(errorResponse.Errors), ShouldEqual, len(tt.errorCodes))
+			castErr := errorResponse.Errors[0].(*models.Error)
+			So(castErr.Code, ShouldEqual, tt.errorCodes[0])
+			if len(errorResponse.Errors) > 1 {
+				castErr = errorResponse.Errors[1].(*models.Error)
+				So(castErr.Code, ShouldEqual, tt.errorCodes[1])
 			}
 		}
 	})

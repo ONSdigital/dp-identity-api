@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -20,51 +19,6 @@ import (
 const signInEndPoint = "http://localhost:25600/tokens"
 const signOutEndPoint = "http://localhost:25600/tokens/self"
 const tokenRefreshEndPoint = "http://localhost:25600/tokens/self"
-
-func TestDeprecatedWriteErrorResponse(t *testing.T) {
-	Convey("A status code and an error body with two errors is written to a http response", t, func() {
-
-		errorResponseBodyExample := `{"errors":[{"code":"Invalid email","description":"Unable to validate the email in the request"},{"code":"Invalid email","description":"Unable to validate the email in the request"}]}`
-
-		var errorList []apierrorsdeprecated.Error
-
-		errorList = nil
-
-		errInvalidEmail := errors.New("Invalid email")
-		invalidErrorDescription := "Unable to validate the email in the request"
-		invalidEmailErrorBody := apierrorsdeprecated.IndividualErrorBuilder(errInvalidEmail, invalidErrorDescription)
-		errorList = append(errorList, invalidEmailErrorBody)
-		errorList = append(errorList, invalidEmailErrorBody)
-
-		ctx := context.Background()
-		resp := httptest.NewRecorder()
-		statusCode := 400
-		errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
-
-		apierrorsdeprecated.WriteErrorResponse(ctx, resp, statusCode, errorResponseBody)
-
-		So(resp.Code, ShouldEqual, http.StatusBadRequest)
-		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
-	})
-}
-
-func TestHandleUnexpectedError(t *testing.T) {
-	Convey("An error and an error description is logged and written to a http response", t, func() {
-
-		errorResponseBodyExample := `{"errors":[{"code":"unexpected error","description":"something unexpected has happened"}]}`
-
-		ctx := context.Background()
-		unexpectedError := errors.New("unexpected error")
-		unexpectedErrorDescription := "something unexpected has happened"
-
-		resp := httptest.NewRecorder()
-
-		apierrorsdeprecated.HandleUnexpectedError(ctx, resp, unexpectedError, unexpectedErrorDescription)
-
-		So(resp.Code, ShouldEqual, http.StatusInternalServerError)
-		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
-	})
-}
 
 func TestAPI_TokensHandler(t *testing.T) {
 	var (

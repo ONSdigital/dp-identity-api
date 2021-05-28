@@ -12,7 +12,6 @@ import (
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 )
 
@@ -86,7 +85,10 @@ func TestSetup(t *testing.T) {
 			_, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, tt.userPoolId, tt.clientId, tt.clientSecret, tt.clientAuthFlow)
 
 			Convey("Error should not be nil if require parameter is empty: "+tt.testName, func() {
-				So(err.Error(), ShouldEqual, apierrorsdeprecated.RequiredParameterNotFoundDescription)
+				So(err.Error(), ShouldEqual, models.MissingConfigError+": "+models.MissingConfigDescription)
+				castErr := err.(*models.Error)
+				So(castErr.Code, ShouldEqual, models.MissingConfigError)
+				So(castErr.Description, ShouldEqual, models.MissingConfigDescription)
 			})
 		}
 	})

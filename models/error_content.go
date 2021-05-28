@@ -11,6 +11,8 @@ const (
 	JSONMarshalError           = "JSONMarshalError"
 	JSONUnmarshalError         = "JSONUnmarshalError"
 	WriteResponseError         = "WriteResponseError"
+	InvalidForenameError       = "InvalidForename"
+	InvalidSurnameError        = "InvalidSurname"
 	InvalidEmailError          = "InvalidEmail"
 	InvalidTokenError          = "InvalidToken"
 	InternalError              = "InternalServerError"
@@ -28,6 +30,7 @@ const (
 	TooManyRequestsError       = "TooManyRequests"
 	UserNotConfirmedError      = "UserNotConfirmed"
 	UsernameExistsError        = "UsernameExists"
+	MissingConfigError         = "MissingConfig"
 )
 
 // API error descriptions
@@ -44,9 +47,14 @@ const (
 	UnrecognisedCognitoResponseDescription = "unexpected response from cognito"
 	BodyReadFailedDescription              = "endpoint returned an error reading the request body"
 	InvalidPasswordDescription             = "the submitted password could not be validated"
+	PasswordGenerationErrorDescription     = "failed to generate a valid password"
+	InvalidForenameErrorDescription        = "the submitted user's forename could not be validated"
+	InvalidSurnameErrorDescription         = "the submitted user's surname could not be validated"
 	InvalidEmailDescription                = "the submitted email could not be validated"
+	DuplicateEmailDescription              = "account using email address found"
 	SignInFailedDescription                = "Incorrect username or password"
 	SignInAttemptsExceededDescription      = "Password attempts exceeded"
+	MissingConfigDescription               = "required configuration setting is missing"
 )
 
 // Mapping Cognito error codes to API error codes
