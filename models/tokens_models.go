@@ -16,7 +16,7 @@ type AccessToken struct {
 	TokenString string
 }
 
-func (t *AccessToken) Validate(ctx context.Context) error {
+func (t *AccessToken) Validate(ctx context.Context) *Error {
 	if t.AuthHeader == "" {
 		return NewValidationError(ctx, InvalidTokenError, MissingAuthorizationTokenDescription)
 	}

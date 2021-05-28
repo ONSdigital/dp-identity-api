@@ -234,9 +234,11 @@ definitions:
         type: string
         description: "Code representing the type of error that occurred"
         enum:
-          - "InvalidToken"
           - "JSONMarshalError"
+          - "JSONUnmarshalError"
           - "WriteResponseError"
+          - "InvalidEmail"
+          - "InvalidToken"
           - "InternalServerError"
           - "NotFound"
           - "AlreadyExists"
@@ -252,6 +254,7 @@ definitions:
           - "TooManyRequests"
           - "UserNotConfirmed"
           - "UsernameExists"
+          - "RequestBodyReadError"
       description:
         type: string
         description: "Description of the error"

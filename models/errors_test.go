@@ -6,7 +6,6 @@ import (
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	. "github.com/smartystreets/goconvey/convey"
-	"reflect"
 	"testing"
 )
 
@@ -49,7 +48,6 @@ func TestNewError(t *testing.T) {
 		err := models.NewError(ctx, cause, errorCode, errorDescription)
 
 		So(err, ShouldNotBeNil)
-		So(reflect.TypeOf(err), ShouldEqual, reflect.TypeOf(&models.Error{}))
 		So(err.Error(), ShouldEqual, cause.Error())
 		So(err.Code, ShouldEqual, errorCode)
 		So(err.Description, ShouldEqual, errorDescription)
@@ -66,7 +64,6 @@ func TestNewValidationError(t *testing.T) {
 		err := models.NewValidationError(ctx, errorCode, errorDescription)
 
 		So(err, ShouldNotBeNil)
-		So(reflect.TypeOf(err), ShouldEqual, reflect.TypeOf(&models.Error{}))
 		So(err.Error(), ShouldEqual, errorCode)
 		So(err.Code, ShouldEqual, errorCode)
 		So(err.Description, ShouldEqual, errorDescription)
@@ -88,7 +85,6 @@ func TestNewCognitoError(t *testing.T) {
 		expectedErrorCode := models.CognitoErrorMapping[awsErrCode]
 
 		So(err, ShouldNotBeNil)
-		So(reflect.TypeOf(err), ShouldEqual, reflect.TypeOf(models.Error{}))
 		So(err.Error(), ShouldEqual, awsErr.Error())
 		So(err.Code, ShouldEqual, expectedErrorCode)
 		So(err.Description, ShouldEqual, awsErrMessage)
@@ -101,7 +97,6 @@ func TestNewCognitoError(t *testing.T) {
 		err := models.NewCognitoError(ctx, originalErr, errorContext)
 
 		So(err, ShouldNotBeNil)
-		So(reflect.TypeOf(err), ShouldEqual, reflect.TypeOf(models.Error{}))
 		So(err.Error(), ShouldEqual, originalErr.Error())
 		So(err.Code, ShouldEqual, models.InternalError)
 		So(err.Description, ShouldEqual, models.CastingAWSErrorFailedDescription)
