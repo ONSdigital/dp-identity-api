@@ -33,6 +33,9 @@ const (
 // API error descriptions
 const (
 	MissingAuthorizationTokenDescription   = "no Authorization token was provided"
+	MissingRefreshTokenDescription         = "no Refresh token was provided"
+	MissingIDTokenDescription              = "no ID token was provided"
+	MalformedIDTokenDescription            = "the ID token could not be parsed"
 	MalformedAuthorizationTokenDescription = "the authorization token does not meet the required format"
 	ErrorMarshalFailedDescription          = "failed to marshal the error"
 	ErrorUnmarshalFailedDescription        = "failed to unmarshal the request body"

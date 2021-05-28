@@ -349,7 +349,7 @@ Scenario: PUT /tokens/self with no ID token
     {
         "errors": [
             {
-                "code": "invalid ID token",
+                "code": "InvalidToken",
                 "description": "no ID token was provided"
             }
         ]
@@ -368,8 +368,8 @@ Scenario: PUT /tokens/self with no refresh token
     {
         "errors": [
             {
-                "code": "invalid refresh token",
-                "description": "no refresh token was provided"
+                "code": "InvalidToken",
+                "description": "no Refresh token was provided"
             }
         ]
     }
@@ -387,11 +387,11 @@ Scenario: PUT /tokens/self with no tokens
     {
         "errors": [
             {
-                "code": "invalid refresh token",
-                "description": "no refresh token was provided"
+                "code": "InvalidToken",
+                "description": "no Refresh token was provided"
             },
             {
-                "code": "invalid ID token",
+                "code": "InvalidToken",
                 "description": "no ID token was provided"
             }
         ]
@@ -410,7 +410,7 @@ Scenario: PUT /tokens/self with badly formatted ID token
     {
         "errors": [
             {
-                "code": "invalid ID token",
+                "code": "InvalidToken",
                 "description": "the ID token could not be parsed"
             }
         ]
