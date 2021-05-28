@@ -21,12 +21,13 @@ func (e *Error) Error() string {
 }
 
 func NewError(ctx context.Context, cause error, code string, description string) *Error {
-	log.Event(ctx, description, log.Error(cause), log.ERROR)
-	return &Error{
+	err := &Error{
 		Cause:       cause,
 		Code:        code,
 		Description: description,
 	}
+	log.Event(ctx, description, log.Error(err), log.ERROR)
+	return err
 }
 
 func NewValidationError(ctx context.Context, code string, description string) *Error {

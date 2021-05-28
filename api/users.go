@@ -3,10 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/models"
-	"github.com/ONSdigital/log.go/log"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/google/uuid"
 	"io/ioutil"
 	"net/http"
@@ -41,7 +38,6 @@ func (api *API) CreateUserHandler(w http.ResponseWriter, req *http.Request, ctx 
 	}
 	duplicateEmailErr := user.CheckForDuplicateEmail(ctx, listUserResp)
 	if duplicateEmailErr != nil {
-		log.Event(ctx, apierrorsdeprecated.ListUsersErrorDescription, log.ERROR)
 		validationErrs = append(validationErrs, duplicateEmailErr)
 	}
 
@@ -67,53 +63,4 @@ func (api *API) CreateUserHandler(w http.ResponseWriter, req *http.Request, ctx 
 	}
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusCreated), nil
-}
-
-//CreateNewUserModel creates and returns *AdminCreateUserInput
-func CreateNewUserModel(forename string, surname, userId string, email string, tempPass string, userPoolId string) (*cognitoidentityprovider.AdminCreateUserInput, error) {
-	var (
-		deliveryMethod, forenameAttrName, surnameAttrName, emailAttrName string = "EMAIL", "name", "family_name", "email"
-	)
-
-	user := &models.CreateUserInput{
-		UserInput: &cognitoidentityprovider.AdminCreateUserInput{
-			UserAttributes: []*cognitoidentityprovider.AttributeType{
-				{
-					Name:  &forenameAttrName,
-					Value: &forename,
-				},
-				{
-					Name:  &surnameAttrName,
-					Value: &surname,
-				},
-				{
-					Name:  &emailAttrName,
-					Value: &email,
-				},
-			},
-			DesiredDeliveryMediums: []*string{
-				&deliveryMethod,
-			},
-			TemporaryPassword: &tempPass,
-			UserPoolId:        &userPoolId,
-			Username:          &userId,
-		},
-	}
-	return user.UserInput, nil
-}
-
-//ListUsersModel creates and returns *ListUsersInput
-func ListUsersModel(filterString string, requiredAttribute string, limit int64, userPoolId *string) (*cognitoidentityprovider.ListUsersInput, error) {
-	user := &models.ListUsersInput{
-		ListUsersInput: &cognitoidentityprovider.ListUsersInput{
-			AttributesToGet: []*string{
-				&requiredAttribute,
-			},
-			Filter:     &filterString,
-			Limit:      &limit,
-			UserPoolId: userPoolId,
-		},
-	}
-
-	return user.ListUsersInput, nil
 }

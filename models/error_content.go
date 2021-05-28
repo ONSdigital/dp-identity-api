@@ -30,6 +30,7 @@ const (
 	TooManyRequestsError       = "TooManyRequests"
 	UserNotConfirmedError      = "UserNotConfirmed"
 	UsernameExistsError        = "UsernameExists"
+	MissingConfigError         = "MissingConfig"
 )
 
 // API error descriptions
@@ -53,6 +54,7 @@ const (
 	DuplicateEmailDescription              = "account using email address found"
 	SignInFailedDescription                = "Incorrect username or password"
 	SignInAttemptsExceededDescription      = "Password attempts exceeded"
+	MissingConfigDescription               = "required configuration setting is missing"
 )
 
 // Mapping Cognito error codes to API error codes
