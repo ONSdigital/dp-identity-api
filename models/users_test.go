@@ -5,10 +5,83 @@ import (
 	"encoding/json"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/google/uuid"
 	. "github.com/smartystreets/goconvey/convey"
 	"reflect"
 	"testing"
 )
+
+func TestUserParams_BuildListUserRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito ListUsers request body", t, func() {
+
+		user := models.UserParams{
+			Email:    "email.email@ons.gov.uk",
+			Forename: "Stan",
+			Surname:  "Smith",
+		}
+
+		filterString := "email = \"" + user.Email + "\""
+		requiredAttribute := "email"
+		limit := int64(1)
+		userPoolId := "euwest-99-aabbcc"
+
+		response := user.BuildListUserRequest(filterString, requiredAttribute, limit, &userPoolId)
+
+		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInput{}))
+		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserAttributes[0].Value, ShouldEqual, user.Forename)
+		So(*response.UserAttributes[1].Value, ShouldEqual, user.Surname)
+		So(*response.UserAttributes[2].Value, ShouldEqual, user.Email)
+	})
+}
+
+func TestUserParams_BuildCreateUserRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito AdminUserCreateInput request body", t, func() {
+
+		user := models.UserParams{
+			Email:    "email.email@ons.gov.uk",
+			Forename: "Stan",
+			Surname:  "Smith",
+		}
+
+		userId := uuid.NewString()
+		userPoolId := "euwest-99-aabbcc"
+
+		response := user.BuildCreateUserRequest(userId, userPoolId)
+
+		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminCreateUserInput{}))
+		So(*response.Username, ShouldEqual, userId)
+		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserAttributes[0].Value, ShouldEqual, user.Forename)
+		So(*response.UserAttributes[1].Value, ShouldEqual, user.Surname)
+		So(*response.UserAttributes[2].Value, ShouldEqual, user.Email)
+	})
+}
+
+func TestUserParams_BuildSuccessfulJsonResponse(t *testing.T) {
+	Convey("returns a byte array of the response JSON", t, func() {
+		ctx := context.Background()
+		name, status := "abcd-efgh-ijkl-mnop", "UNCONFIRMED"
+		user := models.UserParams{}
+		result := cognitoidentityprovider.AdminCreateUserOutput{
+			User: &cognitoidentityprovider.UserType{
+				Username:   &name,
+				UserStatus: &status,
+			},
+		}
+
+		response, err := user.BuildSuccessfulJsonResponse(ctx, &result)
+
+		So(err, ShouldBeNil)
+		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
+		var body map[string]interface{}
+		err = json.Unmarshal(response, &body)
+		So(err, ShouldBeNil)
+		userJson := body["User"].(map[string]interface{})
+		So(userJson["Username"], ShouldEqual, name)
+		So(userJson["UserStatus"], ShouldEqual, status)
+	})
+}
 
 func TestUserSignIn_ValidateCredentials(t *testing.T) {
 	ctx := context.Background()
