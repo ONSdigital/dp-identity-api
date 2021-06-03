@@ -2,13 +2,35 @@ package models
 
 import (
 	"context"
-	"errors"
-	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
+	"encoding/json"
 	"github.com/ONSdigital/dp-identity-api/utilities"
-	"github.com/ONSdigital/log.go/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/dgrijalva/jwt-go"
+	"strings"
+	"time"
 )
+
+type AccessToken struct {
+	AuthHeader  string
+	TokenString string
+}
+
+func (t *AccessToken) Validate(ctx context.Context) *Error {
+	if t.AuthHeader == "" {
+		return NewValidationError(ctx, InvalidTokenError, MissingAuthorizationTokenDescription)
+	}
+	authComponents := strings.Split(t.AuthHeader, " ")
+	if len(authComponents) != 2 {
+		return NewValidationError(ctx, InvalidTokenError, MalformedAuthorizationTokenDescription)
+	}
+	t.TokenString = authComponents[1]
+	return nil
+}
+
+func (t *AccessToken) GenerateSignOutRequest() *cognitoidentityprovider.GlobalSignOutInput {
+	return &cognitoidentityprovider.GlobalSignOutInput{
+		AccessToken: &t.TokenString}
+}
 
 type IdClaims struct {
 	Sub           string `json:"sub"`
@@ -31,17 +53,17 @@ type IdToken struct {
 }
 
 //ParseWithoutValidating parses the claims in an ID token JWT in to a IdClaims struct without validating the token
-func (t *IdToken) ParseWithoutValidating(tokenString string) error {
+func (t *IdToken) ParseWithoutValidating(ctx context.Context, tokenString string) *Error {
 	parser := new(jwt.Parser)
 
 	idToken, _, parsingErr := parser.ParseUnverified(tokenString, &IdClaims{})
 	if parsingErr != nil {
-		return parsingErr
+		return NewError(ctx, parsingErr, InvalidTokenError, MalformedIDTokenDescription)
 	}
 
 	idClaims, ok := idToken.Claims.(*IdClaims)
 	if !ok {
-		return errors.New("the ID token could not be parsed")
+		return NewValidationError(ctx, InvalidTokenError, MalformedIDTokenDescription)
 	}
 
 	t.Claims = *idClaims
@@ -49,21 +71,15 @@ func (t *IdToken) ParseWithoutValidating(tokenString string) error {
 }
 
 //Validate validates the existence of a JWT string and that it is correctly formatting, storing the tokens claims in an IdClaims struct
-func (t *IdToken) Validate(ctx context.Context, errorList []apierrorsdeprecated.Error) []apierrorsdeprecated.Error {
+func (t *IdToken) Validate(ctx context.Context) *Error {
 	if t.TokenString == "" {
-		log.Event(ctx, apierrorsdeprecated.MissingRefreshTokenMessage, log.ERROR)
-		invalidIDTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.InvalidIDTokenError,
-			apierrorsdeprecated.MissingIDTokenMessage)
-		return append(errorList, invalidIDTokenErrorBody)
+		return NewValidationError(ctx, InvalidTokenError, MissingIDTokenDescription)
 	}
-	parsingErr := t.ParseWithoutValidating(t.TokenString)
+	parsingErr := t.ParseWithoutValidating(ctx, t.TokenString)
 	if parsingErr != nil {
-		log.Event(ctx, parsingErr.Error(), log.ERROR)
-		invalidIDTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.InvalidIDTokenError,
-			apierrorsdeprecated.MalformedIDTokenMessage)
-		errorList = append(errorList, invalidIDTokenErrorBody)
+		return parsingErr
 	}
-	return errorList
+	return nil
 }
 
 type RefreshToken struct {
@@ -90,12 +106,28 @@ func (t *RefreshToken) GenerateRefreshRequest(clientSecret string, username stri
 }
 
 //Validate validates the existence of a JWT string
-func (t *RefreshToken) Validate(ctx context.Context, errorList []apierrorsdeprecated.Error) []apierrorsdeprecated.Error {
+func (t *RefreshToken) Validate(ctx context.Context) *Error {
 	if t.TokenString != "" {
-		return errorList
+		return nil
 	}
-	log.Event(ctx, apierrorsdeprecated.MissingRefreshTokenMessage, log.ERROR)
-	invalidRefreshTokenErrorBody := apierrorsdeprecated.IndividualErrorBuilder(apierrorsdeprecated.InvalidRefreshTokenError,
-		apierrorsdeprecated.MissingRefreshTokenMessage)
-	return append(errorList, invalidRefreshTokenErrorBody)
+	return NewValidationError(ctx, InvalidTokenError, MissingRefreshTokenDescription)
+}
+
+func (t *RefreshToken) BuildSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.InitiateAuthOutput) ([]byte, error) {
+	if result.AuthenticationResult != nil {
+		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
+		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
+
+		postBody := map[string]interface{}{"expirationTime": expirationTime}
+
+		jsonResponse, err := json.Marshal(postBody)
+		if err != nil {
+			responseErr := NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
+			return nil, responseErr
+		}
+		return jsonResponse, nil
+	} else {
+		responseErr := NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
+		return nil, responseErr
+	}
 }

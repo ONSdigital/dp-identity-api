@@ -1,246 +1,327 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"github.com/ONSdigital/dp-identity-api/cognito/mock"
+	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/gorilla/mux"
+	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
-
-	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
+const signInEndPoint = "http://localhost:25600/tokens"
 const signOutEndPoint = "http://localhost:25600/tokens/self"
 const tokenRefreshEndPoint = "http://localhost:25600/tokens/self"
 
-func TestPasswordHasBeenProvided(t *testing.T) {
+func TestAPI_TokensHandler(t *testing.T) {
+	var (
+		r                                               = mux.NewRouter()
+		ctx                                             = context.Background()
+		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "USER_PASSWORD_AUTH"
+		accessToken, idToken, refreshToken       string = "aaaa.bbbb.cccc", "llll.mmmm.nnnn", "zzzz.yyyy.xxxx.wwww.vvvv"
+		expireLength                             int64  = 500
+	)
 
-	Convey("A password has been provided", t, func() {
+	m := &mock.MockCognitoIdentityProviderClient{}
 
-		body := AuthParams{
-			Password: "password",
-		}
-
-		passwordResponse := passwordValidation(body)
-		So(passwordResponse, ShouldBeTrue)
-	})
-
-	Convey("There isn't a password field in the body and the password isn't validated", t, func() {
-
-		body := AuthParams{}
-
-		passwordResponse := passwordValidation(body)
-		So(passwordResponse, ShouldBeFalse)
-	})
-
-	Convey("There isn't a password value in the body and the password isn't validated", t, func() {
-
-		body := AuthParams{
-			Password: "",
-		}
-
-		passwordResponse := passwordValidation(body)
-		So(passwordResponse, ShouldBeFalse)
-	})
-}
-
-func TestEmailConformsToExpectedFormat(t *testing.T) {
-
-	Convey("The email conforms to the expected format and is validated", t, func() {
-
-		body := AuthParams{
-			Email: "email.email@ons.gov.uk",
-		}
-
-		emailResponse := emailValidation(body)
-		So(emailResponse, ShouldBeTrue)
-	})
-
-	Convey("There isn't an email field in the body and the email isn't validated", t, func() {
-
-		body := AuthParams{
-			Password: "password",
-		}
-
-		emailResponse := emailValidation(body)
-		So(emailResponse, ShouldBeFalse)
-	})
-
-	Convey("There isn't a email value in the body and the email isn't validated", t, func() {
-
-		body := AuthParams{
-			Email: "",
-		}
-
-		emailResponse := emailValidation(body)
-		So(emailResponse, ShouldBeFalse)
-	})
-
-	Convey("The email doesn't conform to the expected format and it isn't validated", t, func() {
-
-		body := AuthParams{
-			Email: "email",
-		}
-
-		emailResponse := emailValidation(body)
-		So(emailResponse, ShouldBeFalse)
-	})
-}
-
-func TestWriteErrorResponse(t *testing.T) {
-	Convey("A status code and an error body with two errors is written to a http response", t, func() {
-
-		errorResponseBodyExample := `{"errors":[{"code":"Invalid email","description":"Unable to validate the email in the request"},{"code":"Invalid email","description":"Unable to validate the email in the request"}]}`
-
-		var errorList []apierrorsdeprecated.Error
-
-		errorList = nil
-
-		errInvalidEmail := errors.New("Invalid email")
-		invalidErrorDescription := "Unable to validate the email in the request"
-		invalidEmailErrorBody := apierrorsdeprecated.IndividualErrorBuilder(errInvalidEmail, invalidErrorDescription)
-		errorList = append(errorList, invalidEmailErrorBody)
-		errorList = append(errorList, invalidEmailErrorBody)
-
-		ctx := context.Background()
-		resp := httptest.NewRecorder()
-		statusCode := 400
-		errorResponseBody := apierrorsdeprecated.ErrorResponseBodyBuilder(errorList)
-
-		apierrorsdeprecated.WriteErrorResponse(ctx, resp, statusCode, errorResponseBody)
-
-		So(resp.Code, ShouldEqual, http.StatusBadRequest)
-		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
-	})
-}
-
-func TestHandleUnexpectedError(t *testing.T) {
-	Convey("An error and an error description is logged and written to a http response", t, func() {
-
-		errorResponseBodyExample := `{"errors":[{"code":"unexpected error","description":"something unexpected has happened"}]}`
-
-		ctx := context.Background()
-		unexpectedError := errors.New("unexpected error")
-		unexpectedErrorDescription := "something unexpected has happened"
-
-		resp := httptest.NewRecorder()
-
-		apierrorsdeprecated.HandleUnexpectedError(ctx, resp, unexpectedError, unexpectedErrorDescription)
-
-		So(resp.Code, ShouldEqual, http.StatusInternalServerError)
-		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
-	})
-}
-
-func TestCognitoRequestBuild(t *testing.T) {
-	Convey("build Cognito Request, an authParams and Config is processed and Cognito Request is built", t, func() {
-
-		authParams := AuthParams{
-			Email:    "email.email@ons.gov.uk",
-			Password: "password",
-		}
-
-		clientId := "awsclientid"
-		clientSecret := "awsSectret"
-		clientAuthFlow := "authflow"
-
-		response := buildCognitoRequest(authParams, clientId, clientSecret, clientAuthFlow)
-
-		So(*response.AuthParameters["USERNAME"], ShouldEqual, authParams.Email)
-		So(*response.AuthParameters["PASSWORD"], ShouldEqual, authParams.Password)
-		So(*response.AuthParameters["SECRET_HASH"], ShouldNotBeEmpty)
-		So(*response.AuthFlow, ShouldResemble, "authflow")
-		So(*response.ClientId, ShouldResemble, "awsclientid")
-	})
-}
-
-func TestCognitoResponseHeaderBuild(t *testing.T) {
-	Convey("build 201 response using an InitiateAuthOutput from Cognito", t, func() {
-		w := httptest.NewRecorder()
-		ctx := context.Background()
-		accessToken := "accessToken"
-		var expiration int64 = 123
-		idToken := "idToken"
-		Refresh := "refreshToken"
-
-		initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{
+	// mock call to: AdminUserGlobalSignOut(input *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
+	m.AdminUserGlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+		return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
+	}
+	// mock call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
+	m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+		return &cognitoidentityprovider.InitiateAuthOutput{
 			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
 				AccessToken:  &accessToken,
-				ExpiresIn:    &expiration,
+				ExpiresIn:    &expireLength,
 				IdToken:      &idToken,
-				RefreshToken: &Refresh,
+				RefreshToken: &refreshToken,
 			},
+		}, nil
+	}
+
+	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow)
+	w := httptest.NewRecorder()
+
+	Convey("Sign in success: no ErrorResponse, SuccessResponse Status 201", t, func() {
+		body := map[string]interface{}{
+			"email":    "email@ons.gov.uk",
+			"password": "password",
 		}
+		jsonBody, err := json.Marshal(&body)
+		So(err, ShouldBeNil)
+		request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
 
-		buildSuccessfulResponse(initiateAuthOutput, w, ctx)
+		successResponse, errorResponse := api.TokensHandler(w, request, ctx)
 
-		So(w.Result().StatusCode, ShouldEqual, 201)
-		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
-		So(w.Result().Header["Authorization"], ShouldResemble, []string{"Bearer " + accessToken})
-		So(w.Result().Header["Id"], ShouldResemble, []string{idToken})
-		So(w.Result().Header["Refresh"], ShouldResemble, []string{Refresh})
-
-		var obj map[string]interface{}
-		_ = json.Unmarshal([]byte(w.Body.String()), &obj)
-
-		//there should be one entry in body
-		So(len(obj), ShouldEqual, 1)
-
-		type kv struct {
-			Key   string
-			Value interface{}
-		}
-
-		var ss []kv
-		for k, v := range obj {
-			ss = append(ss, kv{k, v})
-		}
-		str := fmt.Sprintf("%v", ss[0].Value)
-
-		So(ss[0].Key, ShouldResemble, "expirationTime")
-		So(str[:19], ShouldResemble, time.Now().UTC().Add(time.Second * 123).String()[:19])
-
+		So(errorResponse, ShouldBeNil)
+		So(successResponse.Status, ShouldEqual, http.StatusCreated)
+		var responseBody map[string]interface{}
+		err = json.Unmarshal(successResponse.Body, &responseBody)
+		So(err, ShouldBeNil)
+		So(responseBody["expirationTime"], ShouldNotBeNil)
 	})
 
-	Convey("build 500 response if the InitiateAuthOutput has an unexpected format", t, func() {
-		w := httptest.NewRecorder()
-		ctx := context.Background()
+	Convey("Sign In validation error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
+		body := map[string]interface{}{
+			"email":    "email@ons.gov.uk",
+			"password": "",
+		}
+		jsonBody, err := json.Marshal(&body)
+		So(err, ShouldBeNil)
+		request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
 
-		initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{}
-		buildSuccessfulResponse(initiateAuthOutput, w, ctx)
+		successResponse, errorResponse := api.TokensHandler(w, request, ctx)
 
-		So(w.Result().StatusCode, ShouldEqual, 500)
+		So(successResponse, ShouldBeNil)
+		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+		So(len(errorResponse.Errors), ShouldEqual, 1)
+		So(errorResponse.Errors[0].Error(), ShouldEqual, models.InvalidPasswordError)
+	})
+
+	Convey("Sign In Cognito internal error: adds an error to the ErrorResponse and sets its Status to 500", t, func() {
+		awsErrCode := "InternalErrorException"
+		awsErrMessage := "Something strange happened"
+		awsOrigErr := errors.New(awsErrCode)
+		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
+		m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+			return nil, awsErr
+		}
+
+		body := map[string]interface{}{
+			"email":    "email@ons.gov.uk",
+			"password": "password",
+		}
+		jsonBody, err := json.Marshal(&body)
+		So(err, ShouldBeNil)
+		request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
+
+		successResponse, errorResponse := api.TokensHandler(w, request, ctx)
+
+		So(successResponse, ShouldBeNil)
+		So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+		So(len(errorResponse.Errors), ShouldEqual, 1)
+		So(errorResponse.Errors[0].Error(), ShouldEqual, awsErr.Error())
+	})
+
+	Convey("Sign In Cognito request error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
+		awsErrCode := "NotAuthorizedException"
+		awsErrMessage := "User is not authorized"
+		awsOrigErr := errors.New(awsErrCode)
+		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
+		m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+			return nil, awsErr
+		}
+
+		body := map[string]interface{}{
+			"email":    "email@ons.gov.uk",
+			"password": "password",
+		}
+		jsonBody, err := json.Marshal(&body)
+		So(err, ShouldBeNil)
+		request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
+
+		successResponse, errorResponse := api.TokensHandler(w, request, ctx)
+
+		So(successResponse, ShouldBeNil)
+		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+		So(len(errorResponse.Errors), ShouldEqual, 1)
+		So(errorResponse.Errors[0].Error(), ShouldEqual, awsErr.Error())
 	})
 }
 
-func TestBuildJson(t *testing.T) {
+func TestAPI_SignOutHandler(t *testing.T) {
+	var (
+		r                                               = mux.NewRouter()
+		ctx                                             = context.Background()
+		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "USER_PASSWORD_AUTH"
+	)
+
+	m := &mock.MockCognitoIdentityProviderClient{}
+
+	// mock call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
+	m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+		return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
+	}
+
+	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow)
 	w := httptest.NewRecorder()
 
-	Convey("build json", t, func() {
-		w := httptest.NewRecorder()
-		ctx := context.Background()
+	Convey("Global Sign Out success: no errors added to ErrorResponse Errors list", t, func() {
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		request.Header.Set(AccessTokenHeaderName, "Bearer zzzz-yyyy-xxxx")
 
-		testBody := map[string]interface{}{"expirationTime": "123"}
-		buildjson(testBody, w, ctx)
-		So(w.Body.String(), ShouldResemble, "{\"expirationTime\":\"123\"}")
+		successResponse, errorResponse := api.SignOutHandler(w, request, ctx)
 
+		So(errorResponse, ShouldBeNil)
+		So(successResponse.Status, ShouldEqual, http.StatusNoContent)
+		So(successResponse.Body, ShouldBeNil)
 	})
 
-	Convey("build json err", t, func() {
+	Convey("Global Sign Out validation error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		request.Header.Set(AccessTokenHeaderName, "")
 
-		ctx := context.Background()
+		successResponse, errorResponse := api.SignOutHandler(w, request, ctx)
 
-		testBody := map[string]interface{}{
-			"foo": make(chan int),
+		So(successResponse, ShouldBeNil)
+		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+		So(len(errorResponse.Errors), ShouldEqual, 1)
+		So(errorResponse.Errors[0].Error(), ShouldEqual, models.InvalidTokenError)
+	})
+
+	Convey("Global Sign Out Cognito internal error: adds an error to the ErrorResponse and sets its Status to 500", t, func() {
+		awsErrCode := "InternalErrorException"
+		awsErrMessage := "Something strange happened"
+		awsOrigErr := errors.New(awsErrCode)
+		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
+		m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+			return nil, awsErr
 		}
-		buildjson(testBody, w, ctx)
-		So(w.Body.String(), ShouldResemble, "{\"errors\":[{\"code\":\"json: unsupported type: chan int\",\"description\":\"failed to marshal the error\"}]}")
-		So(w.Result().StatusCode, ShouldEqual, 500)
-		So(w.Result().Header["Content-Type"], ShouldResemble, []string{"application/json"})
+
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		request.Header.Set(AccessTokenHeaderName, "Bearer zzzz-yyyy-xxxx")
+
+		successResponse, errorResponse := api.SignOutHandler(w, request, ctx)
+
+		So(successResponse, ShouldBeNil)
+		So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+		So(len(errorResponse.Errors), ShouldEqual, 1)
+		So(errorResponse.Errors[0].Error(), ShouldEqual, awsErr.Error())
+	})
+
+	Convey("Global Sign Out Cognito request error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
+		awsErrCode := "NotAuthorizedException"
+		awsErrMessage := "User is not authorized"
+		awsOrigErr := errors.New(awsErrCode)
+		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
+		m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+			return nil, awsErr
+		}
+
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		request.Header.Set(AccessTokenHeaderName, "Bearer zzzz-yyyy-xxxx")
+
+		successResponse, errorResponse := api.SignOutHandler(w, request, ctx)
+
+		So(successResponse, ShouldBeNil)
+		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+		So(len(errorResponse.Errors), ShouldEqual, 1)
+		So(errorResponse.Errors[0].Error(), ShouldEqual, awsErr.Error())
+	})
+}
+
+func TestAPI_RefreshHandler(t *testing.T) {
+	var (
+		r                                               = mux.NewRouter()
+		ctx                                             = context.Background()
+		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "USER_PASSWORD_AUTH"
+		accessToken, returnIdToken               string = "aaaa.bbbb.cccc", "llll.mmmm.nnnn"
+		expireLength                             int64  = 500
+	)
+
+	m := &mock.MockCognitoIdentityProviderClient{}
+
+	// mock call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
+	m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+		return &cognitoidentityprovider.InitiateAuthOutput{
+			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
+				AccessToken: &accessToken,
+				ExpiresIn:   &expireLength,
+				IdToken:     &returnIdToken,
+			},
+		}, nil
+	}
+
+	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow)
+	w := httptest.NewRecorder()
+
+	Convey("Token refresh success: no errors added to ErrorResponse Errors list", t, func() {
+		request := httptest.NewRequest(http.MethodPut, tokenRefreshEndPoint, nil)
+		idToken := mock.GenerateMockIDToken("test@ons.gov.uk")
+		So(idToken, ShouldNotEqual, "")
+		request.Header.Set(IdTokenHeaderName, idToken)
+		request.Header.Set(RefreshTokenHeaderName, "aaaa.bbbb.cccc.dddd.eeee")
+
+		successResponse, errorResponse := api.RefreshHandler(w, request, ctx)
+
+		So(errorResponse, ShouldBeNil)
+		So(successResponse.Status, ShouldEqual, http.StatusCreated)
+		var responseBody map[string]interface{}
+		err := json.Unmarshal(successResponse.Body, &responseBody)
+		So(err, ShouldBeNil)
+		So(responseBody["expirationTime"], ShouldNotBeNil)
+	})
+
+	Convey("Token refresh validation error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
+		request := httptest.NewRequest(http.MethodPut, tokenRefreshEndPoint, nil)
+		request.Header.Set(IdTokenHeaderName, "")
+		request.Header.Set(RefreshTokenHeaderName, "aaaa.bbbb.cccc.dddd.eeee")
+
+		successResponse, errorResponse := api.RefreshHandler(w, request, ctx)
+
+		So(successResponse, ShouldBeNil)
+		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+		So(len(errorResponse.Errors), ShouldEqual, 1)
+		So(errorResponse.Errors[0].Error(), ShouldEqual, models.InvalidTokenError)
+	})
+
+	Convey("Token refresh Cognito internal error: adds an error to the ErrorResponse and sets its Status to 500", t, func() {
+		awsErrCode := "InternalErrorException"
+		awsErrMessage := "Something strange happened"
+		awsOrigErr := errors.New(awsErrCode)
+		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
+		m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+			return nil, awsErr
+		}
+
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		idToken := mock.GenerateMockIDToken("test@ons.gov.uk")
+		So(idToken, ShouldNotEqual, "")
+		request.Header.Set(IdTokenHeaderName, idToken)
+		request.Header.Set(RefreshTokenHeaderName, "aaaa.bbbb.cccc.dddd.eeee")
+
+		successResponse, errorResponse := api.RefreshHandler(w, request, ctx)
+
+		So(successResponse, ShouldBeNil)
+		So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+		So(len(errorResponse.Errors), ShouldEqual, 1)
+		So(errorResponse.Errors[0].Error(), ShouldEqual, awsErr.Error())
+	})
+
+	Convey("Token refresh Cognito request error: adds an error to the ErrorResponse and sets its Status to 403", t, func() {
+		awsErrCode := "NotAuthorizedException"
+		awsErrMessage := "User is not authorized"
+		awsOrigErr := errors.New(awsErrCode)
+		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
+		m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+			return nil, awsErr
+		}
+
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		idToken := mock.GenerateMockIDToken("test@ons.gov.uk")
+		So(idToken, ShouldNotEqual, "")
+		request.Header.Set(IdTokenHeaderName, idToken)
+		request.Header.Set(RefreshTokenHeaderName, "aaaa.bbbb.cccc.dddd.eeee")
+
+		successResponse, errorResponse := api.RefreshHandler(w, request, ctx)
+
+		So(successResponse, ShouldBeNil)
+		So(errorResponse.Status, ShouldEqual, http.StatusForbidden)
+		So(len(errorResponse.Errors), ShouldEqual, 1)
+		So(errorResponse.Errors[0].Error(), ShouldEqual, awsErr.Error())
 	})
 }

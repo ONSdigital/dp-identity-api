@@ -9,28 +9,11 @@ info:
 basePath: "/v1"
 schemes:
   - http
-tags:
-  - name: "hello"
 paths:
-  /hello:
-    get:
-      tags:
-        - hello
-      summary: Example hello world endpoint
-      description: Returns an example payload.
-      produces:
-        - application/json
-      responses:
-        200:
-          description: OK
-          schema:
-            $ref: "#/definitions/HelloResponse"
-        500:
-          $ref: '#/responses/InternalError'
   /tokens:
     post:
       tags:
-        - tokens
+        - Tokens
       summary: "Creates tokens for authorisation, ID and refresh for authenticated users"
       consumes:
         - application/json
@@ -66,24 +49,24 @@ paths:
         400:
           description: "Invalid request. Empty or invalid email or empty password."
           schema:
-            $ref: '#/definitions/TokensErrorList'
+            $ref: '#/definitions/ErrorResponse'
         401:
           description: "Email or password are not authenticated"
           schema:
-            $ref: '#/definitions/TokensErrorList'
+            $ref: '#/definitions/ErrorResponse'
         403:
           description: "Forbidden. Too many login attempts"
           schema:
-            $ref: '#/definitions/TokensErrorList'
+            $ref: '#/definitions/ErrorResponse'
 
         500:
           description: "Unexpected internal error"
           schema:
-            $ref: '#/definitions/TokensErrorList'
+            $ref: '#/definitions/ErrorResponse'
   /tokens/self:
     put:
       tags:
-        - tokens
+        - Tokens
       summary: "Refreshs a users access token using the refresh and ID tokens"
       consumes:
         - application/json
@@ -114,18 +97,18 @@ paths:
         400:
           description: "Invalid request. Missing or malformed ID token or missing Refresh token provided"
           schema:
-            $ref: '#/definitions/TokensErrorList'
+            $ref: '#/definitions/ErrorResponse'
         403:
           description: "Forbidden. Expired or invalid refresh token"
           schema:
-            $ref: '#/definitions/TokensErrorList'
+            $ref: '#/definitions/ErrorResponse'
         500:
           description: "Unexpected internal error"
           schema:
-            $ref: '#/definitions/TokensErrorList'
+            $ref: '#/definitions/ErrorResponse'
     delete:
       tags:
-        - tokens
+        - Tokens
       summary: "Signs out a user, invalidating their access tokens"
       consumes:
         - application/json
@@ -140,15 +123,15 @@ paths:
         400:
           description: "Invalid request. Missing, malformed or invalid access token provided"
           schema:
-            $ref: '#/definitions/TokensErrorResponse'
+            $ref: '#/definitions/ErrorResponse'
         500:
           description: "Unexpected internal error"
           schema:
-            $ref: '#/definitions/TokensErrorResponse'
+            $ref: '#/definitions/ErrorResponse'
   /users:
     post:
       tags:
-        - users
+        - Users
       summary: "Creates a new user"
       description: "Creates a new user in cognito"
       consumes:
@@ -180,25 +163,17 @@ paths:
         400:
           description: "Unable to validate the forename, username or email in the request"
           schema:
-            $ref: '#/definitions/TokensErrorList'
+            $ref: '#/definitions/ErrorResponse'
         500:
           description: "Invalid request body or unexpected Cognito response"
           schema:
-            $ref: '#/definitions/TokensErrorList'
+            $ref: '#/definitions/ErrorResponse'
 
 responses:
   InternalError:
     description: "Failed to process the request due to an internal error"
 
 definitions:
-  HelloResponse:
-    type: object
-    properties:
-      message:
-        type: string
-        description: "Message returned by hello world endpoint"
-        example: "Hello, world!"
-
   ExpirationTime:
     type: object
     properties:
@@ -206,39 +181,6 @@ definitions:
         type: string
         description: "Expiration Time, UTC ISO 8601"
         example: "YYYY-MM-DD hh-mm-ssZ"
-
-  TokensErrorList:
-    description: "A list of errors"
-    type: object
-    properties:
-      errors:
-        type: array
-        items:
-          $ref: '#/definitions/TokensErrorResponse'
-
-  TokensErrorResponse:
-    description: "an individual error"
-    type: object
-    properties:
-      error:
-        type: string
-        description: "returned error description"
-      message:
-        type: string
-        description: "returned message"
-      source:
-        $ref:  '#/definitions/TokensErrorSource'
-
-  TokensErrorSource:
-    description : "returned field and parameter"
-    type: object
-    properties:
-      field:
-        type: string
-        description: "returned field name on which error has occurred"
-      param:
-        type: string
-        description: "returned parameter on which an error has occurred"
 
   NewUser:
     description: "A model for the response body creating the user"
@@ -274,6 +216,50 @@ definitions:
         description: "The username of the user"
         type: string
         example: "smileons"
+
+  ErrorResponse:
+    description: "A list of any errors"
+    type: object
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/ErrorObject'
+
+  ErrorObject:
+    description: "An individual error details"
+    type: object
+    properties:
+      code:
+        type: string
+        description: "Code representing the type of error that occurred"
+        enum:
+          - "JSONMarshalError"
+          - "JSONUnmarshalError"
+          - "WriteResponseError"
+          - "InvalidForename"
+          - "InvalidSurname"
+          - "InvalidEmail"
+          - "InvalidToken"
+          - "InternalServerError"
+          - "NotFound"
+          - "AlreadyExists"
+          - "DeliveryFailure"
+          - "InvalidCode"
+          - "ExpiredCode"
+          - "InvalidField"
+          - "InvalidPassword"
+          - "LimitExceeded"
+          - "NotAuthorised"
+          - "PasswordResetRequired"
+          - "TooManyFailedAttempts"
+          - "TooManyRequests"
+          - "UserNotConfirmed"
+          - "UsernameExists"
+          - "RequestBodyReadError"
+      description:
+        type: string
+        description: "Description of the error"
 
   AttributeType:
     description: "Specifies the attribute type standard or custom."

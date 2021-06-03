@@ -55,8 +55,8 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "code": "invalid email",
-                        "description": "Unable to validate the email in the request"
+                        "code": "InvalidEmail",
+                        "description": "the submitted email could not be validated"
                     }
                 ]
             }
@@ -76,8 +76,8 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "code": "invalid forename",
-                        "description": "Unable to validate the user's forename in the request"
+                        "code": "InvalidForename",
+                        "description": "the submitted user's forename could not be validated"
                     }
                 ]
             }
@@ -97,8 +97,8 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "code": "invalid surname",
-                        "description": "Unable to validate the user's surname in the request"
+                        "code": "InvalidSurname",
+                        "description": "the submitted user's surname could not be validated"
                     }
                 ]
             }
@@ -118,16 +118,16 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "code": "invalid forename",
-                        "description": "Unable to validate the user's forename in the request"
+                        "code": "InvalidForename",
+                        "description": "the submitted user's forename could not be validated"
                     },
                     {
-                        "code": "invalid surname",
-                        "description": "Unable to validate the user's surname in the request"
+                        "code": "InvalidSurname",
+                        "description": "the submitted user's surname could not be validated"
                     },
                     {
-                        "code": "invalid email",
-                        "description": "Unable to validate the email in the request"
+                        "code": "InvalidEmail",
+                        "description": "the submitted email could not be validated"
                     }
                 ]
             }
@@ -143,8 +143,8 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "code": "unexpected end of JSON input",
-                        "description": "api endpoint POST user returned an error unmarshalling request body"
+                        "code": "JSONUnmarshalError",
+                        "description": "failed to unmarshal the request body"
                     }
                 ]
             }
@@ -164,7 +164,7 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "code": "InternalErrorException",
+                        "code": "InternalServerError",
                         "description": "Failed to create new user in user pool"
                     }
                 ]
@@ -185,8 +185,8 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "code": "duplicate email",
-                        "description": "duplicate email address found"
+                        "code": "InvalidEmail",
+                        "description": "account using email address found"
                     }
                 ]
             }

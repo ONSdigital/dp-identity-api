@@ -2,13 +2,16 @@ package api
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"github.com/ONSdigital/dp-identity-api/models"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/ONSdigital/dp-identity-api/apierrorsdeprecated"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 )
 
@@ -82,7 +85,10 @@ func TestSetup(t *testing.T) {
 			_, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, tt.userPoolId, tt.clientId, tt.clientSecret, tt.clientAuthFlow)
 
 			Convey("Error should not be nil if require parameter is empty: "+tt.testName, func() {
-				So(err.Error(), ShouldEqual, apierrorsdeprecated.RequiredParameterNotFoundDescription)
+				So(err.Error(), ShouldEqual, models.MissingConfigError+": "+models.MissingConfigDescription)
+				castErr := err.(*models.Error)
+				So(castErr.Code, ShouldEqual, models.MissingConfigError)
+				So(castErr.Description, ShouldEqual, models.MissingConfigDescription)
 			})
 		}
 	})
@@ -92,4 +98,74 @@ func hasRoute(r *mux.Router, path, method string) bool {
 	req := httptest.NewRequest(method, path, nil)
 	match := &mux.RouteMatch{}
 	return r.Match(req, match)
+}
+
+func TestWriteErrorResponse(t *testing.T) {
+	Convey("the status code and the list of errors from the ErrorResponse object are written to a http response", t, func() {
+		ctx := context.Background()
+
+		errorResponseBodyExample := `{"errors":[{"code":"TestError","description":"a error generated for testing purposes"},{"code":"TestError","description":"a error generated for testing purposes"}]}`
+		var errorResponse models.ErrorResponse
+
+		errCode := "TestError"
+		errDescription := "a error generated for testing purposes"
+		statusCode := http.StatusBadRequest
+
+		errorResponse.Errors = append(errorResponse.Errors, models.NewValidationError(ctx, errCode, errDescription))
+		errorResponse.Errors = append(errorResponse.Errors, models.NewValidationError(ctx, errCode, errDescription))
+		errorResponse.Status = statusCode
+
+		resp := httptest.NewRecorder()
+
+		writeErrorResponse(ctx, resp, &errorResponse)
+
+		So(resp.Code, ShouldEqual, http.StatusBadRequest)
+		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
+	})
+}
+
+func TestWriteSuccessResponse(t *testing.T) {
+	Convey("the status code and the body from the SuccessResponse object are written to a http response", t, func() {
+		ctx := context.Background()
+		body, err := json.Marshal(map[string]interface{}{"expirationTime": "12/12/2021T12:00:00Z"})
+		So(err, ShouldBeNil)
+		successResponseBodyExample := `{"expirationTime":"12/12/2021T12:00:00Z"}`
+		successResponse := models.SuccessResponse{
+			Body:   body,
+			Status: http.StatusCreated,
+		}
+
+		resp := httptest.NewRecorder()
+
+		writeSuccessResponse(ctx, resp, &successResponse)
+
+		So(resp.Code, ShouldEqual, http.StatusCreated)
+		So(resp.Body.String(), ShouldResemble, successResponseBodyExample)
+	})
+}
+
+func TestHandleBodyReadError(t *testing.T) {
+	Convey("returns an ErrorResponse with a BodyReadError and 500 status", t, func() {
+		ctx := context.Background()
+		err := errors.New("TestError")
+		errResponse := handleBodyReadError(ctx, err)
+
+		So(errResponse.Status, ShouldEqual, http.StatusInternalServerError)
+		castErr := errResponse.Errors[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.BodyReadError)
+		So(castErr.Description, ShouldEqual, models.BodyReadFailedDescription)
+	})
+}
+
+func TestHandleBodyUnmarshalError(t *testing.T) {
+	Convey("returns an ErrorResponse with a JSONUnmarshalError and 500 status", t, func() {
+		ctx := context.Background()
+		err := errors.New("TestError")
+		errResponse := handleBodyUnmarshalError(ctx, err)
+
+		So(errResponse.Status, ShouldEqual, http.StatusInternalServerError)
+		castErr := errResponse.Errors[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.JSONUnmarshalError)
+		So(castErr.Description, ShouldEqual, models.ErrorUnmarshalFailedDescription)
+	})
 }
