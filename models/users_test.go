@@ -297,23 +297,6 @@ func TestUserSignIn_ValidateCredentials(t *testing.T) {
 	})
 }
 
-func TestUserSignIn_BuildOldSessionTerminationRequest(t *testing.T) {
-	Convey("builds a correctly populated Cognito AdminUserGlobalSignOutInput request body", t, func() {
-
-		signIn := models.UserSignIn{
-			Email:    "email.email@ons.gov.uk",
-			Password: "password",
-		}
-
-		userPoolId := "eu-west-99-asegrh"
-
-		response := signIn.BuildOldSessionTerminationRequest(userPoolId)
-
-		So(*response.Username, ShouldEqual, signIn.Email)
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
-	})
-}
-
 func TestUserSignIn_BuildCognitoRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito InitiateAuthInput request body", t, func() {
 

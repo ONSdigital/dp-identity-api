@@ -1,6 +1,6 @@
 Feature: Tokens
 
-Scenario: POST /tokens
+Scenario: POST /tokens successful login
     Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
     When I POST "/tokens"
     """
@@ -14,7 +14,7 @@ Scenario: POST /tokens
     And the response header "ID" should be "idToken"
     And the response header "Refresh" should be "refreshToken"
 
-Scenario: POST /tokens
+Scenario: POST /tokens 401 - invalid credentials
     Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
     When I POST "/tokens"
     """
@@ -35,7 +35,7 @@ Scenario: POST /tokens
         }
         """
 
-Scenario: POST /tokens
+Scenario: POST /tokens 403 - too many failed attempts
     Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
     When I POST "/tokens"
     """
@@ -56,7 +56,7 @@ Scenario: POST /tokens
         }
         """
 
-Scenario: POST /tokens
+Scenario: POST /tokens Cognito internal error
     Given an internal server error is returned from Cognito
     When I POST "/tokens"
     """
@@ -98,7 +98,7 @@ Scenario: POST /tokens
     }
     """
 
-Scenario: POST /tokens
+Scenario: POST /tokens 400 - no password submitted
     When I POST "/tokens"
         """
         {
@@ -118,7 +118,7 @@ Scenario: POST /tokens
         }
         """
 
-Scenario: POST /tokens
+Scenario: POST /tokens 400 - email does not match regex
     When I POST "/tokens"
         """
         {
@@ -138,7 +138,7 @@ Scenario: POST /tokens
         }
         """
 
-Scenario: POST /tokens
+Scenario: POST /tokens 400 - no email submitted
     When I POST "/tokens"
         """
         {
@@ -158,7 +158,7 @@ Scenario: POST /tokens
         }
         """
 
-Scenario: POST /tokens
+Scenario: POST /tokens 400 - no email or password submitted
     When I POST "/tokens"
         """
         {
@@ -181,80 +181,6 @@ Scenario: POST /tokens
             ]
         }
         """
-
-Scenario: POST /tokens
-    Given I have an active session with access token "aaaa.bbbb.cccc"
-    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
-    When I POST "/tokens"
-    """
-    {
-        "email": "email@ons.gov.uk",
-        "password": "Passw0rd!"
-    }
-    """
-    Then the HTTP status code should be "201"
-    And the response header "Authorization" should be "Bearer accessToken"
-    And the response header "ID" should be "idToken"
-    And the response header "Refresh" should be "refreshToken"
-
-Scenario: POST /tokens
-    Given I am not authorised
-    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
-    When I POST "/tokens"
-    """
-    {
-        "email": "email@ons.gov.uk",
-        "password": "Passw0rd!"
-    }
-    """
-    Then the HTTP status code should be "201"
-    And the response header "Authorization" should be "Bearer accessToken"
-    And the response header "ID" should be "idToken"
-    And the response header "Refresh" should be "refreshToken"
-
-Scenario: POST /tokens
-    Given the AdminUserGlobalSignOut endpoint in cognito returns an internal server error
-    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
-    When I POST "/tokens"
-    """
-    {
-        "email": "internalservererror@ons.gov.uk",
-        "password": "Passw0rd!"
-    }
-    """
-    Then I should receive the following JSON response with status "500":
-    """
-    {
-        "errors": [
-            {
-                "code": "InternalServerError",
-                "description": "Something went wrong"
-            }
-        ]
-    }
-    """
-
-Scenario: POST /tokens
-    Given the AdminUserGlobalSignOut endpoint in cognito returns an internal server error
-    And a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
-    When I POST "/tokens"
-    """
-    {
-        "email": "clienterror@ons.gov.uk",
-        "password": "Passw0rd!"
-    }
-    """
-    Then I should receive the following JSON response with status "400":
-    """
-    {
-        "errors": [
-            {
-                "code": "NotAuthorised",
-                "description": "Something went wrong"
-            }
-        ]
-    }
-    """
 
 Scenario: DELETE /tokens/self no Authorization header
     Given I am not authorised
