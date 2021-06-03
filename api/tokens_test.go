@@ -59,7 +59,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 		So(err, ShouldBeNil)
 		request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
 
-		successResponse, errorResponse := api.TokensHandler(w, request, ctx)
+		successResponse, errorResponse := api.TokensHandler(ctx, w, request)
 
 		So(errorResponse, ShouldBeNil)
 		So(successResponse.Status, ShouldEqual, http.StatusCreated)
@@ -78,7 +78,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 		So(err, ShouldBeNil)
 		request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
 
-		successResponse, errorResponse := api.TokensHandler(w, request, ctx)
+		successResponse, errorResponse := api.TokensHandler(ctx, w, request)
 
 		So(successResponse, ShouldBeNil)
 		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
@@ -104,7 +104,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 		So(err, ShouldBeNil)
 		request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
 
-		successResponse, errorResponse := api.TokensHandler(w, request, ctx)
+		successResponse, errorResponse := api.TokensHandler(ctx, w, request)
 
 		So(successResponse, ShouldBeNil)
 		So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
@@ -130,7 +130,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 		So(err, ShouldBeNil)
 		request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
 
-		successResponse, errorResponse := api.TokensHandler(w, request, ctx)
+		successResponse, errorResponse := api.TokensHandler(ctx, w, request)
 
 		So(successResponse, ShouldBeNil)
 		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
@@ -160,7 +160,7 @@ func TestAPI_SignOutHandler(t *testing.T) {
 		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
 		request.Header.Set(AccessTokenHeaderName, "Bearer zzzz-yyyy-xxxx")
 
-		successResponse, errorResponse := api.SignOutHandler(w, request, ctx)
+		successResponse, errorResponse := api.SignOutHandler(ctx, w, request)
 
 		So(errorResponse, ShouldBeNil)
 		So(successResponse.Status, ShouldEqual, http.StatusNoContent)
@@ -171,7 +171,7 @@ func TestAPI_SignOutHandler(t *testing.T) {
 		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
 		request.Header.Set(AccessTokenHeaderName, "")
 
-		successResponse, errorResponse := api.SignOutHandler(w, request, ctx)
+		successResponse, errorResponse := api.SignOutHandler(ctx, w, request)
 
 		So(successResponse, ShouldBeNil)
 		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
@@ -192,7 +192,7 @@ func TestAPI_SignOutHandler(t *testing.T) {
 		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
 		request.Header.Set(AccessTokenHeaderName, "Bearer zzzz-yyyy-xxxx")
 
-		successResponse, errorResponse := api.SignOutHandler(w, request, ctx)
+		successResponse, errorResponse := api.SignOutHandler(ctx, w, request)
 
 		So(successResponse, ShouldBeNil)
 		So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
@@ -213,7 +213,7 @@ func TestAPI_SignOutHandler(t *testing.T) {
 		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
 		request.Header.Set(AccessTokenHeaderName, "Bearer zzzz-yyyy-xxxx")
 
-		successResponse, errorResponse := api.SignOutHandler(w, request, ctx)
+		successResponse, errorResponse := api.SignOutHandler(ctx, w, request)
 
 		So(successResponse, ShouldBeNil)
 		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
@@ -254,7 +254,7 @@ func TestAPI_RefreshHandler(t *testing.T) {
 		request.Header.Set(IdTokenHeaderName, idToken)
 		request.Header.Set(RefreshTokenHeaderName, "aaaa.bbbb.cccc.dddd.eeee")
 
-		successResponse, errorResponse := api.RefreshHandler(w, request, ctx)
+		successResponse, errorResponse := api.RefreshHandler(ctx, w, request)
 
 		So(errorResponse, ShouldBeNil)
 		So(successResponse.Status, ShouldEqual, http.StatusCreated)
@@ -269,7 +269,7 @@ func TestAPI_RefreshHandler(t *testing.T) {
 		request.Header.Set(IdTokenHeaderName, "")
 		request.Header.Set(RefreshTokenHeaderName, "aaaa.bbbb.cccc.dddd.eeee")
 
-		successResponse, errorResponse := api.RefreshHandler(w, request, ctx)
+		successResponse, errorResponse := api.RefreshHandler(ctx, w, request)
 
 		So(successResponse, ShouldBeNil)
 		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
@@ -293,7 +293,7 @@ func TestAPI_RefreshHandler(t *testing.T) {
 		request.Header.Set(IdTokenHeaderName, idToken)
 		request.Header.Set(RefreshTokenHeaderName, "aaaa.bbbb.cccc.dddd.eeee")
 
-		successResponse, errorResponse := api.RefreshHandler(w, request, ctx)
+		successResponse, errorResponse := api.RefreshHandler(ctx, w, request)
 
 		So(successResponse, ShouldBeNil)
 		So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
@@ -317,7 +317,7 @@ func TestAPI_RefreshHandler(t *testing.T) {
 		request.Header.Set(IdTokenHeaderName, idToken)
 		request.Header.Set(RefreshTokenHeaderName, "aaaa.bbbb.cccc.dddd.eeee")
 
-		successResponse, errorResponse := api.RefreshHandler(w, request, ctx)
+		successResponse, errorResponse := api.RefreshHandler(ctx, w, request)
 
 		So(successResponse, ShouldBeNil)
 		So(errorResponse.Status, ShouldEqual, http.StatusForbidden)
