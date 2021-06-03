@@ -29,18 +29,6 @@ func (api *API) TokensHandler(w http.ResponseWriter, req *http.Request, ctx cont
 		return nil, models.NewErrorResponse(*validationErrs, http.StatusBadRequest)
 	}
 
-	terminationRequest := userSignIn.BuildOldSessionTerminationRequest(api.UserPoolId)
-	_, err = api.CognitoClient.AdminUserGlobalSignOut(terminationRequest)
-
-	if err != nil {
-		responseErr := models.NewCognitoError(ctx, err, "Cognito AdminUserGlobalSignOut request from sign in handler")
-		if responseErr.Code == models.InternalError {
-			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError)
-		}
-
-		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusBadRequest)
-	}
-
 	input := userSignIn.BuildCognitoRequest(api.ClientId, api.ClientSecret, api.ClientAuthFlow)
 	result, authErr := api.CognitoClient.InitiateAuth(input)
 
