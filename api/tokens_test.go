@@ -16,9 +16,9 @@ import (
 	"testing"
 )
 
-const signInEndPoint = "http://localhost:25600/tokens"
-const signOutEndPoint = "http://localhost:25600/tokens/self"
-const tokenRefreshEndPoint = "http://localhost:25600/tokens/self"
+const signInEndPoint = "http://localhost:25600/v1/tokens"
+const signOutEndPoint = "http://localhost:25600/v1/tokens/self"
+const tokenRefreshEndPoint = "http://localhost:25600/v1/tokens/self"
 
 func TestAPI_TokensHandler(t *testing.T) {
 	var (

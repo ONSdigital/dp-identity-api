@@ -15,7 +15,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const usersEndPoint = "http://localhost:25600/users"
+const usersEndPoint = "http://localhost:25600/v1/users"
 
 func TestCreateUserHandler(t *testing.T) {
 
