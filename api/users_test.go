@@ -127,7 +127,7 @@ func TestCreateUserHandler(t *testing.T) {
 			body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
 
-			successResponse, errorResponse := api.CreateUserHandler(w, r, ctx)
+			successResponse, errorResponse := api.CreateUserHandler(ctx, w, r)
 
 			// Check whether testing a success or error case
 			if tt.httpResponse > 399 {
@@ -143,7 +143,7 @@ func TestCreateUserHandler(t *testing.T) {
 	Convey("Admin create user returns 500: error unmarshalling request body", t, func() {
 		r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(nil))
 
-		successResponse, errorResponse := api.CreateUserHandler(w, r, ctx)
+		successResponse, errorResponse := api.CreateUserHandler(ctx, w, r)
 
 		So(successResponse, ShouldBeNil)
 		castErr := errorResponse.Errors[0].(*models.Error)
@@ -214,7 +214,7 @@ func TestCreateUserHandler(t *testing.T) {
 			body, _ := json.Marshal(tt.userDetails)
 			r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
 
-			successResponse, errorResponse := api.CreateUserHandler(w, r, ctx)
+			successResponse, errorResponse := api.CreateUserHandler(ctx, w, r)
 
 			So(successResponse, ShouldBeNil)
 			So(errorResponse.Status, ShouldEqual, tt.httpResponse)

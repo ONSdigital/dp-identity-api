@@ -26,12 +26,12 @@ type API struct {
 	ClientAuthFlow string
 }
 
-type baseHandler func(w http.ResponseWriter, r *http.Request, ctx context.Context) (*models.SuccessResponse, *models.ErrorResponse)
+type baseHandler func(ctx context.Context, w http.ResponseWriter, r *http.Request) (*models.SuccessResponse, *models.ErrorResponse)
 
 func contextAndErrors(h baseHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
-		response, err := h(w, req, ctx)
+		response, err := h(ctx, w, req)
 		if err != nil {
 			writeErrorResponse(ctx, w, err)
 			return
