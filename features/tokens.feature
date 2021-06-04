@@ -1,8 +1,8 @@
 Feature: Tokens
 
-Scenario: POST /tokens successful login
+Scenario: POST /v1/tokens successful login
     Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
-    When I POST "/tokens"
+    When I POST "/v1/tokens"
     """
     {
         "email": "email@ons.gov.uk",
@@ -14,9 +14,9 @@ Scenario: POST /tokens successful login
     And the response header "ID" should be "idToken"
     And the response header "Refresh" should be "refreshToken"
 
-Scenario: POST /tokens 401 - invalid credentials
+Scenario: POST /v1/tokens 401 - invalid credentials
     Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
-    When I POST "/tokens"
+    When I POST "/v1/tokens"
     """
     {
         "email": "email1@ons.gov.uk",
@@ -35,9 +35,9 @@ Scenario: POST /tokens 401 - invalid credentials
         }
         """
 
-Scenario: POST /tokens 403 - too many failed attempts
+Scenario: POST /v1/tokens 403 - too many failed attempts
     Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
-    When I POST "/tokens"
+    When I POST "/v1/tokens"
     """
     {
         "email": "email@ons.gov.uk",
@@ -56,9 +56,9 @@ Scenario: POST /tokens 403 - too many failed attempts
         }
         """
 
-Scenario: POST /tokens Cognito internal error
+Scenario: POST /v1/tokens Cognito internal error
     Given an internal server error is returned from Cognito
-    When I POST "/tokens"
+    When I POST "/v1/tokens"
     """
     {
         "email": "email@ons.gov.uk",
@@ -77,9 +77,9 @@ Scenario: POST /tokens Cognito internal error
     }
     """
 
-Scenario: POST /tokens
+Scenario: POST /v1/tokens
     Given an error is returned from Cognito
-    When I POST "/tokens"
+    When I POST "/v1/tokens"
     """
     {
         "email": "email@ons.gov.uk",
@@ -98,8 +98,8 @@ Scenario: POST /tokens
     }
     """
 
-Scenario: POST /tokens 400 - no password submitted
-    When I POST "/tokens"
+Scenario: POST /v1/tokens 400 - no password submitted
+    When I POST "/v1/tokens"
         """
         {
             "email": "email@ons.gov.uk",
@@ -118,8 +118,8 @@ Scenario: POST /tokens 400 - no password submitted
         }
         """
 
-Scenario: POST /tokens 400 - email does not match regex
-    When I POST "/tokens"
+Scenario: POST /v1/tokens 400 - email does not match regex
+    When I POST "/v1/tokens"
         """
         {
             "email": "email",
@@ -138,8 +138,8 @@ Scenario: POST /tokens 400 - email does not match regex
         }
         """
 
-Scenario: POST /tokens 400 - no email submitted
-    When I POST "/tokens"
+Scenario: POST /v1/tokens 400 - no email submitted
+    When I POST "/v1/tokens"
         """
         {
             "email": "",
@@ -158,8 +158,8 @@ Scenario: POST /tokens 400 - no email submitted
         }
         """
 
-Scenario: POST /tokens 400 - no email or password submitted
-    When I POST "/tokens"
+Scenario: POST /v1/tokens 400 - no email or password submitted
+    When I POST "/v1/tokens"
         """
         {
             "email": "",
@@ -182,9 +182,9 @@ Scenario: POST /tokens 400 - no email or password submitted
         }
         """
 
-Scenario: DELETE /tokens/self no Authorization header
+Scenario: DELETE /v1/tokens/self no Authorization header
     Given I am not authorised
-    When I DELETE "/tokens/self"
+    When I DELETE "/v1/tokens/self"
     Then I should receive the following JSON response with status "400":
     """
     {
@@ -197,9 +197,9 @@ Scenario: DELETE /tokens/self no Authorization header
     }
     """
 
-Scenario: DELETE /tokens/self Authorization header missing JWT
+Scenario: DELETE /v1/tokens/self Authorization header missing JWT
     Given I set the "Authorization" header to "Bearer"
-    When I DELETE "/tokens/self"
+    When I DELETE "/v1/tokens/self"
     Then I should receive the following JSON response with status "400":
     """
     {
@@ -212,9 +212,9 @@ Scenario: DELETE /tokens/self Authorization header missing JWT
     }
     """
 
-Scenario: DELETE /tokens/self malformed Authorization header
+Scenario: DELETE /v1/tokens/self malformed Authorization header
     Given I set the "Authorization" header to "BearerSomeToken"
-    When I DELETE "/tokens/self"
+    When I DELETE "/v1/tokens/self"
     Then I should receive the following JSON response with status "400":
     """
     {
@@ -227,9 +227,9 @@ Scenario: DELETE /tokens/self malformed Authorization header
     }
     """
 
-Scenario: DELETE /tokens/self Cognito internal error
+Scenario: DELETE /v1/tokens/self Cognito internal error
     Given I set the "Authorization" header to "Bearer InternalError"
-    When I DELETE "/tokens/self"
+    When I DELETE "/v1/tokens/self"
     Then I should receive the following JSON response with status "500":
     """
     {
@@ -242,9 +242,9 @@ Scenario: DELETE /tokens/self Cognito internal error
     }
     """
 
-Scenario: DELETE /tokens/self access token not valid in Cognito
+Scenario: DELETE /v1/tokens/self access token not valid in Cognito
     Given I set the "Authorization" header to "Bearer xxxx.yyyy.zzzz"
-    When I DELETE "/tokens/self"
+    When I DELETE "/v1/tokens/self"
     Then I should receive the following JSON response with status "400":
     """
     {
@@ -257,16 +257,16 @@ Scenario: DELETE /tokens/self access token not valid in Cognito
     }
     """
 
-Scenario: DELETE /tokens/self success
+Scenario: DELETE /v1/tokens/self success
     Given I have an active session with access token "aaaa.bbbb.cccc"
     And I set the "Authorization" header to "Bearer aaaa.bbbb.cccc"
-    When I DELETE "/tokens/self"
+    When I DELETE "/v1/tokens/self"
     Then the HTTP status code should be "204"
 
-Scenario: PUT /tokens/self with no ID token
+Scenario: PUT /v1/tokens/self with no ID token
     Given I set the "ID" header to ""
     And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
-    When I PUT "/tokens/self"
+    When I PUT "/v1/tokens/self"
     """
     {}
     """
@@ -282,10 +282,10 @@ Scenario: PUT /tokens/self with no ID token
     }
     """
 
-Scenario: PUT /tokens/self with no refresh token
+Scenario: PUT /v1/tokens/self with no refresh token
     Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to ""
-    When I PUT "/tokens/self"
+    When I PUT "/v1/tokens/self"
     """
     {}
     """
@@ -301,10 +301,10 @@ Scenario: PUT /tokens/self with no refresh token
     }
     """
 
-Scenario: PUT /tokens/self with no tokens
+Scenario: PUT /v1/tokens/self with no tokens
     Given I set the "ID" header to ""
     And I set the "Refresh" header to ""
-    When I PUT "/tokens/self"
+    When I PUT "/v1/tokens/self"
     """
     {}
     """
@@ -324,10 +324,10 @@ Scenario: PUT /tokens/self with no tokens
     }
     """
 
-Scenario: PUT /tokens/self with badly formatted ID token
+Scenario: PUT /v1/tokens/self with badly formatted ID token
     Given I set the "ID" header to "zzzz.yyyy.xxxx"
     And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
-    When I PUT "/tokens/self"
+    When I PUT "/v1/tokens/self"
     """
     {}
     """
@@ -343,28 +343,28 @@ Scenario: PUT /tokens/self with badly formatted ID token
     }
     """
 
-Scenario: PUT /tokens/self internal Cognito error
+Scenario: PUT /v1/tokens/self internal Cognito error
     Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to "InternalError"
-    When I PUT "/tokens/self"
+    When I PUT "/v1/tokens/self"
     """
     {}
     """
     Then the HTTP status code should be "500"
 
-Scenario: PUT /tokens/self with expired refresh token
+Scenario: PUT /v1/tokens/self with expired refresh token
     Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to "ExpiredToken"
-    When I PUT "/tokens/self"
+    When I PUT "/v1/tokens/self"
     """
     {}
     """
     Then the HTTP status code should be "403"
 
-Scenario: PUT /tokens/self success
+Scenario: PUT /v1/tokens/self success
     Given I have a valid ID header for user "test@ons.gov.uk"
     And I set the "Refresh" header to "aaaa.bbbb.cccc.dddd.eeee"
-    When I PUT "/tokens/self"
+    When I PUT "/v1/tokens/self"
     """
     {}
     """

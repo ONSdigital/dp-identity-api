@@ -22,10 +22,10 @@ func TestSetup(t *testing.T) {
 		api, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, "us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow")
 
 		Convey("When created the following route(s) should have been added", func() {
-			So(hasRoute(api.Router, "/tokens", "POST"), ShouldBeTrue)
-			So(hasRoute(api.Router, "/tokens/self", "DELETE"), ShouldBeTrue)
-			So(hasRoute(api.Router, "/tokens/self", "PUT"), ShouldBeTrue)
-			So(hasRoute(api.Router, "/users", "POST"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/tokens", "POST"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/tokens/self", "DELETE"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/tokens/self", "PUT"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/users", "POST"), ShouldBeTrue)
 		})
 
 		Convey("No error returned when user pool id supplied", func() {
