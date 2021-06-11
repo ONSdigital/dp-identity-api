@@ -14,6 +14,22 @@ Scenario: POST /v1/tokens successful login
     And the response header "ID" should be "idToken"
     And the response header "Refresh" should be "refreshToken"
 
+Scenario: POST /v1/tokens non-verified email successful login
+    Given a user with non-verified email "new_email@ons.gov.uk" and password "TeMpPassw0rd!"
+    When I POST "/v1/tokens"
+    """
+    {
+        "email": "new_email@ons.gov.uk",
+        "password": "TeMpPassw0rd!"
+    }
+    """
+    Then I should receive the following JSON response with status "200":
+    """
+    {
+        "session": "AYABeBBsY5be-this-is-a-test-session-id-string-123456789iuerhcfdisieo-end"
+    }
+    """
+
 Scenario: POST /v1/tokens 401 - invalid credentials
     Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
     When I POST "/v1/tokens"
@@ -29,7 +45,7 @@ Scenario: POST /v1/tokens 401 - invalid credentials
             "errors": [
                 {
                     "code": "NotAuthorised",
-                    "description": "Incorrect username or password"
+                    "description": "Incorrect username or password."
                 }
             ]
         }

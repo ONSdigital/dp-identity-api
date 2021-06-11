@@ -3,8 +3,9 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/ONSdigital/dp-identity-api/models"
 	"net/http"
+
+	"github.com/ONSdigital/dp-identity-api/models"
 
 	"github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/gorilla/mux"
@@ -14,6 +15,10 @@ var (
 	IdTokenHeaderName      = "ID"
 	AccessTokenHeaderName  = "Authorization"
 	RefreshTokenHeaderName = "Refresh"
+	WWWAuthenticateName    = "WWW-Authenticate"
+	ONSRealm               = "Florence publishing platform"
+	Charset                = "UTF-8"
+	NewPasswordChallenge   = "NEW_PASSWORD_REQUIRED"
 )
 
 //API provides a struct to wrap the api around
@@ -67,7 +72,13 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 
 func writeErrorResponse(ctx context.Context, w http.ResponseWriter, errorResponse *models.ErrorResponse) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(errorResponse.Status)
+	// process custom headers
+	if errorResponse.Headers != nil {
+		for key := range errorResponse.Headers {
+			w.Header().Set(key, errorResponse.Headers[key])
+		}
+	}
+	w.WriteHeader(errorResponse.Status)	
 
 	jsonResponse, err := json.Marshal(errorResponse)
 	if err != nil {
@@ -86,6 +97,12 @@ func writeErrorResponse(ctx context.Context, w http.ResponseWriter, errorRespons
 
 func writeSuccessResponse(ctx context.Context, w http.ResponseWriter, successResponse *models.SuccessResponse) {
 	w.Header().Set("Content-Type", "application/json")
+	// process custom headers
+	if successResponse.Headers != nil {
+		for key := range successResponse.Headers {
+			w.Header().Set(key, successResponse.Headers[key])
+		}
+	}
 	w.WriteHeader(successResponse.Status)
 
 	_, err := w.Write(successResponse.Body)
@@ -98,10 +115,14 @@ func writeSuccessResponse(ctx context.Context, w http.ResponseWriter, successRes
 
 func handleBodyReadError(ctx context.Context, err error) *models.ErrorResponse {
 	return models.NewErrorResponse([]error{models.NewError(ctx, err, models.BodyReadError, models.BodyReadFailedDescription)},
-		http.StatusInternalServerError)
+		http.StatusInternalServerError,
+			nil,	
+	)
 }
 
 func handleBodyUnmarshalError(ctx context.Context, err error) *models.ErrorResponse {
 	return models.NewErrorResponse([]error{models.NewError(ctx, err, models.JSONUnmarshalError, models.ErrorUnmarshalFailedDescription)},
-		http.StatusInternalServerError)
+		http.StatusInternalServerError,
+			nil,
+	)
 }

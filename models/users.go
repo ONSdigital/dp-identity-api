@@ -3,11 +3,12 @@ package models
 import (
 	"context"
 	"encoding/json"
+	"time"
+
 	"github.com/ONSdigital/dp-identity-api/utilities"
 	"github.com/ONSdigital/dp-identity-api/validation"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/sethvargo/go-password/password"
-	"time"
 )
 
 type UserParams struct {
@@ -17,13 +18,12 @@ type UserParams struct {
 	Password string `json:"-"`
 }
 
-func (p UserParams) GeneratePassword(ctx context.Context) error {
+func (p UserParams) GeneratePassword(ctx context.Context) (*string, error) {
 	tempPassword, err := password.Generate(14, 1, 1, false, false)
 	if err != nil {
-		return NewError(ctx, err, InternalError, PasswordGenerationErrorDescription)
+		return nil, NewError(ctx, err, InternalError, PasswordGenerationErrorDescription)
 	}
-	p.Password = tempPassword
-	return nil
+	return &tempPassword, nil
 }
 
 func (p UserParams) ValidateRegistration(ctx context.Context) []error {
@@ -64,6 +64,7 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 	var (
 		deliveryMethod, forenameAttrName, surnameAttrName, emailAttrName string = "EMAIL", "name", "family_name", "email"
 	)
+
 	return &cognitoidentityprovider.AdminCreateUserInput{
 		UserAttributes: []*cognitoidentityprovider.AttributeType{
 			{
@@ -130,7 +131,7 @@ func (p *UserSignIn) ValidateCredentials(ctx context.Context) *[]error {
 
 func (p *UserSignIn) BuildCognitoRequest(clientId string, clientSecret string, clientAuthFlow string) *cognitoidentityprovider.InitiateAuthInput {
 	secretHash := utilities.ComputeSecretHash(clientSecret, p.Email, clientId)
-
+	
 	authParameters := map[string]*string{
 		"USERNAME":    &p.Email,
 		"PASSWORD":    &p.Password,
@@ -151,8 +152,16 @@ func (p *UserSignIn) BuildSuccessfulJsonResponse(ctx context.Context, result *co
 	if result.AuthenticationResult != nil {
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
 		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
-
+		
 		postBody := map[string]interface{}{"expirationTime": expirationTime}
+
+		jsonResponse, err := json.Marshal(postBody)
+		if err != nil {
+			return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
+		}
+		return jsonResponse, nil
+	} else if result.ChallengeName != nil && *result.ChallengeName == "NEW_PASSWORD_REQUIRED" {
+		postBody := map[string]interface{}{"session": *result.Session}
 
 		jsonResponse, err := json.Marshal(postBody)
 		if err != nil {
@@ -163,3 +172,4 @@ func (p *UserSignIn) BuildSuccessfulJsonResponse(ctx context.Context, result *co
 		return nil, NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
 	}
 }
+

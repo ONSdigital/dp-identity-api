@@ -6,7 +6,7 @@ Feature: Users
             {
                 "forename": "smileons",
                 "surname": "bobbings",
-                "email": "email@ons.gov.uk"
+                "email": "emailx@ons.gov.uk"
             }
             """
         Then I should receive the following JSON response with status "201":
@@ -28,7 +28,7 @@ Feature: Users
                         },
                         {
                             "Name": "email",
-                            "Value": "email@ons.gov.uk"
+                            "Value": "emailx@ons.gov.uk"
                         }
                     ],
                     "Enabled": null,
@@ -68,7 +68,7 @@ Feature: Users
             {
                 "forename": "",
                 "surname": "bobbings",
-                "email": "email@ons.gov.uk"
+                "email": "emailx@ons.gov.uk"
             }
             """
         Then I should receive the following JSON response with status "400":
@@ -89,7 +89,7 @@ Feature: Users
             {
                 "forename": "smileons",
                 "surname": "",
-                "email": "email@ons.gov.uk"
+                "email": "emailx@ons.gov.uk"
             }
             """
         Then I should receive the following JSON response with status "400":
@@ -156,7 +156,7 @@ Feature: Users
             {
                 "forename": "bob",
                 "surname": "bobbings",
-                "email": "email@ons.gov.uk"
+                "email": "emailx@ons.gov.uk"
             }
             """
         Then I should receive the following JSON response with status "500":

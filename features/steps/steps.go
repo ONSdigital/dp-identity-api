@@ -2,19 +2,14 @@ package steps
 
 import (
 	"errors"
-	"io/ioutil"
-	"strings"
 
 	"github.com/ONSdigital/dp-identity-api/api"
 
 	"github.com/cucumber/godog"
-	"github.com/stretchr/testify/assert"
 )
 
 func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	c.apiFeature.RegisterSteps(ctx)
-
-	ctx.Step(`^I should receive a hello-world response$`, c.iShouldReceiveAHelloworldResponse)
 
 	ctx.Step(`^a user with email "([^"]*)" and password "([^"]*)" exists in the database$`, c.aUserWithEmailAndPasswordExistsInTheDatabase)
 	ctx.Step(`^an internal server error is returned from Cognito$`, c.anInternalServerErrorIsReturnedFromCognito)
@@ -22,19 +17,11 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I have an active session with access token "([^"]*)"$`, c.iHaveAnActiveSessionWithAccessToken)
 	ctx.Step(`I have a valid ID header for user "([^"]*)"$`, c.iHaveAValidIDHeaderForUser)
 	ctx.Step(`^the AdminUserGlobalSignOut endpoint in cognito returns an internal server error$`, c.theAdminUserGlobalSignOutEndpointInCognitoReturnsAnInternalServerError)
-}
-
-func (c *IdentityComponent) iShouldReceiveAHelloworldResponse() error {
-	responseBody := c.apiFeature.HttpResponse.Body
-	body, _ := ioutil.ReadAll(responseBody)
-
-	assert.Equal(&c.ErrorFeature, `{"message":"Hello, World!"}`, strings.TrimSpace(string(body)))
-
-	return c.ErrorFeature.StepError()
+	ctx.Step(`^a user with non-verified email "([^"]*)" and password "([^"]*)"$`, c.aUserWithNonverifiedEmailAndPassword)
 }
 
 func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(username, password string) error {
-	c.CognitoClient.AddUserWithUsername(username, password)
+	c.CognitoClient.AddUserWithUsername(username, password, true)
 	return nil
 }
 
@@ -61,5 +48,10 @@ func (c *IdentityComponent) iHaveAValidIDHeaderForUser(email string) error {
 }
 
 func (c *IdentityComponent) theAdminUserGlobalSignOutEndpointInCognitoReturnsAnInternalServerError() error {
+	return nil
+}
+
+func (c *IdentityComponent) aUserWithNonverifiedEmailAndPassword(email, password string) error {
+	c.CognitoClient.AddUserWithUsername(email, password, false)
 	return nil
 }

@@ -26,7 +26,7 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 
 	validationErrs := userSignIn.ValidateCredentials(ctx)
 	if validationErrs != nil {
-		return nil, models.NewErrorResponse(*validationErrs, http.StatusBadRequest)
+		return nil, models.NewErrorResponse(*validationErrs, http.StatusBadRequest, nil)
 	}
 
 	input := userSignIn.BuildCognitoRequest(api.ClientId, api.ClientSecret, api.ClientAuthFlow)
@@ -35,30 +35,50 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 	if authErr != nil {
 		responseErr := models.NewCognitoError(ctx, authErr, "Cognito InitiateAuth request from sign in handler")
 		if responseErr.Code == models.InternalError {
-			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError)
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
 		}
-
+		
 		switch responseErr.Description {
-		case models.SignInFailedDescription:
-			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusUnauthorized)
-		case models.SignInAttemptsExceededDescription:
-			// Cognito returns the same Code for invalid credentials and too many attempts errors, changing our Error.Code to enable differentiation in the client
-			responseErr.Code = models.TooManyFailedAttemptsError
-			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusForbidden)
-		default:
-			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusBadRequest)
+			case models.SignInFailedDescription:
+				// Returning `WWW-Authenticate` in header as part of http.StatusUnauthorized response
+				// See here: https://datatracker.ietf.org/doc/html/rfc7235#section-4.1
+				headers := map[string]string{
+					WWWAuthenticateName: "Bearer realm=\""+ONSRealm+"\", charset=\""+Charset+"\"",
+				}
+				return nil, models.NewErrorResponse([]error{responseErr}, http.StatusUnauthorized, headers)
+			case models.SignInAttemptsExceededDescription:
+				// Cognito returns the same Code for invalid credentials and too many attempts errors, changing our Error.Code to enable differentiation in the client
+				responseErr.Code = models.TooManyFailedAttemptsError
+				return nil, models.NewErrorResponse([]error{responseErr}, http.StatusForbidden, nil)
+			default:
+				return nil, models.NewErrorResponse([]error{responseErr}, http.StatusBadRequest, nil)
 		}
 	}
 
 	jsonResponse, responseErr := userSignIn.BuildSuccessfulJsonResponse(ctx, result)
 	if responseErr != nil {
-		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError)
+		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
 	}
 
-	w.Header().Set(AccessTokenHeaderName, "Bearer "+*result.AuthenticationResult.AccessToken)
-	w.Header().Set(IdTokenHeaderName, *result.AuthenticationResult.IdToken)
-	w.Header().Set(RefreshTokenHeaderName, *result.AuthenticationResult.RefreshToken)
-	return models.NewSuccessResponse(jsonResponse, http.StatusCreated), nil
+	// success headers
+	var headers map[string]string
+	if result.AuthenticationResult != nil {
+		headers = map[string]string{
+			AccessTokenHeaderName: "Bearer "+*result.AuthenticationResult.AccessToken,
+			IdTokenHeaderName: *result.AuthenticationResult.IdToken,
+			RefreshTokenHeaderName: *result.AuthenticationResult.RefreshToken,
+		}
+	} else {
+		headers = nil
+	}
+
+	// response - http.StatusCreated by default
+	httpStatus := http.StatusCreated
+	if result.ChallengeName != nil && *result.ChallengeName == NewPasswordChallenge {
+		httpStatus = http.StatusOK
+	}
+
+	return models.NewSuccessResponse(jsonResponse, httpStatus, headers), nil
 }
 
 //SignOutHandler invalidates a users access token signing them out and returns a http handler interface
@@ -68,7 +88,7 @@ func (api *API) SignOutHandler(ctx context.Context, w http.ResponseWriter, req *
 	}
 	validationErr := accessToken.Validate(ctx)
 	if validationErr != nil {
-		return nil, models.NewErrorResponse([]error{validationErr}, http.StatusBadRequest)
+		return nil, models.NewErrorResponse([]error{validationErr}, http.StatusBadRequest, nil)
 	}
 
 	_, err := api.CognitoClient.GlobalSignOut(accessToken.GenerateSignOutRequest())
@@ -76,13 +96,13 @@ func (api *API) SignOutHandler(ctx context.Context, w http.ResponseWriter, req *
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "Cognito GlobalSignOut request for sign out")
 		if responseErr.Code == models.NotFoundError || responseErr.Code == models.NotAuthorisedError {
-			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusBadRequest)
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusBadRequest, nil)
 		} else {
-			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError)
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
 		}
 	}
 
-	return models.NewSuccessResponse(nil, http.StatusNoContent), nil
+	return models.NewSuccessResponse(nil, http.StatusNoContent, nil), nil
 }
 
 //RefreshHandler refreshes a users access token and returns new access and ID tokens, expiration time and the refresh token
@@ -101,7 +121,7 @@ func (api *API) RefreshHandler(ctx context.Context, w http.ResponseWriter, req *
 	}
 
 	if len(validationErrs) > 0 {
-		return nil, models.NewErrorResponse(validationErrs, http.StatusBadRequest)
+		return nil, models.NewErrorResponse(validationErrs, http.StatusBadRequest, nil)
 	}
 
 	authInput := refreshToken.GenerateRefreshRequest(api.ClientSecret, idToken.Claims.CognitoUser, api.ClientId)
@@ -110,18 +130,21 @@ func (api *API) RefreshHandler(ctx context.Context, w http.ResponseWriter, req *
 	if authErr != nil {
 		responseErr := models.NewCognitoError(ctx, authErr, "Cognito InitiateAuth request for token refresh")
 		if responseErr.Code == models.NotAuthorisedError {
-			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusForbidden)
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusForbidden, nil)
 		} else {
-			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError)
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
 		}
 	}
 
 	jsonResponse, responseErr := refreshToken.BuildSuccessfulJsonResponse(ctx, result)
 	if responseErr != nil {
-		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError)
+		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
 	}
 
-	w.Header().Set(AccessTokenHeaderName, "Bearer "+*result.AuthenticationResult.AccessToken)
-	w.Header().Set(IdTokenHeaderName, *result.AuthenticationResult.IdToken)
-	return models.NewSuccessResponse(jsonResponse, http.StatusCreated), nil
+	headers := map[string]string{
+		AccessTokenHeaderName: "Bearer "+*result.AuthenticationResult.AccessToken,
+		IdTokenHeaderName: *result.AuthenticationResult.IdToken,
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusCreated, headers), nil
 }
