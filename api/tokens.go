@@ -10,7 +10,7 @@ import (
 )
 
 //TokensHandler uses submitted email address and password to sign a user in against Cognito and returns a http handler interface
-func (api *API) TokensHandler(w http.ResponseWriter, req *http.Request, ctx context.Context) (*models.SuccessResponse, *models.ErrorResponse) {
+func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer req.Body.Close()
 
 	body, err := ioutil.ReadAll(req.Body)
@@ -27,18 +27,6 @@ func (api *API) TokensHandler(w http.ResponseWriter, req *http.Request, ctx cont
 	validationErrs := userSignIn.ValidateCredentials(ctx)
 	if validationErrs != nil {
 		return nil, models.NewErrorResponse(*validationErrs, http.StatusBadRequest)
-	}
-
-	terminationRequest := userSignIn.BuildOldSessionTerminationRequest(api.UserPoolId)
-	_, err = api.CognitoClient.AdminUserGlobalSignOut(terminationRequest)
-
-	if err != nil {
-		responseErr := models.NewCognitoError(ctx, err, "Cognito AdminUserGlobalSignOut request from sign in handler")
-		if responseErr.Code == models.InternalError {
-			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError)
-		}
-
-		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusBadRequest)
 	}
 
 	input := userSignIn.BuildCognitoRequest(api.ClientId, api.ClientSecret, api.ClientAuthFlow)
@@ -74,7 +62,7 @@ func (api *API) TokensHandler(w http.ResponseWriter, req *http.Request, ctx cont
 }
 
 //SignOutHandler invalidates a users access token signing them out and returns a http handler interface
-func (api *API) SignOutHandler(w http.ResponseWriter, req *http.Request, ctx context.Context) (*models.SuccessResponse, *models.ErrorResponse) {
+func (api *API) SignOutHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	accessToken := models.AccessToken{
 		AuthHeader: req.Header.Get(AccessTokenHeaderName),
 	}
@@ -98,7 +86,7 @@ func (api *API) SignOutHandler(w http.ResponseWriter, req *http.Request, ctx con
 }
 
 //RefreshHandler refreshes a users access token and returns new access and ID tokens, expiration time and the refresh token
-func (api *API) RefreshHandler(w http.ResponseWriter, req *http.Request, ctx context.Context) (*models.SuccessResponse, *models.ErrorResponse) {
+func (api *API) RefreshHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	var validationErrs []error
 	refreshToken := models.RefreshToken{TokenString: req.Header.Get(RefreshTokenHeaderName)}
 	validationErr := refreshToken.Validate(ctx)

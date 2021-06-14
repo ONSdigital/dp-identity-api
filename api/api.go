@@ -26,12 +26,12 @@ type API struct {
 	ClientAuthFlow string
 }
 
-type baseHandler func(w http.ResponseWriter, r *http.Request, ctx context.Context) (*models.SuccessResponse, *models.ErrorResponse)
+type baseHandler func(ctx context.Context, w http.ResponseWriter, r *http.Request) (*models.SuccessResponse, *models.ErrorResponse)
 
 func contextAndErrors(h baseHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
-		response, err := h(w, req, ctx)
+		response, err := h(ctx, w, req)
 		if err != nil {
 			writeErrorResponse(ctx, w, err)
 			return
@@ -57,11 +57,11 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 		ClientAuthFlow: clientAuthFlow,
 	}
 
-	r.HandleFunc("/tokens", contextAndErrors(api.TokensHandler)).Methods("POST")
+	r.HandleFunc("/v1/tokens", contextAndErrors(api.TokensHandler)).Methods("POST")
 	// self used in paths rather than identifier as the identifier is JWT tokens passed in the request headers
-	r.HandleFunc("/tokens/self", contextAndErrors(api.SignOutHandler)).Methods("DELETE")
-	r.HandleFunc("/tokens/self", contextAndErrors(api.RefreshHandler)).Methods("PUT")
-	r.HandleFunc("/users", contextAndErrors(api.CreateUserHandler)).Methods("POST")
+	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.SignOutHandler)).Methods("DELETE")
+	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.RefreshHandler)).Methods("PUT")
+	r.HandleFunc("/v1/users", contextAndErrors(api.CreateUserHandler)).Methods("POST")
 	return api, nil
 }
 

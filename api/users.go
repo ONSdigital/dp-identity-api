@@ -10,7 +10,7 @@ import (
 )
 
 //CreateUserHandler creates a new user and returns a http handler interface
-func (api *API) CreateUserHandler(w http.ResponseWriter, req *http.Request, ctx context.Context) (*models.SuccessResponse, *models.ErrorResponse) {
+func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer req.Body.Close()
 
 	body, err := ioutil.ReadAll(req.Body)

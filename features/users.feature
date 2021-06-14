@@ -1,7 +1,7 @@
 Feature: Users
 
-    Scenario: POST /users and checking the response status 201
-        When I POST "/users"
+    Scenario: POST /v1/users and checking the response status 201
+        When I POST "/v1/users"
             """
             {
                 "forename": "smileons",
@@ -41,8 +41,8 @@ Feature: Users
             }
             """
 
-    Scenario: POST /users missing email and checking the response status 400
-        When I POST "/users"
+    Scenario: POST /v1/users missing email and checking the response status 400
+        When I POST "/v1/users"
             """
             {
                 "forename": "smileons",
@@ -62,8 +62,8 @@ Feature: Users
             }
             """
 
-    Scenario: POST /users missing forename and checking the response status 400
-        When I POST "/users"
+    Scenario: POST /v1/users missing forename and checking the response status 400
+        When I POST "/v1/users"
             """
             {
                 "forename": "",
@@ -83,8 +83,8 @@ Feature: Users
             }
             """
 
-    Scenario: POST /users missing surname and checking the response status 400
-        When I POST "/users"
+    Scenario: POST /v1/users missing surname and checking the response status 400
+        When I POST "/v1/users"
             """
             {
                 "forename": "smileons",
@@ -104,8 +104,8 @@ Feature: Users
             }
             """
 
-    Scenario: POST /users and checking the response status 400
-        When I POST "/users"
+    Scenario: POST /v1/users and checking the response status 400
+        When I POST "/v1/users"
             """
             {
                 "forename": "",
@@ -133,8 +133,8 @@ Feature: Users
             }
             """
 
-    Scenario: POST /users and checking the response status 500
-        When I POST "/users"
+    Scenario: POST /v1/users and checking the response status 500
+        When I POST "/v1/users"
             """
 
             """
@@ -150,8 +150,8 @@ Feature: Users
             }
             """
 
-    Scenario: POST /users unexpected server error and checking the response status 500
-        When I POST "/users"
+    Scenario: POST /v1/users unexpected server error and checking the response status 500
+        When I POST "/v1/users"
             """
             {
                 "forename": "bob",
@@ -171,8 +171,8 @@ Feature: Users
             }
             """
 
-    Scenario: POST /users duplicate email found and checking the response status 400
-        When I POST "/users"
+    Scenario: POST /v1/users duplicate email found and checking the response status 400
+        When I POST "/v1/users"
             """
             {
                 "forename": "bob",

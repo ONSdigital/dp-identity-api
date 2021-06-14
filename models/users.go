@@ -128,13 +128,6 @@ func (p *UserSignIn) ValidateCredentials(ctx context.Context) *[]error {
 	return &validationErrors
 }
 
-func (p *UserSignIn) BuildOldSessionTerminationRequest(userPoolId string) *cognitoidentityprovider.AdminUserGlobalSignOutInput {
-	return &cognitoidentityprovider.AdminUserGlobalSignOutInput{
-		Username:   &p.Email,
-		UserPoolId: &userPoolId,
-	}
-}
-
 func (p *UserSignIn) BuildCognitoRequest(clientId string, clientSecret string, clientAuthFlow string) *cognitoidentityprovider.InitiateAuthInput {
 	secretHash := utilities.ComputeSecretHash(clientSecret, p.Email, clientId)
 
