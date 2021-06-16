@@ -3,12 +3,13 @@ package models_test
 import (
 	"context"
 	"encoding/json"
+	"reflect"
+	"testing"
+
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/google/uuid"
 	. "github.com/smartystreets/goconvey/convey"
-	"reflect"
-	"testing"
 )
 
 func TestUserParams_GeneratePassword(t *testing.T) {
@@ -17,10 +18,10 @@ func TestUserParams_GeneratePassword(t *testing.T) {
 
 		user := models.UserParams{}
 
-		err := user.GeneratePassword(ctx)
+		tempPassword, err := user.GeneratePassword(ctx)
 
 		So(err, ShouldBeNil)
-		So(user.Password, ShouldNotBeNil)
+		So(tempPassword, ShouldNotBeNil)
 	})
 }
 
@@ -343,7 +344,7 @@ func TestUserSignIn_BuildSuccessfulJsonResponse(t *testing.T) {
 			},
 		}
 
-		response, err := signIn.BuildSuccessfulJsonResponse(ctx, &result)
+		response, err := signIn.BuildSuccessfulJsonResponse(ctx,&result)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))

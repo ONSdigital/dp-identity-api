@@ -52,7 +52,7 @@ const (
 	InvalidSurnameErrorDescription         = "the submitted user's surname could not be validated"
 	InvalidEmailDescription                = "the submitted email could not be validated"
 	DuplicateEmailDescription              = "account using email address found"
-	SignInFailedDescription                = "Incorrect username or password"
+	SignInFailedDescription                = "Incorrect username or password."
 	SignInAttemptsExceededDescription      = "Password attempts exceeded"
 	MissingConfigDescription               = "required configuration setting is missing"
 )

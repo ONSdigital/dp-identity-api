@@ -5,15 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 const signInEndPoint = "http://localhost:25600/v1/tokens"
@@ -112,14 +113,66 @@ func TestAPI_TokensHandler(t *testing.T) {
 		So(errorResponse.Errors[0].Error(), ShouldEqual, awsErr.Error())
 	})
 
-	Convey("Sign In Cognito request error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
-		awsErrCode := "NotAuthorizedException"
-		awsErrMessage := "User is not authorized"
-		awsOrigErr := errors.New(awsErrCode)
-		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
-		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
+	Convey("Sign In Cognito request error: adds an error to the ErrorResponse and sets the Status correctly", t, func() {
+		statusTests := []struct {
+			awsErrCode string
+			awsErrMessage string
+			httpResponseCode int
+		}{
+			// http.StatusBadRequest - 400
+			{
+				"NotAuthorizedException",
+				"User is not authorized",
+				http.StatusBadRequest,
+			},
+			// http.StatusUnauthorized - 401
+			{
+				"NotAuthorizedException",
+				"Incorrect username or password.",
+				http.StatusUnauthorized,
+			},
+		}
+
+		for _, tt := range statusTests {
+			awsErr := awserr.New(tt.awsErrCode, tt.awsErrMessage, errors.New(tt.awsErrCode))
+			// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
+			m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+				return nil, awsErr
+			}
+	
+			body := map[string]interface{}{
+				"email":    "email@ons.gov.uk",
+				"password": "password",
+			}
+			jsonBody, err := json.Marshal(&body)
+			So(err, ShouldBeNil)
+			request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
+	
+			successResponse, errorResponse := api.TokensHandler(ctx, w, request)
+	
+			request.Header.Get(WWWAuthenticateName)
+	
+			So(successResponse, ShouldBeNil)
+			So(errorResponse.Status, ShouldEqual, tt.httpResponseCode)
+			So(len(errorResponse.Errors), ShouldEqual, 1)
+			So(errorResponse.Errors[0].Error(), ShouldEqual, awsErr.Error())
+		}
+	})
+
+	// test Tokens handler's NEW_PASSWORD_REQUIRED challenge response
+	Convey("Handle NEW_PASSWORD_REQUIRED challenge response", t, func() {
+		var (
+			newPasswordStatus, sessionID string = "true", "AYABeBBsY5be-this-is-a-test-session-id-string-123456789iuerhcfdisieo-end"
+		)
+
+		// mock call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
 		m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
-			return nil, awsErr
+			challengeName := "NEW_PASSWORD_REQUIRED"
+			return &cognitoidentityprovider.InitiateAuthOutput{
+				AuthenticationResult: nil,
+				ChallengeName: &challengeName,
+				Session: &sessionID,
+			}, nil
 		}
 
 		body := map[string]interface{}{
@@ -132,10 +185,13 @@ func TestAPI_TokensHandler(t *testing.T) {
 
 		successResponse, errorResponse := api.TokensHandler(ctx, w, request)
 
-		So(successResponse, ShouldBeNil)
-		So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
-		So(len(errorResponse.Errors), ShouldEqual, 1)
-		So(errorResponse.Errors[0].Error(), ShouldEqual, awsErr.Error())
+		So(errorResponse, ShouldBeNil)
+		So(successResponse.Status, ShouldEqual, http.StatusAccepted)
+		var responseBody map[string]interface{}
+		err = json.Unmarshal(successResponse.Body, &responseBody)
+		So(err, ShouldBeNil)
+		So(responseBody["new_password_required"], ShouldEqual, newPasswordStatus)
+		So(responseBody["session"], ShouldEqual, sessionID)
 	})
 }
 
