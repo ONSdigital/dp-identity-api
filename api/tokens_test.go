@@ -161,7 +161,9 @@ func TestAPI_TokensHandler(t *testing.T) {
 
 	// test Tokens handler's NEW_PASSWORD_REQUIRED challenge response
 	Convey("Handle NEW_PASSWORD_REQUIRED challenge response", t, func() {
-		sessionID := "AYABeBBsY5be-this-is-a-test-session-id-string-123456789iuerhcfdisieo-end"
+		var (
+			newPasswordStatus, sessionID string = "true", "AYABeBBsY5be-this-is-a-test-session-id-string-123456789iuerhcfdisieo-end"
+		)
 
 		// mock call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
 		m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
@@ -184,10 +186,11 @@ func TestAPI_TokensHandler(t *testing.T) {
 		successResponse, errorResponse := api.TokensHandler(ctx, w, request)
 
 		So(errorResponse, ShouldBeNil)
-		So(successResponse.Status, ShouldEqual, http.StatusOK)
+		So(successResponse.Status, ShouldEqual, http.StatusAccepted)
 		var responseBody map[string]interface{}
 		err = json.Unmarshal(successResponse.Body, &responseBody)
 		So(err, ShouldBeNil)
+		So(responseBody["new_password_required"], ShouldEqual, newPasswordStatus)
 		So(responseBody["session"], ShouldEqual, sessionID)
 	})
 }

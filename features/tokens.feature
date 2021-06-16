@@ -23,9 +23,10 @@ Scenario: POST /v1/tokens non-verified email successful login
         "password": "TeMpPassw0rd!"
     }
     """
-    Then I should receive the following JSON response with status "200":
+    Then I should receive the following JSON response with status "202":
     """
     {
+        "new_password_required": "true",
         "session": "AYABeBBsY5be-this-is-a-test-session-id-string-123456789iuerhcfdisieo-end"
     }
     """

@@ -161,7 +161,10 @@ func (p *UserSignIn) BuildSuccessfulJsonResponse(ctx context.Context, result *co
 		}
 		return jsonResponse, nil
 	} else if result.ChallengeName != nil && *result.ChallengeName == "NEW_PASSWORD_REQUIRED" {
-		postBody := map[string]interface{}{"session": *result.Session}
+		postBody := map[string]interface{} {
+			"new_password_required": "true",
+			"session": *result.Session,
+		}
 
 		jsonResponse, err := json.Marshal(postBody)
 		if err != nil {

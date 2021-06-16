@@ -75,7 +75,7 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 	// response - http.StatusCreated by default
 	httpStatus := http.StatusCreated
 	if result.ChallengeName != nil && *result.ChallengeName == NewPasswordChallenge {
-		httpStatus = http.StatusOK
+		httpStatus = http.StatusAccepted
 	}
 
 	return models.NewSuccessResponse(jsonResponse, httpStatus, headers), nil
