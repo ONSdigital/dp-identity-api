@@ -344,12 +344,103 @@ func TestUserSignIn_BuildSuccessfulJsonResponse(t *testing.T) {
 			},
 		}
 
-		response, err := signIn.BuildSuccessfulJsonResponse(ctx,&result)
+		response, err := signIn.BuildSuccessfulJsonResponse(ctx, &result)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
 		var body map[string]interface{}
 		err = json.Unmarshal(response, &body)
 		So(body["expirationTime"], ShouldNotBeNil)
+	})
+}
+
+func TestChangePassword_ValidateNewPasswordRequiredRequest(t *testing.T) {
+	ctx := context.Background()
+
+	Convey("returns an validation errors if required parameters are missing", t, func() {
+		missingParamsTests := []struct {
+			Session        string
+			Email          string
+			Password       string
+			ExpectedErrors []string
+		}{
+			{
+				// missing session
+				"",
+				"email@gmail.com",
+				"Password2",
+				[]string{models.InvalidChallengeSessionError},
+			},
+			{
+				// missing email
+				"auth-challenge-session",
+				"",
+				"Password2",
+				[]string{models.InvalidEmailError},
+			},
+			{
+				// missing password
+				"auth-challenge-session",
+				"email@gmail.com",
+				"",
+				[]string{models.InvalidPasswordError},
+			},
+			{
+				// missing session and email
+				"",
+				"",
+				"Password2",
+				[]string{models.InvalidEmailError, models.InvalidChallengeSessionError},
+			},
+			{
+				// missing session and password
+				"",
+				"email@gmail.com",
+				"",
+				[]string{models.InvalidPasswordError, models.InvalidChallengeSessionError},
+			},
+			{
+				// missing email and password
+				"auth-challenge-session",
+				"",
+				"",
+				[]string{models.InvalidPasswordError, models.InvalidEmailError},
+			},
+			{
+				// missing session, email and password
+				"",
+				"",
+				"",
+				[]string{models.InvalidPasswordError, models.InvalidEmailError, models.InvalidChallengeSessionError},
+			},
+		}
+		for _, tt := range missingParamsTests {
+			passwordChangeParams := models.ChangePassword{
+				ChangeType:  models.NewPasswordRequiredType,
+				Session:     tt.Session,
+				Email:       tt.Email,
+				NewPassword: tt.Password,
+			}
+
+			validationErrs := passwordChangeParams.ValidateNewPasswordRequiredRequest(ctx)
+
+			So(len(validationErrs), ShouldEqual, len(tt.ExpectedErrors))
+			for i, expectedErrCode := range tt.ExpectedErrors {
+				castErr := validationErrs[i].(*models.Error)
+				So(castErr.Code, ShouldEqual, expectedErrCode)
+			}
+		}
+	})
+
+	Convey("returns an empty slice if there are no validation failures", t, func() {
+		passwordChangeParams := models.ChangePassword{
+			ChangeType:  models.NewPasswordRequiredType,
+			Session:     "auth-challenge-session",
+			Email:       "email@gmail.com",
+			NewPassword: "Password2",
+		}
+		validationErrs := passwordChangeParams.ValidateNewPasswordRequiredRequest(ctx)
+
+		So(len(validationErrs), ShouldEqual, 0)
 	})
 }
