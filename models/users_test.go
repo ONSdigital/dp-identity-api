@@ -469,3 +469,37 @@ func TestChangePassword_BuildAuthChallengeResponseRequest(t *testing.T) {
 		So(*response.ClientId, ShouldResemble, clientId)
 	})
 }
+
+func TestChangePassword_BuildAuthChallengeSuccessfulJsonResponse(t *testing.T) {
+	ctx := context.Background()
+
+	Convey("returns an InternalServerError if the Cognito response does not meet expected format", t, func() {
+		passwordChangeParams := models.ChangePassword{}
+		result := cognitoidentityprovider.RespondToAuthChallengeOutput{}
+
+		response, err := passwordChangeParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, &result)
+
+		So(response, ShouldBeNil)
+		castErr := err.(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InternalError)
+		So(castErr.Description, ShouldEqual, models.UnrecognisedCognitoResponseDescription)
+	})
+
+	Convey("returns a byte array of the response JSON", t, func() {
+		var expirationLength int64 = 300
+		passwordChangeParams := models.ChangePassword{}
+		result := cognitoidentityprovider.RespondToAuthChallengeOutput{
+			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
+				ExpiresIn: &expirationLength,
+			},
+		}
+
+		response, err := passwordChangeParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, &result)
+
+		So(err, ShouldBeNil)
+		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
+		var body map[string]interface{}
+		err = json.Unmarshal(response, &body)
+		So(body["expirationTime"], ShouldNotBeNil)
+	})
+}
