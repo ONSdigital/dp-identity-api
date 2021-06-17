@@ -2,7 +2,6 @@ package mock
 
 import (
 	"errors"
-	"github.com/ONSdigital/dp-identity-api/api"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -193,7 +192,7 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(input *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
 	var expiration int64 = 123
 
-	if *input.ChallengeName == api.NewPasswordChallenge {
+	if *input.ChallengeName == "NEW_PASSWORD_REQUIRED" {
 		accessToken := "accessToken"
 		idToken := "idToken"
 		refreshToken := "refreshToken"
