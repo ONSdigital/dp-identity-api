@@ -202,3 +202,20 @@ func (p ChangePassword) ValidateNewPasswordRequiredRequest(ctx context.Context) 
 	return validationErrs
 }
 
+func (p ChangePassword) BuildAuthChallengeResponseRequest(clientSecret string, clientId string, challengeName string) *cognitoidentityprovider.RespondToAuthChallengeInput {
+	secretHash := utilities.ComputeSecretHash(clientSecret, p.Email, clientId)
+
+	challengeResponses := map[string]*string{
+		"USERNAME":     &p.Email,
+		"NEW_PASSWORD": &p.NewPassword,
+		"SECRET_HASH":  &secretHash,
+	}
+
+	return &cognitoidentityprovider.RespondToAuthChallengeInput{
+		ClientId:           &clientId,
+		ChallengeName:      &challengeName,
+		Session:            &p.Session,
+		ChallengeResponses: challengeResponses,
+	}
+}
+
