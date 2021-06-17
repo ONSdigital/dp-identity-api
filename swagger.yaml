@@ -219,6 +219,10 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
+        501:
+          description: "Requested unimplemented password change type"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
 
 
 responses:
