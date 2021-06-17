@@ -71,6 +71,7 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 	defer req.Body.Close()
 	var jsonResponse []byte = nil
 	var responseErr error = nil
+	var headers map[string]string = nil
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -103,6 +104,14 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 		}
 
 		jsonResponse, responseErr = changePasswordParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, result)
+
+		if responseErr == nil {
+			headers = map[string]string{
+				AccessTokenHeaderName:  "Bearer " + *result.AuthenticationResult.AccessToken,
+				IdTokenHeaderName:      *result.AuthenticationResult.IdToken,
+				RefreshTokenHeaderName: *result.AuthenticationResult.RefreshToken,
+			}
+		}
 	} else if changePasswordParams.ChangeType == models.ForgottenPasswordType {
 		// This feature is to be added in a separate ticket later
 		err = models.NewValidationError(ctx, models.NotImplementedError, models.NotImplementedDescription)
@@ -116,5 +125,5 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
 	}
 
-	return models.NewSuccessResponse(jsonResponse, http.StatusAccepted, nil), nil
+	return models.NewSuccessResponse(jsonResponse, http.StatusAccepted, headers), nil
 }
