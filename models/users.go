@@ -11,6 +11,11 @@ import (
 	"github.com/sethvargo/go-password/password"
 )
 
+const (
+	NewPasswordRequiredType = "NewPasswordRequired"
+	ForgottenPasswordType   = "ForgottenPassword"
+)
+
 type UserParams struct {
 	Forename string `json:"forename"`
 	Surname  string `json:"surname"`
@@ -131,7 +136,7 @@ func (p *UserSignIn) ValidateCredentials(ctx context.Context) *[]error {
 
 func (p *UserSignIn) BuildCognitoRequest(clientId string, clientSecret string, clientAuthFlow string) *cognitoidentityprovider.InitiateAuthInput {
 	secretHash := utilities.ComputeSecretHash(clientSecret, p.Email, clientId)
-	
+
 	authParameters := map[string]*string{
 		"USERNAME":    &p.Email,
 		"PASSWORD":    &p.Password,
@@ -152,7 +157,7 @@ func (p *UserSignIn) BuildSuccessfulJsonResponse(ctx context.Context, result *co
 	if result.AuthenticationResult != nil {
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
 		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
-		
+
 		postBody := map[string]interface{}{"expirationTime": expirationTime}
 
 		jsonResponse, err := json.Marshal(postBody)
@@ -161,9 +166,9 @@ func (p *UserSignIn) BuildSuccessfulJsonResponse(ctx context.Context, result *co
 		}
 		return jsonResponse, nil
 	} else if result.ChallengeName != nil && *result.ChallengeName == "NEW_PASSWORD_REQUIRED" {
-		postBody := map[string]interface{} {
+		postBody := map[string]interface{}{
 			"new_password_required": "true",
-			"session": *result.Session,
+			"session":               *result.Session,
 		}
 
 		jsonResponse, err := json.Marshal(postBody)
@@ -174,5 +179,26 @@ func (p *UserSignIn) BuildSuccessfulJsonResponse(ctx context.Context, result *co
 	} else {
 		return nil, NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
 	}
+}
+
+type ChangePassword struct {
+	ChangeType  string `json:"type"`
+	Session     string `json:"session"`
+	Email       string `json:"email"`
+	NewPassword string `json:"password"`
+}
+
+func (p ChangePassword) ValidateNewPasswordRequiredRequest(ctx context.Context) []error {
+	var validationErrs []error
+	if !validation.IsPasswordValid(p.NewPassword) {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidPasswordError, InvalidPasswordDescription))
+	}
+	if !validation.IsEmailValid(p.Email) {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription))
+	}
+	if p.Session == "" {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidChallengeSessionError, InvalidChallengeSessionDescription))
+	}
+	return validationErrs
 }
 
