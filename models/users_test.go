@@ -3,6 +3,7 @@ package models_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/ONSdigital/dp-identity-api/api"
 	"reflect"
 	"testing"
 
@@ -357,7 +358,7 @@ func TestUserSignIn_BuildSuccessfulJsonResponse(t *testing.T) {
 func TestChangePassword_ValidateNewPasswordRequiredRequest(t *testing.T) {
 	ctx := context.Background()
 
-	Convey("returns an validation errors if required parameters are missing", t, func() {
+	Convey("returns validation errors if required parameters are missing", t, func() {
 		missingParamsTests := []struct {
 			Session        string
 			Email          string
@@ -442,5 +443,29 @@ func TestChangePassword_ValidateNewPasswordRequiredRequest(t *testing.T) {
 		validationErrs := passwordChangeParams.ValidateNewPasswordRequiredRequest(ctx)
 
 		So(len(validationErrs), ShouldEqual, 0)
+	})
+}
+
+func TestChangePassword_BuildAuthChallengeResponseRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito RespondToAuthChallengeInput request body", t, func() {
+
+		passwordChangeParams := models.ChangePassword{
+			ChangeType:  models.NewPasswordRequiredType,
+			Session:     "auth-challenge-session",
+			Email:       "email@gmail.com",
+			NewPassword: "Password2",
+		}
+
+		clientId := "awsclientid"
+		clientSecret := "awsSectret"
+
+		response := passwordChangeParams.BuildAuthChallengeResponseRequest(clientSecret, clientId, api.NewPasswordChallenge)
+
+		So(*response.ChallengeResponses["USERNAME"], ShouldEqual, passwordChangeParams.Email)
+		So(*response.ChallengeResponses["NEW_PASSWORD"], ShouldEqual, passwordChangeParams.NewPassword)
+		So(*response.ChallengeResponses["SECRET_HASH"], ShouldNotBeEmpty)
+		So(*response.ChallengeName, ShouldEqual, api.NewPasswordChallenge)
+		So(*response.Session, ShouldEqual, passwordChangeParams.Session)
+		So(*response.ClientId, ShouldResemble, clientId)
 	})
 }
