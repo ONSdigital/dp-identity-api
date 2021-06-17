@@ -66,3 +66,55 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusCreated, nil), nil
 }
+
+func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	defer req.Body.Close()
+	var jsonResponse []byte = nil
+	var responseErr error = nil
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, handleBodyReadError(ctx, err)
+	}
+
+	changePasswordParams := models.ChangePassword{}
+	err = json.Unmarshal(body, &changePasswordParams)
+	if err != nil {
+		return nil, handleBodyUnmarshalError(ctx, err)
+	}
+
+	if changePasswordParams.ChangeType == models.NewPasswordRequiredType {
+		validationErrs := changePasswordParams.ValidateNewPasswordRequiredRequest(ctx)
+		if len(validationErrs) != 0 {
+			return nil, models.NewErrorResponse(validationErrs, http.StatusBadRequest, nil)
+		}
+
+		changePasswordRequest := changePasswordParams.BuildAuthChallengeResponseRequest(api.ClientSecret, api.ClientId, NewPasswordChallenge)
+
+		result, cognitoErr := api.CognitoClient.RespondToAuthChallenge(changePasswordRequest)
+
+		if cognitoErr != nil {
+			parsedErr := models.NewCognitoError(ctx, cognitoErr, "RespondToAuthChallenge request, NEW_PASSWORD_REQUIRED type, from change password endpoint")
+			if parsedErr.Code == models.InternalError {
+				return nil, models.NewErrorResponse([]error{parsedErr}, http.StatusInternalServerError, nil)
+			} else {
+				return nil, models.NewErrorResponse([]error{parsedErr}, http.StatusBadRequest, nil)
+			}
+		}
+
+		jsonResponse, responseErr = changePasswordParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, result)
+	} else if changePasswordParams.ChangeType == models.ForgottenPasswordType {
+		// This feature is to be added in a separate ticket later
+		err = models.NewValidationError(ctx, models.NotImplementedError, models.NotImplementedDescription)
+		return nil, models.NewErrorResponse([]error{err}, http.StatusNotImplemented, nil)
+	} else {
+		err = models.NewValidationError(ctx, models.UnknownRequestTypeError, models.UnknownPasswordChangeTypeDescription)
+		return nil, models.NewErrorResponse([]error{err}, http.StatusBadRequest, nil)
+	}
+
+	if responseErr != nil {
+		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusAccepted, nil), nil
+}
