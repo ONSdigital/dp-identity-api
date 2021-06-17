@@ -219,3 +219,19 @@ func (p ChangePassword) BuildAuthChallengeResponseRequest(clientSecret string, c
 	}
 }
 
+func (p ChangePassword) BuildAuthChallengeSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.RespondToAuthChallengeOutput) ([]byte, error) {
+	if result.AuthenticationResult != nil {
+		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
+		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
+
+		postBody := map[string]interface{}{"expirationTime": expirationTime}
+
+		jsonResponse, err := json.Marshal(postBody)
+		if err != nil {
+			return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
+		}
+		return jsonResponse, nil
+	} else {
+		return nil, NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
+	}
+}
