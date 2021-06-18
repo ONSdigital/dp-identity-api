@@ -191,3 +191,303 @@ Feature: Users
                 ]
             }
             """
+
+    Scenario: PUT /v1/users/self/password and checking the response status 202
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I PUT "/v1/users/self/password"
+            """
+            {
+                "type": "NewPasswordRequired",
+                "email": "email@ons.gov.uk",
+                "password": "Password2",
+                "session": "auth-challenge-session"
+            }
+            """
+        Then the HTTP status code should be "202"
+        And the response header "Authorization" should be "Bearer accessToken"
+        And the response header "ID" should be "idToken"
+        And the response header "Refresh" should be "refreshToken"
+
+    Scenario: PUT /v1/users/self/password missing type and checking the response status 400
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I PUT "/v1/users/self/password"
+            """
+            {
+                "type": "",
+                "email": "email@ons.gov.uk",
+                "password": "Password2",
+                "session": "auth-challenge-session"
+            }
+            """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "UnknownRequestType",
+                        "description": "unknown password change type received"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/self/password forgotten password type and checking the response status 501
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I PUT "/v1/users/self/password"
+            """
+            {
+                "type": "ForgottenPassword",
+                "email": "email@ons.gov.uk",
+                "password": "Password2",
+                "session": "auth-challenge-session"
+            }
+            """
+        Then I should receive the following JSON response with status "501":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "NotImplemented",
+                        "description": "this feature has not been implemented yet"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/self/password missing email and checking the response status 400
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I PUT "/v1/users/self/password"
+            """
+            {
+                "type": "NewPasswordRequired",
+                "email": "",
+                "password": "Password2",
+                "session": "auth-challenge-session"
+            }
+            """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidEmail",
+                        "description": "the submitted email could not be validated"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/self/password missing password and checking the response status 400
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I PUT "/v1/users/self/password"
+            """
+            {
+                "type": "NewPasswordRequired",
+                "email": "email@ons.gov.uk",
+                "password": "",
+                "session": "auth-challenge-session"
+            }
+            """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidPassword",
+                        "description": "the submitted password could not be validated"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/self/password missing session and checking the response status 400
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I PUT "/v1/users/self/password"
+            """
+            {
+                "type": "NewPasswordRequired",
+                "email": "email@ons.gov.uk",
+                "password": "Password2",
+                "session": ""
+            }
+            """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidChallengeSession",
+                        "description": "no valid auth challenge session was provided"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/self/password missing email and password and checking the response status 400
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I PUT "/v1/users/self/password"
+            """
+            {
+                "type": "NewPasswordRequired",
+                "email": "",
+                "password": "",
+                "session": "auth-challenge-session"
+            }
+            """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidPassword",
+                        "description": "the submitted password could not be validated"
+                    },
+                    {
+                        "code": "InvalidEmail",
+                        "description": "the submitted email could not be validated"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/self/password missing email and session and checking the response status 400
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I PUT "/v1/users/self/password"
+            """
+            {
+                "type": "NewPasswordRequired",
+                "email": "",
+                "password": "Password2",
+                "session": ""
+            }
+            """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidEmail",
+                        "description": "the submitted email could not be validated"
+                    },
+                    {
+                        "code": "InvalidChallengeSession",
+                        "description": "no valid auth challenge session was provided"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/self/password missing password and session and checking the response status 400
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I PUT "/v1/users/self/password"
+            """
+            {
+                "type": "NewPasswordRequired",
+                "email": "email@ons.gov.uk",
+                "password": "",
+                "session": ""
+            }
+            """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidPassword",
+                        "description": "the submitted password could not be validated"
+                    },
+                    {
+                        "code": "InvalidChallengeSession",
+                        "description": "no valid auth challenge session was provided"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/self/password missing email and password and session and checking the response status 400
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I PUT "/v1/users/self/password"
+            """
+            {
+                "type": "NewPasswordRequired",
+                "email": "",
+                "password": "",
+                "session": ""
+            }
+            """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidPassword",
+                        "description": "the submitted password could not be validated"
+                    },
+                    {
+                        "code": "InvalidEmail",
+                        "description": "the submitted email could not be validated"
+                    },
+                    {
+                        "code": "InvalidChallengeSession",
+                        "description": "no valid auth challenge session was provided"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/self/password Cognito internal error
+        Given an internal server error is returned from Cognito
+        When I PUT "/v1/users/self/password"
+        """
+            {
+                "type": "NewPasswordRequired",
+                "email": "email@ons.gov.uk",
+                "password": "internalerrorException",
+                "session": "auth-challenge-session"
+            }
+        """
+        Then I should receive the following JSON response with status "500":
+        """
+        {
+            "errors": [
+                {
+                    "code": "InternalServerError",
+                    "description": "Something went wrong"
+                }
+            ]
+        }
+        """
+
+    Scenario: PUT /v1/users/self/password Cognito invalid password
+        When I PUT "/v1/users/self/password"
+        """
+            {
+                "type": "NewPasswordRequired",
+                "email": "email@ons.gov.uk",
+                "password": "invalidpassword",
+                "session": "auth-challenge-session"
+            }
+        """
+        Then I should receive the following JSON response with status "400":
+        """
+        {
+            "errors": [
+                {
+                    "code": "InvalidPassword",
+                    "description": "password does not meet requirements"
+                }
+            ]
+        }
+        """
+
+    Scenario: PUT /v1/users/self/password Cognito user not found
+        When I PUT "/v1/users/self/password"
+        """
+            {
+                "type": "NewPasswordRequired",
+                "email": "email@ons.gov.uk",
+                "password": "Password",
+                "session": "auth-challenge-session"
+            }
+        """
+        Then the HTTP status code should be "202"

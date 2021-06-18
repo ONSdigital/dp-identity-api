@@ -67,6 +67,9 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.SignOutHandler)).Methods("DELETE")
 	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.RefreshHandler)).Methods("PUT")
 	r.HandleFunc("/v1/users", contextAndErrors(api.CreateUserHandler)).Methods("POST")
+	// self used in paths rather than identifier as the identifier is a Cognito Session string in change password requests
+	// the user id is not yet available from the previous responses
+	r.HandleFunc("/v1/users/self/password", contextAndErrors(api.ChangePasswordHandler)).Methods("PUT")
 	return api, nil
 }
 
@@ -78,7 +81,7 @@ func writeErrorResponse(ctx context.Context, w http.ResponseWriter, errorRespons
 			w.Header().Set(key, errorResponse.Headers[key])
 		}
 	}
-	w.WriteHeader(errorResponse.Status)	
+	w.WriteHeader(errorResponse.Status)
 
 	jsonResponse, err := json.Marshal(errorResponse)
 	if err != nil {
@@ -116,13 +119,13 @@ func writeSuccessResponse(ctx context.Context, w http.ResponseWriter, successRes
 func handleBodyReadError(ctx context.Context, err error) *models.ErrorResponse {
 	return models.NewErrorResponse([]error{models.NewError(ctx, err, models.BodyReadError, models.BodyReadFailedDescription)},
 		http.StatusInternalServerError,
-			nil,	
+		nil,
 	)
 }
 
 func handleBodyUnmarshalError(ctx context.Context, err error) *models.ErrorResponse {
 	return models.NewErrorResponse([]error{models.NewError(ctx, err, models.JSONUnmarshalError, models.ErrorUnmarshalFailedDescription)},
 		http.StatusInternalServerError,
-			nil,
+		nil,
 	)
 }

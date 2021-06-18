@@ -27,6 +27,7 @@ func TestSetup(t *testing.T) {
 			So(hasRoute(api.Router, "/v1/tokens/self", "DELETE"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/tokens/self", "PUT"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/users", "POST"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/users/self/password", "PUT"), ShouldBeTrue)
 		})
 
 		Convey("No error returned when user pool id supplied", func() {
@@ -144,8 +145,8 @@ func TestWriteSuccessResponse(t *testing.T) {
 			Body:   body,
 			Status: http.StatusCreated,
 			Headers: map[string]string{
-				AccessTokenHeaderName: accessTokenHeaderMessage,
-				IdTokenHeaderName: idTokenHeaderMessage,
+				AccessTokenHeaderName:  accessTokenHeaderMessage,
+				IdTokenHeaderName:      idTokenHeaderMessage,
 				RefreshTokenHeaderName: refreshTokenHeaderMessage,
 			},
 		}
