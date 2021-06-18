@@ -98,18 +98,18 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 			parsedErr := models.NewCognitoError(ctx, cognitoErr, "RespondToAuthChallenge request, NEW_PASSWORD_REQUIRED type, from change password endpoint")
 			if parsedErr.Code == models.InternalError {
 				return nil, models.NewErrorResponse([]error{parsedErr}, http.StatusInternalServerError, nil)
-			} else {
+			} else if parsedErr.Code == models.InvalidPasswordError || parsedErr.Code == models.InvalidCodeError {
 				return nil, models.NewErrorResponse([]error{parsedErr}, http.StatusBadRequest, nil)
 			}
-		}
+		} else {
+			jsonResponse, responseErr = changePasswordParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, result)
 
-		jsonResponse, responseErr = changePasswordParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, result)
-
-		if responseErr == nil {
-			headers = map[string]string{
-				AccessTokenHeaderName:  "Bearer " + *result.AuthenticationResult.AccessToken,
-				IdTokenHeaderName:      *result.AuthenticationResult.IdToken,
-				RefreshTokenHeaderName: *result.AuthenticationResult.RefreshToken,
+			if responseErr == nil {
+				headers = map[string]string{
+					AccessTokenHeaderName:  "Bearer " + *result.AuthenticationResult.AccessToken,
+					IdTokenHeaderName:      *result.AuthenticationResult.IdToken,
+					RefreshTokenHeaderName: *result.AuthenticationResult.RefreshToken,
+				}
 			}
 		}
 	} else if changePasswordParams.ChangeType == models.ForgottenPasswordType {

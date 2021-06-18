@@ -464,7 +464,7 @@ Feature: Users
             {
                 "type": "NewPasswordRequired",
                 "email": "email@ons.gov.uk",
-                "password": "Password",
+                "password": "invalidpassword",
                 "session": "auth-challenge-session"
             }
         """
@@ -479,3 +479,15 @@ Feature: Users
             ]
         }
         """
+
+    Scenario: PUT /v1/users/self/password Cognito user not found
+        When I PUT "/v1/users/self/password"
+        """
+            {
+                "type": "NewPasswordRequired",
+                "email": "email@ons.gov.uk",
+                "password": "Password",
+                "session": "auth-challenge-session"
+            }
+        """
+        Then the HTTP status code should be "202"

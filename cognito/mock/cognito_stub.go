@@ -207,6 +207,8 @@ func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(input *cognit
 
 		if *input.ChallengeResponses["NEW_PASSWORD"] == "internalerrorException" {
 			return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		} else if *input.ChallengeResponses["NEW_PASSWORD"] == "invalidpassword" {
+			return nil, awserr.New(cognitoidentityprovider.ErrCodeInvalidPasswordException, "password does not meet requirements", nil)
 		}
 
 		for _, user := range m.Users {
@@ -214,7 +216,7 @@ func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(input *cognit
 				return challengeResponseOutput, nil
 			}
 		}
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInvalidPasswordException, "password does not meet requirements", nil)
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "user not found", nil)
 	} else {
 		return nil, errors.New("InvalidParameterException: Unknown Auth Flow")
 	}
