@@ -279,15 +279,37 @@ func TestChangePasswordHandler(t *testing.T) {
 				http.StatusInternalServerError,
 			},
 			{
-				// Cognito bad request
+				// Cognito invalid session
 				func(input *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
-					awsErrCode := "NotAuthorizedException"
-					awsErrMessage := "session invlaid"
+					awsErrCode := "CodeMismatchException"
+					awsErrMessage := "session invalid"
 					awsOrigErr := errors.New(awsErrCode)
 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					return nil, awsErr
 				},
 				http.StatusBadRequest,
+			},
+			{
+				// Cognito invalid password
+				func(input *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
+					awsErrCode := "InvalidPasswordException"
+					awsErrMessage := "password invalid"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				http.StatusBadRequest,
+			},
+			{
+				// Cognito invalid user
+				func(input *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
+					awsErrCode := "UserNotFoundException"
+					awsErrMessage := "user not found"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				http.StatusAccepted,
 			},
 		}
 
