@@ -67,7 +67,7 @@ func (p UserParams) BuildListUserRequest(filterString string, requiredAttribute 
 
 func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *cognitoidentityprovider.AdminCreateUserInput {
 	var (
-		deliveryMethod, forenameAttrName, surnameAttrName, emailAttrName string = "EMAIL", "name", "family_name", "email"
+		deliveryMethod, forenameAttrName, surnameAttrName, emailAttrName, emailVerifiedAttrName, emailVerifiedValue string = "EMAIL", "name", "family_name", "email", "email_verified", "true"
 	)
 
 	return &cognitoidentityprovider.AdminCreateUserInput{
@@ -83,6 +83,10 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 			{
 				Name:  &emailAttrName,
 				Value: &p.Email,
+			},
+			{
+				Name:  &emailVerifiedAttrName,
+				Value: &emailVerifiedValue,
 			},
 		},
 		DesiredDeliveryMediums: []*string{
