@@ -539,3 +539,21 @@ func TestPasswordReset_Validate(t *testing.T) {
 		So(validationErr, ShouldBeNil)
 	})
 }
+
+func TestPasswordReset_BuildCognitoRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito ForgotPasswordInput request body", t, func() {
+
+		passwordResetParams := models.PasswordReset{
+			Email: "email@gmail.com",
+		}
+
+		clientId := "awsclientid"
+		clientSecret := "awsSectret"
+
+		response := passwordResetParams.BuildCognitoRequest(clientSecret, clientId)
+
+		So(*response.Username, ShouldEqual, passwordResetParams.Email)
+		So(*response.SecretHash, ShouldEqual, ShouldNotBeEmpty)
+		So(*response.ClientId, ShouldResemble, clientId)
+	})
+}
