@@ -246,3 +246,12 @@ func (p *PasswordReset) Validate(ctx context.Context) error {
 	}
 	return nil
 }
+
+func (p PasswordReset) BuildCognitoRequest(clientSecret string, clientId string) *cognitoidentityprovider.ForgotPasswordInput {
+	secretHash := utilities.ComputeSecretHash(clientSecret, p.Email, clientId)
+	return &cognitoidentityprovider.ForgotPasswordInput{
+		ClientId:   &clientId,
+		SecretHash: &secretHash,
+		Username:   &p.Email,
+	}
+}

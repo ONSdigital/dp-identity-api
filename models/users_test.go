@@ -553,7 +553,7 @@ func TestPasswordReset_BuildCognitoRequest(t *testing.T) {
 		response := passwordResetParams.BuildCognitoRequest(clientSecret, clientId)
 
 		So(*response.Username, ShouldEqual, passwordResetParams.Email)
-		So(*response.SecretHash, ShouldEqual, ShouldNotBeEmpty)
+		So(*response.SecretHash, ShouldNotBeEmpty)
 		So(*response.ClientId, ShouldResemble, clientId)
 	})
 }
