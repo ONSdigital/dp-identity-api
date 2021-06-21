@@ -221,3 +221,20 @@ func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(input *cognit
 		return nil, errors.New("InvalidParameterException: Unknown Auth Flow")
 	}
 }
+
+func (m *CognitoIdentityProviderClientStub) ForgotPassword(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
+	forgotPasswordOutput := &cognitoidentityprovider.ForgotPasswordOutput{
+		CodeDeliveryDetails: &cognitoidentityprovider.CodeDeliveryDetailsType{},
+	}
+
+	if *input.Username == "internal.error@ons.gov.uk" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+
+	for _, user := range m.Users {
+		if user.email == *input.Username {
+			return forgotPasswordOutput, nil
+		}
+	}
+	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "user not found", nil)
+}
