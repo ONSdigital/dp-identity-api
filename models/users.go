@@ -235,3 +235,14 @@ func (p ChangePassword) BuildAuthChallengeSuccessfulJsonResponse(ctx context.Con
 		return nil, NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
 	}
 }
+
+type PasswordReset struct {
+	Email string `json:"email"`
+}
+
+func (p *PasswordReset) Validate(ctx context.Context) error {
+	if !validation.IsEmailValid(p.Email) {
+		return NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription)
+	}
+	return nil
+}
