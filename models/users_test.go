@@ -503,3 +503,39 @@ func TestChangePassword_BuildAuthChallengeSuccessfulJsonResponse(t *testing.T) {
 		So(body["expirationTime"], ShouldNotBeNil)
 	})
 }
+
+func TestPasswordReset_Validate(t *testing.T) {
+	ctx := context.Background()
+
+	Convey("returns validation errors if required parameters are missing", t, func() {
+		missingParamsTests := []struct {
+			Email         string
+			ExpectedError string
+		}{
+			{
+				// missing email
+				"",
+				"InvalidEmail",
+			},
+		}
+		for _, tt := range missingParamsTests {
+			passwordChangeParams := models.PasswordReset{
+				Email: tt.Email,
+			}
+
+			validationErr := passwordChangeParams.Validate(ctx)
+
+			castErr := validationErr.(*models.Error)
+			So(castErr.Code, ShouldEqual, tt.ExpectedError)
+		}
+	})
+
+	Convey("returns nil if there are no validation failures", t, func() {
+		passwordResetParams := models.PasswordReset{
+			Email: "email@gmail.com",
+		}
+		validationErr := passwordResetParams.Validate(ctx)
+
+		So(validationErr, ShouldBeNil)
+	})
+}
