@@ -386,7 +386,7 @@ func TestPasswordResetHandler(t *testing.T) {
 		routeMux                                        = mux.NewRouter()
 		ctx                                             = context.Background()
 		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "abc123", "bsjahsaj9djsiq", "authflow"
-		email, password, session                 string = "foo_bar123@ext.ons.gov.uk", "Password2", "auth-challenge-session"
+		email                                    string = "foo_bar123@ext.ons.gov.uk"
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
@@ -435,7 +435,7 @@ func TestPasswordResetHandler(t *testing.T) {
 		for _, tt := range respondToAuthChallengeTests {
 			m.ForgotPasswordFunc = tt.forgotPasswordFunction
 
-			postBody := map[string]interface{}{"type": models.NewPasswordRequiredType, "email": email, "password": password, "session": session}
+			postBody := map[string]interface{}{"email": email}
 			body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodPost, requestResetEndPoint, bytes.NewReader(body))
 
@@ -471,7 +471,7 @@ func TestPasswordResetHandler(t *testing.T) {
 		}{
 			// missing a change request param
 			{
-				map[string]interface{}{"type": models.NewPasswordRequiredType, "email": "", "password": password, "session": session},
+				map[string]interface{}{"email": ""},
 				models.InvalidEmailError,
 				http.StatusBadRequest,
 			},
