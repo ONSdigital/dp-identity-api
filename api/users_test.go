@@ -19,6 +19,7 @@ import (
 
 const usersEndPoint = "http://localhost:25600/v1/users"
 const changePasswordEndPoint = "http://localhost:25600/v1/users/self/password"
+const requestResetEndPoint = "http://localhost:25600/v1/password-reset"
 
 func TestCreateUserHandler(t *testing.T) {
 
@@ -369,6 +370,118 @@ func TestChangePasswordHandler(t *testing.T) {
 			r := httptest.NewRequest(http.MethodPut, changePasswordEndPoint, bytes.NewReader(body))
 
 			successResponse, errorResponse := api.ChangePasswordHandler(ctx, w, r)
+
+			So(successResponse, ShouldBeNil)
+			So(errorResponse.Status, ShouldEqual, tt.httpResponse)
+			So(len(errorResponse.Errors), ShouldEqual, 1)
+			castErr := errorResponse.Errors[0].(*models.Error)
+			So(castErr.Code, ShouldEqual, tt.errorCode)
+		}
+	})
+}
+
+func TestPasswordResetHandler(t *testing.T) {
+
+	var (
+		routeMux                                        = mux.NewRouter()
+		ctx                                             = context.Background()
+		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "abc123", "bsjahsaj9djsiq", "authflow"
+		email, password, session                 string = "foo_bar123@ext.ons.gov.uk", "Password2", "auth-challenge-session"
+	)
+
+	m := &mock.MockCognitoIdentityProviderClient{}
+
+	api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authFlow)
+	w := httptest.NewRecorder()
+
+	Convey("ForgotPassword - check expected responses", t, func() {
+		respondToAuthChallengeTests := []struct {
+			forgotPasswordFunction func(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error)
+			httpResponse           int
+		}{
+			{
+				// Cognito successful password change
+				func(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
+					return &cognitoidentityprovider.ForgotPasswordOutput{
+						CodeDeliveryDetails: &cognitoidentityprovider.CodeDeliveryDetailsType{},
+					}, nil
+				},
+				http.StatusAccepted,
+			},
+			{
+				// Cognito internal error
+				func(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := "Something strange happened"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				http.StatusInternalServerError,
+			},
+			{
+				// Cognito invalid user
+				func(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
+					awsErrCode := "CodeMismatchException"
+					awsErrMessage := "session invalid"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				http.StatusAccepted,
+			},
+		}
+
+		for _, tt := range respondToAuthChallengeTests {
+			m.ForgotPasswordFunc = tt.forgotPasswordFunction
+
+			postBody := map[string]interface{}{"type": models.NewPasswordRequiredType, "email": email, "password": password, "session": session}
+			body, _ := json.Marshal(postBody)
+			r := httptest.NewRequest(http.MethodPost, requestResetEndPoint, bytes.NewReader(body))
+
+			successResponse, errorResponse := api.PasswordResetHandler(ctx, w, r)
+
+			// Check whether testing a success or error case
+			if tt.httpResponse > 399 {
+				So(successResponse, ShouldBeNil)
+				So(errorResponse.Status, ShouldEqual, tt.httpResponse)
+			} else {
+				So(successResponse.Status, ShouldEqual, tt.httpResponse)
+				So(errorResponse, ShouldBeNil)
+			}
+		}
+	})
+
+	Convey("ForgotPassword returns 500: error unmarshalling request body", t, func() {
+		r := httptest.NewRequest(http.MethodPost, requestResetEndPoint, bytes.NewReader(nil))
+
+		successResponse, errorResponse := api.PasswordResetHandler(ctx, w, r)
+
+		So(successResponse, ShouldBeNil)
+		castErr := errorResponse.Errors[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.JSONUnmarshalError)
+		So(castErr.Description, ShouldEqual, models.ErrorUnmarshalFailedDescription)
+	})
+
+	Convey("Validation fails 400: validation of a required param throws validation errors", t, func() {
+		validationTests := []struct {
+			requestBody  map[string]interface{}
+			errorCode    string
+			httpResponse int
+		}{
+			// missing a change request param
+			{
+				map[string]interface{}{"type": models.NewPasswordRequiredType, "email": "", "password": password, "session": session},
+				models.InvalidEmailError,
+				http.StatusBadRequest,
+			},
+		}
+
+		for _, tt := range validationTests {
+			body, _ := json.Marshal(tt.requestBody)
+			r := httptest.NewRequest(http.MethodPost, requestResetEndPoint, bytes.NewReader(body))
+
+			successResponse, errorResponse := api.PasswordResetHandler(ctx, w, r)
 
 			So(successResponse, ShouldBeNil)
 			So(errorResponse.Status, ShouldEqual, tt.httpResponse)
