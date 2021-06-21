@@ -565,23 +565,21 @@ func TestPasswordReset_BuildSuccessfulJsonResponse(t *testing.T) {
 		passwordResetParams := models.PasswordReset{}
 		result := cognitoidentityprovider.ForgotPasswordOutput{}
 
-		response, err := passwordResetParams.BuildSuccessfulJsonResponse(ctx, &result)
+		err := passwordResetParams.BuildSuccessfulJsonResponse(ctx, &result)
 
-		So(response, ShouldBeNil)
 		castErr := err.(*models.Error)
 		So(castErr.Code, ShouldEqual, models.InternalError)
 		So(castErr.Description, ShouldEqual, models.UnrecognisedCognitoResponseDescription)
 	})
 
-	Convey("returns a byte array of the response JSON", t, func() {
+	Convey("returns no error when given an expected Cognito response", t, func() {
 		passwordResetParams := models.PasswordReset{}
 		result := cognitoidentityprovider.ForgotPasswordOutput{
-			CodeDeliveryDetails: nil,
+			CodeDeliveryDetails: &cognitoidentityprovider.CodeDeliveryDetailsType{},
 		}
 
-		response, err := passwordResetParams.BuildSuccessfulJsonResponse(ctx, &result)
+		err := passwordResetParams.BuildSuccessfulJsonResponse(ctx, &result)
 
 		So(err, ShouldBeNil)
-		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
 	})
 }

@@ -255,3 +255,10 @@ func (p PasswordReset) BuildCognitoRequest(clientSecret string, clientId string)
 		Username:   &p.Email,
 	}
 }
+
+func (p *PasswordReset) BuildSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.ForgotPasswordOutput) error {
+	if result.CodeDeliveryDetails == nil {
+		return NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
+	}
+	return nil
+}
