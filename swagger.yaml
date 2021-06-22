@@ -223,6 +223,38 @@ paths:
           description: "Requested unimplemented password change type"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /v1/password-reset:
+    put:
+      tags:
+        - Users
+      summary: "Sends the user a password reset email"
+      description: "Trigger a password reset email from Cognito"
+      consumes:
+        - application/json
+      produces:
+        - "application/json"
+      parameters:
+        - in: body
+          name: "Password reset params"
+          description: "The email address for the user resetting their password"
+          schema:
+            required: ["email"]
+            type: object
+            properties:
+              email:
+                type: string
+                example: "email@ons.gov.uk"
+      responses:
+        202:
+          description: "Request accepted"
+        400:
+          description: "Email was not in a valid format"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: "Invalid request body or unexpected Cognito response"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
 
 
 responses:
