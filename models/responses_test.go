@@ -3,10 +3,11 @@ package models_test
 import (
 	"encoding/json"
 	"errors"
-	"github.com/ONSdigital/dp-identity-api/models"
-	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"testing"
+
+	"github.com/ONSdigital/dp-identity-api/models"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestNewErrorResponse(t *testing.T) {
@@ -17,7 +18,7 @@ func TestNewErrorResponse(t *testing.T) {
 			Description: "description of the error",
 		}
 
-		errResponse := models.NewErrorResponse([]error{&err}, http.StatusInternalServerError)
+		errResponse := models.NewErrorResponse([]error{&err}, http.StatusInternalServerError, nil)
 
 		So(errResponse, ShouldNotBeNil)
 		So(len(errResponse.Errors), ShouldEqual, 1)
@@ -31,7 +32,7 @@ func TestNewSuccessResponse(t *testing.T) {
 		jsonResponse, err := json.Marshal(postBody)
 		So(err, ShouldBeNil)
 
-		successResponse := models.NewSuccessResponse(jsonResponse, http.StatusCreated)
+		successResponse := models.NewSuccessResponse(jsonResponse, http.StatusCreated, nil)
 
 		So(successResponse, ShouldNotBeNil)
 		So(successResponse.Body, ShouldNotBeNil)

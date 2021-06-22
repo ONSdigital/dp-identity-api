@@ -3,12 +3,14 @@ package models_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/ONSdigital/dp-identity-api/api"
+	"reflect"
+	"testing"
+
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/google/uuid"
 	. "github.com/smartystreets/goconvey/convey"
-	"reflect"
-	"testing"
 )
 
 func TestUserParams_GeneratePassword(t *testing.T) {
@@ -17,10 +19,10 @@ func TestUserParams_GeneratePassword(t *testing.T) {
 
 		user := models.UserParams{}
 
-		err := user.GeneratePassword(ctx)
+		tempPassword, err := user.GeneratePassword(ctx)
 
 		So(err, ShouldBeNil)
-		So(user.Password, ShouldNotBeNil)
+		So(tempPassword, ShouldNotBeNil)
 	})
 }
 
@@ -344,6 +346,155 @@ func TestUserSignIn_BuildSuccessfulJsonResponse(t *testing.T) {
 		}
 
 		response, err := signIn.BuildSuccessfulJsonResponse(ctx, &result)
+
+		So(err, ShouldBeNil)
+		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
+		var body map[string]interface{}
+		err = json.Unmarshal(response, &body)
+		So(body["expirationTime"], ShouldNotBeNil)
+	})
+}
+
+func TestChangePassword_ValidateNewPasswordRequiredRequest(t *testing.T) {
+	ctx := context.Background()
+
+	Convey("returns validation errors if required parameters are missing", t, func() {
+		missingParamsTests := []struct {
+			Session        string
+			Email          string
+			Password       string
+			ExpectedErrors []string
+		}{
+			{
+				// missing session
+				"",
+				"email@gmail.com",
+				"Password2",
+				[]string{models.InvalidChallengeSessionError},
+			},
+			{
+				// missing email
+				"auth-challenge-session",
+				"",
+				"Password2",
+				[]string{models.InvalidEmailError},
+			},
+			{
+				// missing password
+				"auth-challenge-session",
+				"email@gmail.com",
+				"",
+				[]string{models.InvalidPasswordError},
+			},
+			{
+				// missing session and email
+				"",
+				"",
+				"Password2",
+				[]string{models.InvalidEmailError, models.InvalidChallengeSessionError},
+			},
+			{
+				// missing session and password
+				"",
+				"email@gmail.com",
+				"",
+				[]string{models.InvalidPasswordError, models.InvalidChallengeSessionError},
+			},
+			{
+				// missing email and password
+				"auth-challenge-session",
+				"",
+				"",
+				[]string{models.InvalidPasswordError, models.InvalidEmailError},
+			},
+			{
+				// missing session, email and password
+				"",
+				"",
+				"",
+				[]string{models.InvalidPasswordError, models.InvalidEmailError, models.InvalidChallengeSessionError},
+			},
+		}
+		for _, tt := range missingParamsTests {
+			passwordChangeParams := models.ChangePassword{
+				ChangeType:  models.NewPasswordRequiredType,
+				Session:     tt.Session,
+				Email:       tt.Email,
+				NewPassword: tt.Password,
+			}
+
+			validationErrs := passwordChangeParams.ValidateNewPasswordRequiredRequest(ctx)
+
+			So(len(validationErrs), ShouldEqual, len(tt.ExpectedErrors))
+			for i, expectedErrCode := range tt.ExpectedErrors {
+				castErr := validationErrs[i].(*models.Error)
+				So(castErr.Code, ShouldEqual, expectedErrCode)
+			}
+		}
+	})
+
+	Convey("returns an empty slice if there are no validation failures", t, func() {
+		passwordChangeParams := models.ChangePassword{
+			ChangeType:  models.NewPasswordRequiredType,
+			Session:     "auth-challenge-session",
+			Email:       "email@gmail.com",
+			NewPassword: "Password2",
+		}
+		validationErrs := passwordChangeParams.ValidateNewPasswordRequiredRequest(ctx)
+
+		So(len(validationErrs), ShouldEqual, 0)
+	})
+}
+
+func TestChangePassword_BuildAuthChallengeResponseRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito RespondToAuthChallengeInput request body", t, func() {
+
+		passwordChangeParams := models.ChangePassword{
+			ChangeType:  models.NewPasswordRequiredType,
+			Session:     "auth-challenge-session",
+			Email:       "email@gmail.com",
+			NewPassword: "Password2",
+		}
+
+		clientId := "awsclientid"
+		clientSecret := "awsSectret"
+
+		response := passwordChangeParams.BuildAuthChallengeResponseRequest(clientSecret, clientId, api.NewPasswordChallenge)
+
+		So(*response.ChallengeResponses["USERNAME"], ShouldEqual, passwordChangeParams.Email)
+		So(*response.ChallengeResponses["NEW_PASSWORD"], ShouldEqual, passwordChangeParams.NewPassword)
+		So(*response.ChallengeResponses["SECRET_HASH"], ShouldNotBeEmpty)
+		So(*response.ChallengeName, ShouldEqual, api.NewPasswordChallenge)
+		So(*response.Session, ShouldEqual, passwordChangeParams.Session)
+		So(*response.ClientId, ShouldResemble, clientId)
+	})
+}
+
+func TestChangePassword_BuildAuthChallengeSuccessfulJsonResponse(t *testing.T) {
+	ctx := context.Background()
+
+	Convey("returns an InternalServerError if the Cognito response does not meet expected format", t, func() {
+		passwordChangeParams := models.ChangePassword{}
+		result := cognitoidentityprovider.RespondToAuthChallengeOutput{}
+
+		response, err := passwordChangeParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, &result)
+
+		So(response, ShouldBeNil)
+		castErr := err.(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InternalError)
+		So(castErr.Description, ShouldEqual, models.UnrecognisedCognitoResponseDescription)
+	})
+
+	Convey("returns a byte array of the response JSON", t, func() {
+		var expirationLength int64 = 300
+		passwordChangeParams := models.ChangePassword{}
+		result := cognitoidentityprovider.RespondToAuthChallengeOutput{
+			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
+				ExpiresIn: &expirationLength,
+			},
+		}
+
+		response, err := passwordChangeParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, &result)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))

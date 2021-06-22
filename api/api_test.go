@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/ONSdigital/dp-identity-api/models"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/ONSdigital/dp-identity-api/models"
 
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
@@ -26,6 +27,7 @@ func TestSetup(t *testing.T) {
 			So(hasRoute(api.Router, "/v1/tokens/self", "DELETE"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/tokens/self", "PUT"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/users", "POST"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/users/self/password", "PUT"), ShouldBeTrue)
 		})
 
 		Convey("No error returned when user pool id supplied", func() {
@@ -111,9 +113,14 @@ func TestWriteErrorResponse(t *testing.T) {
 		errDescription := "a error generated for testing purposes"
 		statusCode := http.StatusBadRequest
 
+		headerMessage := "Test header message."
+
 		errorResponse.Errors = append(errorResponse.Errors, models.NewValidationError(ctx, errCode, errDescription))
 		errorResponse.Errors = append(errorResponse.Errors, models.NewValidationError(ctx, errCode, errDescription))
 		errorResponse.Status = statusCode
+		errorResponse.Headers = map[string]string{
+			WWWAuthenticateName: headerMessage,
+		}
 
 		resp := httptest.NewRecorder()
 
@@ -121,18 +128,27 @@ func TestWriteErrorResponse(t *testing.T) {
 
 		So(resp.Code, ShouldEqual, http.StatusBadRequest)
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
+		So(resp.Result().Header.Get(WWWAuthenticateName), ShouldEqual, headerMessage)
 	})
 }
 
 func TestWriteSuccessResponse(t *testing.T) {
-	Convey("the status code and the body from the SuccessResponse object are written to a http response", t, func() {
+	Convey("test that authentication header data is successfully written in success response", t, func() {
 		ctx := context.Background()
 		body, err := json.Marshal(map[string]interface{}{"expirationTime": "12/12/2021T12:00:00Z"})
 		So(err, ShouldBeNil)
 		successResponseBodyExample := `{"expirationTime":"12/12/2021T12:00:00Z"}`
+		var (
+			accessTokenHeaderMessage, idTokenHeaderMessage, refreshTokenHeaderMessage string = "test-access-token-1", "test-id-token-1", "test-refresh-token-1"
+		)
 		successResponse := models.SuccessResponse{
 			Body:   body,
 			Status: http.StatusCreated,
+			Headers: map[string]string{
+				AccessTokenHeaderName:  accessTokenHeaderMessage,
+				IdTokenHeaderName:      idTokenHeaderMessage,
+				RefreshTokenHeaderName: refreshTokenHeaderMessage,
+			},
 		}
 
 		resp := httptest.NewRecorder()
@@ -141,6 +157,9 @@ func TestWriteSuccessResponse(t *testing.T) {
 
 		So(resp.Code, ShouldEqual, http.StatusCreated)
 		So(resp.Body.String(), ShouldResemble, successResponseBodyExample)
+		So(resp.Result().Header.Get(AccessTokenHeaderName), ShouldEqual, accessTokenHeaderMessage)
+		So(resp.Result().Header.Get(IdTokenHeaderName), ShouldEqual, idTokenHeaderMessage)
+		So(resp.Result().Header.Get(RefreshTokenHeaderName), ShouldEqual, refreshTokenHeaderMessage)
 	})
 }
 

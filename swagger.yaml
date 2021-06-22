@@ -10,7 +10,7 @@ basePath: "/v1"
 schemes:
   - http
 paths:
-  /tokens:
+  /v1/tokens:
     post:
       tags:
         - Tokens
@@ -63,7 +63,7 @@ paths:
           description: "Unexpected internal error"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /tokens/self:
+  /v1/tokens/self:
     put:
       tags:
         - Tokens
@@ -128,7 +128,7 @@ paths:
           description: "Unexpected internal error"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /users:
+  /v1/users:
     post:
       tags:
         - Users
@@ -168,6 +168,62 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /v1/users/self/password:
+    put:
+      tags:
+        - Users
+      summary: "Changes the users password"
+      description: "Changes the users password in Cognito"
+      consumes:
+        - application/json
+      produces:
+        - "application/json"
+      parameters:
+        - in: body
+          name: "Change password params"
+          description: "The type of change request, email address, new password and session"
+          schema:
+            required: ["type","email","password"]
+            type: object
+            properties:
+              type:
+                type: string
+                example: "NewPasswordRequired"
+              email:
+                type: string
+                example: "email@ons.gov.uk"
+              password:
+                type: string
+              session:
+                type: string
+      responses:
+        202:
+          description: "Password changed"
+          headers:
+            Authorization:
+              type: string
+              description: "Auth token"
+            ID:
+              type: string
+              description: "ID token"
+            Refresh:
+              type: string
+              description: "Refresh token"
+          schema:
+            $ref: '#/definitions/ExpirationTime'
+        400:
+          description: "Unable to validate the type, email, passowrd or session in the request"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: "Invalid request body or unexpected Cognito response"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        501:
+          description: "Requested unimplemented password change type"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
 
 responses:
   InternalError:
@@ -257,6 +313,10 @@ definitions:
           - "UserNotConfirmed"
           - "UsernameExists"
           - "RequestBodyReadError"
+          - "MissingConfig"
+          - "UnknownRequestType"
+          - "NotImplemented"
+          - "InvalidChallengeSession"
       description:
         type: string
         description: "Description of the error"

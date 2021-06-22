@@ -3,11 +3,12 @@ package models
 import (
 	"context"
 	"encoding/json"
+	"strings"
+	"time"
+
 	"github.com/ONSdigital/dp-identity-api/utilities"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/dgrijalva/jwt-go"
-	"strings"
-	"time"
 )
 
 type AccessToken struct {
