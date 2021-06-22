@@ -151,17 +151,10 @@ func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter,
 
 	forgotPasswordRequest := passwordResetParams.BuildCognitoRequest(api.ClientSecret, api.ClientId)
 
-	result, err := api.CognitoClient.ForgotPassword(forgotPasswordRequest)
+	_, err = api.CognitoClient.ForgotPassword(forgotPasswordRequest)
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "ForgotPassword request from password reset endpoint")
 		if responseErr.Code == models.InternalError {
-			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
-		}
-	}
-
-	if result != nil {
-		responseErr := passwordResetParams.BuildSuccessfulJsonResponse(ctx, result)
-		if responseErr != nil {
 			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
 		}
 	}
