@@ -128,7 +128,7 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 	return models.NewSuccessResponse(jsonResponse, http.StatusAccepted, headers), nil
 }
 
-//PasswordResetHandler creates a new user and returns a http handler interface
+//PasswordResetHandler requests a password reset email be sent to the user and returns a http handler interface
 func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer req.Body.Close()
 

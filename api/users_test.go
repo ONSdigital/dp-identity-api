@@ -422,8 +422,8 @@ func TestPasswordResetHandler(t *testing.T) {
 			{
 				// Cognito invalid user
 				func(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
-					awsErrCode := "CodeMismatchException"
-					awsErrMessage := "session invalid"
+					awsErrCode := "UserNotFoundException"
+					awsErrMessage := "user not found in user pool"
 					awsOrigErr := errors.New(awsErrCode)
 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					return nil, awsErr
