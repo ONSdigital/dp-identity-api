@@ -201,7 +201,7 @@ Feature: Users
             {
                 "users": [
                     {
-                        "user_id": "aaaabbbbcccc",
+                        "id": "aaaabbbbcccc",
                         "forename": "Bob",
                         "surname": "Smith",
                         "email": "email@ons.gov.uk",
@@ -209,7 +209,7 @@ Feature: Users
                         "status": "CONFIRMED"
                     },
                     {
-                        "user_id": "aaaabbbbcccc",
+                        "id": "aaaabbbbcccc",
                         "forename": "Bob",
                         "surname": "Smith",
                         "email": "new_email@ons.gov.uk",

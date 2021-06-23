@@ -80,7 +80,7 @@ type UserParams struct {
 	Password string   `json:"-"`
 	Groups   []string `json:"groups"`
 	Status   string   `json:"status"`
-	ID       string   `json:"user_id"`
+	ID       string   `json:"id"`
 }
 
 func (p UserParams) GeneratePassword(ctx context.Context) (*string, error) {
