@@ -192,6 +192,49 @@ Feature: Users
             }
             """
 
+    Scenario: GET /v1/users and checking the response status 200
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And a user with email "other.email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I GET "/v1/users"
+        Then I should receive the following JSON response with status "201":
+            """
+            {
+                "users": [
+                    {
+                        "user_id": "aaaabbbbcccc",
+                        "forename": "Bob"
+                        "surname": "Smith",
+                        "email": "email@ons.gov.uk"
+                        "groups": [],
+                        "state": "Confirmed"
+                    },
+                    {
+                        "user_id": "aaaabbbbcccc",
+                        "forename": "Bob"
+                        "surname": "Smith",
+                        "email": "other.email@ons.gov.uk"
+                        "groups": [],
+                        "state": "Confirmed"
+                    }
+                ]
+            }
+            """
+
+    Scenario: GET /v1/users unexpected server error and checking the response status 500
+        Given a user with email "internal.error@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I GET "/v1/users"
+        Then I should receive the following JSON response with status "500":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InternalServerError",
+                        "description": "Something went wrong"
+                    }
+                ]
+            }
+            """
+
     Scenario: PUT /v1/users/self/password and checking the response status 202
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
         When I PUT "/v1/users/self/password"

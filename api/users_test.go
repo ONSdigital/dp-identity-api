@@ -232,6 +232,65 @@ func TestCreateUserHandler(t *testing.T) {
 	})
 }
 
+func TestListUserHandler(t *testing.T) {
+	var (
+		routeMux                                        = mux.NewRouter()
+		ctx                                             = context.Background()
+		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "abc123", "bsjahsaj9djsiq", "authflow"
+	)
+
+	m := &mock.MockCognitoIdentityProviderClient{}
+
+	api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authFlow)
+	w := httptest.NewRecorder()
+
+	Convey("List user - check expected responses", t, func() {
+		adminCreateUsersTests := []struct {
+			listUsersFunction func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
+			httpResponse      int
+		}{
+			{
+				// 200 response from Cognito
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					users := &cognitoidentityprovider.ListUsersOutput{
+						Users: []*cognitoidentityprovider.UserType{},
+					}
+					return users, nil
+				},
+				http.StatusOK,
+			},
+			{
+				// 500 response from Cognito
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := "Something strange happened"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				http.StatusInternalServerError,
+			},
+		}
+
+		for _, tt := range adminCreateUsersTests {
+			m.ListUsersFunc = tt.listUsersFunction
+
+			r := httptest.NewRequest(http.MethodGet, usersEndPoint, nil)
+
+			successResponse, errorResponse := api.ListUserHandler(ctx, w, r)
+
+			// Check whether testing a success or error case
+			if tt.httpResponse > 399 {
+				So(successResponse, ShouldBeNil)
+				So(errorResponse.Status, ShouldEqual, tt.httpResponse)
+			} else {
+				So(successResponse.Status, ShouldEqual, tt.httpResponse)
+				So(errorResponse, ShouldBeNil)
+			}
+		}
+	})
+}
+
 func TestChangePasswordHandler(t *testing.T) {
 
 	var (
