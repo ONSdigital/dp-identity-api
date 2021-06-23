@@ -25,11 +25,11 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
 
-	tempPassword, err := user.GeneratePassword(ctx)
+	err = user.GeneratePassword(ctx)
 	if err != nil {
 		return nil, models.NewErrorResponse([]error{err}, http.StatusInternalServerError, nil)
 	}
-	user.Password = *tempPassword
+	//user.Password = *tempPassword
 
 	validationErrs := user.ValidateRegistration(ctx)
 

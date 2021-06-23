@@ -140,7 +140,7 @@ paths:
         200:
           description: "The list of users"
           schema:
-            $ref: '#/definitions/User'
+            $ref: '#/definitions/UserList'
         500:
           description: "Internal error occurred"
           schema:
@@ -253,7 +253,16 @@ definitions:
         type: string
         description: "Expiration Time, UTC ISO 8601"
         example: "YYYY-MM-DD hh-mm-ssZ"
-
+  UserList:
+    description: "A list of users for the response body"
+    type: object
+    properties:
+      users:
+        type: array
+        items:
+          $ref: '#/definitions/User'
+      count:
+        type: integer
   User:
     description: "The user model for the response body"
     type: object
