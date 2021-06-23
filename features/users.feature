@@ -194,29 +194,30 @@ Feature: Users
 
     Scenario: GET /v1/users and checking the response status 200
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
-        And a user with email "other.email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And a user with non-verified email "new_email@ons.gov.uk" and password "TeMpPassw0rd!"
         When I GET "/v1/users"
-        Then I should receive the following JSON response with status "201":
+        Then I should receive the following JSON response with status "200":
             """
             {
                 "users": [
                     {
                         "user_id": "aaaabbbbcccc",
-                        "forename": "Bob"
+                        "forename": "Bob",
                         "surname": "Smith",
-                        "email": "email@ons.gov.uk"
+                        "email": "email@ons.gov.uk",
                         "groups": [],
-                        "state": "Confirmed"
+                        "status": "CONFIRMED"
                     },
                     {
                         "user_id": "aaaabbbbcccc",
-                        "forename": "Bob"
+                        "forename": "Bob",
                         "surname": "Smith",
-                        "email": "other.email@ons.gov.uk"
+                        "email": "new_email@ons.gov.uk",
                         "groups": [],
-                        "state": "Confirmed"
+                        "status": "FORCE_CHANGE_PASSWORD"
                     }
-                ]
+                ],
+                "count": 2
             }
             """
 

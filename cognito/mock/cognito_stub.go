@@ -2,6 +2,8 @@ package mock
 
 import (
 	"errors"
+	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -155,14 +157,14 @@ func (m *CognitoIdentityProviderClientStub) AdminUserGlobalSignOut(adminUserGlob
 
 func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 	var (
-		emailVerifiedAttr, emailVerifiedValue string = "email_verified", "true"
-		givenNameAttr, familyNameAttr                = "given_name", "family_name"
-		enabled                               bool   = true
+		emailVerifiedAttr, emailVerifiedValue    string = "email_verified", "true"
+		givenNameAttr, familyNameAttr, emailAttr string = "given_name", "family_name", "email"
+		enabled                                  bool   = true
 	)
 
 	var usersList []*cognitoidentityprovider.UserType
 
-	if m.Users[0].Email == "internal.error@ons.gov.uk" {
+	if len(m.Users) > 0 && m.Users[0].Email == "internal.error@ons.gov.uk" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	}
 
@@ -184,7 +186,9 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 		}
 	} else {
 		for _, user := range m.Users {
-			usersList = append(usersList, &cognitoidentityprovider.UserType{
+			fmt.Println("pre add users list")
+			fmt.Println(usersList)
+			userDetails := cognitoidentityprovider.UserType{
 				Attributes: []*cognitoidentityprovider.AttributeType{
 					{
 						Name:  &emailVerifiedAttr,
@@ -192,20 +196,26 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 					},
 					{
 						Name:  &givenNameAttr,
-						Value: &user.GivenName,
+						Value: aws.String(user.GivenName),
 					},
 					{
 						Name:  &familyNameAttr,
-						Value: &user.FamilyName,
+						Value: aws.String(user.FamilyName),
+					},
+					{
+						Name:  &emailAttr,
+						Value: aws.String(user.Email),
 					},
 				},
 				Enabled:    &enabled,
-				UserStatus: &user.Status,
-				Username:   &user.Email,
-			})
+				UserStatus: aws.String(user.Status),
+				Username:   aws.String(user.ID),
+			}
+			usersList = append(usersList, &userDetails)
+			fmt.Println("post add users list")
+			fmt.Println(usersList)
 		}
 	}
-	// default - email doesn't exist in user pool
 	users := &models.ListUsersOutput{
 		ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
 			Users: usersList,

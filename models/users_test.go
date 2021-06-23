@@ -134,30 +134,6 @@ func TestUserParams_CheckForDuplicateEmail(t *testing.T) {
 	})
 }
 
-func TestUserParams_BuildListUserRequest(t *testing.T) {
-	Convey("builds a correctly populated Cognito ListUsers request body", t, func() {
-
-		user := models.UserParams{
-			Email:    "email.email@ons.gov.uk",
-			Forename: "Stan",
-			Surname:  "Smith",
-		}
-
-		filterString := "email = \"" + user.Email + "\""
-		requiredAttribute := "email"
-		limit := int64(1)
-		userPoolId := "euwest-99-aabbcc"
-
-		response := user.BuildListUserRequest(filterString, requiredAttribute, limit, &userPoolId)
-
-		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInput{}))
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
-		So(*response.Limit, ShouldEqual, limit)
-		So(*response.Filter, ShouldEqual, filterString)
-		So(*response.AttributesToGet[0], ShouldEqual, requiredAttribute)
-	})
-}
-
 func TestUserParams_BuildCreateUserRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminUserCreateInput request body", t, func() {
 
@@ -501,5 +477,29 @@ func TestChangePassword_BuildAuthChallengeSuccessfulJsonResponse(t *testing.T) {
 		var body map[string]interface{}
 		err = json.Unmarshal(response, &body)
 		So(body["expirationTime"], ShouldNotBeNil)
+	})
+}
+
+func TestUsersList_BuildListUserRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito ListUsers request body", t, func() {
+
+		user := models.UserParams{
+			Email:    "email.email@ons.gov.uk",
+			Forename: "Stan",
+			Surname:  "Smith",
+		}
+
+		filterString := "email = \"" + user.Email + "\""
+		requiredAttribute := "email"
+		limit := int64(1)
+		userPoolId := "euwest-99-aabbcc"
+
+		response := models.UsersList{}.BuildListUserRequest(filterString, requiredAttribute, limit, &userPoolId)
+
+		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInput{}))
+		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.Limit, ShouldEqual, limit)
+		So(*response.Filter, ShouldEqual, filterString)
+		So(*response.AttributesToGet[0], ShouldEqual, requiredAttribute)
 	})
 }

@@ -20,8 +20,8 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^a user with non-verified email "([^"]*)" and password "([^"]*)"$`, c.aUserWithNonverifiedEmailAndPassword)
 }
 
-func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(username, password string) error {
-	c.CognitoClient.AddUserWithUsername(username, password, true)
+func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(email, password string) error {
+	c.CognitoClient.AddUserWithUsername(email, password, true)
 	return nil
 }
 
