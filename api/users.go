@@ -154,7 +154,9 @@ func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter,
 	_, err = api.CognitoClient.ForgotPassword(forgotPasswordRequest)
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "ForgotPassword request from password reset endpoint")
-		if responseErr.Code == models.InternalError {
+		if responseErr.Code == models.LimitExceededError || responseErr.Code == models.TooManyRequestsError {
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusBadRequest, nil)
+		} else if responseErr.Code != models.UserNotFoundError && responseErr.Code != models.UserNotConfirmedError {
 			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
 		}
 	}

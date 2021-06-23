@@ -551,6 +551,26 @@ Feature: Users
             }
         """
 
+    Scenario: POST /v1/password-reset Cognito too many requests error
+        Given an internal server error is returned from Cognito
+        When I POST "/v1/password-reset"
+        """
+            {
+                "email": "too.many@ons.gov.uk"
+            }
+        """
+        Then I should receive the following JSON response with status "400":
+        """
+            {
+                "errors": [
+                    {
+                        "code": "TooManyRequests",
+                        "description": "Slow down"
+                    }
+                ]
+            }
+        """
+
     Scenario: POST /v1/password-reset Cognito user not found
         When I POST "/v1/password-reset"
         """

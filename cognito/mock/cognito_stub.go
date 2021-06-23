@@ -230,6 +230,9 @@ func (m *CognitoIdentityProviderClientStub) ForgotPassword(input *cognitoidentit
 	if *input.Username == "internal.error@ons.gov.uk" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	}
+	if *input.Username == "too.many@ons.gov.uk" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeTooManyRequestsException, "Slow down", nil)
+	}
 
 	for _, user := range m.Users {
 		if user.email == *input.Username {

@@ -420,6 +420,17 @@ func TestPasswordResetHandler(t *testing.T) {
 				http.StatusInternalServerError,
 			},
 			{
+				// Cognito too many requests
+				func(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
+					awsErrCode := "TooManyRequestsException"
+					awsErrMessage := "slow down"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				http.StatusBadRequest,
+			},
+			{
 				// Cognito invalid user
 				func(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
 					awsErrCode := "UserNotFoundException"
