@@ -59,7 +59,8 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 		}
 	}
 
-	jsonResponse, responseErr := user.BuildSuccessfulJsonResponse(ctx, resultUser)
+	createdUser := models.UserParams{}.MapCognitoDetails(resultUser.User)
+	jsonResponse, responseErr := createdUser.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
 	}
@@ -76,8 +77,7 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 		return nil, models.NewErrorResponse([]error{models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint")}, http.StatusInternalServerError, nil)
 	}
 
-	usersList.Users = usersList.MapCognitoUsers(listUserResp)
-	usersList.Count = len(usersList.Users)
+	usersList.MapCognitoUsers(listUserResp)
 
 	jsonResponse, responseErr := usersList.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {

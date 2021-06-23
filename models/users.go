@@ -40,29 +40,13 @@ func (p UsersList) BuildListUserRequest(filterString string, requiredAttribute s
 	return requestInput
 }
 
-func (p *UsersList) MapCognitoUsers(cognitoResults *cognitoidentityprovider.ListUsersOutput) []UserParams {
+func (p *UsersList) MapCognitoUsers(cognitoResults *cognitoidentityprovider.ListUsersOutput) {
 	var usersList []UserParams
 	for _, user := range cognitoResults.Users {
-		var forename, surname, email string
-		for _, attr := range user.Attributes {
-			if *attr.Name == "given_name" {
-				forename = *attr.Value
-			} else if *attr.Name == "family_name" {
-				surname = *attr.Value
-			} else if *attr.Name == "email" {
-				email = *attr.Value
-			}
-		}
-		usersList = append(usersList, UserParams{
-			Forename: forename,
-			Surname:  surname,
-			Email:    email,
-			Groups:   []string{},
-			Status:   *user.UserStatus,
-			ID:       *user.Username,
-		})
+		usersList = append(usersList, UserParams{}.MapCognitoDetails(user))
 	}
-	return usersList
+	p.Users = usersList
+	p.Count = len(p.Users)
 }
 
 func (p *UsersList) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
@@ -143,12 +127,33 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 	}
 }
 
-func (p UserParams) BuildSuccessfulJsonResponse(ctx context.Context, createdUser *cognitoidentityprovider.AdminCreateUserOutput) ([]byte, error) {
-	jsonResponse, err := json.Marshal(createdUser)
+func (p UserParams) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
+	jsonResponse, err := json.Marshal(p)
 	if err != nil {
 		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
 	}
 	return jsonResponse, nil
+}
+
+func (p UserParams) MapCognitoDetails(userDetails *cognitoidentityprovider.UserType) UserParams {
+	var forename, surname, email string
+	for _, attr := range userDetails.Attributes {
+		if *attr.Name == "given_name" {
+			forename = *attr.Value
+		} else if *attr.Name == "family_name" {
+			surname = *attr.Value
+		} else if *attr.Name == "email" {
+			email = *attr.Value
+		}
+	}
+	return UserParams{
+		Forename: forename,
+		Surname:  surname,
+		Email:    email,
+		Groups:   []string{},
+		Status:   *userDetails.UserStatus,
+		ID:       *userDetails.Username,
+	}
 }
 
 type CreateUserInput struct {

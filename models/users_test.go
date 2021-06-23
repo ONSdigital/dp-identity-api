@@ -161,24 +161,20 @@ func TestUserParams_BuildSuccessfulJsonResponse(t *testing.T) {
 	Convey("returns a byte array of the response JSON", t, func() {
 		ctx := context.Background()
 		name, status := "abcd-efgh-ijkl-mnop", "UNCONFIRMED"
-		user := models.UserParams{}
-		result := cognitoidentityprovider.AdminCreateUserOutput{
-			User: &cognitoidentityprovider.UserType{
-				Username:   &name,
-				UserStatus: &status,
-			},
+		createdUser := models.UserParams{
+			Status: status,
+			ID:     name,
 		}
 
-		response, err := user.BuildSuccessfulJsonResponse(ctx, &result)
+		response, err := createdUser.BuildSuccessfulJsonResponse(ctx)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
-		var body map[string]interface{}
-		err = json.Unmarshal(response, &body)
+		var userJson map[string]interface{}
+		err = json.Unmarshal(response, &userJson)
 		So(err, ShouldBeNil)
-		userJson := body["User"].(map[string]interface{})
-		So(userJson["Username"], ShouldEqual, name)
-		So(userJson["UserStatus"], ShouldEqual, status)
+		So(userJson["id"], ShouldEqual, name)
+		So(userJson["status"], ShouldEqual, status)
 	})
 }
 

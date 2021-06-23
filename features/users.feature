@@ -12,32 +12,12 @@ Feature: Users
         Then I should receive the following JSON response with status "201":
             """
             {
-                "User": {
-                    "Attributes": [
-                        {
-                            "Name": "sub",
-                            "Value": "f0cf8dd9-755c-4caf-884d-b0c56e7d0704"
-                        },
-                        {
-                            "Name": "name",
-                            "Value": "smileons"
-                        },
-                        {
-                            "Name": "family_name",
-                            "Value": "bobbings"
-                        },
-                        {
-                            "Name": "email",
-                            "Value": "emailx@ons.gov.uk"
-                        }
-                    ],
-                    "Enabled": null,
-                    "MFAOptions": null,
-                    "UserCreateDate": null,
-                    "UserLastModifiedDate": null,
-                    "UserStatus": "FORCE_CHANGE_PASSWORD",
-                    "Username": "123e4567-e89b-12d3-a456-426614174000"
-                }
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "forename": "smileons",
+                "surname": "bobbings",
+                "email": "emailx@ons.gov.uk",
+                "groups": [],
+                "status": "FORCE_CHANGE_PASSWORD"
             }
             """
 
