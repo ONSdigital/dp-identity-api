@@ -274,7 +274,7 @@ definitions:
         description: "The groups the user belongs to"
         type: array
         items:
-          description: "The gropus name"
+          description: "The groups name"
           type: string
       status:
         description: "The current status of the user"
