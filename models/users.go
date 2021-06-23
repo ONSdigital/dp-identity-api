@@ -16,11 +16,71 @@ const (
 	ForgottenPasswordType   = "ForgottenPassword"
 )
 
+type UsersList struct {
+	Users []UserParams `json:"users"`
+	Count int          `json:"count"`
+}
+
+func (p UsersList) BuildListUserRequest(filterString string, requiredAttribute string, limit int64, userPoolId *string) *cognitoidentityprovider.ListUsersInput {
+	requestInput := &cognitoidentityprovider.ListUsersInput{
+		UserPoolId: userPoolId,
+	}
+	if requiredAttribute != "" {
+		requestInput.AttributesToGet = []*string{
+			&requiredAttribute,
+		}
+	}
+	if filterString != "" {
+		requestInput.Filter = &filterString
+	}
+	if limit != 0 {
+		requestInput.Limit = &limit
+	}
+
+	return requestInput
+}
+
+func (p *UsersList) MapCognitoUsers(cognitoResults *cognitoidentityprovider.ListUsersOutput) []UserParams {
+	var usersList []UserParams
+	for _, user := range cognitoResults.Users {
+		var forename, surname, email string
+		for _, attr := range user.Attributes {
+			if *attr.Name == "given_name" {
+				forename = *attr.Value
+			} else if *attr.Name == "family_name" {
+				surname = *attr.Value
+			} else if *attr.Name == "email" {
+				email = *attr.Value
+			}
+		}
+		usersList = append(usersList, UserParams{
+			Forename: forename,
+			Surname:  surname,
+			Email:    email,
+			Groups:   []string{},
+			Status:   *user.UserStatus,
+			ID:       *user.Username,
+		})
+	}
+	return usersList
+}
+
+func (p *UsersList) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
+	jsonResponse, err := json.Marshal(p)
+	if err != nil {
+		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
+	}
+	return jsonResponse, nil
+}
+
 type UserParams struct {
-	Forename string `json:"forename"`
-	Surname  string `json:"surname"`
-	Email    string `json:"email"`
-	Password string `json:"-"`
+	Forename string   `json:"forename"`
+	Surname  string   `json:"surname"`
+	Email    string   `json:"email"`
+	Password string   `json:"-"`
+	Groups   []string `json:"groups"`
+	Status   string   `json:"status"`
+	ID       string   `json:"user_id"`
 }
 
 func (p UserParams) GeneratePassword(ctx context.Context) (*string, error) {
@@ -52,17 +112,6 @@ func (p UserParams) CheckForDuplicateEmail(ctx context.Context, listUserResp *co
 		return nil
 	}
 	return NewValidationError(ctx, InvalidEmailError, DuplicateEmailDescription)
-}
-
-func (p UserParams) BuildListUserRequest(filterString string, requiredAttribute string, limit int64, userPoolId *string) *cognitoidentityprovider.ListUsersInput {
-	return &cognitoidentityprovider.ListUsersInput{
-		AttributesToGet: []*string{
-			&requiredAttribute,
-		},
-		Filter:     &filterString,
-		Limit:      &limit,
-		UserPoolId: userPoolId,
-	}
 }
 
 func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *cognitoidentityprovider.AdminCreateUserInput {

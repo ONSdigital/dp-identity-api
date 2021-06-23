@@ -33,7 +33,7 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 
 	validationErrs := user.ValidateRegistration(ctx)
 
-	listUserInput := user.BuildListUserRequest("email = \""+user.Email+"\"", "email", int64(1), &api.UserPoolId)
+	listUserInput := models.UsersList{}.BuildListUserRequest("email = \""+user.Email+"\"", "email", int64(1), &api.UserPoolId)
 	listUserResp, err := api.CognitoClient.ListUsers(listUserInput)
 	if err != nil {
 		return nil, models.NewErrorResponse([]error{models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint")}, http.StatusInternalServerError, nil)
@@ -67,6 +67,27 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 	return models.NewSuccessResponse(jsonResponse, http.StatusCreated, nil), nil
 }
 
+//ListUsersHandler lists the users in the user pool
+func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	usersList := models.UsersList{}
+	listUserInput := usersList.BuildListUserRequest("", "", int64(0), &api.UserPoolId)
+	listUserResp, err := api.CognitoClient.ListUsers(listUserInput)
+	if err != nil {
+		return nil, models.NewErrorResponse([]error{models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint")}, http.StatusInternalServerError, nil)
+	}
+
+	usersList.Users = usersList.MapCognitoUsers(listUserResp)
+	usersList.Count = len(usersList.Users)
+
+	jsonResponse, responseErr := usersList.BuildSuccessfulJsonResponse(ctx)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
+
+//ChangePasswordHandler processes changes to the users password
 func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer req.Body.Close()
 	var jsonResponse []byte = nil
