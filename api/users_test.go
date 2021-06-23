@@ -277,7 +277,7 @@ func TestListUserHandler(t *testing.T) {
 
 			r := httptest.NewRequest(http.MethodGet, usersEndPoint, nil)
 
-			successResponse, errorResponse := api.ListUserHandler(ctx, w, r)
+			successResponse, errorResponse := api.ListUsersHandler(ctx, w, r)
 
 			// Check whether testing a success or error case
 			if tt.httpResponse > 399 {
