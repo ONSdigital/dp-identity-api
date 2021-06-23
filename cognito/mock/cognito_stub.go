@@ -92,14 +92,14 @@ func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityp
 		}
 
 		for _, user := range m.Users {
-			if (user.email == *input.AuthParameters["USERNAME"]) && (user.password == *input.AuthParameters["PASSWORD"]) {
+			if (user.Email == *input.AuthParameters["USERNAME"]) && (user.Password == *input.AuthParameters["PASSWORD"]) {
 				// non-challenge response
-				if user.Attributes != nil {
+				if user.Status == "CONFIRMED" {
 					return initiateAuthOutput, nil
 				} else {
 					return initiateAuthOutputChallenge, nil
 				}
-			} else if user.email != *input.AuthParameters["USERNAME"] {
+			} else if user.Email != *input.AuthParameters["USERNAME"] {
 				return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Incorrect username or password.", nil)
 			} else {
 				return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Password attempts exceeded", nil)
@@ -155,35 +155,60 @@ func (m *CognitoIdentityProviderClientStub) AdminUserGlobalSignOut(adminUserGlob
 
 func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 	var (
-		attribute_name, attribute_value string = "email_verified", "true"
+		emailVerifiedAttr, emailVerifiedValue string = "email_verified", "true"
+		givenNameAttr, familyNameAttr                = "given_name", "family_name"
+		enabled                               bool   = true
 	)
 
-	getEmailFromFilter, _ := regexp.Compile(`^email\s\=\s(\D+.*)$`)
-	email := getEmailFromFilter.ReplaceAllString(*input.Filter, `$1`)
+	var usersList []*cognitoidentityprovider.UserType
 
-	var emailRegex = regexp.MustCompile(`^\"email(\d)?@(ext\.)?ons.gov.uk\"`)
-	if emailRegex.MatchString(email) {
-		users := &models.ListUsersOutput{
-			ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
-				Users: []*cognitoidentityprovider.UserType{
+	if m.Users[0].Email == "internal.error@ons.gov.uk" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+
+	if input.Filter != nil {
+		getEmailFromFilter, _ := regexp.Compile(`^email\s\=\s(\D+.*)$`)
+		email := getEmailFromFilter.ReplaceAllString(*input.Filter, `$1`)
+
+		var emailRegex = regexp.MustCompile(`^\"email(\d)?@(ext\.)?ons.gov.uk\"`)
+		if emailRegex.MatchString(email) {
+			usersList = append(usersList, &cognitoidentityprovider.UserType{
+				Attributes: []*cognitoidentityprovider.AttributeType{
 					{
-						Attributes: []*cognitoidentityprovider.AttributeType{
-							{
-								Name:  &attribute_name,
-								Value: &attribute_value,
-							},
-						},
-						Username: &email,
+						Name:  &emailVerifiedAttr,
+						Value: &emailVerifiedValue,
 					},
 				},
-			},
+				Username: &email,
+			})
 		}
-		return users.ListUsersOutput, nil
+	} else {
+		for _, user := range m.Users {
+			usersList = append(usersList, &cognitoidentityprovider.UserType{
+				Attributes: []*cognitoidentityprovider.AttributeType{
+					{
+						Name:  &emailVerifiedAttr,
+						Value: &emailVerifiedValue,
+					},
+					{
+						Name:  &givenNameAttr,
+						Value: &user.GivenName,
+					},
+					{
+						Name:  &familyNameAttr,
+						Value: &user.FamilyName,
+					},
+				},
+				Enabled:    &enabled,
+				UserStatus: &user.Status,
+				Username:   &user.Email,
+			})
+		}
 	}
 	// default - email doesn't exist in user pool
 	users := &models.ListUsersOutput{
 		ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
-			Users: []*cognitoidentityprovider.UserType{},
+			Users: usersList,
 		},
 	}
 	return users.ListUsersOutput, nil
@@ -212,7 +237,7 @@ func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(input *cognit
 		}
 
 		for _, user := range m.Users {
-			if user.email == *input.ChallengeResponses["USERNAME"] {
+			if user.Email == *input.ChallengeResponses["USERNAME"] {
 				return challengeResponseOutput, nil
 			}
 		}
