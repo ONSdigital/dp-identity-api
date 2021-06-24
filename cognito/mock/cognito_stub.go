@@ -265,7 +265,7 @@ func (m *CognitoIdentityProviderClientStub) ForgotPassword(input *cognitoidentit
 	}
 
 	for _, user := range m.Users {
-		if user.email == *input.Username {
+		if user.Email == *input.Username {
 			return forgotPasswordOutput, nil
 		}
 	}
