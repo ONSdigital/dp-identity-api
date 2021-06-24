@@ -5,7 +5,7 @@ Feature: Users
             """
             {
                 "forename": "smileons",
-                "surname": "bobbings",
+                "lastname": "bobbings",
                 "email": "emailx@ons.gov.uk"
             }
             """
@@ -14,7 +14,7 @@ Feature: Users
             {
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "forename": "smileons",
-                "surname": "bobbings",
+                "lastname": "bobbings",
                 "email": "emailx@ons.gov.uk",
                 "groups": [],
                 "status": "FORCE_CHANGE_PASSWORD"
@@ -26,7 +26,7 @@ Feature: Users
             """
             {
                 "forename": "smileons",
-                "surname": "bobbings",
+                "lastname": "bobbings",
                 "email": ""
             }
             """
@@ -47,7 +47,7 @@ Feature: Users
             """
             {
                 "forename": "",
-                "surname": "bobbings",
+                "lastname": "bobbings",
                 "email": "emailx@ons.gov.uk"
             }
             """
@@ -63,12 +63,12 @@ Feature: Users
             }
             """
 
-    Scenario: POST /v1/users missing surname and checking the response status 400
+    Scenario: POST /v1/users missing lastname and checking the response status 400
         When I POST "/v1/users"
             """
             {
                 "forename": "smileons",
-                "surname": "",
+                "lastname": "",
                 "email": "emailx@ons.gov.uk"
             }
             """
@@ -78,7 +78,7 @@ Feature: Users
                 "errors": [
                     {
                         "code": "InvalidSurname",
-                        "description": "the submitted user's surname could not be validated"
+                        "description": "the submitted user's lastname could not be validated"
                     }
                 ]
             }
@@ -89,7 +89,7 @@ Feature: Users
             """
             {
                 "forename": "",
-                "surname": "",
+                "lastname": "",
                 "email": ""
             }
             """
@@ -103,7 +103,7 @@ Feature: Users
                     },
                     {
                         "code": "InvalidSurname",
-                        "description": "the submitted user's surname could not be validated"
+                        "description": "the submitted user's lastname could not be validated"
                     },
                     {
                         "code": "InvalidEmail",
@@ -135,7 +135,7 @@ Feature: Users
             """
             {
                 "forename": "bob",
-                "surname": "bobbings",
+                "lastname": "bobbings",
                 "email": "emailx@ons.gov.uk"
             }
             """
@@ -156,7 +156,7 @@ Feature: Users
             """
             {
                 "forename": "bob",
-                "surname": "bobbings",
+                "lastname": "bobbings",
                 "email": "email@ext.ons.gov.uk"
             }
             """
@@ -183,7 +183,7 @@ Feature: Users
                     {
                         "id": "aaaabbbbcccc",
                         "forename": "Bob",
-                        "surname": "Smith",
+                        "lastname": "Smith",
                         "email": "email@ons.gov.uk",
                         "groups": [],
                         "status": "CONFIRMED"
@@ -191,7 +191,7 @@ Feature: Users
                     {
                         "id": "aaaabbbbcccc",
                         "forename": "Bob",
-                        "surname": "Smith",
+                        "lastname": "Smith",
                         "email": "new_email@ons.gov.uk",
                         "groups": [],
                         "status": "FORCE_CHANGE_PASSWORD"

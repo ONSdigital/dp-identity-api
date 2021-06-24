@@ -62,7 +62,7 @@ func (p *UsersList) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, er
 
 type UserParams struct {
 	Forename string   `json:"forename"`
-	Surname  string   `json:"surname"`
+	Lastname string   `json:"lastname"`
 	Email    string   `json:"email"`
 	Password string   `json:"-"`
 	Groups   []string `json:"groups"`
@@ -87,7 +87,7 @@ func (p UserParams) ValidateRegistration(ctx context.Context) []error {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidForenameError, InvalidForenameErrorDescription))
 	}
 
-	if p.Surname == "" {
+	if p.Lastname == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidSurnameError, InvalidSurnameErrorDescription))
 	}
 
@@ -119,7 +119,7 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 			},
 			{
 				Name:  &surnameAttrName,
-				Value: &p.Surname,
+				Value: &p.Lastname,
 			},
 			{
 				Name:  &emailAttrName,
@@ -158,7 +158,7 @@ func (p UserParams) MapCognitoDetails(userDetails *cognitoidentityprovider.UserT
 	}
 	return UserParams{
 		Forename: forename,
-		Surname:  surname,
+		Lastname: surname,
 		Email:    email,
 		Groups:   []string{},
 		Status:   *userDetails.UserStatus,

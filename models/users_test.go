@@ -20,7 +20,7 @@ func TestUsersList_BuildListUserRequest(t *testing.T) {
 		user := models.UserParams{
 			Email:    "email.email@ons.gov.uk",
 			Forename: "Stan",
-			Surname:  "Smith",
+			Lastname: "Smith",
 		}
 
 		filterString := "email = \"" + user.Email + "\""
@@ -111,7 +111,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 		user := models.UserParams{
 			Email:    "email.email@ons.gov.uk",
 			Forename: "",
-			Surname:  "Smith",
+			Lastname: "Smith",
 		}
 
 		errs := user.ValidateRegistration(ctx)
@@ -126,7 +126,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 		user := models.UserParams{
 			Email:    "email.email@ons.gov.uk",
 			Forename: "Stan",
-			Surname:  "",
+			Lastname: "",
 		}
 
 		errs := user.ValidateRegistration(ctx)
@@ -141,7 +141,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 		user := models.UserParams{
 			Email:    "email",
 			Forename: "Stan",
-			Surname:  "Smith",
+			Lastname: "Smith",
 		}
 
 		errs := user.ValidateRegistration(ctx)
@@ -156,7 +156,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 		user := models.UserParams{
 			Email:    "email@gmail.com",
 			Forename: "Stan",
-			Surname:  "Smith",
+			Lastname: "Smith",
 		}
 
 		errs := user.ValidateRegistration(ctx)
@@ -175,7 +175,7 @@ func TestUserParams_CheckForDuplicateEmail(t *testing.T) {
 		user := models.UserParams{
 			Email:    "email.email@ons.gov.uk",
 			Forename: "Stan",
-			Surname:  "Smith",
+			Lastname: "Smith",
 		}
 
 		listUserResponse := cognitoidentityprovider.ListUsersOutput{
@@ -191,7 +191,7 @@ func TestUserParams_CheckForDuplicateEmail(t *testing.T) {
 		user := models.UserParams{
 			Email:    "email.email@ons.gov.uk",
 			Forename: "Stan",
-			Surname:  "Smith",
+			Lastname: "Smith",
 		}
 
 		name, status := "abcd-efgh-ijkl-mnop", "UNCONFIRMED"
@@ -218,7 +218,7 @@ func TestUserParams_BuildCreateUserRequest(t *testing.T) {
 		user := models.UserParams{
 			Email:    "email.email@ons.gov.uk",
 			Forename: "Stan",
-			Surname:  "Smith",
+			Lastname: "Smith",
 		}
 
 		userId := uuid.NewString()
@@ -230,7 +230,7 @@ func TestUserParams_BuildCreateUserRequest(t *testing.T) {
 		So(*response.Username, ShouldEqual, userId)
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
 		So(*response.UserAttributes[0].Value, ShouldEqual, user.Forename)
-		So(*response.UserAttributes[1].Value, ShouldEqual, user.Surname)
+		So(*response.UserAttributes[1].Value, ShouldEqual, user.Lastname)
 		So(*response.UserAttributes[2].Value, ShouldEqual, user.Email)
 	})
 }
@@ -280,7 +280,7 @@ func TestUserParams_MapCognitoDetails(t *testing.T) {
 		user := models.UserParams{}.MapCognitoDetails(&cognitoUser)
 
 		So(user.Forename, ShouldEqual, forename)
-		So(user.Surname, ShouldEqual, surname)
+		So(user.Lastname, ShouldEqual, surname)
 		So(user.Email, ShouldEqual, email)
 		So(user.Status, ShouldEqual, status)
 		So(user.ID, ShouldEqual, id)
