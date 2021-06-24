@@ -2,7 +2,6 @@ package mock
 
 import (
 	"errors"
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"regexp"
 
@@ -186,8 +185,6 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 		}
 	} else {
 		for _, user := range m.Users {
-			fmt.Println("pre add users list")
-			fmt.Println(usersList)
 			userDetails := cognitoidentityprovider.UserType{
 				Attributes: []*cognitoidentityprovider.AttributeType{
 					{
@@ -212,8 +209,6 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 				Username:   aws.String(user.ID),
 			}
 			usersList = append(usersList, &userDetails)
-			fmt.Println("post add users list")
-			fmt.Println(usersList)
 		}
 	}
 	users := &models.ListUsersOutput{
