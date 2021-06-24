@@ -5,39 +5,19 @@ Feature: Users
             """
             {
                 "forename": "smileons",
-                "surname": "bobbings",
+                "lastname": "bobbings",
                 "email": "emailx@ons.gov.uk"
             }
             """
         Then I should receive the following JSON response with status "201":
             """
             {
-                "User": {
-                    "Attributes": [
-                        {
-                            "Name": "sub",
-                            "Value": "f0cf8dd9-755c-4caf-884d-b0c56e7d0704"
-                        },
-                        {
-                            "Name": "name",
-                            "Value": "smileons"
-                        },
-                        {
-                            "Name": "family_name",
-                            "Value": "bobbings"
-                        },
-                        {
-                            "Name": "email",
-                            "Value": "emailx@ons.gov.uk"
-                        }
-                    ],
-                    "Enabled": null,
-                    "MFAOptions": null,
-                    "UserCreateDate": null,
-                    "UserLastModifiedDate": null,
-                    "UserStatus": "FORCE_CHANGE_PASSWORD",
-                    "Username": "123e4567-e89b-12d3-a456-426614174000"
-                }
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "forename": "smileons",
+                "lastname": "bobbings",
+                "email": "emailx@ons.gov.uk",
+                "groups": [],
+                "status": "FORCE_CHANGE_PASSWORD"
             }
             """
 
@@ -46,7 +26,7 @@ Feature: Users
             """
             {
                 "forename": "smileons",
-                "surname": "bobbings",
+                "lastname": "bobbings",
                 "email": ""
             }
             """
@@ -67,7 +47,7 @@ Feature: Users
             """
             {
                 "forename": "",
-                "surname": "bobbings",
+                "lastname": "bobbings",
                 "email": "emailx@ons.gov.uk"
             }
             """
@@ -83,12 +63,12 @@ Feature: Users
             }
             """
 
-    Scenario: POST /v1/users missing surname and checking the response status 400
+    Scenario: POST /v1/users missing lastname and checking the response status 400
         When I POST "/v1/users"
             """
             {
                 "forename": "smileons",
-                "surname": "",
+                "lastname": "",
                 "email": "emailx@ons.gov.uk"
             }
             """
@@ -98,7 +78,7 @@ Feature: Users
                 "errors": [
                     {
                         "code": "InvalidSurname",
-                        "description": "the submitted user's surname could not be validated"
+                        "description": "the submitted user's lastname could not be validated"
                     }
                 ]
             }
@@ -109,7 +89,7 @@ Feature: Users
             """
             {
                 "forename": "",
-                "surname": "",
+                "lastname": "",
                 "email": ""
             }
             """
@@ -123,7 +103,7 @@ Feature: Users
                     },
                     {
                         "code": "InvalidSurname",
-                        "description": "the submitted user's surname could not be validated"
+                        "description": "the submitted user's lastname could not be validated"
                     },
                     {
                         "code": "InvalidEmail",
@@ -155,7 +135,7 @@ Feature: Users
             """
             {
                 "forename": "bob",
-                "surname": "bobbings",
+                "lastname": "bobbings",
                 "email": "emailx@ons.gov.uk"
             }
             """
@@ -176,7 +156,7 @@ Feature: Users
             """
             {
                 "forename": "bob",
-                "surname": "bobbings",
+                "lastname": "bobbings",
                 "email": "email@ext.ons.gov.uk"
             }
             """
@@ -187,6 +167,50 @@ Feature: Users
                     {
                         "code": "InvalidEmail",
                         "description": "account using email address found"
+                    }
+                ]
+            }
+            """
+
+    Scenario: GET /v1/users and checking the response status 200
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And a user with non-verified email "new_email@ons.gov.uk" and password "TeMpPassw0rd!"
+        When I GET "/v1/users"
+        Then I should receive the following JSON response with status "200":
+            """
+            {
+                "users": [
+                    {
+                        "id": "aaaabbbbcccc",
+                        "forename": "Bob",
+                        "lastname": "Smith",
+                        "email": "email@ons.gov.uk",
+                        "groups": [],
+                        "status": "CONFIRMED"
+                    },
+                    {
+                        "id": "aaaabbbbcccc",
+                        "forename": "Bob",
+                        "lastname": "Smith",
+                        "email": "new_email@ons.gov.uk",
+                        "groups": [],
+                        "status": "FORCE_CHANGE_PASSWORD"
+                    }
+                ],
+                "count": 2
+            }
+            """
+
+    Scenario: GET /v1/users unexpected server error and checking the response status 500
+        Given a user with email "internal.error@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I GET "/v1/users"
+        Then I should receive the following JSON response with status "500":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InternalServerError",
+                        "description": "Something went wrong"
                     }
                 ]
             }

@@ -16,28 +16,78 @@ const (
 	ForgottenPasswordType   = "ForgottenPassword"
 )
 
-type UserParams struct {
-	Forename string `json:"forename"`
-	Surname  string `json:"surname"`
-	Email    string `json:"email"`
-	Password string `json:"-"`
+type UsersList struct {
+	Users []UserParams `json:"users"`
+	Count int          `json:"count"`
 }
 
-func (p UserParams) GeneratePassword(ctx context.Context) (*string, error) {
+//BuildListUserRequest generates a ListUsersInput object for Cognito
+func (p UsersList) BuildListUserRequest(filterString string, requiredAttribute string, limit int64, userPoolId *string) *cognitoidentityprovider.ListUsersInput {
+	requestInput := &cognitoidentityprovider.ListUsersInput{
+		UserPoolId: userPoolId,
+	}
+	if requiredAttribute != "" {
+		requestInput.AttributesToGet = []*string{
+			&requiredAttribute,
+		}
+	}
+	if filterString != "" {
+		requestInput.Filter = &filterString
+	}
+	if limit != 0 {
+		requestInput.Limit = &limit
+	}
+
+	return requestInput
+}
+
+//MapCognitoUsers maps the users from the cognito response into the UsersList Users attribute and sets the Count attribute
+func (p *UsersList) MapCognitoUsers(cognitoResults *cognitoidentityprovider.ListUsersOutput) {
+	var usersList []UserParams
+	for _, user := range cognitoResults.Users {
+		usersList = append(usersList, UserParams{}.MapCognitoDetails(user))
+	}
+	p.Users = usersList
+	p.Count = len(p.Users)
+}
+
+//BuildSuccessfulJsonResponse builds the UsersList response json for client responses
+func (p *UsersList) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
+	jsonResponse, err := json.Marshal(p)
+	if err != nil {
+		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
+	}
+	return jsonResponse, nil
+}
+
+type UserParams struct {
+	Forename string   `json:"forename"`
+	Lastname string   `json:"lastname"`
+	Email    string   `json:"email"`
+	Password string   `json:"-"`
+	Groups   []string `json:"groups"`
+	Status   string   `json:"status"`
+	ID       string   `json:"id"`
+}
+
+//GeneratePassword creates a password for the user and assigns it to the struct
+func (p *UserParams) GeneratePassword(ctx context.Context) error {
 	tempPassword, err := password.Generate(14, 1, 1, false, false)
 	if err != nil {
-		return nil, NewError(ctx, err, InternalError, PasswordGenerationErrorDescription)
+		return NewError(ctx, err, InternalError, PasswordGenerationErrorDescription)
 	}
-	return &tempPassword, nil
+	p.Password = tempPassword
+	return nil
 }
 
+//ValidateRegistration validates the required fields for user creation, returning validation errors for any failures
 func (p UserParams) ValidateRegistration(ctx context.Context) []error {
 	var validationErrs []error
 	if p.Forename == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidForenameError, InvalidForenameErrorDescription))
 	}
 
-	if p.Surname == "" {
+	if p.Lastname == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidSurnameError, InvalidSurnameErrorDescription))
 	}
 
@@ -47,6 +97,7 @@ func (p UserParams) ValidateRegistration(ctx context.Context) []error {
 	return validationErrs
 }
 
+//CheckForDuplicateEmail checks the Cognito response for users already using the email address, returning a validation error if found
 func (p UserParams) CheckForDuplicateEmail(ctx context.Context, listUserResp *cognitoidentityprovider.ListUsersOutput) error {
 	if len(listUserResp.Users) == 0 {
 		return nil
@@ -54,17 +105,7 @@ func (p UserParams) CheckForDuplicateEmail(ctx context.Context, listUserResp *co
 	return NewValidationError(ctx, InvalidEmailError, DuplicateEmailDescription)
 }
 
-func (p UserParams) BuildListUserRequest(filterString string, requiredAttribute string, limit int64, userPoolId *string) *cognitoidentityprovider.ListUsersInput {
-	return &cognitoidentityprovider.ListUsersInput{
-		AttributesToGet: []*string{
-			&requiredAttribute,
-		},
-		Filter:     &filterString,
-		Limit:      &limit,
-		UserPoolId: userPoolId,
-	}
-}
-
+//BuildCreateUserRequest generates a AdminCreateUserInput for Cognito
 func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *cognitoidentityprovider.AdminCreateUserInput {
 	var (
 		deliveryMethod, forenameAttrName, surnameAttrName, emailAttrName, emailVerifiedAttrName, emailVerifiedValue string = "EMAIL", "given_name", "family_name", "email", "email_verified", "true"
@@ -78,7 +119,7 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 			},
 			{
 				Name:  &surnameAttrName,
-				Value: &p.Surname,
+				Value: &p.Lastname,
 			},
 			{
 				Name:  &emailAttrName,
@@ -98,12 +139,35 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 	}
 }
 
-func (p UserParams) BuildSuccessfulJsonResponse(ctx context.Context, createdUser *cognitoidentityprovider.AdminCreateUserOutput) ([]byte, error) {
-	jsonResponse, err := json.Marshal(createdUser)
+//BuildSuccessfulJsonResponse builds the UserParams response json for client responses
+func (p UserParams) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
+	jsonResponse, err := json.Marshal(p)
 	if err != nil {
 		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
 	}
 	return jsonResponse, nil
+}
+
+//MapCognitoDetails maps the details from the Cognito User model to the UserParams model
+func (p UserParams) MapCognitoDetails(userDetails *cognitoidentityprovider.UserType) UserParams {
+	var forename, surname, email string
+	for _, attr := range userDetails.Attributes {
+		if *attr.Name == "given_name" {
+			forename = *attr.Value
+		} else if *attr.Name == "family_name" {
+			surname = *attr.Value
+		} else if *attr.Name == "email" {
+			email = *attr.Value
+		}
+	}
+	return UserParams{
+		Forename: forename,
+		Lastname: surname,
+		Email:    email,
+		Groups:   []string{},
+		Status:   *userDetails.UserStatus,
+		ID:       *userDetails.Username,
+	}
 }
 
 type CreateUserInput struct {
@@ -124,6 +188,7 @@ type UserSignIn struct {
 	Password string `json:"password"`
 }
 
+//ValidateCredentials validates the required fields have been submitted and meet the basic structure requirements
 func (p *UserSignIn) ValidateCredentials(ctx context.Context) *[]error {
 	var validationErrors []error
 	if !validation.IsPasswordValid(p.Password) {
@@ -138,6 +203,7 @@ func (p *UserSignIn) ValidateCredentials(ctx context.Context) *[]error {
 	return &validationErrors
 }
 
+//BuildCognitoRequest generates a InitiateAuthInput for Cognito
 func (p *UserSignIn) BuildCognitoRequest(clientId string, clientSecret string, clientAuthFlow string) *cognitoidentityprovider.InitiateAuthInput {
 	secretHash := utilities.ComputeSecretHash(clientSecret, p.Email, clientId)
 
@@ -157,6 +223,7 @@ func (p *UserSignIn) BuildCognitoRequest(clientId string, clientSecret string, c
 	}
 }
 
+//BuildSuccessfulJsonResponse builds the UserSignIn response json for client responses
 func (p *UserSignIn) BuildSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.InitiateAuthOutput) ([]byte, error) {
 	if result.AuthenticationResult != nil {
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
@@ -192,6 +259,7 @@ type ChangePassword struct {
 	NewPassword string `json:"password"`
 }
 
+//ValidateNewPasswordRequiredRequest validates the required fields have been submitted and meet the basic structure requirements
 func (p ChangePassword) ValidateNewPasswordRequiredRequest(ctx context.Context) []error {
 	var validationErrs []error
 	if !validation.IsPasswordValid(p.NewPassword) {
@@ -206,6 +274,7 @@ func (p ChangePassword) ValidateNewPasswordRequiredRequest(ctx context.Context) 
 	return validationErrs
 }
 
+//BuildAuthChallengeResponseRequest generates a RespondToAuthChallengeInput for Cognito
 func (p ChangePassword) BuildAuthChallengeResponseRequest(clientSecret string, clientId string, challengeName string) *cognitoidentityprovider.RespondToAuthChallengeInput {
 	secretHash := utilities.ComputeSecretHash(clientSecret, p.Email, clientId)
 
@@ -223,6 +292,7 @@ func (p ChangePassword) BuildAuthChallengeResponseRequest(clientSecret string, c
 	}
 }
 
+//BuildAuthChallengeSuccessfulJsonResponse builds the ChangePassword response json for client responses to NewPasswordRequired changes
 func (p ChangePassword) BuildAuthChallengeSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.RespondToAuthChallengeOutput) ([]byte, error) {
 	if result.AuthenticationResult != nil {
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)

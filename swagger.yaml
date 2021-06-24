@@ -129,6 +129,22 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
   /v1/users:
+    get:
+      tags:
+        - Users
+      summary: "List users"
+      description: "List all the user in the user pool"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "The list of users"
+          schema:
+            $ref: '#/definitions/UserList'
+        500:
+          description: "Internal error occurred"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
     post:
       tags:
         - Users
@@ -159,7 +175,7 @@ paths:
         201:
           description: "The user is created"
           schema:
-            $ref: '#/definitions/NewUser'
+            $ref: '#/definitions/User'
         400:
           description: "Unable to validate the forename, username or email in the request"
           schema:
@@ -269,41 +285,43 @@ definitions:
         type: string
         description: "Expiration Time, UTC ISO 8601"
         example: "YYYY-MM-DD hh-mm-ssZ"
-
-  NewUser:
-    description: "A model for the response body creating the user"
+  UserList:
+    description: "A list of users for the response body"
     type: object
     properties:
-      Attributes:
-        description: "Information about list of user type attribute"
+      users:
         type: array
         items:
-          $ref: '#/definitions/AttributeType'
-      Enabled:
-        description: "Specifies whether the user is enabled"
-        type: boolean
-      MFAOptions:
-        description: "The MFA options for the user."
+          $ref: '#/definitions/User'
+      count:
+        type: integer
+  User:
+    description: "The user model for the response body"
+    type: object
+    properties:
+      id:
+        description: "The users id"
+        type: string
+      forename:
+        description: "The users forename"
+        type: string
+      surname:
+        description: "The users surname"
+        type: string
+      email:
+        description: "The users email address"
+        type: string
+      groups:
+        description: "The groups the user belongs to"
         type: array
         items:
-          $ref: '#/definitions/MFAOptionType'
-      UserCreateDate:
-        description: "The creation date of the user"
-        type: string
-        format: date-time
-      UserLastModifiedDate:
-        description: "The last modified date of the user."
-        type: string
-        format: date-time
-      UserStatus:
+          description: "The groups name"
+          type: string
+      status:
         description: "The current status of the user"
         type: string
         enum: [UNCONFIRMED, CONFIRMED, ARCHIVED, COMPROMISED, UNKNOWN, RESET_REQUIRED, FORCE_CHANGE_PASSWORD]
         example: "CONFIRMED"
-      Username:
-        description: "The username of the user"
-        type: string
-        example: "smileons"
 
   ErrorResponse:
     description: "A list of any errors"
