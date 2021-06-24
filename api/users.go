@@ -29,7 +29,6 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 	if err != nil {
 		return nil, models.NewErrorResponse([]error{err}, http.StatusInternalServerError, nil)
 	}
-	//user.Password = *tempPassword
 
 	validationErrs := user.ValidateRegistration(ctx)
 
