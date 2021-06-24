@@ -17,6 +17,7 @@ const (
 	InvalidTokenError            = "InvalidToken"
 	InternalError                = "InternalServerError"
 	NotFoundError                = "NotFound"
+	UserNotFoundError            = "UserNotFound"
 	AlreadyExistsError           = "AlreadyExists"
 	DeliveryFailureError         = "DeliveryFailure"
 	InvalidCodeError             = "InvalidCode"
@@ -81,7 +82,7 @@ var CognitoErrorMapping = map[string]string{
 	cognitoidentityprovider.ErrCodeTooManyFailedAttemptsException:  TooManyFailedAttemptsError,
 	cognitoidentityprovider.ErrCodeTooManyRequestsException:        TooManyRequestsError,
 	cognitoidentityprovider.ErrCodeUserNotConfirmedException:       UserNotConfirmedError,
-	cognitoidentityprovider.ErrCodeUserNotFoundException:           NotFoundError,
+	cognitoidentityprovider.ErrCodeUserNotFoundException:           UserNotFoundError,
 	cognitoidentityprovider.ErrCodeUsernameExistsException:         UsernameExistsError,
 	request.ErrCodeSerialization:                                   InternalError,
 	request.ErrCodeRead:                                            InternalError,

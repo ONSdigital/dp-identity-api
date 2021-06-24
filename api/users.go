@@ -127,3 +127,39 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusAccepted, headers), nil
 }
+
+//PasswordResetHandler requests a password reset email be sent to the user and returns a http handler interface
+func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	defer req.Body.Close()
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, handleBodyReadError(ctx, err)
+	}
+
+	passwordResetParams := models.PasswordReset{}
+	err = json.Unmarshal(body, &passwordResetParams)
+	if err != nil {
+		return nil, handleBodyUnmarshalError(ctx, err)
+	}
+
+	validationErr := passwordResetParams.Validate(ctx)
+
+	if validationErr != nil {
+		return nil, models.NewErrorResponse([]error{validationErr}, http.StatusBadRequest, nil)
+	}
+
+	forgotPasswordRequest := passwordResetParams.BuildCognitoRequest(api.ClientSecret, api.ClientId)
+
+	_, err = api.CognitoClient.ForgotPassword(forgotPasswordRequest)
+	if err != nil {
+		responseErr := models.NewCognitoError(ctx, err, "ForgotPassword request from password reset endpoint")
+		if responseErr.Code == models.LimitExceededError || responseErr.Code == models.TooManyRequestsError {
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusBadRequest, nil)
+		} else if responseErr.Code != models.UserNotFoundError && responseErr.Code != models.UserNotConfirmedError {
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
+		}
+	}
+
+	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
+}

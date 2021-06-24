@@ -67,7 +67,7 @@ func (p UserParams) BuildListUserRequest(filterString string, requiredAttribute 
 
 func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *cognitoidentityprovider.AdminCreateUserInput {
 	var (
-		deliveryMethod, forenameAttrName, surnameAttrName, emailAttrName string = "EMAIL", "name", "family_name", "email"
+		deliveryMethod, forenameAttrName, surnameAttrName, emailAttrName, emailVerifiedAttrName, emailVerifiedValue string = "EMAIL", "given_name", "family_name", "email", "email_verified", "true"
 	)
 
 	return &cognitoidentityprovider.AdminCreateUserInput{
@@ -83,6 +83,10 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 			{
 				Name:  &emailAttrName,
 				Value: &p.Email,
+			},
+			{
+				Name:  &emailVerifiedAttrName,
+				Value: &emailVerifiedValue,
 			},
 		},
 		DesiredDeliveryMediums: []*string{
@@ -233,5 +237,25 @@ func (p ChangePassword) BuildAuthChallengeSuccessfulJsonResponse(ctx context.Con
 		return jsonResponse, nil
 	} else {
 		return nil, NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
+	}
+}
+
+type PasswordReset struct {
+	Email string `json:"email"`
+}
+
+func (p *PasswordReset) Validate(ctx context.Context) error {
+	if !validation.IsEmailValid(p.Email) {
+		return NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription)
+	}
+	return nil
+}
+
+func (p PasswordReset) BuildCognitoRequest(clientSecret string, clientId string) *cognitoidentityprovider.ForgotPasswordInput {
+	secretHash := utilities.ComputeSecretHash(clientSecret, p.Email, clientId)
+	return &cognitoidentityprovider.ForgotPasswordInput{
+		ClientId:   &clientId,
+		SecretHash: &secretHash,
+		Username:   &p.Email,
 	}
 }
