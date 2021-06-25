@@ -178,6 +178,20 @@ func (p UserParams) MapCognitoDetails(userDetails *cognitoidentityprovider.UserT
 	}
 }
 
+func (p *UserParams) MapCognitoGetResponse(userDetails *cognitoidentityprovider.AdminGetUserOutput) {
+	for _, attr := range userDetails.UserAttributes {
+		if *attr.Name == "given_name" {
+			p.Forename = *attr.Value
+		} else if *attr.Name == "family_name" {
+			p.Lastname = *attr.Value
+		} else if *attr.Name == "email" {
+			p.Email = *attr.Value
+		}
+	}
+	p.Status = *userDetails.UserStatus
+	p.Groups = []string{}
+}
+
 type CreateUserInput struct {
 	UserInput *cognitoidentityprovider.AdminCreateUserInput
 }
