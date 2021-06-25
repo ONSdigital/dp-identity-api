@@ -25,6 +25,14 @@ func TestEmailValidationConformsToExpectedFormat(t *testing.T) {
 		So(emailResponse, ShouldBeTrue)
 	})
 
+	Convey("A capitalised email conforms to the expected format and is validated", t, func() {
+
+		email := "EMAIL.EMAIL@DOMAIN.HOST"
+
+		emailResponse := IsEmailValid(email)
+		So(emailResponse, ShouldBeTrue)
+	})
+
 	Convey("The empty email does not conform to the expected format and is validated", t, func() {
 
 		email := ""

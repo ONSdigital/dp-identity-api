@@ -13,4 +13,5 @@ type Client interface {
 	ListUsers(input *cognito.ListUsersInput) (*cognito.ListUsersOutput, error)
 	AdminUserGlobalSignOut(input *cognito.AdminUserGlobalSignOutInput) (*cognito.AdminUserGlobalSignOutOutput, error)
 	RespondToAuthChallenge(input *cognito.RespondToAuthChallengeInput) (*cognito.RespondToAuthChallengeOutput, error)
+	ForgotPassword(input *cognito.ForgotPasswordInput) (*cognito.ForgotPasswordOutput, error)
 }
