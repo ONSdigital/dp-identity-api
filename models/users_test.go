@@ -235,7 +235,7 @@ func TestUserParams_BuildCreateUserRequest(t *testing.T) {
 	})
 }
 
-func TestUserParams_BuildSuccessfulJsonResponse(t *testing.T) {
+func TestUserParams_BuildSuccessfulCreateJsonResponse(t *testing.T) {
 	Convey("returns a byte array of the response JSON", t, func() {
 		ctx := context.Background()
 		name, status := "abcd-efgh-ijkl-mnop", "UNCONFIRMED"
@@ -244,7 +244,7 @@ func TestUserParams_BuildSuccessfulJsonResponse(t *testing.T) {
 			ID:     name,
 		}
 
-		response, err := createdUser.BuildSuccessfulJsonResponse(ctx)
+		response, err := createdUser.BuildSuccessfulCreateJsonResponse(ctx)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
@@ -273,7 +273,7 @@ func TestUserParams_BuildAdminGetUserRequest(t *testing.T) {
 	})
 }
 
-func TestUserParams_BuildGetSuccessfulJsonResponse(t *testing.T) {
+func TestUserParams_BuildSuccessfulGetJsonResponse(t *testing.T) {
 	Convey("returns a byte array of the response JSON", t, func() {
 		ctx := context.Background()
 		id, status, forename := "abcd-efgh-ijkl-mnop", "UNCONFIRMED", "Bob"
@@ -283,7 +283,7 @@ func TestUserParams_BuildGetSuccessfulJsonResponse(t *testing.T) {
 			ID:       id,
 		}
 
-		response, err := user.BuildGetSuccessfulJsonResponse(ctx)
+		response, err := user.BuildSuccessfulGetJsonResponse(ctx)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))

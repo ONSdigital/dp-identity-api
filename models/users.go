@@ -139,13 +139,21 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 	}
 }
 
-//BuildSuccessfulJsonResponse builds the UserParams response json for client responses
-func (p UserParams) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
+//BuildSuccessfulCreateJsonResponse builds the UserParams response json for client responses
+func (p UserParams) BuildSuccessfulCreateJsonResponse(ctx context.Context) ([]byte, error) {
 	jsonResponse, err := json.Marshal(p)
 	if err != nil {
 		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
 	}
 	return jsonResponse, nil
+}
+
+//BuildCreateUserRequest generates a AdminCreateUserInput for Cognito
+func (p UserParams) BuildAdminGetUserRequest(userPoolId string) *cognitoidentityprovider.AdminGetUserInput {
+	return &cognitoidentityprovider.AdminGetUserInput{
+		UserPoolId: &userPoolId,
+		Username:   &p.ID,
+	}
 }
 
 //MapCognitoDetails maps the details from the Cognito User model to the UserParams model
