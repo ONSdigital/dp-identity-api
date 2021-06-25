@@ -235,7 +235,7 @@ func TestUserParams_BuildCreateUserRequest(t *testing.T) {
 	})
 }
 
-func TestUserParams_BuildSuccessfulCreateJsonResponse(t *testing.T) {
+func TestUserParams_BuildSuccessfulJsonResponse(t *testing.T) {
 	Convey("returns a byte array of the response JSON", t, func() {
 		ctx := context.Background()
 		name, status := "abcd-efgh-ijkl-mnop", "UNCONFIRMED"
@@ -244,7 +244,7 @@ func TestUserParams_BuildSuccessfulCreateJsonResponse(t *testing.T) {
 			ID:     name,
 		}
 
-		response, err := createdUser.BuildSuccessfulCreateJsonResponse(ctx)
+		response, err := createdUser.BuildSuccessfulJsonResponse(ctx)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
@@ -270,29 +270,6 @@ func TestUserParams_BuildAdminGetUserRequest(t *testing.T) {
 		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminGetUserInput{}))
 		So(*request.Username, ShouldEqual, userId)
 		So(*request.UserPoolId, ShouldEqual, userPoolId)
-	})
-}
-
-func TestUserParams_BuildSuccessfulGetJsonResponse(t *testing.T) {
-	Convey("returns a byte array of the response JSON", t, func() {
-		ctx := context.Background()
-		id, status, forename := "abcd-efgh-ijkl-mnop", "UNCONFIRMED", "Bob"
-		user := models.UserParams{
-			Forename: forename,
-			Status:   status,
-			ID:       id,
-		}
-
-		response, err := user.BuildSuccessfulGetJsonResponse(ctx)
-
-		So(err, ShouldBeNil)
-		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
-		var userJson map[string]interface{}
-		err = json.Unmarshal(response, &userJson)
-		So(err, ShouldBeNil)
-		So(userJson["id"], ShouldEqual, id)
-		So(userJson["status"], ShouldEqual, status)
-		So(userJson["forename"], ShouldEqual, forename)
 	})
 }
 

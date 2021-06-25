@@ -139,8 +139,8 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 	}
 }
 
-//BuildSuccessfulCreateJsonResponse builds the UserParams response json for client responses
-func (p UserParams) BuildSuccessfulCreateJsonResponse(ctx context.Context) ([]byte, error) {
+//BuildSuccessfulJsonResponse builds the UserParams response json for client responses
+func (p UserParams) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
 	jsonResponse, err := json.Marshal(p)
 	if err != nil {
 		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
