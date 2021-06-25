@@ -304,6 +304,38 @@ func TestUserParams_MapCognitoDetails(t *testing.T) {
 	})
 }
 
+func TestUserParams_MapCognitoGetResponse(t *testing.T) {
+	Convey("maps the returned user details to the UserParam attributes", t, func() {
+		var forename, surname, email, status, id string = "Bob", "Smith", "email@ons.gov.uk", "CONFIRMED", "user-1"
+		cognitoUser := cognitoidentityprovider.AdminGetUserOutput{
+			UserAttributes: []*cognitoidentityprovider.AttributeType{
+				{
+					Name:  aws.String("given_name"),
+					Value: &forename,
+				},
+				{
+					Name:  aws.String("family_name"),
+					Value: &surname,
+				},
+				{
+					Name:  aws.String("email"),
+					Value: &email,
+				},
+			},
+			UserStatus: &status,
+			Username:   &id,
+		}
+		user := models.UserParams{ID: id}
+		user.MapCognitoGetResponse(&cognitoUser)
+
+		So(user.Forename, ShouldEqual, forename)
+		So(user.Lastname, ShouldEqual, surname)
+		So(user.Email, ShouldEqual, email)
+		So(user.Status, ShouldEqual, status)
+		So(user.ID, ShouldEqual, id)
+	})
+}
+
 func TestUserSignIn_ValidateCredentials(t *testing.T) {
 	ctx := context.Background()
 
