@@ -256,6 +256,46 @@ func TestUserParams_BuildSuccessfulJsonResponse(t *testing.T) {
 	})
 }
 
+func TestUserParams_BuildAdminGetUserRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito AdminGetUserInput request body", t, func() {
+		userId := "abcd1234"
+		user := models.UserParams{
+			ID: userId,
+		}
+
+		userPoolId := "euwest-99-aabbcc"
+
+		request := user.BuildAdminGetUserRequest(userPoolId)
+
+		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminGetUserInput{}))
+		So(*request.Username, ShouldEqual, userId)
+		So(*request.UserPoolId, ShouldEqual, userPoolId)
+	})
+}
+
+func TestUserParams_BuildGetSuccessfulJsonResponse(t *testing.T) {
+	Convey("returns a byte array of the response JSON", t, func() {
+		ctx := context.Background()
+		id, status, forename := "abcd-efgh-ijkl-mnop", "UNCONFIRMED", "Bob"
+		user := models.UserParams{
+			Forename: forename,
+			Status:   status,
+			ID:       id,
+		}
+
+		response, err := user.BuildGetSuccessfulJsonResponse(ctx)
+
+		So(err, ShouldBeNil)
+		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
+		var userJson map[string]interface{}
+		err = json.Unmarshal(response, &userJson)
+		So(err, ShouldBeNil)
+		So(userJson["id"], ShouldEqual, id)
+		So(userJson["status"], ShouldEqual, status)
+		So(userJson["forename"], ShouldEqual, forename)
+	})
+}
+
 func TestUserParams_MapCognitoDetails(t *testing.T) {
 	Convey("maps the returned user details to the UserParam attributes", t, func() {
 		var forename, surname, email, status, id string = "Bob", "Smith", "email@ons.gov.uk", "CONFIRMED", "user-1"
