@@ -18,6 +18,7 @@ import (
 )
 
 const usersEndPoint = "http://localhost:25600/v1/users"
+const userEndPoint = "http://localhost:25600/v1/users/abcd1234"
 const changePasswordEndPoint = "http://localhost:25600/v1/users/self/password"
 const requestResetEndPoint = "http://localhost:25600/v1/password-reset"
 
@@ -279,6 +280,93 @@ func TestListUserHandler(t *testing.T) {
 			r := httptest.NewRequest(http.MethodGet, usersEndPoint, nil)
 
 			successResponse, errorResponse := api.ListUsersHandler(ctx, w, r)
+
+			// Check whether testing a success or error case
+			if tt.httpResponse > 399 {
+				So(successResponse, ShouldBeNil)
+				So(errorResponse.Status, ShouldEqual, tt.httpResponse)
+			} else {
+				So(successResponse.Status, ShouldEqual, tt.httpResponse)
+				So(errorResponse, ShouldBeNil)
+			}
+		}
+	})
+}
+
+func TestGetUserHandler(t *testing.T) {
+	var (
+		routeMux                                         = mux.NewRouter()
+		ctx                                              = context.Background()
+		poolId, clientId, clientSecret, authFlow  string = "us-west-11_bxushuds", "abc123", "bsjahsaj9djsiq", "authflow"
+		forename, lastname, status, email, userId string = "bob", "bobbings", "UNCONFIRMED", "foo_bar123@ext.ons.gov.uk", "abcd1234"
+		givenNameAttr, familyNameAttr, emailAttr  string = "given_name", "family_name", "email"
+	)
+
+	m := &mock.MockCognitoIdentityProviderClient{}
+
+	api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authFlow)
+	w := httptest.NewRecorder()
+
+	Convey("Get user - check expected responses", t, func() {
+		adminCreateUsersTests := []struct {
+			getUserFunction func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
+			httpResponse    int
+		}{
+			{
+				// 200 response from Cognito
+				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+					user := &cognitoidentityprovider.AdminGetUserOutput{
+						UserAttributes: []*cognitoidentityprovider.AttributeType{
+							{
+								Name:  &givenNameAttr,
+								Value: &forename,
+							},
+							{
+								Name:  &familyNameAttr,
+								Value: &lastname,
+							},
+							{
+								Name:  &emailAttr,
+								Value: &email,
+							},
+						},
+						UserStatus: &status,
+						Username:   &userId,
+					}
+					return user, nil
+				},
+				http.StatusOK,
+			},
+			{
+				// 500 response from Cognito
+				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := "Something strange happened"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				http.StatusInternalServerError,
+			},
+			{
+				//404 response from Cognito
+				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+					awsErrCode := "UserNotFoundException"
+					awsErrMessage := "user could not be found"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				http.StatusNotFound,
+			},
+		}
+
+		for _, tt := range adminCreateUsersTests {
+			m.AdminGetUserFunc = tt.getUserFunction
+
+			r := httptest.NewRequest(http.MethodGet, userEndPoint, nil)
+
+			successResponse, errorResponse := api.GetUserHandler(ctx, w, r)
 
 			// Check whether testing a success or error case
 			if tt.httpResponse > 399 {
