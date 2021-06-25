@@ -271,3 +271,42 @@ func (m *CognitoIdentityProviderClientStub) ForgotPassword(input *cognitoidentit
 	}
 	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "user not found", nil)
 }
+
+func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+	var (
+		emailVerifiedAttr, emailVerifiedValue    string = "email_verified", "true"
+		givenNameAttr, familyNameAttr, emailAttr string = "given_name", "family_name", "email"
+		enabled                                  bool   = true
+	)
+	for _, user := range m.Users {
+		if user.ID == *input.Username {
+			if user.Email == "internal.error@ons.gov.uk" {
+				return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+			}
+			return &cognitoidentityprovider.AdminGetUserOutput{
+				UserAttributes: []*cognitoidentityprovider.AttributeType{
+					{
+						Name:  &emailVerifiedAttr,
+						Value: &emailVerifiedValue,
+					},
+					{
+						Name:  &givenNameAttr,
+						Value: aws.String(user.GivenName),
+					},
+					{
+						Name:  &familyNameAttr,
+						Value: aws.String(user.FamilyName),
+					},
+					{
+						Name:  &emailAttr,
+						Value: aws.String(user.Email),
+					},
+				},
+				Enabled:    &enabled,
+				UserStatus: aws.String(user.Status),
+				Username:   aws.String(user.ID),
+			}, nil
+		}
+	}
+	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "user not found", nil)
+}
