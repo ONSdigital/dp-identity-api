@@ -222,7 +222,7 @@ Feature: Users
         Then I should receive the following JSON response with status "200":
             """
             {
-                "id": "aaaabbbbcccc",
+                "id": "abcd1234",
                 "forename": "Bob",
                 "lastname": "Smith",
                 "email": "email@ons.gov.uk",

@@ -308,5 +308,5 @@ func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityp
 			}, nil
 		}
 	}
-	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "user not found", nil)
+	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
 }
