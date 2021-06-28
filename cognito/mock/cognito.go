@@ -15,6 +15,7 @@ type MockCognitoIdentityProviderClient struct {
 	AdminUserGlobalSignOutFunc func(adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
 	RespondToAuthChallengeFunc func(input *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error)
 	ForgotPasswordFunc         func(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error)
+	AdminGetUserFunc           func(input *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
 }
 
 func (m *MockCognitoIdentityProviderClient) DescribeUserPool(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
@@ -48,4 +49,8 @@ func (m *MockCognitoIdentityProviderClient) RespondToAuthChallenge(input *cognit
 
 func (m *MockCognitoIdentityProviderClient) ForgotPassword(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
 	return m.ForgotPasswordFunc(input)
+}
+
+func (m *MockCognitoIdentityProviderClient) AdminGetUser(input *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+	return m.AdminGetUserFunc(input)
 }

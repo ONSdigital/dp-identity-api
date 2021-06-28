@@ -12,6 +12,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	c.apiFeature.RegisterSteps(ctx)
 
 	ctx.Step(`^a user with email "([^"]*)" and password "([^"]*)" exists in the database$`, c.aUserWithEmailAndPasswordExistsInTheDatabase)
+	ctx.Step(`^a user with username "([^"]*)" and email "([^"]*)" exists in the database$`, c.aUserWithUsernameAndEmailExistsInTheDatabase)
 	ctx.Step(`^an internal server error is returned from Cognito$`, c.anInternalServerErrorIsReturnedFromCognito)
 	ctx.Step(`^an error is returned from Cognito$`, c.anErrorIsReturnedFromCognito)
 	ctx.Step(`^I have an active session with access token "([^"]*)"$`, c.iHaveAnActiveSessionWithAccessToken)
@@ -21,7 +22,12 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 }
 
 func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(email, password string) error {
-	c.CognitoClient.AddUserWithUsername(email, password, true)
+	c.CognitoClient.AddUserWithEmail(email, password, true)
+	return nil
+}
+
+func (c *IdentityComponent) aUserWithUsernameAndEmailExistsInTheDatabase(username, email string) error {
+	c.CognitoClient.AddUserWithUsername(username, email, true)
 	return nil
 }
 
@@ -52,6 +58,6 @@ func (c *IdentityComponent) theAdminUserGlobalSignOutEndpointInCognitoReturnsAnI
 }
 
 func (c *IdentityComponent) aUserWithNonverifiedEmailAndPassword(email, password string) error {
-	c.CognitoClient.AddUserWithUsername(email, password, false)
+	c.CognitoClient.AddUserWithEmail(email, password, false)
 	return nil
 }
