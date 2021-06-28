@@ -184,6 +184,33 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /v1/users/{id}:
+    get:
+      tags:
+        - Users
+      summary: "Get a user"
+      description: "Gets the details of a user from the user pool"
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+          description: the users id
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "The users details"
+          schema:
+            $ref: '#/definitions/User'
+        404:
+          description: "User not found"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: "Internal error occurred"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
   /v1/users/self/password:
     put:
       tags:

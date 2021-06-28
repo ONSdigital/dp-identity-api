@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 
@@ -79,6 +80,31 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 	usersList.MapCognitoUsers(listUserResp)
 
 	jsonResponse, responseErr := usersList.BuildSuccessfulJsonResponse(ctx)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
+
+//GetUserHandler lists the users in the user pool
+func (api *API) GetUserHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	vars := mux.Vars(req)
+	user := models.UserParams{ID: vars["id"]}
+	userInput := user.BuildAdminGetUserRequest(api.UserPoolId)
+	userResp, err := api.CognitoClient.AdminGetUser(userInput)
+	if err != nil {
+		responseErr := models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint")
+		if responseErr.Code == models.UserNotFoundError {
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusNotFound, nil)
+		} else {
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
+		}
+	}
+
+	user.MapCognitoGetResponse(userResp)
+
+	jsonResponse, responseErr := user.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
 	}

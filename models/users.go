@@ -148,6 +148,14 @@ func (p UserParams) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, er
 	return jsonResponse, nil
 }
 
+//BuildCreateUserRequest generates a AdminCreateUserInput for Cognito
+func (p UserParams) BuildAdminGetUserRequest(userPoolId string) *cognitoidentityprovider.AdminGetUserInput {
+	return &cognitoidentityprovider.AdminGetUserInput{
+		UserPoolId: &userPoolId,
+		Username:   &p.ID,
+	}
+}
+
 //MapCognitoDetails maps the details from the Cognito User model to the UserParams model
 func (p UserParams) MapCognitoDetails(userDetails *cognitoidentityprovider.UserType) UserParams {
 	var forename, surname, email string
@@ -168,6 +176,20 @@ func (p UserParams) MapCognitoDetails(userDetails *cognitoidentityprovider.UserT
 		Status:   *userDetails.UserStatus,
 		ID:       *userDetails.Username,
 	}
+}
+
+func (p *UserParams) MapCognitoGetResponse(userDetails *cognitoidentityprovider.AdminGetUserOutput) {
+	for _, attr := range userDetails.UserAttributes {
+		if *attr.Name == "given_name" {
+			p.Forename = *attr.Value
+		} else if *attr.Name == "family_name" {
+			p.Lastname = *attr.Value
+		} else if *attr.Name == "email" {
+			p.Email = *attr.Value
+		}
+	}
+	p.Status = *userDetails.UserStatus
+	p.Groups = []string{}
 }
 
 type CreateUserInput struct {

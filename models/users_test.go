@@ -256,6 +256,23 @@ func TestUserParams_BuildSuccessfulJsonResponse(t *testing.T) {
 	})
 }
 
+func TestUserParams_BuildAdminGetUserRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito AdminGetUserInput request body", t, func() {
+		userId := "abcd1234"
+		user := models.UserParams{
+			ID: userId,
+		}
+
+		userPoolId := "euwest-99-aabbcc"
+
+		request := user.BuildAdminGetUserRequest(userPoolId)
+
+		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminGetUserInput{}))
+		So(*request.Username, ShouldEqual, userId)
+		So(*request.UserPoolId, ShouldEqual, userPoolId)
+	})
+}
+
 func TestUserParams_MapCognitoDetails(t *testing.T) {
 	Convey("maps the returned user details to the UserParam attributes", t, func() {
 		var forename, surname, email, status, id string = "Bob", "Smith", "email@ons.gov.uk", "CONFIRMED", "user-1"
@@ -278,6 +295,38 @@ func TestUserParams_MapCognitoDetails(t *testing.T) {
 			Username:   &id,
 		}
 		user := models.UserParams{}.MapCognitoDetails(&cognitoUser)
+
+		So(user.Forename, ShouldEqual, forename)
+		So(user.Lastname, ShouldEqual, surname)
+		So(user.Email, ShouldEqual, email)
+		So(user.Status, ShouldEqual, status)
+		So(user.ID, ShouldEqual, id)
+	})
+}
+
+func TestUserParams_MapCognitoGetResponse(t *testing.T) {
+	Convey("maps the returned user details to the UserParam attributes", t, func() {
+		var forename, surname, email, status, id string = "Bob", "Smith", "email@ons.gov.uk", "CONFIRMED", "user-1"
+		cognitoUser := cognitoidentityprovider.AdminGetUserOutput{
+			UserAttributes: []*cognitoidentityprovider.AttributeType{
+				{
+					Name:  aws.String("given_name"),
+					Value: &forename,
+				},
+				{
+					Name:  aws.String("family_name"),
+					Value: &surname,
+				},
+				{
+					Name:  aws.String("email"),
+					Value: &email,
+				},
+			},
+			UserStatus: &status,
+			Username:   &id,
+		}
+		user := models.UserParams{ID: id}
+		user.MapCognitoGetResponse(&cognitoUser)
 
 		So(user.Forename, ShouldEqual, forename)
 		So(user.Lastname, ShouldEqual, surname)
