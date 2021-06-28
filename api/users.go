@@ -91,8 +91,8 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 func (api *API) GetUserHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	user := models.UserParams{ID: vars["id"]}
-	getUserInput := user.BuildAdminGetUserRequest(api.UserPoolId)
-	getUserResp, err := api.CognitoClient.AdminGetUser(getUserInput)
+	userInput := user.BuildAdminGetUserRequest(api.UserPoolId)
+	userResp, err := api.CognitoClient.AdminGetUser(userInput)
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint")
 		if responseErr.Code == models.UserNotFoundError {
@@ -102,7 +102,7 @@ func (api *API) GetUserHandler(ctx context.Context, w http.ResponseWriter, req *
 		}
 	}
 
-	user.MapCognitoGetResponse(getUserResp)
+	user.MapCognitoGetResponse(userResp)
 
 	jsonResponse, responseErr := user.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {
