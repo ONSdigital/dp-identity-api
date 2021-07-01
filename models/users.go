@@ -68,6 +68,7 @@ type UserParams struct {
 	Password string   `json:"-"`
 	Groups   []string `json:"groups"`
 	Status   string   `json:"status"`
+	RoleType string   `json:"role_type"`
 	ID       string   `json:"id"`
 }
 
@@ -94,6 +95,19 @@ func (p UserParams) ValidateRegistration(ctx context.Context) []error {
 
 	if !validation.ValidateONSEmail(p.Email) {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription))
+	}
+	return validationErrs
+}
+
+//ValidateUpdate validates the required fields for user update, returning validation errors for any failures
+func (p UserParams) ValidateUpdate(ctx context.Context) []error {
+	var validationErrs []error
+	if p.Forename == "" {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidForenameError, InvalidForenameErrorDescription))
+	}
+
+	if p.Lastname == "" {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidSurnameError, InvalidSurnameErrorDescription))
 	}
 	return validationErrs
 }
