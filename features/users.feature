@@ -313,7 +313,7 @@ Feature: Users
             }
             """
 
-    Scenario: PUT /v1/users/{id} missing surname and checking the response status 400
+    Scenario: PUT /v1/users/{id} missing lastname and checking the response status 400
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         When I PUT "/v1/users/abcd1234"
         """
@@ -337,7 +337,7 @@ Feature: Users
             }
             """
 
-    Scenario: PUT /v1/users/{id} missing forename and surname and checking the response status 400
+    Scenario: PUT /v1/users/{id} missing forename and lastname and checking the response status 400
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         When I PUT "/v1/users/abcd1234"
         """

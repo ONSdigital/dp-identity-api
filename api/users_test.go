@@ -291,7 +291,7 @@ func TestGetUserHandler(t *testing.T) {
 	api, w, m := apiSetup()
 
 	Convey("Get user - check expected responses", t, func() {
-		adminCreateUsersTests := []struct {
+		adminGetUsersTests := []struct {
 			getUserFunction func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
 			httpResponse    int
 		}{
@@ -344,10 +344,97 @@ func TestGetUserHandler(t *testing.T) {
 			},
 		}
 
-		for _, tt := range adminCreateUsersTests {
+		for _, tt := range adminGetUsersTests {
 			m.AdminGetUserFunc = tt.getUserFunction
 
 			r := httptest.NewRequest(http.MethodGet, userEndPoint, nil)
+
+			successResponse, errorResponse := api.GetUserHandler(ctx, w, r)
+
+			// Check whether testing a success or error case
+			if tt.httpResponse > 399 {
+				So(successResponse, ShouldBeNil)
+				So(errorResponse.Status, ShouldEqual, tt.httpResponse)
+			} else {
+				So(successResponse.Status, ShouldEqual, tt.httpResponse)
+				So(errorResponse, ShouldBeNil)
+			}
+		}
+	})
+}
+
+func TestUpdateUserHandler(t *testing.T) {
+	var (
+		routeMux                                        = mux.NewRouter()
+		ctx                                             = context.Background()
+		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "abc123", "bsjahsaj9djsiq", "authflow"
+		forename, lastname, status, roleType     string = "bob", "bobbings", "Active", "Viewer"
+	)
+
+	m := &mock.MockCognitoIdentityProviderClient{}
+
+	api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authFlow)
+	w := httptest.NewRecorder()
+
+	Convey("Update user - check expected responses", t, func() {
+		adminCreateUsersTests := []struct {
+			updateUserFunction func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error)
+			userForename       string
+			httpResponse       int
+		}{
+			{
+				// 200 response from Cognito
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
+					return user, nil
+				},
+				forename,
+				http.StatusOK,
+			},
+			{
+				// 500 response from Cognito
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := "Something strange happened"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				forename,
+				http.StatusInternalServerError,
+			},
+			{
+				//404 response from Cognito
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					awsErrCode := "UserNotFoundException"
+					awsErrMessage := "user could not be found"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				forename,
+				http.StatusNotFound,
+			},
+			{
+				//local validation failure
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					awsErrCode := "UserNotFoundException"
+					awsErrMessage := "user could not be found"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				"",
+				http.StatusBadRequest,
+			},
+		}
+
+		for _, tt := range adminCreateUsersTests {
+			m.AdminUpdateUserAttributesFunc = tt.updateUserFunction
+
+			postBody := map[string]interface{}{"forename": tt.userForename, "lastname": lastname, "status": status, "role_type": roleType}
+			body, _ := json.Marshal(postBody)
+			r := httptest.NewRequest(http.MethodGet, userEndPoint, bytes.NewReader(body))
 
 			successResponse, errorResponse := api.GetUserHandler(ctx, w, r)
 
