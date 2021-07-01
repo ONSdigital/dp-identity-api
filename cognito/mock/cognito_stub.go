@@ -340,3 +340,15 @@ func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentitypr
 		},
 	}, nil
 }
+
+func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(input *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+	for _, user := range m.Users {
+		if user.ID == *input.Username {
+			if user.Email == "internal.error@ons.gov.uk" {
+				return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+			}
+			return &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}, nil
+		}
+	}
+	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+}
