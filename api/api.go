@@ -73,6 +73,7 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 	r.HandleFunc("/v1/users", contextAndErrors(api.CreateUserHandler)).Methods("POST")
 	r.HandleFunc("/v1/users", contextAndErrors(api.ListUsersHandler)).Methods("GET")
 	r.HandleFunc("/v1/users/{id}", contextAndErrors(api.GetUserHandler)).Methods("GET")
+	r.HandleFunc("/v1/users/{id}", contextAndErrors(api.UpdateUserHandler)).Methods("PUT")
 	// self used in paths rather than identifier as the identifier is a Cognito Session string in change password requests
 	// the user id is not yet available from the previous responses
 	r.HandleFunc("/v1/users/self/password", contextAndErrors(api.ChangePasswordHandler)).Methods("PUT")
