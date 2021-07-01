@@ -168,6 +168,55 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 	})
 }
 
+func TestUserParams_ValidateUpdate(t *testing.T) {
+	ctx := context.Background()
+
+	Convey("returns an InvalidForename error if an invalid forename is submitted", t, func() {
+		user := models.UserParams{
+			Forename: "",
+			Lastname: "Smith",
+		}
+
+		errs := user.ValidateUpdate(ctx)
+
+		So(len(errs), ShouldEqual, 1)
+		castErr := errs[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidForenameError)
+		So(castErr.Description, ShouldEqual, models.InvalidForenameErrorDescription)
+	})
+
+	Convey("returns an InvalidSurname error if an invalid surname is submitted", t, func() {
+		user := models.UserParams{
+			Forename: "Stan",
+			Lastname: "",
+		}
+
+		errs := user.ValidateUpdate(ctx)
+
+		So(len(errs), ShouldEqual, 1)
+		castErr := errs[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidSurnameError)
+		So(castErr.Description, ShouldEqual, models.InvalidSurnameErrorDescription)
+	})
+
+	Convey("returns an InvalidForename and InvalidSurname errors if no forename or lastname is submitted", t, func() {
+		user := models.UserParams{
+			Forename: "",
+			Lastname: "",
+		}
+
+		errs := user.ValidateUpdate(ctx)
+
+		So(len(errs), ShouldEqual, 2)
+		castErr := errs[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidForenameError)
+		So(castErr.Description, ShouldEqual, models.InvalidForenameErrorDescription)
+		castErr = errs[1].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidSurnameError)
+		So(castErr.Description, ShouldEqual, models.InvalidSurnameErrorDescription)
+	})
+}
+
 func TestUserParams_CheckForDuplicateEmail(t *testing.T) {
 	ctx := context.Background()
 
@@ -232,6 +281,27 @@ func TestUserParams_BuildCreateUserRequest(t *testing.T) {
 		So(*response.UserAttributes[0].Value, ShouldEqual, user.Forename)
 		So(*response.UserAttributes[1].Value, ShouldEqual, user.Lastname)
 		So(*response.UserAttributes[2].Value, ShouldEqual, user.Email)
+	})
+}
+
+func TestUserParams_BuildUpdateUserRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito AdminUpdateUserAttributeInput request body", t, func() {
+
+		user := models.UserParams{
+			ID:       "abcd1234",
+			Forename: "Stan",
+			Lastname: "Smith",
+		}
+
+		userPoolId := "euwest-99-aabbcc"
+
+		response := user.BuildUpdateUserRequest(userPoolId)
+
+		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminUpdateUserAttributesInput{}))
+		So(*response.Username, ShouldEqual, user.ID)
+		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserAttributes[0].Value, ShouldEqual, user.Forename)
+		So(*response.UserAttributes[1].Value, ShouldEqual, user.Lastname)
 	})
 }
 
