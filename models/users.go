@@ -154,6 +154,28 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 	}
 }
 
+//BuildUpdateUserRequest generates a AdminUpdateUserAttributesInput for Cognito
+func (p UserParams) BuildUpdateUserRequest(userPoolId string) *cognitoidentityprovider.AdminUpdateUserAttributesInput {
+	var (
+		forenameAttrName, surnameAttrName string = "given_name", "family_name"
+	)
+
+	return &cognitoidentityprovider.AdminUpdateUserAttributesInput{
+		UserAttributes: []*cognitoidentityprovider.AttributeType{
+			{
+				Name:  &forenameAttrName,
+				Value: &p.Forename,
+			},
+			{
+				Name:  &surnameAttrName,
+				Value: &p.Lastname,
+			},
+		},
+		UserPoolId: &userPoolId,
+		Username:   &p.ID,
+	}
+}
+
 //BuildSuccessfulJsonResponse builds the UserParams response json for client responses
 func (p UserParams) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
 	jsonResponse, err := json.Marshal(p)
