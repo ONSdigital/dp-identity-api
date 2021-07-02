@@ -267,9 +267,7 @@ Feature: Users
             {
                 "forename": "Changed",
                 "lastname": "Names",
-                "status": "Active",
-                "status_notes": ""
-                "role_type": "Viewer"
+                "status": "Active"
             }
         """
         Then I should receive the following JSON response with status "200":
@@ -279,12 +277,7 @@ Feature: Users
                 "forename": "Changed",
                 "lastname": "Names",
                 "email": "email@ons.gov.uk",
-                "groups": [
-                    {
-                        "id" : "efgh5678",
-                        "name": "role-publisher"
-                    }
-                ],
+                "groups": [],
                 "status": "CONFIRMED"
             }
             """
@@ -296,9 +289,7 @@ Feature: Users
             {
                 "forename": "",
                 "lastname": "Smith",
-                "status": "Active",
-                "status_notes": ""
-                "role_type": "Viewer"
+                "status": "Active"
             }
         """
         Then I should receive the following JSON response with status "400":
@@ -320,9 +311,7 @@ Feature: Users
             {
                 "forename": "Bob",
                 "lastname": "",
-                "status": "Active",
-                "status_notes": ""
-                "role_type": "Viewer"
+                "status": "Active"
             }
         """
         Then I should receive the following JSON response with status "400":
@@ -344,9 +333,7 @@ Feature: Users
             {
                 "forename": "",
                 "lastname": "",
-                "status": "Active",
-                "status_notes": ""
-                "role_type": "Viewer"
+                "status": "Active"
             }
         """
         Then I should receive the following JSON response with status "400":
@@ -371,9 +358,7 @@ Feature: Users
             {
                 "forename": "Bob",
                 "lastname": "Smith",
-                "status": "Active",
-                "status_notes": ""
-                "role_type": "Admin"
+                "status": "Active"
             }
             """
         Then I should receive the following JSON response with status "404":
@@ -388,16 +373,36 @@ Feature: Users
             }
             """
 
-    Scenario: PUT /v1/users/{id} unexpected server error and checking the response status 500
+    Scenario: PUT /v1/users/{id} unexpected server error updating user and checking the response status 500
+        Given a user with username "abcd1234" and email "update.internalerror@ons.gov.uk" exists in the database
+        When I PUT "/v1/users/abcd1234"
+            """
+            {
+                "forename": "Bob",
+                "lastname": "Smith",
+                "status": "Active"
+            }
+            """
+        Then I should receive the following JSON response with status "500":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InternalServerError",
+                        "description": "Something went wrong"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} unexpected server error loading updated user and checking the response status 500
         Given a user with username "abcd1234" and email "internal.error@ons.gov.uk" exists in the database
         When I PUT "/v1/users/abcd1234"
             """
             {
                 "forename": "Bob",
                 "lastname": "Smith",
-                "status": "Active",
-                "status_notes": ""
-                "role_type": "Admin"
+                "status": "Active"
             }
             """
         Then I should receive the following JSON response with status "500":

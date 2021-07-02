@@ -15,7 +15,7 @@ import (
 type CognitoIdentityProviderClientStub struct {
 	cognitoidentityprovideriface.CognitoIdentityProviderAPI
 	UserPools []string
-	Users     []User
+	Users     []*User
 	Sessions  []Session
 	Groups    []Group
 }
@@ -344,8 +344,15 @@ func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentitypr
 func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(input *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 	for _, user := range m.Users {
 		if user.ID == *input.Username {
-			if user.Email == "internal.error@ons.gov.uk" {
+			if user.Email == "update.internalerror@ons.gov.uk" {
 				return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+			}
+			for _, attr := range input.UserAttributes {
+				if *attr.Name == "given_name" {
+					user.GivenName = *attr.Value
+				} else if *attr.Name == "family_name" {
+					user.FamilyName = *attr.Value
+				}
 			}
 			return &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}, nil
 		}

@@ -68,7 +68,6 @@ type UserParams struct {
 	Password string   `json:"-"`
 	Groups   []string `json:"groups"`
 	Status   string   `json:"status"`
-	RoleType string   `json:"role_type"`
 	ID       string   `json:"id"`
 }
 
