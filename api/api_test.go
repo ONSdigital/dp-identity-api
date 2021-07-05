@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -189,5 +191,90 @@ func TestHandleBodyUnmarshalError(t *testing.T) {
 		castErr := errResponse.Errors[0].(*models.Error)
 		So(castErr.Code, ShouldEqual, models.JSONUnmarshalError)
 		So(castErr.Description, ShouldEqual, models.ErrorUnmarshalFailedDescription)
+	})
+}
+
+func TestInitialiseRoleGroups(t *testing.T) {
+	Convey("Initialise role groups - check expected responses", t, func() {
+		m := &mock.MockCognitoIdentityProviderClient{}
+
+		ctx := context.Background()
+
+		userPoolId := "us-west-11_bxushuds"
+
+		adminCreateUsersTests := []struct {
+			createGroupFunction func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error)
+			err                 error
+		}{
+			{
+				// neither group exists
+				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+					group := &cognitoidentityprovider.CreateGroupOutput{
+						Group: &cognitoidentityprovider.GroupType{},
+					}
+					return group, nil
+				},
+				nil,
+			},
+			{
+				// admin group exists
+				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+					if *input.GroupName == models.AdminRoleGroup {
+						awsErrCode := "GroupExistsException"
+						awsErrMessage := "This group exists"
+						awsOrigErr := errors.New(awsErrCode)
+						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						return nil, awsErr
+					} else {
+						group := &cognitoidentityprovider.CreateGroupOutput{
+							Group: &cognitoidentityprovider.GroupType{},
+						}
+						return group, nil
+					}
+				},
+				nil,
+			},
+			{
+				// publisher group exists
+				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+					if *input.GroupName == models.PublisherRoleGroup {
+						awsErrCode := "GroupExistsException"
+						awsErrMessage := "This group exists"
+						awsOrigErr := errors.New(awsErrCode)
+						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						return nil, awsErr
+					} else {
+						group := &cognitoidentityprovider.CreateGroupOutput{
+							Group: &cognitoidentityprovider.GroupType{},
+						}
+						return group, nil
+					}
+				},
+				nil,
+			},
+			{
+				// create group internal error
+				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := "Something weird happened"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				models.NewError(ctx, nil, models.InternalError, "Something weird happened"),
+			},
+		}
+
+		for _, tt := range adminCreateUsersTests {
+			m.CreateGroupFunc = tt.createGroupFunction
+
+			err := initialiseRoleGroups(ctx, m, userPoolId)
+
+			if tt.err == nil {
+				So(err, ShouldBeNil)
+			} else {
+				So(err, ShouldNotBeNil)
+			}
+		}
 	})
 }
