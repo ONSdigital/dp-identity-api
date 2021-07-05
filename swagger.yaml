@@ -159,13 +159,13 @@ paths:
           name: user
           description: "The forename, surname and email for a user."
           schema:
-            required: ["forename","surname","email"]
+            required: ["forename","lastname","email"]
             type: object
             properties:
               forename:
                 type: string
                 example: "bob"
-              surname:
+              lastname:
                 type: string
                 example: "bobbings"
               email:
@@ -226,13 +226,13 @@ paths:
           name: user
           description: "The forename and surname for a user."
           schema:
-            required: ["forename","surname", "status"]
+            required: ["forename","lastname", "status"]
             type: object
             properties:
               forename:
                 type: string
                 example: "bob"
-              surname:
+              lastname:
                 type: string
                 example: "bobbings"
               status:
