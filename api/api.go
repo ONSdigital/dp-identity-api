@@ -132,3 +132,27 @@ func handleBodyUnmarshalError(ctx context.Context, err error) *models.ErrorRespo
 		nil,
 	)
 }
+
+func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, userPoolId string) error {
+	adminGroup := models.NewAdminRoleGroup()
+	adminGroupCreateInput := adminGroup.BuildCreateGroupRequest(userPoolId)
+	_, err := cognitoClient.CreateGroup(adminGroupCreateInput)
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for admin group from API start up")
+		if cognitoErr.Code != models.GroupExistsError {
+			return cognitoErr
+		}
+	}
+
+	publisherGroup := models.NewPublisherRoleGroup()
+	publisherGroupCreateInput := publisherGroup.BuildCreateGroupRequest(userPoolId)
+	_, err = cognitoClient.CreateGroup(publisherGroupCreateInput)
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for publisher group from API start up")
+		if cognitoErr.Code != models.GroupExistsError {
+			return cognitoErr
+		}
+	}
+
+	return nil
+}
