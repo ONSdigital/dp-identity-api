@@ -25,3 +25,24 @@ func TestGroups_BuildGetGroupRequest(t *testing.T) {
 		So(*response.GroupName, ShouldEqual, group.Name)
 	})
 }
+
+func TestGroups_BuildCreateGroupRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito GetGroup request body", t, func() {
+
+		group := models.Group{
+			Name:        "role-admin",
+			Description: "Test admin role group",
+			Precedence:  1,
+		}
+
+		userPoolId := "euwest-99-aabbcc"
+
+		response := group.BuildCreateGroupRequest(userPoolId)
+
+		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.CreateGroupInput{}))
+		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.GroupName, ShouldEqual, group.Name)
+		So(*response.Description, ShouldEqual, group.Description)
+		So(*response.Precedence, ShouldEqual, group.Precedence)
+	})
+}
