@@ -9,25 +9,32 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestGroups_BuildGetGroupRequest(t *testing.T) {
-	Convey("builds a correctly populated Cognito GetGroup request body", t, func() {
+func TestNewAdminRoleGroup(t *testing.T) {
+	Convey("builds a Group instance with admin group details", t, func() {
+		name, description, precedence := "role-admin", "The publishing admins", 1
 
-		group := models.Group{
-			Name: "role-admin",
-		}
+		adminGroup := models.NewAdminRoleGroup()
 
-		userPoolId := "euwest-99-aabbcc"
+		So(adminGroup.Name, ShouldEqual, name)
+		So(adminGroup.Description, ShouldEqual, description)
+		So(adminGroup.Precedence, ShouldEqual, precedence)
+	})
+}
 
-		response := group.BuildGetGroupRequest(userPoolId)
+func TestNewPublisherRoleGroup(t *testing.T) {
+	Convey("builds a Group instance with publisher group details", t, func() {
+		name, description, precedence := "role-publisher", "The publishers", 1
 
-		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.GetGroupInput{}))
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
-		So(*response.GroupName, ShouldEqual, group.Name)
+		adminGroup := models.NewPublisherRoleGroup()
+
+		So(adminGroup.Name, ShouldEqual, name)
+		So(adminGroup.Description, ShouldEqual, description)
+		So(adminGroup.Precedence, ShouldEqual, precedence)
 	})
 }
 
 func TestGroups_BuildCreateGroupRequest(t *testing.T) {
-	Convey("builds a correctly populated Cognito GetGroup request body", t, func() {
+	Convey("builds a correctly populated Cognito CreateGroup request body", t, func() {
 
 		group := models.Group{
 			Name:        "role-admin",
@@ -44,5 +51,22 @@ func TestGroups_BuildCreateGroupRequest(t *testing.T) {
 		So(*response.GroupName, ShouldEqual, group.Name)
 		So(*response.Description, ShouldEqual, group.Description)
 		So(*response.Precedence, ShouldEqual, group.Precedence)
+	})
+}
+
+func TestGroups_BuildGetGroupRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito GetGroup request body", t, func() {
+
+		group := models.Group{
+			Name: "role-admin",
+		}
+
+		userPoolId := "euwest-99-aabbcc"
+
+		response := group.BuildGetGroupRequest(userPoolId)
+
+		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.GetGroupInput{}))
+		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.GroupName, ShouldEqual, group.Name)
 	})
 }
