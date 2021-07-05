@@ -53,6 +53,10 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 		return nil, models.NewError(ctx, nil, models.MissingConfigError, models.MissingConfigDescription)
 	}
 
+	if err := initialiseRoleGroups(ctx, cognitoClient, userPoolId); err != nil {
+		return nil, err
+	}
+
 	api := &API{
 		Router:         r,
 		CognitoClient:  cognitoClient,
