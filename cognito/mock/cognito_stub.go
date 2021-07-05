@@ -17,6 +17,7 @@ type CognitoIdentityProviderClientStub struct {
 	UserPools []string
 	Users     []User
 	Sessions  []Session
+	Groups    []Group
 }
 
 func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
@@ -309,4 +310,33 @@ func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityp
 		}
 	}
 	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+}
+
+func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+	userPoolId := "aaaa-bbbb-ccc-dddd"
+
+	if *input.GroupName == "internalError" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "something went wrong", nil)
+	}
+
+	for _, group := range m.Groups {
+		if group.Name == *input.GroupName {
+			return nil, awserr.New(cognitoidentityprovider.ErrCodeGroupExistsException, "this group already exists", nil)
+		}
+	}
+
+	m.Groups = append(m.Groups, Group{
+		Name:        *input.GroupName,
+		Description: *input.Description,
+		Precedence:  *input.Precedence,
+	})
+
+	return &cognitoidentityprovider.CreateGroupOutput{
+		Group: &cognitoidentityprovider.GroupType{
+			Description: input.Description,
+			GroupName:   input.GroupName,
+			Precedence:  input.Precedence,
+			UserPoolId:  &userPoolId,
+		},
+	}, nil
 }

@@ -22,7 +22,15 @@ func TestSetup(t *testing.T) {
 	Convey("Given an API instance", t, func() {
 		r := mux.NewRouter()
 		ctx := context.Background()
-		api, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, "us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow")
+
+		m := &mock.MockCognitoIdentityProviderClient{}
+		m.CreateGroupFunc = func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+			group := &cognitoidentityprovider.CreateGroupOutput{
+				Group: &cognitoidentityprovider.GroupType{},
+			}
+			return group, nil
+		}
+		api, err := Setup(ctx, r, m, "us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow")
 
 		Convey("When created the following route(s) should have been added", func() {
 			So(hasRoute(api.Router, "/v1/tokens", "POST"), ShouldBeTrue)
@@ -105,6 +113,28 @@ func hasRoute(r *mux.Router, path, method string) bool {
 	req := httptest.NewRequest(method, path, nil)
 	match := &mux.RouteMatch{}
 	return r.Match(req, match)
+}
+
+func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProviderClient) {
+	var (
+		ctx                                             = context.Background()
+		r                                               = mux.NewRouter()
+		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "USER_PASSWORD_AUTH"
+	)
+
+	m := &mock.MockCognitoIdentityProviderClient{}
+	m.CreateGroupFunc = func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+		group := &cognitoidentityprovider.CreateGroupOutput{
+			Group: &cognitoidentityprovider.GroupType{},
+		}
+		return group, nil
+	}
+
+	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow)
+
+	w := httptest.NewRecorder()
+
+	return api, w, m
 }
 
 func TestWriteErrorResponse(t *testing.T) {

@@ -10,10 +10,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -25,15 +23,12 @@ const requestResetEndPoint = "http://localhost:25600/v1/password-reset"
 func TestCreateUserHandler(t *testing.T) {
 
 	var (
-		routeMux                                                                                                   = mux.NewRouter()
-		ctx                                                                                                        = context.Background()
-		name, surname, status, email, poolId, userException, clientId, clientSecret, authFlow, invalidEmail string = "bob", "bobbings", "UNCONFIRMED", "foo_bar123@ext.ons.gov.uk", "us-west-11_bxushuds", "UsernameExistsException: User account already exists", "abc123", "bsjahsaj9djsiq", "authflow", "foo_bar123@test.ons.gov.ie"
+		ctx                                               = context.Background()
+		name, surname, status, email, invalidEmail string = "bob", "bobbings", "UNCONFIRMED", "foo_bar123@ext.ons.gov.uk", "foo_bar123@test.ons.gov.ie"
+		userException                              string = "UsernameExistsException: User account already exists"
 	)
 
-	m := &mock.MockCognitoIdentityProviderClient{}
-
-	api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authFlow)
-	w := httptest.NewRecorder()
+	api, w, m := apiSetup()
 
 	Convey("Admin create user - check expected responses", t, func() {
 		adminCreateUsersTests := []struct {
@@ -235,16 +230,9 @@ func TestCreateUserHandler(t *testing.T) {
 }
 
 func TestListUserHandler(t *testing.T) {
-	var (
-		routeMux                                        = mux.NewRouter()
-		ctx                                             = context.Background()
-		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "abc123", "bsjahsaj9djsiq", "authflow"
-	)
+	var ctx = context.Background()
 
-	m := &mock.MockCognitoIdentityProviderClient{}
-
-	api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authFlow)
-	w := httptest.NewRecorder()
+	api, w, m := apiSetup()
 
 	Convey("List user - check expected responses", t, func() {
 		adminCreateUsersTests := []struct {
@@ -295,17 +283,12 @@ func TestListUserHandler(t *testing.T) {
 
 func TestGetUserHandler(t *testing.T) {
 	var (
-		routeMux                                         = mux.NewRouter()
 		ctx                                              = context.Background()
-		poolId, clientId, clientSecret, authFlow  string = "us-west-11_bxushuds", "abc123", "bsjahsaj9djsiq", "authflow"
 		forename, lastname, status, email, userId string = "bob", "bobbings", "UNCONFIRMED", "foo_bar123@ext.ons.gov.uk", "abcd1234"
 		givenNameAttr, familyNameAttr, emailAttr  string = "given_name", "family_name", "email"
 	)
 
-	m := &mock.MockCognitoIdentityProviderClient{}
-
-	api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authFlow)
-	w := httptest.NewRecorder()
+	api, w, m := apiSetup()
 
 	Convey("Get user - check expected responses", t, func() {
 		adminCreateUsersTests := []struct {
@@ -383,18 +366,13 @@ func TestGetUserHandler(t *testing.T) {
 func TestChangePasswordHandler(t *testing.T) {
 
 	var (
-		routeMux                                        = mux.NewRouter()
-		ctx                                             = context.Background()
-		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "abc123", "bsjahsaj9djsiq", "authflow"
-		email, password, session                 string = "foo_bar123@ext.ons.gov.uk", "Password2", "auth-challenge-session"
-		accessToken, idToken, refreshToken       string = "aaaa.bbbb.cccc", "llll.mmmm.nnnn", "zzzz.yyyy.xxxx.wwww.vvvv"
-		expireLength                             int64  = 500
+		ctx                                       = context.Background()
+		email, password, session           string = "foo_bar123@ext.ons.gov.uk", "Password2", "auth-challenge-session"
+		accessToken, idToken, refreshToken string = "aaaa.bbbb.cccc", "llll.mmmm.nnnn", "zzzz.yyyy.xxxx.wwww.vvvv"
+		expireLength                       int64  = 500
 	)
 
-	m := &mock.MockCognitoIdentityProviderClient{}
-
-	api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authFlow)
-	w := httptest.NewRecorder()
+	api, w, m := apiSetup()
 
 	Convey("RespondToAuthChallenge - check expected responses", t, func() {
 		respondToAuthChallengeTests := []struct {
@@ -530,16 +508,11 @@ func TestChangePasswordHandler(t *testing.T) {
 func TestPasswordResetHandler(t *testing.T) {
 
 	var (
-		routeMux                                        = mux.NewRouter()
-		ctx                                             = context.Background()
-		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "abc123", "bsjahsaj9djsiq", "authflow"
-		email                                    string = "foo_bar123@ext.ons.gov.uk"
+		ctx          = context.Background()
+		email string = "foo_bar123@ext.ons.gov.uk"
 	)
 
-	m := &mock.MockCognitoIdentityProviderClient{}
-
-	api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authFlow)
-	w := httptest.NewRecorder()
+	api, w, m := apiSetup()
 
 	Convey("ForgotPassword - check expected responses", t, func() {
 		respondToAuthChallengeTests := []struct {
