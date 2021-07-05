@@ -11,11 +11,11 @@ import (
 
 func TestNewAdminRoleGroup(t *testing.T) {
 	Convey("builds a Group instance with admin group details", t, func() {
-		name, description, precedence := "role-admin", "The publishing admins", 1
+		description, precedence := "The publishing admins", 1
 
 		adminGroup := models.NewAdminRoleGroup()
 
-		So(adminGroup.Name, ShouldEqual, name)
+		So(adminGroup.Name, ShouldEqual, models.AdminRoleGroup)
 		So(adminGroup.Description, ShouldEqual, description)
 		So(adminGroup.Precedence, ShouldEqual, precedence)
 	})
@@ -23,11 +23,11 @@ func TestNewAdminRoleGroup(t *testing.T) {
 
 func TestNewPublisherRoleGroup(t *testing.T) {
 	Convey("builds a Group instance with publisher group details", t, func() {
-		name, description, precedence := "role-publisher", "The publishers", 1
+		description, precedence := "The publishers", 1
 
 		adminGroup := models.NewPublisherRoleGroup()
 
-		So(adminGroup.Name, ShouldEqual, name)
+		So(adminGroup.Name, ShouldEqual, models.PublisherRoleGroup)
 		So(adminGroup.Description, ShouldEqual, description)
 		So(adminGroup.Precedence, ShouldEqual, precedence)
 	})
