@@ -267,7 +267,7 @@ Feature: Users
             {
                 "forename": "Changed",
                 "lastname": "Names",
-                "status": "Active"
+                "status": "CONFIRMED"
             }
         """
         Then I should receive the following JSON response with status "200":
@@ -289,7 +289,7 @@ Feature: Users
             {
                 "forename": "",
                 "lastname": "Smith",
-                "status": "Active"
+                "status": "CONFIRMED"
             }
         """
         Then I should receive the following JSON response with status "400":
@@ -311,7 +311,7 @@ Feature: Users
             {
                 "forename": "Bob",
                 "lastname": "",
-                "status": "Active"
+                "status": "CONFIRMED"
             }
         """
         Then I should receive the following JSON response with status "400":
@@ -333,7 +333,7 @@ Feature: Users
             {
                 "forename": "",
                 "lastname": "",
-                "status": "Active"
+                "status": "CONFIRMED"
             }
         """
         Then I should receive the following JSON response with status "400":
@@ -358,7 +358,7 @@ Feature: Users
             {
                 "forename": "Bob",
                 "lastname": "Smith",
-                "status": "Active"
+                "status": "CONFIRMED"
             }
             """
         Then I should receive the following JSON response with status "404":
@@ -380,7 +380,7 @@ Feature: Users
             {
                 "forename": "Bob",
                 "lastname": "Smith",
-                "status": "Active"
+                "status": "CONFIRMED"
             }
             """
         Then I should receive the following JSON response with status "500":
@@ -402,7 +402,7 @@ Feature: Users
             {
                 "forename": "Bob",
                 "lastname": "Smith",
-                "status": "Active"
+                "status": "CONFIRMED"
             }
             """
         Then I should receive the following JSON response with status "500":
