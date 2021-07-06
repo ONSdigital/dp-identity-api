@@ -60,6 +60,7 @@ func (p *UsersList) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, er
 	return jsonResponse, nil
 }
 
+//Model for the User
 type UserParams struct {
 	Forename string   `json:"forename"`
 	Lastname string   `json:"lastname"`

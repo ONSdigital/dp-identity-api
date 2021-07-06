@@ -7,12 +7,14 @@ const (
 	PublisherRoleGroup = "role-publisher"
 )
 
+//Type to map for the Cognito GroupType object
 type Group struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Precedence  int64  `json:"precedence"`
 }
 
+// Constructor for a new instance of the admin role group
 func NewAdminRoleGroup() Group {
 	return Group{
 		Name:        AdminRoleGroup,
@@ -21,6 +23,7 @@ func NewAdminRoleGroup() Group {
 	}
 }
 
+// Constructor for a new instance of the publisher role group
 func NewPublisherRoleGroup() Group {
 	return Group{
 		Name:        PublisherRoleGroup,
@@ -29,6 +32,7 @@ func NewPublisherRoleGroup() Group {
 	}
 }
 
+// BuildCreateGroupRequest builds a correctly populated CreateGroupInput object using the Groups values
 func (g *Group) BuildCreateGroupRequest(userPoolId string) *cognitoidentityprovider.CreateGroupInput {
 	return &cognitoidentityprovider.CreateGroupInput{
 		GroupName:   &g.Name,
@@ -38,6 +42,7 @@ func (g *Group) BuildCreateGroupRequest(userPoolId string) *cognitoidentityprovi
 	}
 }
 
+// BuildCreateGroupRequest builds a correctly populated GetGroupInput object using the Groups values
 func (g *Group) BuildGetGroupRequest(userPoolId string) *cognitoidentityprovider.GetGroupInput {
 	return &cognitoidentityprovider.GetGroupInput{
 		GroupName:  &g.Name,
