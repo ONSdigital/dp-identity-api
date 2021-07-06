@@ -23,7 +23,7 @@ func TestNewAdminRoleGroup(t *testing.T) {
 
 func TestNewPublisherRoleGroup(t *testing.T) {
 	Convey("builds a Group instance with publisher group details", t, func() {
-		description, precedence := "The publishers", 1
+		description, precedence := "The publishers", 2
 
 		adminGroup := models.NewPublisherRoleGroup()
 
