@@ -25,7 +25,7 @@ func NewPublisherRoleGroup() Group {
 	return Group{
 		Name:        PublisherRoleGroup,
 		Description: "The publishers",
-		Precedence:  1,
+		Precedence:  2,
 	}
 }
 
