@@ -17,6 +17,7 @@ type MockCognitoIdentityProviderClient struct {
 	ForgotPasswordFunc         func(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error)
 	AdminGetUserFunc           func(input *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
 	CreateGroupFunc            func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error)
+	GetGroupFunc               func(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error)
 }
 
 func (m *MockCognitoIdentityProviderClient) DescribeUserPool(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
@@ -58,4 +59,8 @@ func (m *MockCognitoIdentityProviderClient) AdminGetUser(input *cognitoidentityp
 
 func (m *MockCognitoIdentityProviderClient) CreateGroup(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
 	return m.CreateGroupFunc(input)
+}
+
+func (m *MockCognitoIdentityProviderClient) GetGroup(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+	return m.GetGroupFunc(input)
 }
