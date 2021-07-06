@@ -140,13 +140,13 @@ func (api *API) UpdateUserHandler(ctx context.Context, w http.ResponseWriter, re
 	_, err = api.CognitoClient.AdminUpdateUserAttributes(userRequest)
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "AdminUpdateUserAttributes request from update user endpoint")
+		errList := []error{responseErr}
 		if responseErr.Code == models.UserNotFoundError {
-			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusNotFound, nil)
+			return nil, models.NewErrorResponse(errList, http.StatusNotFound, nil)
 		} else if responseErr.Code == models.InvalidFieldError {
-			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusBadRequest, nil)
-		} else {
-			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
+			return nil, models.NewErrorResponse(errList, http.StatusBadRequest, nil)
 		}
+		return nil, models.NewErrorResponse(errList, http.StatusInternalServerError, nil)
 	}
 
 	userDetailsRequest := user.BuildAdminGetUserRequest(api.UserPoolId)

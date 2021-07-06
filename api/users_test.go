@@ -397,7 +397,7 @@ func TestUpdateUserHandler(t *testing.T) {
 			updateUserFunction func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error)
 			getUserFunction    func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
 			userForename       string
-			httpResponse       int
+			assertions         func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{
 			{
 				// 200 response from Cognito
@@ -414,7 +414,10 @@ func TestUpdateUserHandler(t *testing.T) {
 					return user, nil
 				},
 				forename,
-				http.StatusOK,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(errorResponse, ShouldBeNil)
+				},
 			},
 			{
 				// 500 response from Cognito
@@ -434,7 +437,10 @@ func TestUpdateUserHandler(t *testing.T) {
 					return user, nil
 				},
 				forename,
-				http.StatusInternalServerError,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+				},
 			},
 			{
 				//404 response from Cognito
@@ -454,7 +460,10 @@ func TestUpdateUserHandler(t *testing.T) {
 					return user, nil
 				},
 				forename,
-				http.StatusNotFound,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusNotFound)
+				},
 			},
 			{
 				//local validation failure
@@ -471,7 +480,10 @@ func TestUpdateUserHandler(t *testing.T) {
 					return user, nil
 				},
 				"",
-				http.StatusBadRequest,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+				},
 			},
 			{
 				//reload user details failure
@@ -487,7 +499,10 @@ func TestUpdateUserHandler(t *testing.T) {
 					return nil, awsErr
 				},
 				forename,
-				http.StatusInternalServerError,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+				},
 			},
 		}
 
@@ -496,19 +511,15 @@ func TestUpdateUserHandler(t *testing.T) {
 			m.AdminGetUserFunc = tt.getUserFunction
 
 			postBody := map[string]interface{}{"forename": tt.userForename, "lastname": lastname, "status": status, "role_type": roleType}
-			body, _ := json.Marshal(postBody)
+			body, err := json.Marshal(postBody)
+
+			So(err, ShouldBeNil)
+
 			r := httptest.NewRequest(http.MethodGet, userEndPoint, bytes.NewReader(body))
 
 			successResponse, errorResponse := api.UpdateUserHandler(ctx, w, r)
 
-			// Check whether testing a success or error case
-			if tt.httpResponse > 399 {
-				So(successResponse, ShouldBeNil)
-				So(errorResponse.Status, ShouldEqual, tt.httpResponse)
-			} else {
-				So(successResponse.Status, ShouldEqual, tt.httpResponse)
-				So(errorResponse, ShouldBeNil)
-			}
+			tt.assertions(successResponse, errorResponse)
 		}
 	})
 }
