@@ -12,17 +12,43 @@ import (
 
 func TestNewErrorResponse(t *testing.T) {
 	Convey("successfully constructs an ErrorResponse object", t, func() {
-		err := models.Error{
-			Cause:       errors.New("TestError"),
-			Code:        "TestErrorCode",
-			Description: "description of the error",
-		}
 
-		errResponse := models.NewErrorResponse([]error{&err}, http.StatusInternalServerError, nil)
+		Convey("with one error", func() {
+			err := models.Error{
+				Cause:       errors.New("TestError"),
+				Code:        "TestErrorCode",
+				Description: "description of the error",
+			}
 
-		So(errResponse, ShouldNotBeNil)
-		So(len(errResponse.Errors), ShouldEqual, 1)
-		So(errResponse.Status, ShouldEqual, http.StatusInternalServerError)
+			errResponse := models.NewErrorResponse(http.StatusInternalServerError, nil, &err)
+
+			So(errResponse, ShouldNotBeNil)
+			So(len(errResponse.Errors), ShouldEqual, 1)
+			So(errResponse.Status, ShouldEqual, http.StatusInternalServerError)
+		})
+
+		Convey("with multiple errors", func() {
+			err := models.Error{
+				Cause:       errors.New("TestError"),
+				Code:        "TestErrorCode",
+				Description: "description of the error",
+			}
+			err2 := models.Error{
+				Cause:       errors.New("TestError2"),
+				Code:        "TestErrorCode",
+				Description: "description of the error",
+			}
+			errList := []error{
+				&err,
+				&err2,
+			}
+
+			errResponse := models.NewErrorResponse(http.StatusInternalServerError, nil, errList...)
+
+			So(errResponse, ShouldNotBeNil)
+			So(len(errResponse.Errors), ShouldEqual, 2)
+			So(errResponse.Status, ShouldEqual, http.StatusInternalServerError)
+		})
 	})
 }
 

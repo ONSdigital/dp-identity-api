@@ -125,16 +125,16 @@ func writeSuccessResponse(ctx context.Context, w http.ResponseWriter, successRes
 }
 
 func handleBodyReadError(ctx context.Context, err error) *models.ErrorResponse {
-	return models.NewErrorResponse([]error{models.NewError(ctx, err, models.BodyReadError, models.BodyReadFailedDescription)},
-		http.StatusInternalServerError,
+	return models.NewErrorResponse(http.StatusInternalServerError,
 		nil,
+		models.NewError(ctx, err, models.BodyReadError, models.BodyReadFailedDescription),
 	)
 }
 
 func handleBodyUnmarshalError(ctx context.Context, err error) *models.ErrorResponse {
-	return models.NewErrorResponse([]error{models.NewError(ctx, err, models.JSONUnmarshalError, models.ErrorUnmarshalFailedDescription)},
-		http.StatusInternalServerError,
+	return models.NewErrorResponse(http.StatusInternalServerError,
 		nil,
+		models.NewError(ctx, err, models.JSONUnmarshalError, models.ErrorUnmarshalFailedDescription),
 	)
 }
 
