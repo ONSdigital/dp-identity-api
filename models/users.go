@@ -62,14 +62,15 @@ func (p *UsersList) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, er
 
 //Model for the User
 type UserParams struct {
-	Forename string   `json:"forename"`
-	Lastname string   `json:"lastname"`
-	Email    string   `json:"email"`
-	Password string   `json:"-"`
-	Groups   []string `json:"groups"`
-	Status   string   `json:"status"`
-	Active   bool     `json:"active"`
-	ID       string   `json:"id"`
+	Forename    string   `json:"forename"`
+	Lastname    string   `json:"lastname"`
+	Email       string   `json:"email"`
+	Password    string   `json:"-"`
+	Groups      []string `json:"groups"`
+	Status      string   `json:"status"`
+	Active      bool     `json:"active"`
+	ID          string   `json:"id"`
+	StatusNotes string   `json:"status_notes"`
 }
 
 //GeneratePassword creates a password for the user and assigns it to the struct
