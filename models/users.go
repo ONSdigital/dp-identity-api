@@ -68,6 +68,7 @@ type UserParams struct {
 	Password string   `json:"-"`
 	Groups   []string `json:"groups"`
 	Status   string   `json:"status"`
+	Active   bool     `json:"active"`
 	ID       string   `json:"id"`
 }
 
@@ -108,6 +109,7 @@ func (p UserParams) ValidateUpdate(ctx context.Context) []error {
 	if p.Lastname == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidSurnameError, InvalidSurnameErrorDescription))
 	}
+
 	return validationErrs
 }
 
