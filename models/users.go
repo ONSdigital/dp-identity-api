@@ -178,6 +178,22 @@ func (p UserParams) BuildUpdateUserRequest(userPoolId string) *cognitoidentitypr
 	}
 }
 
+//BuildEnableUserRequest generates a AdminEnableUserInput for Cognito
+func (p UserParams) BuildEnableUserRequest(userPoolId string) *cognitoidentityprovider.AdminEnableUserInput {
+	return &cognitoidentityprovider.AdminEnableUserInput{
+		UserPoolId: &userPoolId,
+		Username:   &p.ID,
+	}
+}
+
+//BuildDisableUserRequest generates a AdminDisableUserInput for Cognito
+func (p UserParams) BuildDisableUserRequest(userPoolId string) *cognitoidentityprovider.AdminDisableUserInput {
+	return &cognitoidentityprovider.AdminDisableUserInput{
+		UserPoolId: &userPoolId,
+		Username:   &p.ID,
+	}
+}
+
 //BuildSuccessfulJsonResponse builds the UserParams response json for client responses
 func (p UserParams) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
 	jsonResponse, err := json.Marshal(p)
@@ -187,7 +203,7 @@ func (p UserParams) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, er
 	return jsonResponse, nil
 }
 
-//BuildCreateUserRequest generates a AdminCreateUserInput for Cognito
+//BuildAdminGetUserRequest generates a AdminGetUserInput for Cognito
 func (p UserParams) BuildAdminGetUserRequest(userPoolId string) *cognitoidentityprovider.AdminGetUserInput {
 	return &cognitoidentityprovider.AdminGetUserInput{
 		UserPoolId: &userPoolId,
