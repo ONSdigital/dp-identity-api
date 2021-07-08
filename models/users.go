@@ -159,7 +159,7 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 //BuildUpdateUserRequest generates a AdminUpdateUserAttributesInput for Cognito
 func (p UserParams) BuildUpdateUserRequest(userPoolId string) *cognitoidentityprovider.AdminUpdateUserAttributesInput {
 	var (
-		forenameAttrName, surnameAttrName string = "given_name", "family_name"
+		forenameAttrName, surnameAttrName, statusNotesAttrName string = "given_name", "family_name", "custom:status_note"
 	)
 
 	return &cognitoidentityprovider.AdminUpdateUserAttributesInput{
@@ -171,6 +171,10 @@ func (p UserParams) BuildUpdateUserRequest(userPoolId string) *cognitoidentitypr
 			{
 				Name:  &surnameAttrName,
 				Value: &p.Lastname,
+			},
+			{
+				Name:  &statusNotesAttrName,
+				Value: &p.StatusNotes,
 			},
 		},
 		UserPoolId: &userPoolId,
