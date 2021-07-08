@@ -215,9 +215,9 @@ func (p UserParams) BuildAdminGetUserRequest(userPoolId string) *cognitoidentity
 	}
 }
 
-//MapCognitoDetails maps the details from the Cognito User model to the UserParams model
+//MapCognitoDetails maps the details from the Cognito ListUser User model to the UserParams model
 func (p UserParams) MapCognitoDetails(userDetails *cognitoidentityprovider.UserType) UserParams {
-	var forename, surname, email string
+	var forename, surname, email, statusNotes string
 	for _, attr := range userDetails.Attributes {
 		if *attr.Name == "given_name" {
 			forename = *attr.Value
@@ -225,18 +225,23 @@ func (p UserParams) MapCognitoDetails(userDetails *cognitoidentityprovider.UserT
 			surname = *attr.Value
 		} else if *attr.Name == "email" {
 			email = *attr.Value
+		} else if *attr.Name == "custom:status_notes" {
+			statusNotes = *attr.Value
 		}
 	}
 	return UserParams{
-		Forename: forename,
-		Lastname: surname,
-		Email:    email,
-		Groups:   []string{},
-		Status:   *userDetails.UserStatus,
-		ID:       *userDetails.Username,
+		Forename:    forename,
+		Lastname:    surname,
+		Email:       email,
+		Groups:      []string{},
+		Status:      *userDetails.UserStatus,
+		ID:          *userDetails.Username,
+		StatusNotes: statusNotes,
+		Active:      *userDetails.Enabled,
 	}
 }
 
+//MapCognitoGetResponse maps the details from the Cognito GetUser User model to the UserParams model
 func (p *UserParams) MapCognitoGetResponse(userDetails *cognitoidentityprovider.AdminGetUserOutput) {
 	for _, attr := range userDetails.UserAttributes {
 		if *attr.Name == "given_name" {
@@ -245,10 +250,13 @@ func (p *UserParams) MapCognitoGetResponse(userDetails *cognitoidentityprovider.
 			p.Lastname = *attr.Value
 		} else if *attr.Name == "email" {
 			p.Email = *attr.Value
+		} else if *attr.Name == "custom:status_notes" {
+			p.StatusNotes = *attr.Value
 		}
 	}
 	p.Status = *userDetails.UserStatus
 	p.Groups = []string{}
+	p.Active = *userDetails.Enabled
 }
 
 type CreateUserInput struct {

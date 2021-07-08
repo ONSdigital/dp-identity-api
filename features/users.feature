@@ -190,7 +190,9 @@ Feature: Users
                         "lastname": "Smith",
                         "email": "email@ons.gov.uk",
                         "groups": [],
-                        "status": "CONFIRMED"
+                        "status": "CONFIRMED",
+                        "active": true,
+                        "status_notes": ""
                     },
                     {
                         "id": "aaaabbbbcccc",
@@ -198,7 +200,9 @@ Feature: Users
                         "lastname": "Smith",
                         "email": "new_email@ons.gov.uk",
                         "groups": [],
-                        "status": "FORCE_CHANGE_PASSWORD"
+                        "status": "FORCE_CHANGE_PASSWORD",
+                        "active": true,
+                        "status_notes": ""
                     }
                 ],
                 "count": 2

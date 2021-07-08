@@ -298,7 +298,6 @@ func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityp
 	var (
 		emailVerifiedAttr, emailVerifiedValue    string = "email_verified", "true"
 		givenNameAttr, familyNameAttr, emailAttr string = "given_name", "family_name", "email"
-		enabled                                  bool   = true
 	)
 	for _, user := range m.Users {
 		if user.ID == *input.Username {
@@ -324,7 +323,7 @@ func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityp
 						Value: aws.String(user.Email),
 					},
 				},
-				Enabled:    &enabled,
+				Enabled:    aws.Bool(user.Active),
 				UserStatus: aws.String(user.Status),
 				Username:   aws.String(user.ID),
 			}, nil

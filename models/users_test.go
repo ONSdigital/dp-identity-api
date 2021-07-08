@@ -45,10 +45,12 @@ func TestUsersList_MapCognitoUsers(t *testing.T) {
 		cognitoResponse := cognitoidentityprovider.ListUsersOutput{
 			Users: []*cognitoidentityprovider.UserType{
 				{
+					Enabled:    aws.Bool(true),
 					UserStatus: aws.String("CONFIRMED"),
 					Username:   aws.String("user-1"),
 				},
 				{
+					Enabled:    aws.Bool(true),
 					UserStatus: aws.String("CONFIRMED"),
 					Username:   aws.String("user-2"),
 				},
@@ -401,6 +403,7 @@ func TestUserParams_MapCognitoDetails(t *testing.T) {
 			},
 			UserStatus: &status,
 			Username:   &id,
+			Enabled:    aws.Bool(true),
 		}
 		user := models.UserParams{}.MapCognitoDetails(&cognitoUser)
 
@@ -432,6 +435,7 @@ func TestUserParams_MapCognitoGetResponse(t *testing.T) {
 			},
 			UserStatus: &status,
 			Username:   &id,
+			Enabled:    aws.Bool(true),
 		}
 		user := models.UserParams{ID: id}
 		user.MapCognitoGetResponse(&cognitoUser)

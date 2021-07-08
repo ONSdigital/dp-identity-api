@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -316,6 +317,7 @@ func TestGetUserHandler(t *testing.T) {
 						},
 						UserStatus: &status,
 						Username:   &userId,
+						Enabled:    aws.Bool(true),
 					}
 					return user, nil
 				},
@@ -366,9 +368,9 @@ func TestGetUserHandler(t *testing.T) {
 
 func TestUpdateUserHandler(t *testing.T) {
 	var (
-		ctx                                                        = context.Background()
-		forename, lastname, status, email, userId, roleType string = "bob", "bobbings", "UNCONFIRMED", "foo_bar123@ext.ons.gov.uk", "abcd1234", "Viewer"
-		givenNameAttr, familyNameAttr, emailAttr            string = "given_name", "family_name", "email"
+		ctx                                              = context.Background()
+		forename, lastname, email, userId, status string = "bob", "bobbings", "foo_bar123@ext.ons.gov.uk", "abcd1234", "CONFIRMED"
+		givenNameAttr, familyNameAttr, emailAttr  string = "given_name", "family_name", "email"
 	)
 
 	api, w, m := apiSetup()
@@ -409,6 +411,7 @@ func TestUpdateUserHandler(t *testing.T) {
 						UserAttributes: successfullyGetUser,
 						UserStatus:     &status,
 						Username:       &userId,
+						Enabled:        aws.Bool(true),
 					}
 					return user, nil
 				},
@@ -421,6 +424,7 @@ func TestUpdateUserHandler(t *testing.T) {
 				forename,
 				true,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
 					So(errorResponse, ShouldBeNil)
 				},
@@ -436,6 +440,7 @@ func TestUpdateUserHandler(t *testing.T) {
 						UserAttributes: successfullyGetUser,
 						UserStatus:     &status,
 						Username:       &userId,
+						Enabled:        aws.Bool(true),
 					}
 					return user, nil
 				},
@@ -463,6 +468,7 @@ func TestUpdateUserHandler(t *testing.T) {
 						UserAttributes: successfullyGetUser,
 						UserStatus:     &status,
 						Username:       &userId,
+						Enabled:        aws.Bool(true),
 					}
 					return user, nil
 				},
@@ -494,6 +500,7 @@ func TestUpdateUserHandler(t *testing.T) {
 						UserAttributes: successfullyGetUser,
 						UserStatus:     &status,
 						Username:       &userId,
+						Enabled:        aws.Bool(true),
 					}
 					return user, nil
 				},
@@ -525,6 +532,7 @@ func TestUpdateUserHandler(t *testing.T) {
 						UserAttributes: successfullyGetUser,
 						UserStatus:     &status,
 						Username:       &userId,
+						Enabled:        aws.Bool(true),
 					}
 					return user, nil
 				},
@@ -556,6 +564,7 @@ func TestUpdateUserHandler(t *testing.T) {
 						UserAttributes: successfullyGetUser,
 						UserStatus:     &status,
 						Username:       &userId,
+						Enabled:        aws.Bool(true),
 					}
 					return user, nil
 				},
@@ -590,6 +599,7 @@ func TestUpdateUserHandler(t *testing.T) {
 						UserAttributes: successfullyGetUser,
 						UserStatus:     &status,
 						Username:       &userId,
+						Enabled:        aws.Bool(true),
 					}
 					return user, nil
 				},
@@ -620,6 +630,7 @@ func TestUpdateUserHandler(t *testing.T) {
 						UserAttributes: successfullyGetUser,
 						UserStatus:     &status,
 						Username:       &userId,
+						Enabled:        aws.Bool(true),
 					}
 					return user, nil
 				},
@@ -670,7 +681,7 @@ func TestUpdateUserHandler(t *testing.T) {
 			m.AdminEnableUserFunc = tt.enableUserFunction
 			m.AdminDisableUserFunc = tt.disableUserFunction
 
-			postBody := map[string]interface{}{"forename": tt.userForename, "lastname": lastname, "status": status, "role_type": roleType, "active": tt.userActive}
+			postBody := map[string]interface{}{"forename": tt.userForename, "lastname": lastname, "active": tt.userActive}
 			body, err := json.Marshal(postBody)
 
 			So(err, ShouldBeNil)

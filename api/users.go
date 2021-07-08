@@ -3,10 +3,10 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/gorilla/mux"
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/google/uuid"
@@ -59,7 +59,7 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, responseErr)
 		}
 	}
-
+	resultUser.User.Enabled = aws.Bool(true)
 	createdUser := models.UserParams{}.MapCognitoDetails(resultUser.User)
 	jsonResponse, responseErr := createdUser.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {
