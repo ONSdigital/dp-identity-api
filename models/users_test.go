@@ -290,9 +290,10 @@ func TestUserParams_BuildUpdateUserRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminUpdateUserAttributeInput request body", t, func() {
 
 		user := models.UserParams{
-			ID:       "abcd1234",
-			Forename: "Stan",
-			Lastname: "Smith",
+			ID:          "abcd1234",
+			Forename:    "Stan",
+			Lastname:    "Smith",
+			StatusNotes: "user suspended",
 		}
 
 		userPoolId := "euwest-99-aabbcc"
@@ -304,6 +305,7 @@ func TestUserParams_BuildUpdateUserRequest(t *testing.T) {
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
 		So(*response.UserAttributes[0].Value, ShouldEqual, user.Forename)
 		So(*response.UserAttributes[1].Value, ShouldEqual, user.Lastname)
+		So(*response.UserAttributes[2].Value, ShouldEqual, user.StatusNotes)
 	})
 }
 
