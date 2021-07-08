@@ -1,34 +1,51 @@
 package mock
 
-import "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-
 type User struct {
-	email    string
-	password string
-	Attributes []*cognitoidentityprovider.AttributeType
+	ID         string
+	Email      string
+	Password   string
+	GivenName  string
+	FamilyName string
+	Groups     []string
+	Status     string
 }
 
-func (m *CognitoIdentityProviderClientStub) AddUserWithUsername(email, password string, addAttributes bool) {
-	m.Users = append(m.Users, m.GenerateUser(email, password, addAttributes))
+func (m *CognitoIdentityProviderClientStub) AddUserWithEmail(email, password string, isConfirmed bool) {
+	m.Users = append(m.Users, m.GenerateUser("", email, password, "", "", isConfirmed))
 }
 
-func (m *CognitoIdentityProviderClientStub) GenerateUser(email, password string, addAttributes bool) User {
-	var user User
-	user.email = email
-	user.password = password
-	// add email verified only if required
-	if addAttributes {
-		var (
-			name, value string = "email_verified", "true"
-		)
-		user.Attributes = []*cognitoidentityprovider.AttributeType{
-			{
-				Name: &name,
-				Value: &value,
-			},
-		}
-	} else {
-		user.Attributes = nil
+func (m *CognitoIdentityProviderClientStub) AddUserWithUsername(username, email string, isConfirmed bool) {
+	m.Users = append(m.Users, m.GenerateUser(username, email, "", "", "", isConfirmed))
+}
+
+func (m *CognitoIdentityProviderClientStub) GenerateUser(id, email, password, givenName, familyName string, isConfirmed bool) User {
+	statusString := "FORCE_CHANGE_PASSWORD"
+	if isConfirmed {
+		statusString = "CONFIRMED"
 	}
-	return user
+	if id == "" {
+		id = "aaaabbbbcccc"
+	}
+	if email == "" {
+		email = "email@ons.gov.uk"
+	}
+	if password == "" {
+		password = "Passw0rd!"
+	}
+	if givenName == "" {
+		givenName = "Bob"
+	}
+	if familyName == "" {
+		familyName = "Smith"
+	}
+
+	return User{
+		ID:         id,
+		Email:      email,
+		Password:   password,
+		GivenName:  givenName,
+		FamilyName: familyName,
+		Groups:     []string{},
+		Status:     statusString,
+	}
 }

@@ -27,7 +27,10 @@ func TestSetup(t *testing.T) {
 			So(hasRoute(api.Router, "/v1/tokens/self", "DELETE"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/tokens/self", "PUT"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/users", "POST"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/users", "GET"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/users/{id}", "GET"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/users/self/password", "PUT"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/password-reset", "POST"), ShouldBeTrue)
 		})
 
 		Convey("No error returned when user pool id supplied", func() {

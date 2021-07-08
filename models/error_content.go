@@ -17,6 +17,7 @@ const (
 	InvalidTokenError            = "InvalidToken"
 	InternalError                = "InternalServerError"
 	NotFoundError                = "NotFound"
+	UserNotFoundError            = "UserNotFound"
 	AlreadyExistsError           = "AlreadyExists"
 	DeliveryFailureError         = "DeliveryFailure"
 	InvalidCodeError             = "InvalidCode"
@@ -52,7 +53,7 @@ const (
 	InvalidPasswordDescription             = "the submitted password could not be validated"
 	PasswordGenerationErrorDescription     = "failed to generate a valid password"
 	InvalidForenameErrorDescription        = "the submitted user's forename could not be validated"
-	InvalidSurnameErrorDescription         = "the submitted user's surname could not be validated"
+	InvalidSurnameErrorDescription         = "the submitted user's lastname could not be validated"
 	InvalidEmailDescription                = "the submitted email could not be validated"
 	DuplicateEmailDescription              = "account using email address found"
 	SignInFailedDescription                = "Incorrect username or password."
@@ -82,7 +83,7 @@ var CognitoErrorMapping = map[string]string{
 	cognitoidentityprovider.ErrCodeTooManyFailedAttemptsException:  TooManyFailedAttemptsError,
 	cognitoidentityprovider.ErrCodeTooManyRequestsException:        TooManyRequestsError,
 	cognitoidentityprovider.ErrCodeUserNotConfirmedException:       UserNotConfirmedError,
-	cognitoidentityprovider.ErrCodeUserNotFoundException:           NotFoundError,
+	cognitoidentityprovider.ErrCodeUserNotFoundException:           UserNotFoundError,
 	cognitoidentityprovider.ErrCodeUsernameExistsException:         UsernameExistsError,
 	request.ErrCodeSerialization:                                   InternalError,
 	request.ErrCodeRead:                                            InternalError,

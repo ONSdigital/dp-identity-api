@@ -2,6 +2,7 @@ package validation
 
 import (
 	"regexp"
+	"strings"
 )
 
 // This regex checks entered email address and if match found, email address deemed valid, else invalid.
@@ -51,7 +52,7 @@ func IsEmailValid(e string) bool {
 		return false
 	}
 
-	return emailRegex.MatchString(e)
+	return emailRegex.MatchString(strings.ToLower(e))
 }
 
 // ValidateONSEmail - validates email address for ons domain
@@ -60,7 +61,7 @@ func ValidateONSEmail(e string) bool {
 	if !emailLengthValid(len(e)) {
 		return false
 	}
-	return onsEmailRegex.MatchString(e)
+	return onsEmailRegex.MatchString(strings.ToLower(e))
 }
 
 func emailLengthValid(l int) bool {

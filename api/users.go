@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 
@@ -25,15 +26,14 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
 
-	tempPassword, err := user.GeneratePassword(ctx)
+	err = user.GeneratePassword(ctx)
 	if err != nil {
 		return nil, models.NewErrorResponse([]error{err}, http.StatusInternalServerError, nil)
 	}
-	user.Password = *tempPassword
 
 	validationErrs := user.ValidateRegistration(ctx)
 
-	listUserInput := user.BuildListUserRequest("email = \""+user.Email+"\"", "email", int64(1), &api.UserPoolId)
+	listUserInput := models.UsersList{}.BuildListUserRequest("email = \""+user.Email+"\"", "email", int64(1), &api.UserPoolId)
 	listUserResp, err := api.CognitoClient.ListUsers(listUserInput)
 	if err != nil {
 		return nil, models.NewErrorResponse([]error{models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint")}, http.StatusInternalServerError, nil)
@@ -59,7 +59,8 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 		}
 	}
 
-	jsonResponse, responseErr := user.BuildSuccessfulJsonResponse(ctx, resultUser)
+	createdUser := models.UserParams{}.MapCognitoDetails(resultUser.User)
+	jsonResponse, responseErr := createdUser.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
 	}
@@ -67,6 +68,51 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 	return models.NewSuccessResponse(jsonResponse, http.StatusCreated, nil), nil
 }
 
+//ListUsersHandler lists the users in the user pool
+func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	usersList := models.UsersList{}
+	listUserInput := usersList.BuildListUserRequest("", "", int64(0), &api.UserPoolId)
+	listUserResp, err := api.CognitoClient.ListUsers(listUserInput)
+	if err != nil {
+		return nil, models.NewErrorResponse([]error{models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint")}, http.StatusInternalServerError, nil)
+	}
+
+	usersList.MapCognitoUsers(listUserResp)
+
+	jsonResponse, responseErr := usersList.BuildSuccessfulJsonResponse(ctx)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
+
+//GetUserHandler lists the users in the user pool
+func (api *API) GetUserHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	vars := mux.Vars(req)
+	user := models.UserParams{ID: vars["id"]}
+	userInput := user.BuildAdminGetUserRequest(api.UserPoolId)
+	userResp, err := api.CognitoClient.AdminGetUser(userInput)
+	if err != nil {
+		responseErr := models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint")
+		if responseErr.Code == models.UserNotFoundError {
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusNotFound, nil)
+		} else {
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
+		}
+	}
+
+	user.MapCognitoGetResponse(userResp)
+
+	jsonResponse, responseErr := user.BuildSuccessfulJsonResponse(ctx)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
+
+//ChangePasswordHandler processes changes to the users password
 func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer req.Body.Close()
 	var jsonResponse []byte = nil
@@ -141,4 +187,40 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 	}
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusAccepted, headers), nil
+}
+
+//PasswordResetHandler requests a password reset email be sent to the user and returns a http handler interface
+func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	defer req.Body.Close()
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, handleBodyReadError(ctx, err)
+	}
+
+	passwordResetParams := models.PasswordReset{}
+	err = json.Unmarshal(body, &passwordResetParams)
+	if err != nil {
+		return nil, handleBodyUnmarshalError(ctx, err)
+	}
+
+	validationErr := passwordResetParams.Validate(ctx)
+
+	if validationErr != nil {
+		return nil, models.NewErrorResponse([]error{validationErr}, http.StatusBadRequest, nil)
+	}
+
+	forgotPasswordRequest := passwordResetParams.BuildCognitoRequest(api.ClientSecret, api.ClientId)
+
+	_, err = api.CognitoClient.ForgotPassword(forgotPasswordRequest)
+	if err != nil {
+		responseErr := models.NewCognitoError(ctx, err, "ForgotPassword request from password reset endpoint")
+		if responseErr.Code == models.LimitExceededError || responseErr.Code == models.TooManyRequestsError {
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusBadRequest, nil)
+		} else if responseErr.Code != models.UserNotFoundError && responseErr.Code != models.UserNotConfirmedError {
+			return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
+		}
+	}
+
+	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
 }

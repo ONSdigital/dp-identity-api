@@ -2,6 +2,7 @@ package mock
 
 import (
 	"errors"
+	"github.com/aws/aws-sdk-go/aws"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -29,7 +30,7 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cogn
 
 func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
 	var (
-		status, subjectAttrName, forenameAttrName, surnameAttrName, emailAttrName, username, subUUID, forename, surname, email string = "FORCE_CHANGE_PASSWORD", "sub", "name", "family_name", "email", "123e4567-e89b-12d3-a456-426614174000", "f0cf8dd9-755c-4caf-884d-b0c56e7d0704", "smileons", "bobbings", "emailx@ons.gov.uk"
+		status, subjectAttrName, forenameAttrName, surnameAttrName, emailAttrName, username, subUUID, forename, surname, email string = "FORCE_CHANGE_PASSWORD", "sub", "given_name", "family_name", "email", "123e4567-e89b-12d3-a456-426614174000", "f0cf8dd9-755c-4caf-884d-b0c56e7d0704", "smileons", "bobbings", "emailx@ons.gov.uk"
 	)
 
 	if *input.UserAttributes[0].Value == "smileons" { // 201 - created successfully
@@ -92,14 +93,14 @@ func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityp
 		}
 
 		for _, user := range m.Users {
-			if (user.email == *input.AuthParameters["USERNAME"]) && (user.password == *input.AuthParameters["PASSWORD"]) {
+			if (user.Email == *input.AuthParameters["USERNAME"]) && (user.Password == *input.AuthParameters["PASSWORD"]) {
 				// non-challenge response
-				if user.Attributes != nil {
+				if user.Status == "CONFIRMED" {
 					return initiateAuthOutput, nil
 				} else {
 					return initiateAuthOutputChallenge, nil
 				}
-			} else if user.email != *input.AuthParameters["USERNAME"] {
+			} else if user.Email != *input.AuthParameters["USERNAME"] {
 				return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Incorrect username or password.", nil)
 			} else {
 				return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Password attempts exceeded", nil)
@@ -155,35 +156,64 @@ func (m *CognitoIdentityProviderClientStub) AdminUserGlobalSignOut(adminUserGlob
 
 func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 	var (
-		attribute_name, attribute_value string = "email_verified", "true"
+		emailVerifiedAttr, emailVerifiedValue    string = "email_verified", "true"
+		givenNameAttr, familyNameAttr, emailAttr string = "given_name", "family_name", "email"
+		enabled                                  bool   = true
 	)
 
-	getEmailFromFilter, _ := regexp.Compile(`^email\s\=\s(\D+.*)$`)
-	email := getEmailFromFilter.ReplaceAllString(*input.Filter, `$1`)
+	var usersList []*cognitoidentityprovider.UserType
 
-	var emailRegex = regexp.MustCompile(`^\"email(\d)?@(ext\.)?ons.gov.uk\"`)
-	if emailRegex.MatchString(email) {
-		users := &models.ListUsersOutput{
-			ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
-				Users: []*cognitoidentityprovider.UserType{
+	if len(m.Users) > 0 && m.Users[0].Email == "internal.error@ons.gov.uk" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+
+	if input.Filter != nil {
+		getEmailFromFilter, _ := regexp.Compile(`^email\s\=\s(\D+.*)$`)
+		email := getEmailFromFilter.ReplaceAllString(*input.Filter, `$1`)
+
+		var emailRegex = regexp.MustCompile(`^\"email(\d)?@(ext\.)?ons.gov.uk\"`)
+		if emailRegex.MatchString(email) {
+			usersList = append(usersList, &cognitoidentityprovider.UserType{
+				Attributes: []*cognitoidentityprovider.AttributeType{
 					{
-						Attributes: []*cognitoidentityprovider.AttributeType{
-							{
-								Name:  &attribute_name,
-								Value: &attribute_value,
-							},
-						},
-						Username: &email,
+						Name:  &emailVerifiedAttr,
+						Value: &emailVerifiedValue,
 					},
 				},
-			},
+				Username: &email,
+			})
 		}
-		return users.ListUsersOutput, nil
+	} else {
+		for _, user := range m.Users {
+			userDetails := cognitoidentityprovider.UserType{
+				Attributes: []*cognitoidentityprovider.AttributeType{
+					{
+						Name:  &emailVerifiedAttr,
+						Value: &emailVerifiedValue,
+					},
+					{
+						Name:  &givenNameAttr,
+						Value: aws.String(user.GivenName),
+					},
+					{
+						Name:  &familyNameAttr,
+						Value: aws.String(user.FamilyName),
+					},
+					{
+						Name:  &emailAttr,
+						Value: aws.String(user.Email),
+					},
+				},
+				Enabled:    &enabled,
+				UserStatus: aws.String(user.Status),
+				Username:   aws.String(user.ID),
+			}
+			usersList = append(usersList, &userDetails)
+		}
 	}
-	// default - email doesn't exist in user pool
 	users := &models.ListUsersOutput{
 		ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
-			Users: []*cognitoidentityprovider.UserType{},
+			Users: usersList,
 		},
 	}
 	return users.ListUsersOutput, nil
@@ -212,7 +242,7 @@ func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(input *cognit
 		}
 
 		for _, user := range m.Users {
-			if user.email == *input.ChallengeResponses["USERNAME"] {
+			if user.Email == *input.ChallengeResponses["USERNAME"] {
 				return challengeResponseOutput, nil
 			}
 		}
@@ -220,4 +250,63 @@ func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(input *cognit
 	} else {
 		return nil, errors.New("InvalidParameterException: Unknown Auth Flow")
 	}
+}
+
+func (m *CognitoIdentityProviderClientStub) ForgotPassword(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
+	forgotPasswordOutput := &cognitoidentityprovider.ForgotPasswordOutput{
+		CodeDeliveryDetails: &cognitoidentityprovider.CodeDeliveryDetailsType{},
+	}
+
+	if *input.Username == "internal.error@ons.gov.uk" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+	if *input.Username == "too.many@ons.gov.uk" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeTooManyRequestsException, "Slow down", nil)
+	}
+
+	for _, user := range m.Users {
+		if user.Email == *input.Username {
+			return forgotPasswordOutput, nil
+		}
+	}
+	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "user not found", nil)
+}
+
+func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+	var (
+		emailVerifiedAttr, emailVerifiedValue    string = "email_verified", "true"
+		givenNameAttr, familyNameAttr, emailAttr string = "given_name", "family_name", "email"
+		enabled                                  bool   = true
+	)
+	for _, user := range m.Users {
+		if user.ID == *input.Username {
+			if user.Email == "internal.error@ons.gov.uk" {
+				return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+			}
+			return &cognitoidentityprovider.AdminGetUserOutput{
+				UserAttributes: []*cognitoidentityprovider.AttributeType{
+					{
+						Name:  &emailVerifiedAttr,
+						Value: &emailVerifiedValue,
+					},
+					{
+						Name:  &givenNameAttr,
+						Value: aws.String(user.GivenName),
+					},
+					{
+						Name:  &familyNameAttr,
+						Value: aws.String(user.FamilyName),
+					},
+					{
+						Name:  &emailAttr,
+						Value: aws.String(user.Email),
+					},
+				},
+				Enabled:    &enabled,
+				UserStatus: aws.String(user.Status),
+				Username:   aws.String(user.ID),
+			}, nil
+		}
+	}
+	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
 }
