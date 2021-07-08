@@ -390,13 +390,16 @@ func TestUpdateUserHandler(t *testing.T) {
 
 	Convey("Update user - check expected responses", t, func() {
 		adminCreateUsersTests := []struct {
-			updateUserFunction func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error)
-			getUserFunction    func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
-			userForename       string
-			assertions         func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+			updateUserFunction  func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error)
+			getUserFunction     func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
+			enableUserFunction  func(userInput *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error)
+			disableUserFunction func(userInput *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error)
+			userForename        string
+			userActive          bool
+			assertions          func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{
+			// 200 response from Cognito
 			{
-				// 200 response from Cognito
 				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
 					return user, nil
@@ -409,14 +412,202 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return user, nil
 				},
+				func(userInput *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+					return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
+				},
 				forename,
+				true,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
 					So(errorResponse, ShouldBeNil)
 				},
 			},
+			//local validation failure
 			{
-				// 500 response from Cognito
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
+					return user, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+					user := &cognitoidentityprovider.AdminGetUserOutput{
+						UserAttributes: successfullyGetUser,
+						UserStatus:     &status,
+						Username:       &userId,
+					}
+					return user, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+					return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
+				},
+				"",
+				true,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+				},
+			},
+			//404 response from Cognito enable user
+			{
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
+					return user, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+					user := &cognitoidentityprovider.AdminGetUserOutput{
+						UserAttributes: successfullyGetUser,
+						UserStatus:     &status,
+						Username:       &userId,
+					}
+					return user, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+					awsErrCode := "UserNotFoundException"
+					awsErrMessage := "user could not be found"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				func(userInput *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+					return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
+				},
+				forename,
+				true,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusNotFound)
+				},
+			},
+			// 500 response from Cognito enable user
+			{
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
+					return user, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+					user := &cognitoidentityprovider.AdminGetUserOutput{
+						UserAttributes: successfullyGetUser,
+						UserStatus:     &status,
+						Username:       &userId,
+					}
+					return user, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := "Something strange happened"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				func(userInput *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+					return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
+				},
+				forename,
+				true,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+				},
+			},
+			//404 response from Cognito disable user
+			{
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
+					return user, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+					user := &cognitoidentityprovider.AdminGetUserOutput{
+						UserAttributes: successfullyGetUser,
+						UserStatus:     &status,
+						Username:       &userId,
+					}
+					return user, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+					awsErrCode := "UserNotFoundException"
+					awsErrMessage := "user could not be found"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				forename,
+				false,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusNotFound)
+				},
+			},
+			// 500 response from Cognito disable user
+			{
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
+					return user, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+					user := &cognitoidentityprovider.AdminGetUserOutput{
+						UserAttributes: successfullyGetUser,
+						UserStatus:     &status,
+						Username:       &userId,
+					}
+					return user, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := "Something strange happened"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				forename,
+				false,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+				},
+			},
+			//404 response from Cognito user update
+			{
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					awsErrCode := "UserNotFoundException"
+					awsErrMessage := "user could not be found"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+					user := &cognitoidentityprovider.AdminGetUserOutput{
+						UserAttributes: successfullyGetUser,
+						UserStatus:     &status,
+						Username:       &userId,
+					}
+					return user, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+					return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
+				},
+				forename,
+				true,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusNotFound)
+				},
+			},
+			// 500 response from Cognito user update
+			{
 				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 					awsErrCode := "InternalErrorException"
 					awsErrMessage := "Something strange happened"
@@ -432,57 +623,21 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return user, nil
 				},
+				func(userInput *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+					return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
+				},
 				forename,
+				true,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(successResponse, ShouldBeNil)
 					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
 				},
 			},
+			//reload user details failure
 			{
-				//404 response from Cognito
-				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
-					awsErrCode := "UserNotFoundException"
-					awsErrMessage := "user could not be found"
-					awsOrigErr := errors.New(awsErrCode)
-					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
-					return nil, awsErr
-				},
-				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
-					user := &cognitoidentityprovider.AdminGetUserOutput{
-						UserAttributes: successfullyGetUser,
-						UserStatus:     &status,
-						Username:       &userId,
-					}
-					return user, nil
-				},
-				forename,
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					So(successResponse, ShouldBeNil)
-					So(errorResponse.Status, ShouldEqual, http.StatusNotFound)
-				},
-			},
-			{
-				//local validation failure
-				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
-					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
-					return user, nil
-				},
-				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
-					user := &cognitoidentityprovider.AdminGetUserOutput{
-						UserAttributes: successfullyGetUser,
-						UserStatus:     &status,
-						Username:       &userId,
-					}
-					return user, nil
-				},
-				"",
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					So(successResponse, ShouldBeNil)
-					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
-				},
-			},
-			{
-				//reload user details failure
 				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
 					return user, nil
@@ -494,7 +649,14 @@ func TestUpdateUserHandler(t *testing.T) {
 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					return nil, awsErr
 				},
+				func(userInput *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+					return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
+				},
 				forename,
+				true,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(successResponse, ShouldBeNil)
 					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
@@ -505,6 +667,8 @@ func TestUpdateUserHandler(t *testing.T) {
 		for _, tt := range adminCreateUsersTests {
 			m.AdminUpdateUserAttributesFunc = tt.updateUserFunction
 			m.AdminGetUserFunc = tt.getUserFunction
+			m.AdminEnableUserFunc = tt.enableUserFunction
+			m.AdminDisableUserFunc = tt.disableUserFunction
 
 			postBody := map[string]interface{}{"forename": tt.userForename, "lastname": lastname, "status": status, "role_type": roleType}
 			body, err := json.Marshal(postBody)
