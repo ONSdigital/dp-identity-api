@@ -345,6 +345,40 @@ func TestUserParams_BuildAdminGetUserRequest(t *testing.T) {
 	})
 }
 
+func TestUserParams_BuildEnableUserRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito AdminEnableUserInput request body", t, func() {
+		userId := "abcd1234"
+		user := models.UserParams{
+			ID: userId,
+		}
+
+		userPoolId := "euwest-99-aabbcc"
+
+		request := user.BuildEnableUserRequest(userPoolId)
+
+		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminEnableUserInput{}))
+		So(*request.Username, ShouldEqual, userId)
+		So(*request.UserPoolId, ShouldEqual, userPoolId)
+	})
+}
+
+func TestUserParams_BuildDisableUserRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito AdminDisableUserInput request body", t, func() {
+		userId := "abcd1234"
+		user := models.UserParams{
+			ID: userId,
+		}
+
+		userPoolId := "euwest-99-aabbcc"
+
+		request := user.BuildDisableUserRequest(userPoolId)
+
+		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminDisableUserInput{}))
+		So(*request.Username, ShouldEqual, userId)
+		So(*request.UserPoolId, ShouldEqual, userPoolId)
+	})
+}
+
 func TestUserParams_MapCognitoDetails(t *testing.T) {
 	Convey("maps the returned user details to the UserParam attributes", t, func() {
 		var forename, surname, email, status, id string = "Bob", "Smith", "email@ons.gov.uk", "CONFIRMED", "user-1"
