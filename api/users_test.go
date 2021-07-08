@@ -684,6 +684,46 @@ func TestUpdateUserHandler(t *testing.T) {
 	})
 }
 
+func TestProcessUpdateCognitoError(t *testing.T) {
+	ctx := context.Background()
+
+	Convey("Processes UserNotFound to a 404 response", t, func() {
+		awsErrCode := "UserNotFoundException"
+		awsErrMessage := "user could not be found"
+		awsOrigErr := errors.New(awsErrCode)
+		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		errResponse := processUpdateCognitoError(ctx, awsErr, "Testing user not found")
+		So(errResponse.Status, ShouldEqual, http.StatusNotFound)
+		castErr := errResponse.Errors[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.UserNotFoundError)
+		So(castErr.Description, ShouldEqual, "user could not be found")
+	})
+
+	Convey("Processes InternalError to a 500 response", t, func() {
+		awsErrCode := "InternalErrorException"
+		awsErrMessage := "something went wrong"
+		awsOrigErr := errors.New(awsErrCode)
+		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		errResponse := processUpdateCognitoError(ctx, awsErr, "Testing internal error")
+		So(errResponse.Status, ShouldEqual, http.StatusInternalServerError)
+		castErr := errResponse.Errors[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InternalError)
+		So(castErr.Description, ShouldEqual, "something went wrong")
+	})
+
+	Convey("Processes InvalidField to a 400 response", t, func() {
+		awsErrCode := "InvalidParameterException"
+		awsErrMessage := "param invalid"
+		awsOrigErr := errors.New(awsErrCode)
+		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		errResponse := processUpdateCognitoError(ctx, awsErr, "Testing invalid param error")
+		So(errResponse.Status, ShouldEqual, http.StatusBadRequest)
+		castErr := errResponse.Errors[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidFieldError)
+		So(castErr.Description, ShouldEqual, "param invalid")
+	})
+}
+
 func TestChangePasswordHandler(t *testing.T) {
 
 	var (
