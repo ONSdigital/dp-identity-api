@@ -53,6 +53,10 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 		return nil, models.NewError(ctx, nil, models.MissingConfigError, models.MissingConfigDescription)
 	}
 
+	if err := initialiseRoleGroups(ctx, cognitoClient, userPoolId); err != nil {
+		return nil, err
+	}
+
 	api := &API{
 		Router:         r,
 		CognitoClient:  cognitoClient,
@@ -131,4 +135,28 @@ func handleBodyUnmarshalError(ctx context.Context, err error) *models.ErrorRespo
 		http.StatusInternalServerError,
 		nil,
 	)
+}
+
+func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, userPoolId string) error {
+	adminGroup := models.NewAdminRoleGroup()
+	adminGroupCreateInput := adminGroup.BuildCreateGroupRequest(userPoolId)
+	_, err := cognitoClient.CreateGroup(adminGroupCreateInput)
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for admin group from API start up")
+		if cognitoErr.Code != models.GroupExistsError {
+			return cognitoErr
+		}
+	}
+
+	publisherGroup := models.NewPublisherRoleGroup()
+	publisherGroupCreateInput := publisherGroup.BuildCreateGroupRequest(userPoolId)
+	_, err = cognitoClient.CreateGroup(publisherGroupCreateInput)
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for publisher group from API start up")
+		if cognitoErr.Code != models.GroupExistsError {
+			return cognitoErr
+		}
+	}
+
+	return nil
 }
