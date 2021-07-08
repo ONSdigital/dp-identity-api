@@ -267,7 +267,8 @@ Feature: Users
             {
                 "forename": "Changed",
                 "lastname": "Names",
-                "status": "CONFIRMED"
+                "active": true,
+                "status_notes": ""
             }
         """
         Then I should receive the following JSON response with status "200":
@@ -278,7 +279,111 @@ Feature: Users
                 "lastname": "Names",
                 "email": "email@ons.gov.uk",
                 "groups": [],
-                "status": "CONFIRMED"
+                "status": "CONFIRMED",
+                "active": true,
+                "status_notes": ""
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} set user disabled and checking the response status 200
+        Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        When I PUT "/v1/users/abcd1234"
+        """
+            {
+                "forename": "Bob",
+                "lastname": "Smith",
+                "active": false,
+                "status_notes": "user disabled"
+            }
+        """
+        Then I should receive the following JSON response with status "200":
+            """
+            {
+                "id": "abcd1234",
+                "forename": "Bob",
+                "lastname": "Smith",
+                "email": "email@ons.gov.uk",
+                "groups": [],
+                "status": "CONFIRMED",
+                "active": false,
+                "status_notes": "user disabled"
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} set user enabled and checking the response status 200
+        Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And user "abcd1234" is "disabled"
+        When I PUT "/v1/users/abcd1234"
+        """
+            {
+                "forename": "Bob",
+                "lastname": "Smith",
+                "active": true,
+                "status_notes": "user reactivated"
+            }
+        """
+        Then I should receive the following JSON response with status "200":
+            """
+            {
+                "id": "abcd1234",
+                "forename": "Bob",
+                "lastname": "Smith",
+                "email": "email@ons.gov.uk",
+                "groups": [],
+                "status": "CONFIRMED",
+                "active": true,
+                "status_notes": "user reactivated"
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} set user disabled and change names and checking the response status 200
+        Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        When I PUT "/v1/users/abcd1234"
+        """
+            {
+                "forename": "Changed",
+                "lastname": "Names",
+                "active": false,
+                "status_notes": "user suspended"
+            }
+        """
+        Then I should receive the following JSON response with status "200":
+            """
+            {
+                "id": "abcd1234",
+                "forename": "Changed",
+                "lastname": "Names",
+                "email": "email@ons.gov.uk",
+                "groups": [],
+                "status": "CONFIRMED",
+                "active": false,
+                "status_notes": "user suspended"
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} set user enabled and change names and checking the response status 200
+        Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And user "abcd1234" is "disabled"
+        When I PUT "/v1/users/abcd1234"
+        """
+            {
+                "forename": "Changed",
+                "lastname": "Names",
+                "active": true,
+                "status_notes": "user reactivated"
+            }
+        """
+        Then I should receive the following JSON response with status "200":
+            """
+            {
+                "id": "abcd1234",
+                "forename": "Changed",
+                "lastname": "Names",
+                "email": "email@ons.gov.uk",
+                "groups": [],
+                "status": "CONFIRMED",
+                "active": true,
+                "status_notes": "user reactivated"
             }
             """
 
@@ -289,7 +394,8 @@ Feature: Users
             {
                 "forename": "",
                 "lastname": "Smith",
-                "status": "CONFIRMED"
+                "active": true,
+                "status_notes": ""
             }
         """
         Then I should receive the following JSON response with status "400":
@@ -311,7 +417,8 @@ Feature: Users
             {
                 "forename": "Bob",
                 "lastname": "",
-                "status": "CONFIRMED"
+                "active": true,
+                "status_notes": ""
             }
         """
         Then I should receive the following JSON response with status "400":
@@ -333,7 +440,8 @@ Feature: Users
             {
                 "forename": "",
                 "lastname": "",
-                "status": "CONFIRMED"
+                "active": true,
+                "status_notes": ""
             }
         """
         Then I should receive the following JSON response with status "400":
@@ -358,7 +466,8 @@ Feature: Users
             {
                 "forename": "Bob",
                 "lastname": "Smith",
-                "status": "CONFIRMED"
+                "active": true,
+                "status_notes": ""
             }
             """
         Then I should receive the following JSON response with status "404":
@@ -373,6 +482,53 @@ Feature: Users
             }
             """
 
+    Scenario: PUT /v1/users/{id} unexpected server error disabling user and checking the response status 500
+        Given a user with username "abcd1234" and email "disable.internalerror@ons.gov.uk" exists in the database
+        When I PUT "/v1/users/abcd1234"
+            """
+            {
+                "forename": "Bob",
+                "lastname": "Smith",
+                "active": false,
+                "status_notes": "user suspended"
+            }
+            """
+        Then I should receive the following JSON response with status "500":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InternalServerError",
+                        "description": "Something went wrong whilst disabling"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} unexpected server error enabling user and checking the response status 500
+        Given a user with username "abcd1234" and email "enable.internalerror@ons.gov.uk" exists in the database
+        And user "abcd1234" is "disabled"
+        When I PUT "/v1/users/abcd1234"
+            """
+            {
+                "forename": "Bob",
+                "lastname": "Smith",
+                "active": true,
+                "status_notes": "user reactivated"
+            }
+            """
+        Then I should receive the following JSON response with status "500":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InternalServerError",
+                        "description": "Something went wrong whilst enabling"
+                    }
+                ]
+            }
+            """
+
     Scenario: PUT /v1/users/{id} unexpected server error updating user and checking the response status 500
         Given a user with username "abcd1234" and email "update.internalerror@ons.gov.uk" exists in the database
         When I PUT "/v1/users/abcd1234"
@@ -380,7 +536,8 @@ Feature: Users
             {
                 "forename": "Bob",
                 "lastname": "Smith",
-                "status": "CONFIRMED"
+                "active": true,
+                "status_notes": ""
             }
             """
         Then I should receive the following JSON response with status "500":
@@ -402,7 +559,8 @@ Feature: Users
             {
                 "forename": "Bob",
                 "lastname": "Smith",
-                "status": "CONFIRMED"
+                "active": true,
+                "status_notes": ""
             }
             """
         Then I should receive the following JSON response with status "500":
