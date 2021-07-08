@@ -61,6 +61,7 @@ const (
 	UnknownPasswordChangeTypeDescription   = "unknown password change type received"
 	NotImplementedDescription              = "this feature has not been implemented yet"
 	InvalidChallengeSessionDescription     = "no valid auth challenge session was provided"
+	InvalidTokenDescription                = "the submitted token could not be validated"
 )
 
 // Mapping Cognito error codes to API error codes

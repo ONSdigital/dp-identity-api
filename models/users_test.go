@@ -3,9 +3,10 @@ package models_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/ONSdigital/dp-identity-api/api"
 	"reflect"
 	"testing"
+
+	"github.com/ONSdigital/dp-identity-api/api"
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -501,5 +502,114 @@ func TestChangePassword_BuildAuthChallengeSuccessfulJsonResponse(t *testing.T) {
 		var body map[string]interface{}
 		err = json.Unmarshal(response, &body)
 		So(body["expirationTime"], ShouldNotBeNil)
+	})
+}
+
+func TestChangePassword_ValidateForgottenPasswordRequiredRequest(t *testing.T) {
+	ctx := context.Background()
+
+	Convey("returns validation errors if required parameters are missing", t, func() {
+		missingParamsTests := []struct {
+			VerificationToken string
+			Email             string
+			Password          string
+			ExpectedErrors    []string
+		}{
+			{
+				// missing VerificationToken
+				"",
+				"email@gmail.com",
+				"Password2",
+				[]string{models.InvalidTokenError},
+			},
+			{
+				// missing email
+				"≈",
+				"",
+				"Password2",
+				[]string{models.InvalidEmailError},
+			},
+			{
+				// missing password
+				"verification_token",
+				"email@gmail.com",
+				"",
+				[]string{models.InvalidPasswordError},
+			},
+			{
+				// missing VerificationToken and email
+				"",
+				"",
+				"Password2",
+				[]string{models.InvalidEmailError, models.InvalidTokenError},
+			},
+			{
+				// missing VerificationToken and password
+				"",
+				"email@gmail.com",
+				"",
+				[]string{models.InvalidPasswordError, models.InvalidTokenError},
+			},
+			{
+				// missing email and password
+				"verification_token",
+				"",
+				"",
+				[]string{models.InvalidPasswordError, models.InvalidEmailError},
+			},
+			{
+				// missing VerificationToken, email and password
+				"",
+				"",
+				"",
+				[]string{models.InvalidPasswordError, models.InvalidEmailError, models.InvalidTokenError},
+			},
+			{
+				// missing VerificationToken, email and password
+
+				"",
+				"email@gmail.com",
+				"Password2",
+				[]string{models.InvalidPasswordError, models.InvalidEmailError, models.InvalidTokenError},
+			},
+		}
+		for _, tt := range missingParamsTests {
+			passwordChangeParams := models.ChangePassword{
+				ChangeType:        models.NewPasswordRequiredType,
+				VerificationToken: tt.VerificationToken,
+				Email:             tt.Email,
+				NewPassword:       tt.Password,
+			}
+
+			validationErrs := passwordChangeParams.ValidateForgottenPasswordRequiredRequest(ctx)
+
+			So(len(validationErrs), ShouldEqual, len(tt.ExpectedErrors))
+			for i, expectedErrCode := range tt.ExpectedErrors {
+				castErr := validationErrs[i].(*models.Error)
+				So(castErr.Code, ShouldEqual, expectedErrCode)
+			}
+		}
+	})
+}
+
+func TestForgottenPassword_BuildConfirmForgotPasswordRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito RespondToAuthChallengeInput request body", t, func() {
+
+		passwordChangeParams := models.ChangePassword{
+			VerificationToken: "verification_token",
+			Email:             "email@gmail.com",
+			NewPassword:       "Password2",
+		}
+
+		clientId := "awsclientid"
+		clientSecret := "awsSecret"
+
+		response := passwordChangeParams.BuildConfirmForgotPasswordRequest(clientSecret, clientId)
+
+		So(*response.ClientId, ShouldResemble, clientId)
+		So(*response.ConfirmationCode, ShouldResemble, passwordChangeParams.VerificationToken)
+		So(*response.Password, ShouldResemble, passwordChangeParams.NewPassword)
+		So(*response.Username, ShouldResemble, passwordChangeParams.Email)
+
 	})
 }
