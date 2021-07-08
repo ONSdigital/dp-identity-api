@@ -225,9 +225,9 @@ paths:
           description: the users id
         - in: body
           name: user
-          description: "The forename and surname for a user."
+          description: "The forename, surname, active status and status notes for a user."
           schema:
-            required: ["forename","lastname", "status"]
+            required: ["forename","lastname", "active"]
             type: object
             properties:
               forename:
@@ -236,9 +236,11 @@ paths:
               lastname:
                 type: string
                 example: "bobbings"
-              status:
+              active:
+                type: boolean
+              status_notes:
                 type: string
-                example: "CONFIRMED"
+                example: "User has been suspended"
       responses:
         200:
           description: "The users details"
@@ -395,6 +397,13 @@ definitions:
         items:
           description: "The groups name"
           type: string
+      active:
+        description: "Whether or not the user is active"
+        type: boolean
+      status_notes:
+        description: "Notes about the updates made to the user"
+        type: string
+        example: "User has been suspended"
       status:
         description: "The current status of the user"
         type: string
