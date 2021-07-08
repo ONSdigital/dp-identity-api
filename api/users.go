@@ -166,6 +166,16 @@ func (api *API) UpdateUserHandler(ctx context.Context, w http.ResponseWriter, re
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
+func processUpdateCognitoError(ctx context.Context, err error, errContext string) *models.ErrorResponse {
+	responseErr := models.NewCognitoError(ctx, err, errContext)
+	if responseErr.Code == models.UserNotFoundError {
+		return models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
+	} else if responseErr.Code == models.InvalidFieldError {
+		return models.NewErrorResponse(http.StatusBadRequest, nil, responseErr)
+	}
+	return models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+}
+
 //ChangePasswordHandler processes changes to the users password
 func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer req.Body.Close()
