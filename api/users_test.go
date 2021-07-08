@@ -670,7 +670,7 @@ func TestUpdateUserHandler(t *testing.T) {
 			m.AdminEnableUserFunc = tt.enableUserFunction
 			m.AdminDisableUserFunc = tt.disableUserFunction
 
-			postBody := map[string]interface{}{"forename": tt.userForename, "lastname": lastname, "status": status, "role_type": roleType}
+			postBody := map[string]interface{}{"forename": tt.userForename, "lastname": lastname, "status": status, "role_type": roleType, "active": tt.userActive}
 			body, err := json.Marshal(postBody)
 
 			So(err, ShouldBeNil)
