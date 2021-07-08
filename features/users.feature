@@ -1,5 +1,6 @@
 Feature: Users
 
+#   Create User
     Scenario: POST /v1/users and checking the response status 201
         When I POST "/v1/users"
             """
@@ -17,7 +18,9 @@ Feature: Users
                 "lastname": "bobbings",
                 "email": "emailx@ons.gov.uk",
                 "groups": [],
-                "status": "FORCE_CHANGE_PASSWORD"
+                "status": "FORCE_CHANGE_PASSWORD",
+                "active": true,
+                "status_notes": ""
             }
             """
 
@@ -172,6 +175,7 @@ Feature: Users
             }
             """
 
+#   List Users
     Scenario: GET /v1/users and checking the response status 200
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
         And a user with non-verified email "new_email@ons.gov.uk" and password "TeMpPassw0rd!"
@@ -216,6 +220,7 @@ Feature: Users
             }
             """
 
+#   Get User
     Scenario: GET /v1/users/{id} and checking the response status 200
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         When I GET "/v1/users/abcd1234"
@@ -227,7 +232,9 @@ Feature: Users
                 "lastname": "Smith",
                 "email": "email@ons.gov.uk",
                 "groups": [],
-                "status": "CONFIRMED"
+                "status": "CONFIRMED",
+                "active": true,
+                "status_notes": ""
             }
             """
 
@@ -260,6 +267,7 @@ Feature: Users
             }
             """
 
+#   Update User
     Scenario: PUT /v1/users/{id} to update users names and checking the response status 200
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         When I PUT "/v1/users/abcd1234"
@@ -312,7 +320,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} set user enabled and checking the response status 200
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And user "abcd1234" is "disabled"
+        And user "abcd1234" active is "false"
         When I PUT "/v1/users/abcd1234"
         """
             {
@@ -363,7 +371,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} set user enabled and change names and checking the response status 200
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And user "abcd1234" is "disabled"
+        And user "abcd1234" active is "false"
         When I PUT "/v1/users/abcd1234"
         """
             {
@@ -507,7 +515,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} unexpected server error enabling user and checking the response status 500
         Given a user with username "abcd1234" and email "enable.internalerror@ons.gov.uk" exists in the database
-        And user "abcd1234" is "disabled"
+        And user "abcd1234" active is "false"
         When I PUT "/v1/users/abcd1234"
             """
             {
@@ -575,6 +583,7 @@ Feature: Users
             }
             """
 
+#   Change password
     Scenario: PUT /v1/users/self/password and checking the response status 202
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
         When I PUT "/v1/users/self/password"
@@ -875,6 +884,7 @@ Feature: Users
         """
         Then the HTTP status code should be "202"
 
+#   Request password reset
     Scenario: POST /v1/password-reset and checking the response status 202
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
         When I POST "/v1/password-reset"
