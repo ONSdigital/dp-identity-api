@@ -211,6 +211,7 @@ paths:
           description: "Internal error occurred"
           schema:
             $ref: '#/definitions/ErrorResponse'
+            
   /v1/users/self/password:
     put:
       tags:
@@ -224,7 +225,8 @@ paths:
       parameters:
         - in: body
           name: "Change password params"
-          description: "The type of change request, email address, new password and session"
+          description: "The type of change request, email address, new password and session.
+                        for type ForgottenPassword email address, new password and verification token"
           schema:
             required: ["type","email","password"]
             type: object
@@ -238,6 +240,8 @@ paths:
               password:
                 type: string
               session:
+                type: string
+              verification_token:
                 type: string
       responses:
         202:
@@ -266,6 +270,8 @@ paths:
           description: "Requested unimplemented password change type"
           schema:
             $ref: '#/definitions/ErrorResponse'
+
+
   /v1/password-reset:
     put:
       tags:
@@ -298,6 +304,7 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
+
 
 
 responses:

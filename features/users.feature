@@ -1,5 +1,5 @@
 Feature: Users
-
+ƒ
     Scenario: POST /v1/users and checking the response status 201
         When I POST "/v1/users"
             """
@@ -310,13 +310,13 @@ Feature: Users
                 "session": "auth-challenge-session"
             }
             """
-        Then I should receive the following JSON response with status "501":
+        Then I should receive the following JSON response with status "400":
             """
             {
                 "errors": [
                     {
-                        "code": "NotImplemented",
-                        "description": "this feature has not been implemented yet"
+                        "code": "InvalidToken",
+                        "description": "the submitted token could not be validated"
                     }
                 ]
             }
@@ -647,3 +647,67 @@ Feature: Users
             }
         """
         Then the HTTP status code should be "202"
+
+    Scenario: POST /v1/password-reset non ONS email address and checking the response status 202
+        When I POST "/v1/password-reset"
+        """
+            {
+                "email": "email@gmail.com"
+            }
+        """
+        Then the HTTP status code should be "202"
+
+
+
+    Scenario: POST /v1/password-reset and checking the response status 202
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I POST "/v1/password-reset"
+            """
+                {
+                    "email": "email@ons.gov.uk"
+                }
+            """
+        Then the HTTP status code should be "202"
+
+    Scenario: POST /v1/password-reset missing email and checking the response status 400
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I POST "/v1/password-reset"
+            """
+                {
+                    "email": ""
+                }
+            """
+        Then I should receive the following JSON response with status "400":
+            """
+                {
+                    "errors": [
+                        {
+                            "code": "InvalidEmail",
+                            "description": "the submitted email could not be validated"
+                        }
+                    ]
+                }
+            """
+            
+     Scenario: PUT /v1/users/self/password forgotten password type and checking the response status 202
+        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        When I PUT "/v1/users/self/password"
+            """
+            {
+                "type": "ForgottenPassword",
+                "email": "email@ons.gov.uk",
+                "password": "Password2",
+                "session": "auth-challenge-session"
+            }
+            """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidToken",
+                        "description": "the submitted token could not be validated"
+                    }
+                ]
+            }
+            """

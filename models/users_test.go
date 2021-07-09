@@ -695,14 +695,6 @@ func TestChangePassword_ValidateForgottenPasswordRequiredRequest(t *testing.T) {
 				"",
 				[]string{models.InvalidPasswordError, models.InvalidEmailError, models.InvalidTokenError},
 			},
-			{
-				// missing VerificationToken, email and password
-
-				"",
-				"email@gmail.com",
-				"Password2",
-				[]string{models.InvalidPasswordError, models.InvalidEmailError, models.InvalidTokenError},
-			},
 		}
 		for _, tt := range missingParamsTests {
 			passwordChangeParams := models.ChangePassword{
