@@ -365,14 +365,12 @@ func TestGetUserHandler(t *testing.T) {
 
 func TestUpdateUserHandler(t *testing.T) {
 	var (
-		routeMux                                                   = mux.NewRouter()
 		ctx                                                        = context.Background()
-		poolId, clientId, clientSecret, authFlow            string = "us-west-11_bxushuds", "abc123", "bsjahsaj9djsiq", "authflow"
 		forename, lastname, status, email, userId, roleType string = "bob", "bobbings", "UNCONFIRMED", "foo_bar123@ext.ons.gov.uk", "abcd1234", "Viewer"
 		givenNameAttr, familyNameAttr, emailAttr            string = "given_name", "family_name", "email"
 	)
 
-	m := &mock.MockCognitoIdentityProviderClient{}
+	api, w, m := apiSetup()
 
 	successfullyGetUser := []*cognitoidentityprovider.AttributeType{
 		{
@@ -388,9 +386,6 @@ func TestUpdateUserHandler(t *testing.T) {
 			Value: &email,
 		},
 	}
-
-	api, _ := Setup(ctx, routeMux, m, poolId, clientId, clientSecret, authFlow)
-	w := httptest.NewRecorder()
 
 	Convey("Update user - check expected responses", t, func() {
 		adminCreateUsersTests := []struct {
