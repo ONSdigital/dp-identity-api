@@ -14,6 +14,7 @@ import (
 const (
 	NewPasswordRequiredType = "NewPasswordRequired"
 	ForgottenPasswordType   = "ForgottenPassword"
+	MaxStatusNotesLength    = 512
 )
 
 type UsersList struct {
@@ -109,6 +110,10 @@ func (p UserParams) ValidateUpdate(ctx context.Context) []error {
 
 	if p.Lastname == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidSurnameError, InvalidSurnameErrorDescription))
+	}
+
+	if len(p.StatusNotes) > MaxStatusNotesLength {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidStatusNotesError, TooLongStatusNotesDescription))
 	}
 
 	return validationErrs

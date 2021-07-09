@@ -175,10 +175,13 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 func TestUserParams_ValidateUpdate(t *testing.T) {
 	ctx := context.Background()
 
+	invalidStatusNotes := "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eu turpis libero. Sed convallis pharetra mollis. Mauris ex nisi, finibus in mi quis, tincidunt pulvinar risus. Ut iaculis lobortis nisl. Suspendisse venenatis ante congue erat posuere, eget mattis massa facilisis. Vivamus bibendum pharetra suscipit. Integer laoreet molestie velit, vitae euismod ligula dictum eu. Phasellus a fermentum metus, nec dignissim ex. Sed dolor lectus, sollicitudin sit amet imperdiet eget, fringilla nec felis. Morbi commodo diam massa, sed interdum tellus sit"
+
 	Convey("returns an InvalidForename error if an invalid forename is submitted", t, func() {
 		user := models.UserParams{
-			Forename: "",
-			Lastname: "Smith",
+			Forename:    "",
+			Lastname:    "Smith",
+			StatusNotes: "",
 		}
 
 		errs := user.ValidateUpdate(ctx)
@@ -191,8 +194,9 @@ func TestUserParams_ValidateUpdate(t *testing.T) {
 
 	Convey("returns an InvalidSurname error if an invalid surname is submitted", t, func() {
 		user := models.UserParams{
-			Forename: "Stan",
-			Lastname: "",
+			Forename:    "Stan",
+			Lastname:    "",
+			StatusNotes: "",
 		}
 
 		errs := user.ValidateUpdate(ctx)
@@ -203,10 +207,26 @@ func TestUserParams_ValidateUpdate(t *testing.T) {
 		So(castErr.Description, ShouldEqual, models.InvalidSurnameErrorDescription)
 	})
 
-	Convey("returns an InvalidForename and InvalidSurname errors if no forename or lastname is submitted", t, func() {
+	Convey("returns an InvalidStatusNotes error if an invalid status notes is submitted", t, func() {
 		user := models.UserParams{
-			Forename: "",
-			Lastname: "",
+			Forename:    "Stan",
+			Lastname:    "Smith",
+			StatusNotes: invalidStatusNotes,
+		}
+
+		errs := user.ValidateUpdate(ctx)
+
+		So(len(errs), ShouldEqual, 1)
+		castErr := errs[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidStatusNotesError)
+		So(castErr.Description, ShouldEqual, models.TooLongStatusNotesDescription)
+	})
+
+	Convey("returns an InvalidForename and InvalidSurname errors if no forename or lastname are submitted", t, func() {
+		user := models.UserParams{
+			Forename:    "",
+			Lastname:    "",
+			StatusNotes: "",
 		}
 
 		errs := user.ValidateUpdate(ctx)
@@ -218,6 +238,63 @@ func TestUserParams_ValidateUpdate(t *testing.T) {
 		castErr = errs[1].(*models.Error)
 		So(castErr.Code, ShouldEqual, models.InvalidSurnameError)
 		So(castErr.Description, ShouldEqual, models.InvalidSurnameErrorDescription)
+	})
+
+	Convey("returns an InvalidForename and InvalidStatusNotes errors if no forename and invalid notes are submitted", t, func() {
+		user := models.UserParams{
+			Forename:    "",
+			Lastname:    "Smith",
+			StatusNotes: invalidStatusNotes,
+		}
+
+		errs := user.ValidateUpdate(ctx)
+
+		So(len(errs), ShouldEqual, 2)
+		castErr := errs[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidForenameError)
+		So(castErr.Description, ShouldEqual, models.InvalidForenameErrorDescription)
+		castErr = errs[1].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidStatusNotesError)
+		So(castErr.Description, ShouldEqual, models.TooLongStatusNotesDescription)
+	})
+
+	Convey("returns an InvalidSurname and InvalidStatusNotes errors if no surname and invalid notes are submitted", t, func() {
+		user := models.UserParams{
+			Forename:    "Stan",
+			Lastname:    "",
+			StatusNotes: invalidStatusNotes,
+		}
+
+		errs := user.ValidateUpdate(ctx)
+
+		So(len(errs), ShouldEqual, 2)
+		castErr := errs[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidSurnameError)
+		So(castErr.Description, ShouldEqual, models.InvalidSurnameErrorDescription)
+		castErr = errs[1].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidStatusNotesError)
+		So(castErr.Description, ShouldEqual, models.TooLongStatusNotesDescription)
+	})
+
+	Convey("returns an InvalidForename, InvalidSurname and InvalidStatusNotes errors if no forename or surname and invalid notes are submitted", t, func() {
+		user := models.UserParams{
+			Forename:    "",
+			Lastname:    "",
+			StatusNotes: invalidStatusNotes,
+		}
+
+		errs := user.ValidateUpdate(ctx)
+
+		So(len(errs), ShouldEqual, 3)
+		castErr := errs[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidForenameError)
+		So(castErr.Description, ShouldEqual, models.InvalidForenameErrorDescription)
+		castErr = errs[1].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidSurnameError)
+		So(castErr.Description, ShouldEqual, models.InvalidSurnameErrorDescription)
+		castErr = errs[2].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidStatusNotesError)
+		So(castErr.Description, ShouldEqual, models.TooLongStatusNotesDescription)
 	})
 }
 

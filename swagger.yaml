@@ -455,6 +455,7 @@ definitions:
           - "UnknownRequestType"
           - "NotImplemented"
           - "InvalidChallengeSession"
+          - "InvalidStatusNotes"
       description:
         type: string
         description: "Description of the error"

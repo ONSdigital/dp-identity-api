@@ -445,6 +445,29 @@ Feature: Users
             }
             """
 
+    Scenario: PUT /v1/users/{id} invalid notes and checking the response status 400
+        Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        When I PUT "/v1/users/abcd1234"
+        """
+            {
+                "forename": "Stan",
+                "lastname": "Smith",
+                "active": true,
+                "status_notes": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eu turpis libero. Sed convallis pharetra mollis. Mauris ex nisi, finibus in mi quis, tincidunt pulvinar risus. Ut iaculis lobortis nisl. Suspendisse venenatis ante congue erat posuere, eget mattis massa facilisis. Vivamus bibendum pharetra suscipit. Integer laoreet molestie velit, vitae euismod ligula dictum eu. Phasellus a fermentum metus, nec dignissim ex. Sed dolor lectus, sollicitudin sit amet imperdiet eget, fringilla nec felis. Morbi commodo diam massa, sed interdum tellus sit"
+            }
+        """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidStatusNotes",
+                        "description": "the status notes are too long"
+                    }
+                ]
+            }
+            """
+
     Scenario: PUT /v1/users/{id} missing forename and lastname and checking the response status 400
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         When I PUT "/v1/users/abcd1234"
@@ -467,6 +490,91 @@ Feature: Users
                     {
                         "code": "InvalidSurname",
                         "description": "the submitted user's lastname could not be validated"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} missing forename and invalid notes and checking the response status 400
+        Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        When I PUT "/v1/users/abcd1234"
+        """
+            {
+                "forename": "",
+                "lastname": "Smith",
+                "active": true,
+                "status_notes": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eu turpis libero. Sed convallis pharetra mollis. Mauris ex nisi, finibus in mi quis, tincidunt pulvinar risus. Ut iaculis lobortis nisl. Suspendisse venenatis ante congue erat posuere, eget mattis massa facilisis. Vivamus bibendum pharetra suscipit. Integer laoreet molestie velit, vitae euismod ligula dictum eu. Phasellus a fermentum metus, nec dignissim ex. Sed dolor lectus, sollicitudin sit amet imperdiet eget, fringilla nec felis. Morbi commodo diam massa, sed interdum tellus sit"
+            }
+        """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidForename",
+                        "description": "the submitted user's forename could not be validated"
+                    },
+                    {
+                        "code": "InvalidStatusNotes",
+                        "description": "the status notes are too long"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} missing lastname and invalid notes and checking the response status 400
+        Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        When I PUT "/v1/users/abcd1234"
+        """
+            {
+                "forename": "Stan",
+                "lastname": "",
+                "active": true,
+                "status_notes": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eu turpis libero. Sed convallis pharetra mollis. Mauris ex nisi, finibus in mi quis, tincidunt pulvinar risus. Ut iaculis lobortis nisl. Suspendisse venenatis ante congue erat posuere, eget mattis massa facilisis. Vivamus bibendum pharetra suscipit. Integer laoreet molestie velit, vitae euismod ligula dictum eu. Phasellus a fermentum metus, nec dignissim ex. Sed dolor lectus, sollicitudin sit amet imperdiet eget, fringilla nec felis. Morbi commodo diam massa, sed interdum tellus sit"
+            }
+        """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidSurname",
+                        "description": "the submitted user's lastname could not be validated"
+                    },
+                    {
+                        "code": "InvalidStatusNotes",
+                        "description": "the status notes are too long"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} missing forename, lastname and invalid notes and checking the response status 400
+        Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        When I PUT "/v1/users/abcd1234"
+        """
+            {
+                "forename": "",
+                "lastname": "",
+                "active": true,
+                "status_notes": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eu turpis libero. Sed convallis pharetra mollis. Mauris ex nisi, finibus in mi quis, tincidunt pulvinar risus. Ut iaculis lobortis nisl. Suspendisse venenatis ante congue erat posuere, eget mattis massa facilisis. Vivamus bibendum pharetra suscipit. Integer laoreet molestie velit, vitae euismod ligula dictum eu. Phasellus a fermentum metus, nec dignissim ex. Sed dolor lectus, sollicitudin sit amet imperdiet eget, fringilla nec felis. Morbi commodo diam massa, sed interdum tellus sit"
+            }
+        """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidForename",
+                        "description": "the submitted user's forename could not be validated"
+                    },
+                    {
+                        "code": "InvalidSurname",
+                        "description": "the submitted user's lastname could not be validated"
+                    },
+                    {
+                        "code": "InvalidStatusNotes",
+                        "description": "the status notes are too long"
                     }
                 ]
             }

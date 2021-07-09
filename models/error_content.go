@@ -13,6 +13,7 @@ const (
 	WriteResponseError           = "WriteResponseError"
 	InvalidForenameError         = "InvalidForename"
 	InvalidSurnameError          = "InvalidSurname"
+	InvalidStatusNotesError      = "InvalidStatusNotes"
 	InvalidEmailError            = "InvalidEmail"
 	InvalidTokenError            = "InvalidToken"
 	InternalError                = "InternalServerError"
@@ -63,6 +64,7 @@ const (
 	NotImplementedDescription              = "this feature has not been implemented yet"
 	InvalidChallengeSessionDescription     = "no valid auth challenge session was provided"
 	InvalidTokenDescription                = "the submitted token could not be validated"
+	TooLongStatusNotesDescription          = "the status notes are too long"
 )
 
 // Mapping Cognito error codes to API error codes
