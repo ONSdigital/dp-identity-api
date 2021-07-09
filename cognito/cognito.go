@@ -16,4 +16,6 @@ type Client interface {
 	ConfirmForgotPassword(input *cognito.ConfirmForgotPasswordInput) (*cognito.ConfirmForgotPasswordOutput, error)
 	ForgotPassword(input *cognito.ForgotPasswordInput) (*cognito.ForgotPasswordOutput, error)
 	AdminGetUser(input *cognito.AdminGetUserInput) (*cognito.AdminGetUserOutput, error)
+	CreateGroup(input *cognito.CreateGroupInput) (*cognito.CreateGroupOutput, error)
+	GetGroup(input *cognito.GetGroupInput) (*cognito.GetGroupOutput, error)
 }

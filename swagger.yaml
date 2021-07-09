@@ -384,7 +384,7 @@ definitions:
           - "InternalServerError"
           - "NotFound"
           - "UserNotFound"
-          - "AlreadyExists"
+          - "GroupExists"
           - "DeliveryFailure"
           - "InvalidCode"
           - "ExpiredCode"
