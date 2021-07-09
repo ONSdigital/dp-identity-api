@@ -98,6 +98,19 @@ func (p UserParams) ValidateRegistration(ctx context.Context) []error {
 	return validationErrs
 }
 
+//ValidateUpdate validates the required fields for user update, returning validation errors for any failures
+func (p UserParams) ValidateUpdate(ctx context.Context) []error {
+	var validationErrs []error
+	if p.Forename == "" {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidForenameError, InvalidForenameErrorDescription))
+	}
+
+	if p.Lastname == "" {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidSurnameError, InvalidSurnameErrorDescription))
+	}
+	return validationErrs
+}
+
 //CheckForDuplicateEmail checks the Cognito response for users already using the email address, returning a validation error if found
 func (p UserParams) CheckForDuplicateEmail(ctx context.Context, listUserResp *cognitoidentityprovider.ListUsersOutput) error {
 	if len(listUserResp.Users) == 0 {
@@ -137,6 +150,28 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 		TemporaryPassword: &p.Password,
 		UserPoolId:        &userPoolId,
 		Username:          &userId,
+	}
+}
+
+//BuildUpdateUserRequest generates a AdminUpdateUserAttributesInput for Cognito
+func (p UserParams) BuildUpdateUserRequest(userPoolId string) *cognitoidentityprovider.AdminUpdateUserAttributesInput {
+	var (
+		forenameAttrName, surnameAttrName string = "given_name", "family_name"
+	)
+
+	return &cognitoidentityprovider.AdminUpdateUserAttributesInput{
+		UserAttributes: []*cognitoidentityprovider.AttributeType{
+			{
+				Name:  &forenameAttrName,
+				Value: &p.Forename,
+			},
+			{
+				Name:  &surnameAttrName,
+				Value: &p.Lastname,
+			},
+		},
+		UserPoolId: &userPoolId,
+		Username:   &p.ID,
 	}
 }
 

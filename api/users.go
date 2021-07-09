@@ -112,6 +112,60 @@ func (api *API) GetUserHandler(ctx context.Context, w http.ResponseWriter, req *
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
+//UpdateUserHandler updates a users details in Cognito and returns a http handler interface
+func (api *API) UpdateUserHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	defer req.Body.Close()
+	vars := mux.Vars(req)
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, handleBodyReadError(ctx, err)
+	}
+
+	user := models.UserParams{}
+	err = json.Unmarshal(body, &user)
+	if err != nil {
+		return nil, handleBodyUnmarshalError(ctx, err)
+	}
+	user.ID = vars["id"]
+
+	validationErrs := user.ValidateUpdate(ctx)
+
+	if len(validationErrs) != 0 {
+		return nil, models.NewErrorResponse(validationErrs, http.StatusBadRequest, nil)
+	}
+
+	userRequest := user.BuildUpdateUserRequest(api.UserPoolId)
+
+	_, err = api.CognitoClient.AdminUpdateUserAttributes(userRequest)
+	if err != nil {
+		responseErr := models.NewCognitoError(ctx, err, "AdminUpdateUserAttributes request from update user endpoint")
+		errList := []error{responseErr}
+		if responseErr.Code == models.UserNotFoundError {
+			return nil, models.NewErrorResponse(errList, http.StatusNotFound, nil)
+		} else if responseErr.Code == models.InvalidFieldError {
+			return nil, models.NewErrorResponse(errList, http.StatusBadRequest, nil)
+		}
+		return nil, models.NewErrorResponse(errList, http.StatusInternalServerError, nil)
+	}
+
+	userDetailsRequest := user.BuildAdminGetUserRequest(api.UserPoolId)
+	userDetailsResponse, err := api.CognitoClient.AdminGetUser(userDetailsRequest)
+	if err != nil {
+		responseErr := models.NewCognitoError(ctx, err, "AdminGetUser request from update user endpoint")
+		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
+	}
+
+	user.MapCognitoGetResponse(userDetailsResponse)
+
+	jsonResponse, responseErr := user.BuildSuccessfulJsonResponse(ctx)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse([]error{responseErr}, http.StatusInternalServerError, nil)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
+
 //ChangePasswordHandler processes changes to the users password
 func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer req.Body.Close()
