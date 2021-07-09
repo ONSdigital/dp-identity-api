@@ -9,10 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
-
-	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	. "github.com/smartystreets/goconvey/convey"
 )

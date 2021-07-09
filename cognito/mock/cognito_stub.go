@@ -2,8 +2,9 @@ package mock
 
 import (
 	"errors"
-	"github.com/aws/aws-sdk-go/aws"
 	"regexp"
+
+	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 
@@ -251,6 +252,27 @@ func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(input *cognit
 	} else {
 		return nil, errors.New("InvalidParameterException: Unknown Auth Flow")
 	}
+}
+
+func (m *CognitoIdentityProviderClientStub) ConfirmForgotPassword(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+
+	challengeResponseOutput := &cognitoidentityprovider.ConfirmForgotPasswordOutput{}
+
+	if *input.Password == "internalerrorException" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	} else if *input.Password == "invalidpassword" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInvalidPasswordException, "password does not meet requirements", nil)
+	} else if *input.ConfirmationCode == "invalidtoken" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeCodeMismatchException, "verification token does not meet requirements", nil)
+	}
+
+	for _, user := range m.Users {
+		if user.Email == *input.Username {
+			return challengeResponseOutput, nil
+		}
+	}
+	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "user not found", nil)
+
 }
 
 func (m *CognitoIdentityProviderClientStub) ForgotPassword(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
