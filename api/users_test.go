@@ -293,7 +293,7 @@ func TestGetUserHandler(t *testing.T) {
 	api, w, m := apiSetup()
 
 	Convey("Get user - check expected responses", t, func() {
-		adminCreateUsersTests := []struct {
+		adminGetUsersTests := []struct {
 			getUserFunction func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
 			httpResponse    int
 		}{
@@ -346,7 +346,7 @@ func TestGetUserHandler(t *testing.T) {
 			},
 		}
 
-		for _, tt := range adminCreateUsersTests {
+		for _, tt := range adminGetUsersTests {
 			m.AdminGetUserFunc = tt.getUserFunction
 
 			r := httptest.NewRequest(http.MethodGet, userEndPoint, nil)
@@ -361,6 +361,162 @@ func TestGetUserHandler(t *testing.T) {
 				So(successResponse.Status, ShouldEqual, tt.httpResponse)
 				So(errorResponse, ShouldBeNil)
 			}
+		}
+	})
+}
+
+func TestUpdateUserHandler(t *testing.T) {
+	var (
+		ctx                                                        = context.Background()
+		forename, lastname, status, email, userId, roleType string = "bob", "bobbings", "UNCONFIRMED", "foo_bar123@ext.ons.gov.uk", "abcd1234", "Viewer"
+		givenNameAttr, familyNameAttr, emailAttr            string = "given_name", "family_name", "email"
+	)
+
+	api, w, m := apiSetup()
+
+	successfullyGetUser := []*cognitoidentityprovider.AttributeType{
+		{
+			Name:  &givenNameAttr,
+			Value: &forename,
+		},
+		{
+			Name:  &familyNameAttr,
+			Value: &lastname,
+		},
+		{
+			Name:  &emailAttr,
+			Value: &email,
+		},
+	}
+
+	Convey("Update user - check expected responses", t, func() {
+		adminCreateUsersTests := []struct {
+			updateUserFunction func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error)
+			getUserFunction    func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
+			userForename       string
+			assertions         func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+		}{
+			{
+				// 200 response from Cognito
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
+					return user, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+					user := &cognitoidentityprovider.AdminGetUserOutput{
+						UserAttributes: successfullyGetUser,
+						UserStatus:     &status,
+						Username:       &userId,
+					}
+					return user, nil
+				},
+				forename,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(errorResponse, ShouldBeNil)
+				},
+			},
+			{
+				// 500 response from Cognito
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := "Something strange happened"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+					user := &cognitoidentityprovider.AdminGetUserOutput{
+						UserAttributes: successfullyGetUser,
+						UserStatus:     &status,
+						Username:       &userId,
+					}
+					return user, nil
+				},
+				forename,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+				},
+			},
+			{
+				//404 response from Cognito
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					awsErrCode := "UserNotFoundException"
+					awsErrMessage := "user could not be found"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+					user := &cognitoidentityprovider.AdminGetUserOutput{
+						UserAttributes: successfullyGetUser,
+						UserStatus:     &status,
+						Username:       &userId,
+					}
+					return user, nil
+				},
+				forename,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusNotFound)
+				},
+			},
+			{
+				//local validation failure
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
+					return user, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+					user := &cognitoidentityprovider.AdminGetUserOutput{
+						UserAttributes: successfullyGetUser,
+						UserStatus:     &status,
+						Username:       &userId,
+					}
+					return user, nil
+				},
+				"",
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+				},
+			},
+			{
+				//reload user details failure
+				func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
+					return user, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+					awsErrCode := "UserNotFoundException"
+					awsErrMessage := "user could not be found"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				forename,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+				},
+			},
+		}
+
+		for _, tt := range adminCreateUsersTests {
+			m.AdminUpdateUserAttributesFunc = tt.updateUserFunction
+			m.AdminGetUserFunc = tt.getUserFunction
+
+			postBody := map[string]interface{}{"forename": tt.userForename, "lastname": lastname, "status": status, "role_type": roleType}
+			body, err := json.Marshal(postBody)
+
+			So(err, ShouldBeNil)
+
+			r := httptest.NewRequest(http.MethodGet, userEndPoint, bytes.NewReader(body))
+
+			successResponse, errorResponse := api.UpdateUserHandler(ctx, w, r)
+
+			tt.assertions(successResponse, errorResponse)
 		}
 	})
 }

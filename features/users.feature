@@ -260,6 +260,163 @@ Feature: Users
             }
             """
 
+    Scenario: PUT /v1/users/{id} to update users names and checking the response status 200
+        Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        When I PUT "/v1/users/abcd1234"
+        """
+            {
+                "forename": "Changed",
+                "lastname": "Names",
+                "status": "CONFIRMED"
+            }
+        """
+        Then I should receive the following JSON response with status "200":
+            """
+            {
+                "id": "abcd1234",
+                "forename": "Changed",
+                "lastname": "Names",
+                "email": "email@ons.gov.uk",
+                "groups": [],
+                "status": "CONFIRMED"
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} missing forename and checking the response status 400
+        Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        When I PUT "/v1/users/abcd1234"
+        """
+            {
+                "forename": "",
+                "lastname": "Smith",
+                "status": "CONFIRMED"
+            }
+        """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidForename",
+                        "description": "the submitted user's forename could not be validated"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} missing lastname and checking the response status 400
+        Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        When I PUT "/v1/users/abcd1234"
+        """
+            {
+                "forename": "Bob",
+                "lastname": "",
+                "status": "CONFIRMED"
+            }
+        """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidSurname",
+                        "description": "the submitted user's lastname could not be validated"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} missing forename and lastname and checking the response status 400
+        Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        When I PUT "/v1/users/abcd1234"
+        """
+            {
+                "forename": "",
+                "lastname": "",
+                "status": "CONFIRMED"
+            }
+        """
+        Then I should receive the following JSON response with status "400":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidForename",
+                        "description": "the submitted user's forename could not be validated"
+                    },
+                    {
+                        "code": "InvalidSurname",
+                        "description": "the submitted user's lastname could not be validated"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} user not found and checking the response status 404
+        When I PUT "/v1/users/abcd1234"
+            """
+            {
+                "forename": "Bob",
+                "lastname": "Smith",
+                "status": "CONFIRMED"
+            }
+            """
+        Then I should receive the following JSON response with status "404":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "UserNotFound",
+                        "description": "the user could not be found"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} unexpected server error updating user and checking the response status 500
+        Given a user with username "abcd1234" and email "update.internalerror@ons.gov.uk" exists in the database
+        When I PUT "/v1/users/abcd1234"
+            """
+            {
+                "forename": "Bob",
+                "lastname": "Smith",
+                "status": "CONFIRMED"
+            }
+            """
+        Then I should receive the following JSON response with status "500":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InternalServerError",
+                        "description": "Something went wrong"
+                    }
+                ]
+            }
+            """
+
+    Scenario: PUT /v1/users/{id} unexpected server error loading updated user and checking the response status 500
+        Given a user with username "abcd1234" and email "internal.error@ons.gov.uk" exists in the database
+        When I PUT "/v1/users/abcd1234"
+            """
+            {
+                "forename": "Bob",
+                "lastname": "Smith",
+                "status": "CONFIRMED"
+            }
+            """
+        Then I should receive the following JSON response with status "500":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InternalServerError",
+                        "description": "Something went wrong"
+                    }
+                ]
+            }
+            """
+
     Scenario: PUT /v1/users/self/password and checking the response status 202
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
         When I PUT "/v1/users/self/password"

@@ -39,6 +39,7 @@ func TestSetup(t *testing.T) {
 			So(hasRoute(api.Router, "/v1/users", "POST"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/users", "GET"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/users/{id}", "GET"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/users/{id}", "PUT"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/users/self/password", "PUT"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/password-reset", "POST"), ShouldBeTrue)
 		})
