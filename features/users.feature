@@ -1116,5 +1116,5 @@ Feature: Users
                 "verification_token": "auth-challenge-session"
             }
         """
-        Then the HTTP status code should be "202"
+        Then the HTTP status code should be "202"\
         

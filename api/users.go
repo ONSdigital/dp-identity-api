@@ -3,9 +3,10 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/gorilla/mux"
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/google/uuid"
@@ -222,7 +223,7 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 		_, cognitoErr := api.CognitoClient.ConfirmForgotPassword(changeForgottenPasswordRequest)
 
 		if cognitoErr != nil {
-			parsedErr := models.NewCognitoError(ctx, cognitoErr, "ConfirmForgottenPassword request, NEW_PASSWORD_REQUIRED type, from change password endpoint")
+			parsedErr := models.NewCognitoError(ctx, cognitoErr, "ConfirmForgottenPassword request from change password endpoint")
 			// change string
 			if parsedErr.Code == models.InternalError {
 				return nil, models.NewErrorResponse([]error{parsedErr}, http.StatusInternalServerError, nil)
