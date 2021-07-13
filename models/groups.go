@@ -74,3 +74,10 @@ func (g *Group) BuildAddUserToGroupRequest(userPoolId, userId string) *cognitoid
 		Username:   &userId,
 	}
 }
+
+// MapCognitoDetails maps the group details returned from GetGroup requests
+func (g *Group) MapCognitoDetails(groupDetails *cognitoidentityprovider.GroupType) {
+	g.Name = *groupDetails.GroupName
+	g.Precedence = *groupDetails.Precedence
+	g.Description = *groupDetails.Description
+}

@@ -3,6 +3,7 @@ package models_test
 import (
 	"context"
 	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"reflect"
 	"testing"
@@ -93,7 +94,7 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 	})
 }
 
-func TestGroups_BuildCreateGroupRequest(t *testing.T) {
+func TestGroup_BuildCreateGroupRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito CreateGroup request body", t, func() {
 
 		group := models.Group{
@@ -114,7 +115,7 @@ func TestGroups_BuildCreateGroupRequest(t *testing.T) {
 	})
 }
 
-func TestGroups_BuildGetGroupRequest(t *testing.T) {
+func TestGroup_BuildGetGroupRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito GetGroup request body", t, func() {
 
 		group := models.Group{
@@ -131,7 +132,7 @@ func TestGroups_BuildGetGroupRequest(t *testing.T) {
 	})
 }
 
-func TestGroups_BuildAddUserToGroupRequest(t *testing.T) {
+func TestGroup_BuildAddUserToGroupRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito GetGroup request body", t, func() {
 		group := models.Group{
 			Name: "role-test",
@@ -145,5 +146,23 @@ func TestGroups_BuildAddUserToGroupRequest(t *testing.T) {
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
 		So(*response.GroupName, ShouldEqual, group.Name)
 		So(*response.Username, ShouldEqual, userId)
+	})
+}
+
+func TestGroup_MapCognitoDetails(t *testing.T) {
+	Convey("correctly maps values from Cognito GroupType", t, func() {
+		group := models.Group{}
+
+		response := &cognitoidentityprovider.GroupType{
+			Description: aws.String("A test group"),
+			GroupName:   aws.String("test-group"),
+			Precedence:  aws.Int64(1),
+		}
+
+		group.MapCognitoDetails(response)
+
+		So(group.Description, ShouldEqual, *response.Description)
+		So(group.Name, ShouldEqual, *response.GroupName)
+		So(group.Precedence, ShouldEqual, *response.Precedence)
 	})
 }
