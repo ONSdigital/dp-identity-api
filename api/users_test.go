@@ -626,7 +626,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 		verification_token string = "999999"
 	)
 
-	api, w, _ := apiSetup()
+	api, w, m := apiSetup()
 	Convey("ConfirmForgotPassword - check expected responses", t, func() {
 		confirmForgotPasswordTests := []struct {
 			confirmForgotPasswordFunction func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error)
@@ -687,6 +687,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 		}
 
 		for _, tt := range confirmForgotPasswordTests {
+			m.ConfirmForgotPasswordFunc = tt.confirmForgotPasswordFunction;
 
 			postBody := map[string]interface{}{"type": models.ForgottenPasswordType, "email": email, "password": password, "verification_token": verification_token}
 			body, _ := json.Marshal(postBody)
