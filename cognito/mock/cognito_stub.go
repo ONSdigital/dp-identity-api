@@ -4,7 +4,7 @@ import (
 	"errors"
 	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"q
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	"github.com/ONSdigital/dp-identity-api/models"
