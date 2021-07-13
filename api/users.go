@@ -3,9 +3,10 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/gorilla/mux"
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/google/uuid"
@@ -195,7 +196,7 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 		result, cognitoErr := api.CognitoClient.RespondToAuthChallenge(changePasswordRequest)
 
 		if cognitoErr != nil {
-			parsedErr := models.NewCognitoError(ctx, cognitoErr, "RespondToAuthChallenge request, NEW_PASSWORD_REQUIRED type, from change password endpoint")
+			parsedErr := models.NewCognitoError(ctx, cognitoErr, "RespondToAuthChallenge request from change password endpoint")
 			if parsedErr.Code == models.InternalError {
 				return nil, models.NewErrorResponse([]error{parsedErr}, http.StatusInternalServerError, nil)
 			} else if parsedErr.Code == models.InvalidPasswordError || parsedErr.Code == models.InvalidCodeError {
@@ -213,9 +214,23 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 			}
 		}
 	} else if changePasswordParams.ChangeType == models.ForgottenPasswordType {
-		// This feature is to be added in a separate ticket later
-		err = models.NewValidationError(ctx, models.NotImplementedError, models.NotImplementedDescription)
-		return nil, models.NewErrorResponse([]error{err}, http.StatusNotImplemented, nil)
+		validationErrs := changePasswordParams.ValidateForgottenPasswordRequiredRequest(ctx)
+		if len(validationErrs) != 0 {
+			return nil, models.NewErrorResponse(validationErrs, http.StatusBadRequest, nil)
+		}
+		changeForgottenPasswordRequest := changePasswordParams.BuildConfirmForgotPasswordRequest(api.ClientSecret, api.ClientId)
+
+		_, cognitoErr := api.CognitoClient.ConfirmForgotPassword(changeForgottenPasswordRequest)
+
+		if cognitoErr != nil {
+			parsedErr := models.NewCognitoError(ctx, cognitoErr, "ConfirmForgottenPassword request from change password endpoint")
+			if parsedErr.Code == models.InternalError {
+				return nil, models.NewErrorResponse([]error{parsedErr}, http.StatusInternalServerError, nil)
+			} else if parsedErr.Code == models.InvalidPasswordError || parsedErr.Code == models.InvalidCodeError {
+				return nil, models.NewErrorResponse([]error{parsedErr}, http.StatusBadRequest, nil)
+			}
+		}
+
 	} else {
 		err = models.NewValidationError(ctx, models.UnknownRequestTypeError, models.UnknownPasswordChangeTypeDescription)
 		return nil, models.NewErrorResponse([]error{err}, http.StatusBadRequest, nil)
