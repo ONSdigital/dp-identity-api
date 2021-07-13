@@ -60,6 +60,7 @@ func (p *UsersList) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, er
 	return jsonResponse, nil
 }
 
+//Model for the User
 type UserParams struct {
 	Forename string   `json:"forename"`
 	Lastname string   `json:"lastname"`
@@ -93,6 +94,19 @@ func (p UserParams) ValidateRegistration(ctx context.Context) []error {
 
 	if !validation.ValidateONSEmail(p.Email) {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription))
+	}
+	return validationErrs
+}
+
+//ValidateUpdate validates the required fields for user update, returning validation errors for any failures
+func (p UserParams) ValidateUpdate(ctx context.Context) []error {
+	var validationErrs []error
+	if p.Forename == "" {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidForenameError, InvalidForenameErrorDescription))
+	}
+
+	if p.Lastname == "" {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidSurnameError, InvalidSurnameErrorDescription))
 	}
 	return validationErrs
 }
@@ -136,6 +150,28 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 		TemporaryPassword: &p.Password,
 		UserPoolId:        &userPoolId,
 		Username:          &userId,
+	}
+}
+
+//BuildUpdateUserRequest generates a AdminUpdateUserAttributesInput for Cognito
+func (p UserParams) BuildUpdateUserRequest(userPoolId string) *cognitoidentityprovider.AdminUpdateUserAttributesInput {
+	var (
+		forenameAttrName, surnameAttrName string = "given_name", "family_name"
+	)
+
+	return &cognitoidentityprovider.AdminUpdateUserAttributesInput{
+		UserAttributes: []*cognitoidentityprovider.AttributeType{
+			{
+				Name:  &forenameAttrName,
+				Value: &p.Forename,
+			},
+			{
+				Name:  &surnameAttrName,
+				Value: &p.Lastname,
+			},
+		},
+		UserPoolId: &userPoolId,
+		Username:   &p.ID,
 	}
 }
 

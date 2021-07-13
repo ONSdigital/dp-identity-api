@@ -13,7 +13,6 @@ import (
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -23,14 +22,12 @@ const tokenRefreshEndPoint = "http://localhost:25600/v1/tokens/self"
 
 func TestAPI_TokensHandler(t *testing.T) {
 	var (
-		r                                               = mux.NewRouter()
-		ctx                                             = context.Background()
-		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "USER_PASSWORD_AUTH"
-		accessToken, idToken, refreshToken       string = "aaaa.bbbb.cccc", "llll.mmmm.nnnn", "zzzz.yyyy.xxxx.wwww.vvvv"
-		expireLength                             int64  = 500
+		ctx                                       = context.Background()
+		accessToken, idToken, refreshToken string = "aaaa.bbbb.cccc", "llll.mmmm.nnnn", "zzzz.yyyy.xxxx.wwww.vvvv"
+		expireLength                       int64  = 500
 	)
 
-	m := &mock.MockCognitoIdentityProviderClient{}
+	api, w, m := apiSetup()
 
 	// mock call to: AdminUserGlobalSignOut(input *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
 	m.AdminUserGlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
@@ -47,9 +44,6 @@ func TestAPI_TokensHandler(t *testing.T) {
 			},
 		}, nil
 	}
-
-	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow)
-	w := httptest.NewRecorder()
 
 	Convey("Sign in success: no ErrorResponse, SuccessResponse Status 201", t, func() {
 		body := map[string]interface{}{
@@ -115,8 +109,8 @@ func TestAPI_TokensHandler(t *testing.T) {
 
 	Convey("Sign In Cognito request error: adds an error to the ErrorResponse and sets the Status correctly", t, func() {
 		statusTests := []struct {
-			awsErrCode string
-			awsErrMessage string
+			awsErrCode       string
+			awsErrMessage    string
 			httpResponseCode int
 		}{
 			// http.StatusBadRequest - 400
@@ -139,7 +133,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 			m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 				return nil, awsErr
 			}
-	
+
 			body := map[string]interface{}{
 				"email":    "email@ons.gov.uk",
 				"password": "password",
@@ -147,11 +141,11 @@ func TestAPI_TokensHandler(t *testing.T) {
 			jsonBody, err := json.Marshal(&body)
 			So(err, ShouldBeNil)
 			request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
-	
+
 			successResponse, errorResponse := api.TokensHandler(ctx, w, request)
-	
+
 			request.Header.Get(WWWAuthenticateName)
-	
+
 			So(successResponse, ShouldBeNil)
 			So(errorResponse.Status, ShouldEqual, tt.httpResponseCode)
 			So(len(errorResponse.Errors), ShouldEqual, 1)
@@ -170,8 +164,8 @@ func TestAPI_TokensHandler(t *testing.T) {
 			challengeName := "NEW_PASSWORD_REQUIRED"
 			return &cognitoidentityprovider.InitiateAuthOutput{
 				AuthenticationResult: nil,
-				ChallengeName: &challengeName,
-				Session: &sessionID,
+				ChallengeName:        &challengeName,
+				Session:              &sessionID,
 			}, nil
 		}
 
@@ -196,21 +190,14 @@ func TestAPI_TokensHandler(t *testing.T) {
 }
 
 func TestAPI_SignOutHandler(t *testing.T) {
-	var (
-		r                                               = mux.NewRouter()
-		ctx                                             = context.Background()
-		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "USER_PASSWORD_AUTH"
-	)
+	var ctx = context.Background()
 
-	m := &mock.MockCognitoIdentityProviderClient{}
+	api, w, m := apiSetup()
 
 	// mock call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
 	m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 		return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
 	}
-
-	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow)
-	w := httptest.NewRecorder()
 
 	Convey("Global Sign Out success: no errors added to ErrorResponse Errors list", t, func() {
 		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
@@ -280,14 +267,12 @@ func TestAPI_SignOutHandler(t *testing.T) {
 
 func TestAPI_RefreshHandler(t *testing.T) {
 	var (
-		r                                               = mux.NewRouter()
-		ctx                                             = context.Background()
-		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "USER_PASSWORD_AUTH"
-		accessToken, returnIdToken               string = "aaaa.bbbb.cccc", "llll.mmmm.nnnn"
-		expireLength                             int64  = 500
+		ctx                               = context.Background()
+		accessToken, returnIdToken string = "aaaa.bbbb.cccc", "llll.mmmm.nnnn"
+		expireLength               int64  = 500
 	)
 
-	m := &mock.MockCognitoIdentityProviderClient{}
+	api, w, m := apiSetup()
 
 	// mock call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
 	m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
@@ -299,9 +284,6 @@ func TestAPI_RefreshHandler(t *testing.T) {
 			},
 		}, nil
 	}
-
-	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow)
-	w := httptest.NewRecorder()
 
 	Convey("Token refresh success: no errors added to ErrorResponse Errors list", t, func() {
 		request := httptest.NewRequest(http.MethodPut, tokenRefreshEndPoint, nil)

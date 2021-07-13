@@ -53,6 +53,10 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 		return nil, models.NewError(ctx, nil, models.MissingConfigError, models.MissingConfigDescription)
 	}
 
+	if err := initialiseRoleGroups(ctx, cognitoClient, userPoolId); err != nil {
+		return nil, err
+	}
+
 	api := &API{
 		Router:         r,
 		CognitoClient:  cognitoClient,
@@ -62,17 +66,18 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 		ClientAuthFlow: clientAuthFlow,
 	}
 
-	r.HandleFunc("/v1/tokens", contextAndErrors(api.TokensHandler)).Methods("POST")
+	r.HandleFunc("/v1/tokens", contextAndErrors(api.TokensHandler)).Methods(http.MethodPost)
 	// self used in paths rather than identifier as the identifier is JWT tokens passed in the request headers
-	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.SignOutHandler)).Methods("DELETE")
-	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.RefreshHandler)).Methods("PUT")
-	r.HandleFunc("/v1/users", contextAndErrors(api.CreateUserHandler)).Methods("POST")
-	r.HandleFunc("/v1/users", contextAndErrors(api.ListUsersHandler)).Methods("GET")
-	r.HandleFunc("/v1/users/{id}", contextAndErrors(api.GetUserHandler)).Methods("GET")
+	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.SignOutHandler)).Methods(http.MethodDelete)
+	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.RefreshHandler)).Methods(http.MethodPut)
+	r.HandleFunc("/v1/users", contextAndErrors(api.CreateUserHandler)).Methods(http.MethodPost)
+	r.HandleFunc("/v1/users", contextAndErrors(api.ListUsersHandler)).Methods(http.MethodGet)
+	r.HandleFunc("/v1/users/{id}", contextAndErrors(api.GetUserHandler)).Methods(http.MethodGet)
+	r.HandleFunc("/v1/users/{id}", contextAndErrors(api.UpdateUserHandler)).Methods(http.MethodPut)
 	// self used in paths rather than identifier as the identifier is a Cognito Session string in change password requests
 	// the user id is not yet available from the previous responses
-	r.HandleFunc("/v1/users/self/password", contextAndErrors(api.ChangePasswordHandler)).Methods("PUT")
-	r.HandleFunc("/v1/password-reset", contextAndErrors(api.PasswordResetHandler)).Methods("POST")
+	r.HandleFunc("/v1/users/self/password", contextAndErrors(api.ChangePasswordHandler)).Methods(http.MethodPut)
+	r.HandleFunc("/v1/password-reset", contextAndErrors(api.PasswordResetHandler)).Methods(http.MethodPost)
 	return api, nil
 }
 
@@ -131,4 +136,28 @@ func handleBodyUnmarshalError(ctx context.Context, err error) *models.ErrorRespo
 		http.StatusInternalServerError,
 		nil,
 	)
+}
+
+func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, userPoolId string) error {
+	adminGroup := models.NewAdminRoleGroup()
+	adminGroupCreateInput := adminGroup.BuildCreateGroupRequest(userPoolId)
+	_, err := cognitoClient.CreateGroup(adminGroupCreateInput)
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for admin group from API start up")
+		if cognitoErr.Code != models.GroupExistsError {
+			return cognitoErr
+		}
+	}
+
+	publisherGroup := models.NewPublisherRoleGroup()
+	publisherGroupCreateInput := publisherGroup.BuildCreateGroupRequest(userPoolId)
+	_, err = cognitoClient.CreateGroup(publisherGroupCreateInput)
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for publisher group from API start up")
+		if cognitoErr.Code != models.GroupExistsError {
+			return cognitoErr
+		}
+	}
+
+	return nil
 }

@@ -3,6 +3,8 @@ package healthcheck_test
 import (
 	"context"
 	"errors"
+	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"net/http"
 	"testing"
 
@@ -30,6 +32,12 @@ func TestGetHealthCheck(t *testing.T) {
 		awsUserPoolID := "us-west-2_aaaaaaaaa"
 		checkState := health.NewCheckState("dp-identity-api-test")
 
+		m.GetGroupFunc = func(inputData *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+			group := &cognitoidentityprovider.GetGroupOutput{
+				Group: &cognitoidentityprovider.GroupType{},
+			}
+			return group, nil
+		}
 		checker := healthcheck.CognitoHealthCheck(m, &awsUserPoolID)
 		err := checker(ctx, checkState)
 		Convey("When GetHealthCheck is called", func() {
@@ -42,17 +50,86 @@ func TestGetHealthCheck(t *testing.T) {
 	})
 
 	Convey("dp-identity-api healthchecker reports critical", t, func() {
-		awsUserPoolID := "us-west-2_aaaaaaaab"
+		Convey("When the user pool can't be found", func() {
+			m.GetGroupFunc = func(inputData *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+				group := &cognitoidentityprovider.GetGroupOutput{
+					Group: &cognitoidentityprovider.GroupType{},
+				}
+				return group, nil
+			}
 
-		checkState := health.NewCheckState("dp-identity-api-test")
+			awsUserPoolID := "us-west-2_aaaaaaaab"
 
-		checker := healthcheck.CognitoHealthCheck(m, &awsUserPoolID)
-		err := checker(ctx, checkState)
-		Convey("When GetHealthCheck is called", func() {
-			Convey("Then the HealthCheck flag is set to true and HealthCheck is returned", func() {
-				So(checkState.StatusCode(), ShouldEqual, http.StatusTooManyRequests)
-				So(checkState.Status(), ShouldEqual, health.StatusCritical)
-				So(err, ShouldNotBeNil)
+			checkState := health.NewCheckState("dp-identity-api-test")
+
+			checker := healthcheck.CognitoHealthCheck(m, &awsUserPoolID)
+			err := checker(ctx, checkState)
+			Convey("When GetHealthCheck is called", func() {
+				Convey("Then the HealthCheck flag is set to true and HealthCheck is returned", func() {
+					So(checkState.StatusCode(), ShouldEqual, http.StatusTooManyRequests)
+					So(checkState.Status(), ShouldEqual, health.StatusCritical)
+					So(err, ShouldNotBeNil)
+				})
+			})
+		})
+
+		Convey("When a role group can't be found", func() {
+			awsUserPoolID := "us-west-2_aaaaaaaaa"
+
+			Convey("the admin role group is missing", func() {
+				m.GetGroupFunc = func(inputData *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+					if *inputData.GroupName == models.AdminRoleGroup {
+						awsErrCode := "ResourceNotFoundException"
+						awsErrMessage := "Group not found."
+						awsOrigErr := errors.New(awsErrCode)
+						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						return nil, awsErr
+					}
+					group := &cognitoidentityprovider.GetGroupOutput{
+						Group: &cognitoidentityprovider.GroupType{},
+					}
+					return group, nil
+				}
+
+				checkState := health.NewCheckState("dp-identity-api-test")
+
+				checker := healthcheck.CognitoHealthCheck(m, &awsUserPoolID)
+				err := checker(ctx, checkState)
+				Convey("When GetHealthCheck is called", func() {
+					Convey("Then the HealthCheck flag is set to true and HealthCheck is returned", func() {
+						So(checkState.StatusCode(), ShouldEqual, http.StatusTooManyRequests)
+						So(checkState.Status(), ShouldEqual, health.StatusCritical)
+						So(err, ShouldNotBeNil)
+					})
+				})
+			})
+
+			Convey("the publisher role group is missing", func() {
+				m.GetGroupFunc = func(inputData *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+					if *inputData.GroupName == models.PublisherRoleGroup {
+						awsErrCode := "ResourceNotFoundException"
+						awsErrMessage := "Group not found."
+						awsOrigErr := errors.New(awsErrCode)
+						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						return nil, awsErr
+					}
+					group := &cognitoidentityprovider.GetGroupOutput{
+						Group: &cognitoidentityprovider.GroupType{},
+					}
+					return group, nil
+				}
+
+				checkState := health.NewCheckState("dp-identity-api-test")
+
+				checker := healthcheck.CognitoHealthCheck(m, &awsUserPoolID)
+				err := checker(ctx, checkState)
+				Convey("When GetHealthCheck is called", func() {
+					Convey("Then the HealthCheck flag is set to true and HealthCheck is returned", func() {
+						So(checkState.StatusCode(), ShouldEqual, http.StatusTooManyRequests)
+						So(checkState.Status(), ShouldEqual, health.StatusCritical)
+						So(err, ShouldNotBeNil)
+					})
+				})
 			})
 		})
 	})

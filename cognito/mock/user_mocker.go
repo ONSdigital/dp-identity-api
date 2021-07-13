@@ -18,7 +18,7 @@ func (m *CognitoIdentityProviderClientStub) AddUserWithUsername(username, email 
 	m.Users = append(m.Users, m.GenerateUser(username, email, "", "", "", isConfirmed))
 }
 
-func (m *CognitoIdentityProviderClientStub) GenerateUser(id, email, password, givenName, familyName string, isConfirmed bool) User {
+func (m *CognitoIdentityProviderClientStub) GenerateUser(id, email, password, givenName, familyName string, isConfirmed bool) *User {
 	statusString := "FORCE_CHANGE_PASSWORD"
 	if isConfirmed {
 		statusString = "CONFIRMED"
@@ -39,7 +39,7 @@ func (m *CognitoIdentityProviderClientStub) GenerateUser(id, email, password, gi
 		familyName = "Smith"
 	}
 
-	return User{
+	return &User{
 		ID:         id,
 		Email:      email,
 		Password:   password,

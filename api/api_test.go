@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -20,7 +22,15 @@ func TestSetup(t *testing.T) {
 	Convey("Given an API instance", t, func() {
 		r := mux.NewRouter()
 		ctx := context.Background()
-		api, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, "us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow")
+
+		m := &mock.MockCognitoIdentityProviderClient{}
+		m.CreateGroupFunc = func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+			group := &cognitoidentityprovider.CreateGroupOutput{
+				Group: &cognitoidentityprovider.GroupType{},
+			}
+			return group, nil
+		}
+		api, err := Setup(ctx, r, m, "us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow")
 
 		Convey("When created the following route(s) should have been added", func() {
 			So(hasRoute(api.Router, "/v1/tokens", "POST"), ShouldBeTrue)
@@ -29,6 +39,7 @@ func TestSetup(t *testing.T) {
 			So(hasRoute(api.Router, "/v1/users", "POST"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/users", "GET"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/users/{id}", "GET"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/users/{id}", "PUT"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/users/self/password", "PUT"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/password-reset", "POST"), ShouldBeTrue)
 		})
@@ -103,6 +114,28 @@ func hasRoute(r *mux.Router, path, method string) bool {
 	req := httptest.NewRequest(method, path, nil)
 	match := &mux.RouteMatch{}
 	return r.Match(req, match)
+}
+
+func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProviderClient) {
+	var (
+		ctx                                             = context.Background()
+		r                                               = mux.NewRouter()
+		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "USER_PASSWORD_AUTH"
+	)
+
+	m := &mock.MockCognitoIdentityProviderClient{}
+	m.CreateGroupFunc = func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+		group := &cognitoidentityprovider.CreateGroupOutput{
+			Group: &cognitoidentityprovider.GroupType{},
+		}
+		return group, nil
+	}
+
+	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow)
+
+	w := httptest.NewRecorder()
+
+	return api, w, m
 }
 
 func TestWriteErrorResponse(t *testing.T) {
@@ -189,5 +222,90 @@ func TestHandleBodyUnmarshalError(t *testing.T) {
 		castErr := errResponse.Errors[0].(*models.Error)
 		So(castErr.Code, ShouldEqual, models.JSONUnmarshalError)
 		So(castErr.Description, ShouldEqual, models.ErrorUnmarshalFailedDescription)
+	})
+}
+
+func TestInitialiseRoleGroups(t *testing.T) {
+	Convey("Initialise role groups - check expected responses", t, func() {
+		m := &mock.MockCognitoIdentityProviderClient{}
+
+		ctx := context.Background()
+
+		userPoolId := "us-west-11_bxushuds"
+
+		adminCreateUsersTests := []struct {
+			createGroupFunction func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error)
+			err                 error
+		}{
+			{
+				// neither group exists
+				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+					group := &cognitoidentityprovider.CreateGroupOutput{
+						Group: &cognitoidentityprovider.GroupType{},
+					}
+					return group, nil
+				},
+				nil,
+			},
+			{
+				// admin group exists
+				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+					if *input.GroupName == models.AdminRoleGroup {
+						awsErrCode := "GroupExistsException"
+						awsErrMessage := "This group exists"
+						awsOrigErr := errors.New(awsErrCode)
+						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						return nil, awsErr
+					} else {
+						group := &cognitoidentityprovider.CreateGroupOutput{
+							Group: &cognitoidentityprovider.GroupType{},
+						}
+						return group, nil
+					}
+				},
+				nil,
+			},
+			{
+				// publisher group exists
+				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+					if *input.GroupName == models.PublisherRoleGroup {
+						awsErrCode := "GroupExistsException"
+						awsErrMessage := "This group exists"
+						awsOrigErr := errors.New(awsErrCode)
+						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						return nil, awsErr
+					} else {
+						group := &cognitoidentityprovider.CreateGroupOutput{
+							Group: &cognitoidentityprovider.GroupType{},
+						}
+						return group, nil
+					}
+				},
+				nil,
+			},
+			{
+				// create group internal error
+				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := "Something weird happened"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				models.NewError(ctx, nil, models.InternalError, "Something weird happened"),
+			},
+		}
+
+		for _, tt := range adminCreateUsersTests {
+			m.CreateGroupFunc = tt.createGroupFunction
+
+			err := initialiseRoleGroups(ctx, m, userPoolId)
+
+			if tt.err == nil {
+				So(err, ShouldBeNil)
+			} else {
+				So(err, ShouldNotBeNil)
+			}
+		}
 	})
 }

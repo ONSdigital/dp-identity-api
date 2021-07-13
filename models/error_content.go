@@ -18,7 +18,7 @@ const (
 	InternalError                = "InternalServerError"
 	NotFoundError                = "NotFound"
 	UserNotFoundError            = "UserNotFound"
-	AlreadyExistsError           = "AlreadyExists"
+	GroupExistsError             = "GroupExists"
 	DeliveryFailureError         = "DeliveryFailure"
 	InvalidCodeError             = "InvalidCode"
 	ExpiredCodeError             = "ExpiredCode"
@@ -71,7 +71,7 @@ var CognitoErrorMapping = map[string]string{
 	cognitoidentityprovider.ErrCodeCodeMismatchException:           InvalidCodeError,
 	cognitoidentityprovider.ErrCodeConcurrentModificationException: InternalError,
 	cognitoidentityprovider.ErrCodeExpiredCodeException:            ExpiredCodeError,
-	cognitoidentityprovider.ErrCodeGroupExistsException:            AlreadyExistsError,
+	cognitoidentityprovider.ErrCodeGroupExistsException:            GroupExistsError,
 	cognitoidentityprovider.ErrCodeInvalidOAuthFlowException:       InternalError,
 	cognitoidentityprovider.ErrCodeInvalidParameterException:       InvalidFieldError,
 	cognitoidentityprovider.ErrCodeInvalidPasswordException:        InvalidPasswordError,
