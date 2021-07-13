@@ -196,7 +196,7 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 		result, cognitoErr := api.CognitoClient.RespondToAuthChallenge(changePasswordRequest)
 
 		if cognitoErr != nil {
-			parsedErr := models.NewCognitoError(ctx, cognitoErr, "RespondToAuthChallenge request, NEW_PASSWORD_REQUIRED type, from change password endpoint")
+			parsedErr := models.NewCognitoError(ctx, cognitoErr, "RespondToAuthChallenge request from change password endpoint")
 			if parsedErr.Code == models.InternalError {
 				return nil, models.NewErrorResponse([]error{parsedErr}, http.StatusInternalServerError, nil)
 			} else if parsedErr.Code == models.InvalidPasswordError || parsedErr.Code == models.InvalidCodeError {
