@@ -1,5 +1,5 @@
 Feature: Users
-ƒ
+
     Scenario: POST /v1/users and checking the response status 201
         When I POST "/v1/users"
             """
