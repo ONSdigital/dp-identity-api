@@ -12,9 +12,10 @@ const (
 
 //Type to map for the Cognito GroupType object
 type Group struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Precedence  int64  `json:"precedence"`
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Precedence  int64        `json:"precedence"`
+	Members     []UserParams `json:"members"`
 }
 
 // Constructor for a new instance of the admin role group
@@ -88,4 +89,12 @@ func (g *Group) MapCognitoDetails(groupDetails *cognitoidentityprovider.GroupTyp
 	g.Name = *groupDetails.GroupName
 	g.Precedence = *groupDetails.Precedence
 	g.Description = *groupDetails.Description
+}
+
+// MapMembers maps Cognito user details to the internal UserParams model from ListUserInGroup requests
+func (g *Group) MapMembers(membersList *[]*cognitoidentityprovider.UserType) {
+	g.Members = []UserParams{}
+	for _, member := range *membersList {
+		g.Members = append(g.Members, UserParams{}.MapCognitoDetails(member))
+	}
 }
