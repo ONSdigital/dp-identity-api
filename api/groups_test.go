@@ -97,7 +97,7 @@ func TestAddUserToGroupHandler(t *testing.T) {
 			body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodPost, addUserToGroupEndPoint, bytes.NewReader(body))
 
-			successResponse, errorResponse := api.CreateUserHandler(ctx, w, r)
+			successResponse, errorResponse := api.AddUserToGroupHandler(ctx, w, r)
 
 			tt.assertions(successResponse, errorResponse)
 		}
@@ -106,7 +106,7 @@ func TestAddUserToGroupHandler(t *testing.T) {
 	Convey("Add a user to a group - returns 500 error unmarshalling invalid request body", t, func() {
 		r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(nil))
 
-		successResponse, errorResponse := api.CreateUserHandler(ctx, w, r)
+		successResponse, errorResponse := api.AddUserToGroupHandler(ctx, w, r)
 
 		So(successResponse, ShouldBeNil)
 		castErr := errorResponse.Errors[0].(*models.Error)
@@ -134,7 +134,7 @@ func TestAddUserToGroupHandler(t *testing.T) {
 			body, _ := json.Marshal(tt.userDetails)
 			r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
 
-			successResponse, errorResponse := api.CreateUserHandler(ctx, w, r)
+			successResponse, errorResponse := api.AddUserToGroupHandler(ctx, w, r)
 
 			So(successResponse, ShouldBeNil)
 			So(errorResponse.Status, ShouldEqual, tt.httpResponse)
