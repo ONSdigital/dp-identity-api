@@ -224,7 +224,6 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 
 		if cognitoErr != nil {
 			parsedErr := models.NewCognitoError(ctx, cognitoErr, "ConfirmForgottenPassword request from change password endpoint")
-			// change string
 			if parsedErr.Code == models.InternalError {
 				return nil, models.NewErrorResponse([]error{parsedErr}, http.StatusInternalServerError, nil)
 			} else if parsedErr.Code == models.InvalidPasswordError || parsedErr.Code == models.InvalidCodeError {
