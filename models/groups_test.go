@@ -41,10 +41,9 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		group := models.Group{
 			Name: "test-group",
 		}
-		userPoolId := "abcd-efgh-1234"
 		userId := ""
 
-		errs := group.ValidateAddUser(ctx, userPoolId, userId)
+		errs := group.ValidateAddUser(ctx, userId)
 
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 1)
@@ -55,10 +54,9 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 
 	Convey("returns InvalidGroupName error if no group name is set", t, func() {
 		group := models.Group{}
-		userPoolId := "abcd-efgh-1234"
 		userId := "zzzz-9999"
 
-		errs := group.ValidateAddUser(ctx, userPoolId, userId)
+		errs := group.ValidateAddUser(ctx, userId)
 
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 1)
@@ -69,10 +67,9 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 
 	Convey("returns InvalidUserId and InvalidGroupName errors if no user id submitted and group name set", t, func() {
 		group := models.Group{}
-		userPoolId := "abcd-efgh-1234"
 		userId := ""
 
-		errs := group.ValidateAddUser(ctx, userPoolId, userId)
+		errs := group.ValidateAddUser(ctx, userId)
 
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 2)
@@ -88,10 +85,9 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		group := models.Group{
 			Name: "test-group",
 		}
-		userPoolId := "abcd-efgh-1234"
 		userId := "zzzz-9999"
 
-		errs := group.Validate(ctx, userPoolId, userId)
+		errs := group.ValidateAddUser(ctx, userId)
 
 		So(errs, ShouldBeNil)
 	})
@@ -143,7 +139,7 @@ func TestGroups_BuildAddUserToGroupRequest(t *testing.T) {
 		userPoolId := "euwest-99-aabbcc"
 		userId := "zzzz-9999"
 
-		response := group.BuildAddUserToGroupRequest(userPoolId)
+		response := group.BuildAddUserToGroupRequest(userPoolId, userId)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminAddUserToGroupInput{}))
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
