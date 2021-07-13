@@ -22,6 +22,7 @@ type MockCognitoIdentityProviderClient struct {
 	AdminUpdateUserAttributesFunc func(input *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error)
 	AdminEnableUserFunc           func(input *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error)
 	AdminDisableUserFunc          func(input *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error)
+	AdminAddUserToGroupFunc       func(input *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error)
 }
 
 func (m *MockCognitoIdentityProviderClient) DescribeUserPool(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
@@ -83,4 +84,8 @@ func (m *MockCognitoIdentityProviderClient) AdminEnableUser(input *cognitoidenti
 
 func (m *MockCognitoIdentityProviderClient) AdminDisableUser(input *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
 	return m.AdminDisableUserFunc(input)
+}
+
+func (m *MockCognitoIdentityProviderClient) AdminAddUserToGroup(input *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+	return m.AdminAddUserToGroupFunc(input)
 }
