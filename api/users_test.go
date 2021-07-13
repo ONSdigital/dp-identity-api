@@ -621,9 +621,9 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 
 	var (
 		ctx                       = context.Background()
-		email              string = "foo_bar123@ext.ons.gov.uk"
-		password           string = "Password2"
-		verification_token string = "auth-challenge-session"
+		email              string = "fred.bloggs@ons.gov.uk"
+		password           string = "Password2@123456"
+		verification_token string = "999999"
 	)
 
 	api, w, _ := apiSetup()
@@ -635,7 +635,8 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 			{
 				// Cognito successful password change
 				func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
-					return &cognitoidentityprovider.ConfirmForgotPasswordOutput{}, nil
+					tst := cognitoidentityprovider.ConfirmForgotPasswordOutput{}
+					return &tst, nil
 				},
 				http.StatusAccepted,
 			},

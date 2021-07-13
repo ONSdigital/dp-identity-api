@@ -51,6 +51,10 @@ func (m *MockCognitoIdentityProviderClient) RespondToAuthChallenge(input *cognit
 	return m.RespondToAuthChallengeFunc(input)
 }
 
+func (m *MockCognitoIdentityProviderClient) ConfirmForgotPassword(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+	return m.ConfirmForgotPasswordFunc(input)
+}
+
 func (m *MockCognitoIdentityProviderClient) ForgotPassword(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
 	return m.ForgotPasswordFunc(input)
 }
