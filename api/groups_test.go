@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/http/httptest"
@@ -37,10 +38,10 @@ func TestAddUserToGroupHandler(t *testing.T) {
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(successResponse, ShouldNotBeNil)
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
-					So(errorResponse.Status, ShouldBeNil)
+					So(errorResponse, ShouldBeNil)
 				},
 			},
-			// 404 response - user not found
+			// Cognito 404 response - user not found
 			{
 				func(userInput *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					var userNotFoundException cognitoidentityprovider.UserNotFoundException
@@ -50,13 +51,13 @@ func TestAddUserToGroupHandler(t *testing.T) {
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(successResponse, ShouldBeNil)
 					So(errorResponse.Status, ShouldNotBeNil)
-					So(errorResponse.Status, ShouldEqual, http.StatusNotFound)
+					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
 					castErr := errorResponse.Errors[0].(*models.Error)
 					So(castErr.Code, ShouldEqual, models.UserNotFoundError)
 					So(castErr.Description, ShouldEqual, userNotFoundDescription)
 				},
 			},
-			// 404 response - group not found
+			// Cognito 404 response - group not found
 			{
 				func(userInput *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					var groupNotFoundException cognitoidentityprovider.ResourceNotFoundException
@@ -66,13 +67,13 @@ func TestAddUserToGroupHandler(t *testing.T) {
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(successResponse, ShouldBeNil)
 					So(errorResponse.Status, ShouldNotBeNil)
-					So(errorResponse.Status, ShouldEqual, http.StatusNotFound)
+					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
 					castErr := errorResponse.Errors[0].(*models.Error)
 					So(castErr.Code, ShouldEqual, models.NotFoundError)
 					So(castErr.Description, ShouldEqual, groupNotFoundDescription)
 				},
 			},
-			// 500 response - internal error
+			// Cognito 500 response - internal error
 			{
 				func(userInput *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					var internalError cognitoidentityprovider.InternalErrorException
@@ -82,7 +83,7 @@ func TestAddUserToGroupHandler(t *testing.T) {
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(successResponse, ShouldBeNil)
 					So(errorResponse.Status, ShouldNotBeNil)
-					So(errorResponse.Status, ShouldEqual, http.StatusNotFound)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
 					castErr := errorResponse.Errors[0].(*models.Error)
 					So(castErr.Code, ShouldEqual, models.InternalError)
 					So(castErr.Description, ShouldEqual, internalErrorDescription)
@@ -97,6 +98,11 @@ func TestAddUserToGroupHandler(t *testing.T) {
 			body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodPost, addUserToGroupEndPoint, bytes.NewReader(body))
 
+			urlVars := map[string]string{
+				"id": "efgh5678",
+			}
+			r = mux.SetURLVars(r, urlVars)
+
 			successResponse, errorResponse := api.AddUserToGroupHandler(ctx, w, r)
 
 			tt.assertions(successResponse, errorResponse)
@@ -104,7 +110,7 @@ func TestAddUserToGroupHandler(t *testing.T) {
 	})
 
 	Convey("Add a user to a group - returns 500 error unmarshalling invalid request body", t, func() {
-		r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(nil))
+		r := httptest.NewRequest(http.MethodPost, addUserToGroupEndPoint, bytes.NewReader(nil))
 
 		successResponse, errorResponse := api.AddUserToGroupHandler(ctx, w, r)
 
@@ -132,7 +138,12 @@ func TestAddUserToGroupHandler(t *testing.T) {
 
 		for _, tt := range userValidationTests {
 			body, _ := json.Marshal(tt.userDetails)
-			r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
+			r := httptest.NewRequest(http.MethodPost, addUserToGroupEndPoint, bytes.NewReader(body))
+
+			urlVars := map[string]string{
+				"id": "efgh5678",
+			}
+			r = mux.SetURLVars(r, urlVars)
 
 			successResponse, errorResponse := api.AddUserToGroupHandler(ctx, w, r)
 

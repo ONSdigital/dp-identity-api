@@ -1,0 +1,45 @@
+package api
+
+import (
+	"context"
+	"encoding/json"
+	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/gorilla/mux"
+	"io/ioutil"
+	"net/http"
+)
+
+//ListUsersHandler lists the users in the user pool
+func (api *API) AddUserToGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	vars := mux.Vars(req)
+	group := models.Group{Name: vars["id"]}
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, handleBodyReadError(ctx, err)
+	}
+
+	var bodyJson map[string]string
+	err = json.Unmarshal(body, &bodyJson)
+	if err != nil {
+		return nil, handleBodyUnmarshalError(ctx, err)
+	}
+	userId := bodyJson["user_id"]
+
+	validationErrs := group.ValidateAddUser(ctx, userId)
+	if len(validationErrs) != 0 {
+		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
+	}
+
+	userAddToGroupInput := group.BuildAddUserToGroupRequest(api.UserPoolId, userId)
+	_, err = api.CognitoClient.AdminAddUserToGroup(userAddToGroupInput)
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint")
+		if cognitoErr.Code == models.UserNotFoundError || cognitoErr.Code == models.NotFoundError {
+			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, cognitoErr)
+		}
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+	}
+
+	return models.NewSuccessResponse(nil, http.StatusOK, nil), nil
+}
