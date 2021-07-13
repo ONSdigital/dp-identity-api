@@ -687,7 +687,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 		}
 
 		for _, tt := range confirmForgotPasswordTests {
-			m.ConfirmForgotPasswordFunc = tt.confirmForgotPasswordFunction;
+			m.ConfirmForgotPasswordFunc = tt.confirmForgotPasswordFunction
 
 			postBody := map[string]interface{}{"type": models.ForgottenPasswordType, "email": email, "password": password, "verification_token": verification_token}
 			body, _ := json.Marshal(postBody)
@@ -725,13 +725,13 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 		}{
 			// missing password change type
 			{
-				map[string]interface{}{"type": "", "email": email, "password": password, "validation_token": verification_token},
+				map[string]interface{}{"type": "", "email": email, "password": password, "verification_token": verification_token},
 				models.UnknownRequestTypeError,
 				http.StatusBadRequest,
 			},
 			// missing a change request param
 			{
-				map[string]interface{}{"type": models.ForgottenPasswordType, "email": "", "password": password, "validation_token": verification_token},
+				map[string]interface{}{"type": models.ForgottenPasswordType, "email": "", "password": password, "verification_token": verification_token},
 				models.InvalidEmailError,
 				http.StatusBadRequest,
 			},
