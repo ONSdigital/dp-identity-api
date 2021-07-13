@@ -75,6 +75,14 @@ func (g *Group) BuildAddUserToGroupRequest(userPoolId, userId string) *cognitoid
 	}
 }
 
+// BuildListUsersInGroupRequest builds a correctly populated ListUsersInGroupInput object
+func (g *Group) BuildListUsersInGroupRequest(userPoolId string) *cognitoidentityprovider.ListUsersInGroupInput {
+	return &cognitoidentityprovider.ListUsersInGroupInput{
+		GroupName:  &g.Name,
+		UserPoolId: &userPoolId,
+	}
+}
+
 // MapCognitoDetails maps the group details returned from GetGroup requests
 func (g *Group) MapCognitoDetails(groupDetails *cognitoidentityprovider.GroupType) {
 	g.Name = *groupDetails.GroupName

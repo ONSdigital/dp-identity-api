@@ -149,6 +149,21 @@ func TestGroup_BuildAddUserToGroupRequest(t *testing.T) {
 	})
 }
 
+func TestGroup_BuildListUsersInGroupRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito ListUsersInGroup request body", t, func() {
+		group := models.Group{
+			Name: "role-test",
+		}
+		userPoolId := "euwest-99-aabbcc"
+
+		response := group.BuildListUsersInGroupRequest(userPoolId)
+
+		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInGroupInput{}))
+		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.GroupName, ShouldEqual, group.Name)
+	})
+}
+
 func TestGroup_MapCognitoDetails(t *testing.T) {
 	Convey("correctly maps values from Cognito GroupType", t, func() {
 		group := models.Group{}
