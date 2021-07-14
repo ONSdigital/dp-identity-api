@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
@@ -97,4 +98,13 @@ func (g *Group) MapMembers(membersList *[]*cognitoidentityprovider.UserType) {
 	for _, member := range *membersList {
 		g.Members = append(g.Members, UserParams{}.MapCognitoDetails(member))
 	}
+}
+
+//BuildSuccessfulJsonResponse builds the Group response json for client responses
+func (g *Group) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
+	jsonResponse, err := json.Marshal(g)
+	if err != nil {
+		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
+	}
+	return jsonResponse, nil
 }

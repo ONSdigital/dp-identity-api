@@ -2,6 +2,7 @@ package models_test
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -171,10 +172,12 @@ func TestGroup_MapMembers(t *testing.T) {
 				{
 					UserStatus: aws.String("CONFIRMED"),
 					Username:   aws.String("user-1"),
+					Enabled:    aws.Bool(true),
 				},
 				{
 					UserStatus: aws.String("CONFIRMED"),
 					Username:   aws.String("user-2"),
+					Enabled:    aws.Bool(true),
 				},
 			},
 		}
@@ -200,5 +203,29 @@ func TestGroup_MapCognitoDetails(t *testing.T) {
 		So(group.Description, ShouldEqual, *response.Description)
 		So(group.Name, ShouldEqual, *response.GroupName)
 		So(group.Precedence, ShouldEqual, *response.Precedence)
+	})
+}
+
+func TestGroup_BuildSuccessfulJsonResponse(t *testing.T) {
+	Convey("returns a byte array of the response JSON", t, func() {
+		ctx := context.Background()
+		name, description := "test-group", "a test group"
+		precedence := int64(100)
+		group := models.Group{
+			Name:        name,
+			Description: description,
+			Precedence:  precedence,
+		}
+
+		response, err := group.BuildSuccessfulJsonResponse(ctx)
+
+		So(err, ShouldBeNil)
+		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
+		var userJson map[string]interface{}
+		err = json.Unmarshal(response, &userJson)
+		So(err, ShouldBeNil)
+		So(userJson["name"], ShouldEqual, name)
+		So(userJson["description"], ShouldEqual, description)
+		So(userJson["precedence"], ShouldEqual, precedence)
 	})
 }
