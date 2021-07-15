@@ -56,11 +56,7 @@ func (m *CognitoIdentityProviderClientStub) GenerateUser(id, email, password, gi
 func (m *CognitoIdentityProviderClientStub) SetUserActiveState(username, active string) {
 	for _, user := range m.Users {
 		if user.ID == username {
-			if active == "true" {
-				user.Active = true
-			} else {
-				user.Active = true
-			}
+			user.Active = "true" == active
 			return
 		}
 	}

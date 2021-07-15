@@ -319,7 +319,7 @@ paths:
 
 
   /v1/password-reset:
-    put:
+    post:
       tags:
         - Users
       summary: "Sends the user a password reset email"
