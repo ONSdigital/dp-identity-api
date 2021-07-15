@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -614,8 +615,98 @@ func TestChangePasswordHandler(t *testing.T) {
 			}
 		}
 	})
+}
 
-	Convey("RespondToAuthChallenge returns 500: error unmarshalling request body", t, func() {
+func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
+
+	var (
+		ctx                       = context.Background()
+		email              string = "fred.bloggs@ons.gov.uk"
+		password           string = "Password2@123456"
+		verification_token string = "999999"
+	)
+
+	api, w, m := apiSetup()
+	Convey("ConfirmForgotPassword - check expected responses", t, func() {
+		confirmForgotPasswordTests := []struct {
+			confirmForgotPasswordFunction func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error)
+			httpResponse                  int
+		}{
+			{
+				// Cognito successful password change
+				func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+					tst := cognitoidentityprovider.ConfirmForgotPasswordOutput{}
+					return &tst, nil
+				},
+				http.StatusAccepted,
+			},
+			{
+				// Cognito internal error
+				func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := "Something strange happened"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				http.StatusInternalServerError,
+			},
+			{
+				// Cognito invalid session
+				func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+					awsErrCode := "CodeMismatchException"
+					awsErrMessage := "session invalid"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				http.StatusBadRequest,
+			},
+			{
+				// Cognito invalid password
+				func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+					awsErrCode := "InvalidPasswordException"
+					awsErrMessage := "password invalid"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				http.StatusBadRequest,
+			},
+			{
+				// Cognito invalid user
+				func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+					awsErrCode := "UserNotFoundException"
+					awsErrMessage := "user not found"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				http.StatusAccepted,
+			},
+		}
+
+		for _, tt := range confirmForgotPasswordTests {
+			m.ConfirmForgotPasswordFunc = tt.confirmForgotPasswordFunction
+
+			postBody := map[string]interface{}{"type": models.ForgottenPasswordType, "email": email, "password": password, "verification_token": verification_token}
+			body, _ := json.Marshal(postBody)
+			r := httptest.NewRequest(http.MethodPut, changePasswordEndPoint, bytes.NewReader(body))
+
+			successResponse, errorResponse := api.ChangePasswordHandler(ctx, w, r)
+
+			// Check whether testing a success or error case
+			if tt.httpResponse > 399 {
+				So(successResponse, ShouldBeNil)
+				So(errorResponse.Status, ShouldEqual, tt.httpResponse)
+			} else {
+				So(successResponse.Status, ShouldEqual, tt.httpResponse)
+				So(errorResponse, ShouldBeNil)
+			}
+		}
+	})
+
+	Convey("ConfirmForgotPassword returns 500: error unmarshalling request body", t, func() {
 		r := httptest.NewRequest(http.MethodPut, changePasswordEndPoint, bytes.NewReader(nil))
 
 		successResponse, errorResponse := api.CreateUserHandler(ctx, w, r)
@@ -634,13 +725,13 @@ func TestChangePasswordHandler(t *testing.T) {
 		}{
 			// missing password change type
 			{
-				map[string]interface{}{"type": "", "email": email, "password": password, "session": session},
+				map[string]interface{}{"type": "", "email": email, "password": password, "verification_token": verification_token},
 				models.UnknownRequestTypeError,
 				http.StatusBadRequest,
 			},
 			// missing a change request param
 			{
-				map[string]interface{}{"type": models.NewPasswordRequiredType, "email": "", "password": password, "session": session},
+				map[string]interface{}{"type": models.ForgottenPasswordType, "email": "", "password": password, "verification_token": verification_token},
 				models.InvalidEmailError,
 				http.StatusBadRequest,
 			},

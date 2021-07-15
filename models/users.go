@@ -311,10 +311,11 @@ func (p *UserSignIn) BuildSuccessfulJsonResponse(ctx context.Context, result *co
 }
 
 type ChangePassword struct {
-	ChangeType  string `json:"type"`
-	Session     string `json:"session"`
-	Email       string `json:"email"`
-	NewPassword string `json:"password"`
+	ChangeType        string `json:"type"`
+	Session           string `json:"session"`
+	Email             string `json:"email"`
+	NewPassword       string `json:"password"`
+	VerificationToken string `json:"verification_token"`
 }
 
 //ValidateNewPasswordRequiredRequest validates the required fields have been submitted and meet the basic structure requirements
@@ -365,6 +366,32 @@ func (p ChangePassword) BuildAuthChallengeSuccessfulJsonResponse(ctx context.Con
 		return jsonResponse, nil
 	} else {
 		return nil, NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
+	}
+}
+
+func (p ChangePassword) ValidateForgottenPasswordRequiredRequest(ctx context.Context) []error {
+	var validationErrs []error
+	if !validation.IsPasswordValid(p.NewPassword) {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidPasswordError, InvalidPasswordDescription))
+	}
+	if !validation.IsEmailValid(p.Email) {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription))
+	}
+	if p.VerificationToken == "" {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidTokenError, InvalidTokenDescription))
+	}
+	return validationErrs
+}
+
+func (p ChangePassword) BuildConfirmForgotPasswordRequest(clientSecret string, clientId string) *cognitoidentityprovider.ConfirmForgotPasswordInput {
+	secretHash := utilities.ComputeSecretHash(clientSecret, p.Email, clientId)
+
+	return &cognitoidentityprovider.ConfirmForgotPasswordInput{
+		ClientId:         &clientId,
+		Username:         &p.Email,
+		ConfirmationCode: &p.VerificationToken,
+		SecretHash:       &secretHash,
+		Password:         &p.NewPassword,
 	}
 }
 
