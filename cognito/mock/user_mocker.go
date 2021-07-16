@@ -6,7 +6,7 @@ type User struct {
 	Password    string
 	GivenName   string
 	FamilyName  string
-	Groups      []string
+	Groups      []*Group
 	Status      string
 	Active      bool
 	StatusNotes string
@@ -47,7 +47,7 @@ func (m *CognitoIdentityProviderClientStub) GenerateUser(id, email, password, gi
 		Password:   password,
 		GivenName:  givenName,
 		FamilyName: familyName,
-		Groups:     []string{},
+		Groups:     []*Group{},
 		Status:     statusString,
 		Active:     true,
 	}
@@ -60,4 +60,13 @@ func (m *CognitoIdentityProviderClientStub) SetUserActiveState(username, active 
 			return
 		}
 	}
+}
+
+func (m *CognitoIdentityProviderClientStub) ReadUser(username string) *User {
+	for _, user := range m.Users {
+		if user.ID == username {
+			return user
+		}
+	}
+	return nil
 }

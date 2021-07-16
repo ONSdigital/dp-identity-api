@@ -4,6 +4,7 @@ type Group struct {
 	Name        string
 	Description string
 	Precedence  int64
+	Members     []*User
 }
 
 func (m *CognitoIdentityProviderClientStub) AddGroupWithName(name string) {
@@ -18,7 +19,7 @@ func (m *CognitoIdentityProviderClientStub) AddGroupWithNameAndPrecedence(name s
 	m.Groups = append(m.Groups, m.GenerateGroup(name, "", precedence))
 }
 
-func (m *CognitoIdentityProviderClientStub) GenerateGroup(name, description string, precedence int64) Group {
+func (m *CognitoIdentityProviderClientStub) GenerateGroup(name, description string, precedence int64) *Group {
 	if name == "" {
 		name = "TestGroup"
 	}
@@ -29,9 +30,19 @@ func (m *CognitoIdentityProviderClientStub) GenerateGroup(name, description stri
 		precedence = 100
 	}
 
-	return Group{
+	return &Group{
 		Name:        name,
 		Description: description,
 		Precedence:  precedence,
+		Members:     []*User{},
 	}
+}
+
+func (m *CognitoIdentityProviderClientStub) ReadGroup(groupName string) *Group {
+	for _, group := range m.Groups {
+		if group.Name == groupName {
+			return group
+		}
+	}
+	return nil
 }

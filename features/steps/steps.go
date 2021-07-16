@@ -2,6 +2,8 @@ package steps
 
 import (
 	"errors"
+	"github.com/stretchr/testify/assert"
+	"strconv"
 
 	"github.com/ONSdigital/dp-identity-api/api"
 
@@ -20,6 +22,8 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the AdminUserGlobalSignOut endpoint in cognito returns an internal server error$`, c.theAdminUserGlobalSignOutEndpointInCognitoReturnsAnInternalServerError)
 	ctx.Step(`^a user with non-verified email "([^"]*)" and password "([^"]*)"$`, c.aUserWithNonverifiedEmailAndPassword)
 	ctx.Step(`^user "([^"]*)" active is "([^"]*)"$`, c.userSetState)
+	ctx.Step(`^group "([^"]*)" exists in the database$`, c.groupExistsInTheDatabase)
+	ctx.Step(`^there are "([^"]*)" users in group "([^"]*)"$`, c.thereAreUsersInGroup)
 }
 
 func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(email, password string) error {
@@ -65,5 +69,23 @@ func (c *IdentityComponent) aUserWithNonverifiedEmailAndPassword(email, password
 
 func (c *IdentityComponent) userSetState(username, active string) error {
 	c.CognitoClient.SetUserActiveState(username, active)
+	return nil
+}
+
+func (c *IdentityComponent) groupExistsInTheDatabase(groupName string) error {
+	c.CognitoClient.AddGroupWithName(groupName)
+	return nil
+}
+
+func (c *IdentityComponent) thereAreUsersInGroup(userCount, groupName string) error {
+	group := c.CognitoClient.ReadGroup(groupName)
+	if group == nil {
+		return errors.New("group not found")
+	}
+	userCountInt, err := strconv.Atoi(userCount)
+	if err != nil {
+		return errors.New("could not convert user count to int")
+	}
+	assert.Equal(c.apiFeature, userCountInt, len(group.Members))
 	return nil
 }
