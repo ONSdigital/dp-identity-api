@@ -211,7 +211,7 @@ paths:
           description: "Internal error occurred"
           schema:
             $ref: '#/definitions/ErrorResponse'
-            
+
     put:
       tags:
         - Users
@@ -316,8 +316,6 @@ paths:
           description: "Requested unimplemented password change type"
           schema:
             $ref: '#/definitions/ErrorResponse'
-
-
   /v1/password-reset:
     post:
       tags:
@@ -344,6 +342,42 @@ paths:
           description: "Request accepted"
         400:
           description: "Email was not in a valid format"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: "Invalid request body or unexpected Cognito response"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /v1/groups/{name}/members:
+    post:
+      tags:
+        - Groups
+      summary: "Add user to group"
+      description: "Adds a user to an existing group in Cognito"
+      consumes:
+        - application/json
+      produces:
+        - "application/json"
+      parameters:
+        - in: path
+          name: name
+          type: string
+          required: true
+          description: the groups name
+        - in: body
+          name: "User id"
+          description: "The id of the user being added to the group"
+          schema:
+            required: ["user_id"]
+            type: object
+            properties:
+              user_id:
+                type: string
+      responses:
+        200:
+          description: "User added to group"
+        400:
+          description: "Invalid group name or user id provided"
           schema:
             $ref: '#/definitions/ErrorResponse'
         500:
@@ -456,6 +490,8 @@ definitions:
           - "NotImplemented"
           - "InvalidChallengeSession"
           - "InvalidStatusNotes"
+          - "InvalidUserId"
+          - "InvalidGroupName"
       description:
         type: string
         description: "Description of the error"
