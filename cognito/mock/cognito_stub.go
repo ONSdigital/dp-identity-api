@@ -346,14 +346,19 @@ func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentitypr
 		}
 	}
 
-	m.Groups = append(m.Groups, m.GenerateGroup(*input.GroupName, *input.Description, *input.Precedence))
+	newGroup, err := m.GenerateGroup(*input.GroupName, *input.Description, *input.Precedence)
+	if err != nil {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, err.Error(), nil)
+	}
+	m.Groups = append(m.Groups, newGroup)
 
 	return &cognitoidentityprovider.CreateGroupOutput{
 		Group: &cognitoidentityprovider.GroupType{
-			Description: input.Description,
-			GroupName:   input.GroupName,
-			Precedence:  input.Precedence,
-			UserPoolId:  &userPoolId,
+			Description:  input.Description,
+			GroupName:    input.GroupName,
+			Precedence:   input.Precedence,
+			CreationDate: &newGroup.Created,
+			UserPoolId:   &userPoolId,
 		},
 	}, nil
 }
@@ -441,7 +446,7 @@ func (m *CognitoIdentityProviderClientStub) GetGroup(input *cognitoidentityprovi
 	timestamp := time.Now()
 	return &cognitoidentityprovider.GetGroupOutput{
 		Group: &cognitoidentityprovider.GroupType{
-			CreationDate:     &timestamp,
+			CreationDate:     &group.Created,
 			Description:      &group.Description,
 			GroupName:        &group.Name,
 			LastModifiedDate: &timestamp,

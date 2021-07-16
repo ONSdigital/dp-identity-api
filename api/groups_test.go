@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 const addUserToGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/memebers"
@@ -26,10 +27,12 @@ func TestAddUserToGroupHandler(t *testing.T) {
 
 	api, w, m := apiSetup()
 
+	timeStamp := time.Now()
 	getGroupData := &cognitoidentityprovider.GroupType{
-		Description: aws.String("a test group"),
-		GroupName:   aws.String("test-group"),
-		Precedence:  aws.Int64(100),
+		Description:  aws.String("a test group"),
+		GroupName:    aws.String("test-group"),
+		Precedence:   aws.Int64(100),
+		CreationDate: &timeStamp,
 	}
 
 	Convey("Add a user to a group - check expected responses", t, func() {

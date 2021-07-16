@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"reflect"
 	"testing"
+	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -192,10 +193,12 @@ func TestGroup_MapCognitoDetails(t *testing.T) {
 	Convey("correctly maps values from Cognito GroupType", t, func() {
 		group := models.Group{}
 
+		timestamp := time.Now()
 		response := &cognitoidentityprovider.GroupType{
-			Description: aws.String("A test group"),
-			GroupName:   aws.String("test-group"),
-			Precedence:  aws.Int64(1),
+			Description:  aws.String("A test group"),
+			GroupName:    aws.String("test-group"),
+			Precedence:   aws.Int64(1),
+			CreationDate: &timestamp,
 		}
 
 		group.MapCognitoDetails(response)

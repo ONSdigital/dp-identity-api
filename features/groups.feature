@@ -17,6 +17,7 @@ Feature: Groups
                     "name": "test-group",
                     "description": "A test group",
                     "precedence": 100,
+                    "created": "2010-01-01T00:00:00Z",
                     "members": [
                         {
                             "id": "abcd1234",
