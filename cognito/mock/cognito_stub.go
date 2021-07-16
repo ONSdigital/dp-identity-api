@@ -427,8 +427,11 @@ func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(input *cognitoid
 }
 
 func (m *CognitoIdentityProviderClientStub) GetGroup(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
-	if *input.GroupName == "internal-error" {
+	if *input.GroupName == "internal-error" || *input.GroupName == "get-group-internal-error" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+	if *input.GroupName == "get-group-not-found" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "get group - group not found", nil)
 	}
 
 	group := m.ReadGroup(*input.GroupName)
@@ -454,8 +457,11 @@ func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoident
 		givenNameAttr, familyNameAttr, emailAttr string = "given_name", "family_name", "email"
 	)
 
-	if *input.GroupName == "internal-error" {
+	if *input.GroupName == "internal-error" || *input.GroupName == "list-group-users-internal-error" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+	if *input.GroupName == "list-group-users-not-found" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "list members - group not found", nil)
 	}
 
 	group := m.ReadGroup(*input.GroupName)
