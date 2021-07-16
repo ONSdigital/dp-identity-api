@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"time"
 )
 
 const (
@@ -16,6 +17,7 @@ type Group struct {
 	Name        string       `json:"name"`
 	Description string       `json:"description"`
 	Precedence  int64        `json:"precedence"`
+	Created     time.Time    `json:"created"`
 	Members     []UserParams `json:"members"`
 }
 
@@ -90,6 +92,7 @@ func (g *Group) MapCognitoDetails(groupDetails *cognitoidentityprovider.GroupTyp
 	g.Name = *groupDetails.GroupName
 	g.Precedence = *groupDetails.Precedence
 	g.Description = *groupDetails.Description
+	g.Created = *groupDetails.CreationDate
 }
 
 // MapMembers maps Cognito user details to the internal UserParams model from ListUserInGroup requests
