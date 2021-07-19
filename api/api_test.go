@@ -33,15 +33,15 @@ func TestSetup(t *testing.T) {
 		api, err := Setup(ctx, r, m, "us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow")
 
 		Convey("When created the following route(s) should have been added", func() {
-			So(hasRoute(api.Router, "/v1/tokens", "POST"), ShouldBeTrue)
-			So(hasRoute(api.Router, "/v1/tokens/self", "DELETE"), ShouldBeTrue)
-			So(hasRoute(api.Router, "/v1/tokens/self", "PUT"), ShouldBeTrue)
-			So(hasRoute(api.Router, "/v1/users", "POST"), ShouldBeTrue)
-			So(hasRoute(api.Router, "/v1/users", "GET"), ShouldBeTrue)
-			So(hasRoute(api.Router, "/v1/users/{id}", "GET"), ShouldBeTrue)
-			So(hasRoute(api.Router, "/v1/users/{id}", "PUT"), ShouldBeTrue)
-			So(hasRoute(api.Router, "/v1/users/self/password", "PUT"), ShouldBeTrue)
-			So(hasRoute(api.Router, "/v1/password-reset", "POST"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/tokens", http.MethodPost), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/tokens/self", http.MethodDelete), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/tokens/self", http.MethodPut), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/users", http.MethodPost), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/users", http.MethodGet), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/users/{id}", http.MethodGet), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/users/{id}", http.MethodPut), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/users/self/password", http.MethodPut), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/password-reset", http.MethodPost), ShouldBeTrue)
 		})
 
 		Convey("No error returned when user pool id supplied", func() {

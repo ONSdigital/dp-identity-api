@@ -19,6 +19,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`I have a valid ID header for user "([^"]*)"$`, c.iHaveAValidIDHeaderForUser)
 	ctx.Step(`^the AdminUserGlobalSignOut endpoint in cognito returns an internal server error$`, c.theAdminUserGlobalSignOutEndpointInCognitoReturnsAnInternalServerError)
 	ctx.Step(`^a user with non-verified email "([^"]*)" and password "([^"]*)"$`, c.aUserWithNonverifiedEmailAndPassword)
+	ctx.Step(`^user "([^"]*)" active is "([^"]*)"$`, c.userSetState)
 }
 
 func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(email, password string) error {
@@ -59,5 +60,10 @@ func (c *IdentityComponent) theAdminUserGlobalSignOutEndpointInCognitoReturnsAnI
 
 func (c *IdentityComponent) aUserWithNonverifiedEmailAndPassword(email, password string) error {
 	c.CognitoClient.AddUserWithEmail(email, password, false)
+	return nil
+}
+
+func (c *IdentityComponent) userSetState(username, active string) error {
+	c.CognitoClient.SetUserActiveState(username, active)
 	return nil
 }

@@ -298,7 +298,6 @@ func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityp
 	var (
 		emailVerifiedAttr, emailVerifiedValue    string = "email_verified", "true"
 		givenNameAttr, familyNameAttr, emailAttr string = "given_name", "family_name", "email"
-		enabled                                  bool   = true
 	)
 	for _, user := range m.Users {
 		if user.ID == *input.Username {
@@ -324,7 +323,7 @@ func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityp
 						Value: aws.String(user.Email),
 					},
 				},
-				Enabled:    &enabled,
+				Enabled:    aws.Bool(user.Active),
 				UserStatus: aws.String(user.Status),
 				Username:   aws.String(user.ID),
 			}, nil
@@ -373,9 +372,37 @@ func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(input *cog
 					user.GivenName = *attr.Value
 				} else if *attr.Name == "family_name" {
 					user.FamilyName = *attr.Value
+				} else if *attr.Name == "custom:status_notes" {
+					user.StatusNotes = *attr.Value
 				}
 			}
 			return &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}, nil
+		}
+	}
+	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+}
+
+func (m *CognitoIdentityProviderClientStub) AdminEnableUser(input *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+	for _, user := range m.Users {
+		if user.ID == *input.Username {
+			if user.Email == "enable.internalerror@ons.gov.uk" {
+				return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong whilst enabling", nil)
+			}
+			user.Active = true
+			return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
+		}
+	}
+	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+}
+
+func (m *CognitoIdentityProviderClientStub) AdminDisableUser(input *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+	for _, user := range m.Users {
+		if user.ID == *input.Username {
+			if user.Email == "disable.internalerror@ons.gov.uk" {
+				return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong whilst disabling", nil)
+			}
+			user.Active = false
+			return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
 		}
 	}
 	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)

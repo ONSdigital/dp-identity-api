@@ -1,13 +1,15 @@
 package mock
 
 type User struct {
-	ID         string
-	Email      string
-	Password   string
-	GivenName  string
-	FamilyName string
-	Groups     []string
-	Status     string
+	ID          string
+	Email       string
+	Password    string
+	GivenName   string
+	FamilyName  string
+	Groups      []string
+	Status      string
+	Active      bool
+	StatusNotes string
 }
 
 func (m *CognitoIdentityProviderClientStub) AddUserWithEmail(email, password string, isConfirmed bool) {
@@ -47,5 +49,15 @@ func (m *CognitoIdentityProviderClientStub) GenerateUser(id, email, password, gi
 		FamilyName: familyName,
 		Groups:     []string{},
 		Status:     statusString,
+		Active:     true,
+	}
+}
+
+func (m *CognitoIdentityProviderClientStub) SetUserActiveState(username, active string) {
+	for _, user := range m.Users {
+		if user.ID == username {
+			user.Active = "true" == active
+			return
+		}
 	}
 }
