@@ -43,6 +43,7 @@ func TestSetup(t *testing.T) {
 			So(hasRoute(api.Router, "/v1/users/self/password", http.MethodPut), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/password-reset", http.MethodPost), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/groups/{id}/members", http.MethodPost), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/groups/{group_id}/users/{user_id}", http.MethodDelete), ShouldBeTrue)
 		})
 
 		Convey("No error returned when user pool id supplied", func() {

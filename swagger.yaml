@@ -10,7 +10,7 @@ basePath: "/v1"
 schemes:
   - http
 paths:
-  /v1/tokens:
+  /tokens:
     post:
       tags:
         - Tokens
@@ -63,7 +63,7 @@ paths:
           description: "Unexpected internal error"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /v1/tokens/self:
+  /tokens/self:
     put:
       tags:
         - Tokens
@@ -128,7 +128,7 @@ paths:
           description: "Unexpected internal error"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /v1/users:
+  /users:
     get:
       tags:
         - Users
@@ -184,7 +184,7 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /v1/users/{id}:
+  /users/{id}:
     get:
       tags:
         - Users
@@ -258,7 +258,7 @@ paths:
           description: "Internal error occurred"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /v1/users/self/password:
+  /users/self/password:
     put:
       tags:
         - Users
@@ -316,7 +316,7 @@ paths:
           description: "Requested unimplemented password change type"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /v1/password-reset:
+  /password-reset:
     post:
       tags:
         - Users
@@ -348,7 +348,7 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /v1/groups/{name}/members:
+  /groups/{name}/members:
     post:
       tags:
         - Groups
