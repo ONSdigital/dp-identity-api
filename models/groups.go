@@ -39,8 +39,8 @@ func NewPublisherRoleGroup() Group {
 	}
 }
 
-// ValidateAddUser validates the required fields for adding a user to a group, returns validation errors for anything that fails
-func (g *Group) ValidateAddUser(ctx context.Context, userId string) []error {
+// ValidateAddRemoveUser validates the required fields for adding a user to a group, returns validation errors for anything that fails
+func (g *Group) ValidateAddRemoveUser(ctx context.Context, userId string) []error {
 	var validationErrs []error
 	if g.Name == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupNameError, MissingGroupNameErrorDescription))

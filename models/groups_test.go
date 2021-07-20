@@ -46,7 +46,7 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		}
 		userId := ""
 
-		errs := group.ValidateAddUser(ctx, userId)
+		errs := group.ValidateAddRemoveUser(ctx, userId)
 
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 1)
@@ -59,7 +59,7 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		group := models.Group{}
 		userId := "zzzz-9999"
 
-		errs := group.ValidateAddUser(ctx, userId)
+		errs := group.ValidateAddRemoveUser(ctx, userId)
 
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 1)
@@ -72,7 +72,7 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		group := models.Group{}
 		userId := ""
 
-		errs := group.ValidateAddUser(ctx, userId)
+		errs := group.ValidateAddRemoveUser(ctx, userId)
 
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 2)
@@ -90,7 +90,7 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		}
 		userId := "zzzz-9999"
 
-		errs := group.ValidateAddUser(ctx, userId)
+		errs := group.ValidateAddRemoveUser(ctx, userId)
 
 		So(errs, ShouldBeNil)
 	})

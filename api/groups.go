@@ -26,7 +26,7 @@ func (api *API) AddUserToGroupHandler(ctx context.Context, w http.ResponseWriter
 	}
 	userId := bodyJson["user_id"]
 
-	validationErrs := group.ValidateAddUser(ctx, userId)
+	validationErrs := group.ValidateAddRemoveUser(ctx, userId)
 	if len(validationErrs) != 0 {
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}
