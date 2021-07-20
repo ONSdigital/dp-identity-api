@@ -79,6 +79,15 @@ func (g *Group) BuildAddUserToGroupRequest(userPoolId, userId string) *cognitoid
 	}
 }
 
+// BuildRemoveUserFromGroupRequest builds a correctly populated AdminRemoveUserFromGroupInput object
+func (g *Group) BuildRemoveUserFromGroupRequest(userPoolId, userId string) *cognitoidentityprovider.AdminRemoveUserFromGroupInput {
+	return &cognitoidentityprovider.AdminRemoveUserFromGroupInput{
+		GroupName:  &g.Name,
+		UserPoolId: &userPoolId,
+		Username:   &userId,
+	}
+}
+
 // BuildListUsersInGroupRequest builds a correctly populated ListUsersInGroupInput object
 func (g *Group) BuildListUsersInGroupRequest(userPoolId string) *cognitoidentityprovider.ListUsersInGroupInput {
 	return &cognitoidentityprovider.ListUsersInGroupInput{
