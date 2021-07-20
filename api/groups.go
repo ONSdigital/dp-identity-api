@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-//ListUsersHandler lists the users in the user pool
+//AddUserToGroupHandler adds a user to the specified group
 func (api *API) AddUserToGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	group := models.Group{Name: vars["id"]}
