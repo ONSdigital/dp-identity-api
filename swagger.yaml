@@ -363,7 +363,7 @@ paths:
           name: name
           type: string
           required: true
-          description: the groups name
+          description: the group's name
         - in: body
           name: "User id"
           description: "The id of the user being added to the group"
@@ -415,7 +415,7 @@ definitions:
         description: "The priority of the group"
         type: integer
       created:
-        description: "The the date the group was created"
+        description: "The date the group was created"
         type: string
       members:
         description: "A list of members of a group for the response body"
