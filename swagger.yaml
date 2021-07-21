@@ -211,7 +211,7 @@ paths:
           description: "Internal error occurred"
           schema:
             $ref: '#/definitions/ErrorResponse'
-            
+
     put:
       tags:
         - Users
@@ -316,8 +316,6 @@ paths:
           description: "Requested unimplemented password change type"
           schema:
             $ref: '#/definitions/ErrorResponse'
-
-
   /v1/password-reset:
     post:
       tags:
@@ -350,6 +348,44 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /v1/groups/{name}/members:
+    post:
+      tags:
+        - Groups
+      summary: "Add user to group"
+      description: "Adds a user to an existing group in Cognito"
+      consumes:
+        - application/json
+      produces:
+        - "application/json"
+      parameters:
+        - in: path
+          name: name
+          type: string
+          required: true
+          description: the group's name
+        - in: body
+          name: "User id"
+          description: "The id of the user being added to the group"
+          schema:
+            required: ["user_id"]
+            type: object
+            properties:
+              user_id:
+                type: string
+      responses:
+        200:
+          description: "User added to group"
+          schema:
+            $ref: '#/definitions/Group'
+        400:
+          description: "Invalid group name or user id provided"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: "Invalid request body or unexpected Cognito response"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
 
 
 
@@ -365,6 +401,27 @@ definitions:
         type: string
         description: "Expiration Time, UTC ISO 8601"
         example: "YYYY-MM-DD hh-mm-ssZ"
+  Group:
+    description: "The group model for the response body"
+    type: object
+    properties:
+      name:
+        description: "The group name"
+        type: string
+      description:
+        description: "A description of the group"
+        type: string
+      precedence:
+        description: "The priority of the group"
+        type: integer
+      created:
+        description: "The date the group was created"
+        type: string
+      members:
+        description: "A list of members of a group for the response body"
+        type: array
+        items:
+          $ref: '#/definitions/User'
   UserList:
     description: "A list of users for the response body"
     type: object
@@ -456,6 +513,8 @@ definitions:
           - "NotImplemented"
           - "InvalidChallengeSession"
           - "InvalidStatusNotes"
+          - "InvalidUserId"
+          - "InvalidGroupName"
       description:
         type: string
         description: "Description of the error"

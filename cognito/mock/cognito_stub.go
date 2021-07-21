@@ -3,6 +3,7 @@ package mock
 import (
 	"errors"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -17,7 +18,7 @@ type CognitoIdentityProviderClientStub struct {
 	UserPools []string
 	Users     []*User
 	Sessions  []Session
-	Groups    []Group
+	Groups    []*Group
 }
 
 func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
@@ -345,18 +346,19 @@ func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentitypr
 		}
 	}
 
-	m.Groups = append(m.Groups, Group{
-		Name:        *input.GroupName,
-		Description: *input.Description,
-		Precedence:  *input.Precedence,
-	})
+	newGroup, err := m.GenerateGroup(*input.GroupName, *input.Description, *input.Precedence)
+	if err != nil {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, err.Error(), nil)
+	}
+	m.Groups = append(m.Groups, newGroup)
 
 	return &cognitoidentityprovider.CreateGroupOutput{
 		Group: &cognitoidentityprovider.GroupType{
-			Description: input.Description,
-			GroupName:   input.GroupName,
-			Precedence:  input.Precedence,
-			UserPoolId:  &userPoolId,
+			Description:  input.Description,
+			GroupName:    input.GroupName,
+			Precedence:   input.Precedence,
+			CreationDate: &newGroup.Created,
+			UserPoolId:   &userPoolId,
 		},
 	}, nil
 }
@@ -406,4 +408,100 @@ func (m *CognitoIdentityProviderClientStub) AdminDisableUser(input *cognitoident
 		}
 	}
 	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+}
+
+func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(input *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+	if *input.GroupName == "internal-error" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+
+	group := m.ReadGroup(*input.GroupName)
+	if group == nil {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "the group could not be found", nil)
+	}
+
+	user := m.ReadUser(*input.Username)
+	if user == nil {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+	}
+
+	user.Groups = append(user.Groups, group)
+	group.Members = append(group.Members, user)
+
+	return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
+}
+
+func (m *CognitoIdentityProviderClientStub) GetGroup(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+	if *input.GroupName == "internal-error" || *input.GroupName == "get-group-internal-error" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+	if *input.GroupName == "get-group-not-found" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "get group - group not found", nil)
+	}
+
+	group := m.ReadGroup(*input.GroupName)
+	if group == nil {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "the group could not be found", nil)
+	}
+	timestamp := time.Now()
+	return &cognitoidentityprovider.GetGroupOutput{
+		Group: &cognitoidentityprovider.GroupType{
+			CreationDate:     &group.Created,
+			Description:      &group.Description,
+			GroupName:        &group.Name,
+			LastModifiedDate: &timestamp,
+			Precedence:       &group.Precedence,
+			UserPoolId:       input.UserPoolId,
+		},
+	}, nil
+}
+
+func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+	var (
+		emailVerifiedAttr, emailVerifiedValue    string = "email_verified", "true"
+		givenNameAttr, familyNameAttr, emailAttr string = "given_name", "family_name", "email"
+	)
+
+	if *input.GroupName == "internal-error" || *input.GroupName == "list-group-users-internal-error" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+	if *input.GroupName == "list-group-users-not-found" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "list members - group not found", nil)
+	}
+
+	group := m.ReadGroup(*input.GroupName)
+	if group == nil {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "the group could not be found", nil)
+	}
+	var userList []*cognitoidentityprovider.UserType
+
+	for _, user := range group.Members {
+		userDetails := cognitoidentityprovider.UserType{
+			Attributes: []*cognitoidentityprovider.AttributeType{
+				{
+					Name:  &emailVerifiedAttr,
+					Value: &emailVerifiedValue,
+				},
+				{
+					Name:  &givenNameAttr,
+					Value: aws.String(user.GivenName),
+				},
+				{
+					Name:  &familyNameAttr,
+					Value: aws.String(user.FamilyName),
+				},
+				{
+					Name:  &emailAttr,
+					Value: aws.String(user.Email),
+				},
+			},
+			Enabled:    &user.Active,
+			UserStatus: aws.String(user.Status),
+			Username:   aws.String(user.ID),
+		}
+		userList = append(userList, &userDetails)
+	}
+	return &cognitoidentityprovider.ListUsersInGroupOutput{
+		Users: userList,
+	}, nil
 }
