@@ -298,7 +298,7 @@ func TestRemoveUserFromGroupHandler(t *testing.T) {
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(successResponse, ShouldNotBeNil)
-					So(successResponse.Status, ShouldEqual, http.StatusAccepted)
+					So(successResponse.Status, ShouldEqual, http.StatusNoContent)
 					So(errorResponse, ShouldBeNil)
 				},
 			},
