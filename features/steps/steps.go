@@ -24,6 +24,8 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^user "([^"]*)" active is "([^"]*)"$`, c.userSetState)
 	ctx.Step(`^group "([^"]*)" exists in the database$`, c.groupExistsInTheDatabase)
 	ctx.Step(`^there are "([^"]*)" users in group "([^"]*)"$`, c.thereAreUsersInGroup)
+	ctx.Step(`^user "([^"]*)" is a member of group "([^"]*)"$`, c.userIsAMemberOfGroup)
+
 }
 
 func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(email, password string) error {
@@ -73,8 +75,13 @@ func (c *IdentityComponent) userSetState(username, active string) error {
 }
 
 func (c *IdentityComponent) groupExistsInTheDatabase(groupName string) error {
-	c.CognitoClient.AddGroupWithName(groupName)
-	return nil
+	err := c.CognitoClient.AddGroupWithName(groupName)
+	return err
+}
+
+func (c *IdentityComponent) userIsAMemberOfGroup(username, groupName string) error {
+	err := c.CognitoClient.AddUserToGroup(username, groupName)
+	return err
 }
 
 func (c *IdentityComponent) thereAreUsersInGroup(userCount, groupName string) error {

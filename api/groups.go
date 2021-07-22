@@ -112,5 +112,5 @@ func (api *API) RemoveUserFromGroupHandler(ctx context.Context, w http.ResponseW
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	return models.NewSuccessResponse(jsonResponse, http.StatusNoContent, nil), nil
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
