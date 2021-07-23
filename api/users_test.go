@@ -220,7 +220,6 @@ func TestCreateUserHandler(t *testing.T) {
 
 			So(successResponse, ShouldBeNil)
 			So(errorResponse.Status, ShouldEqual, tt.httpResponse)
-			//So(len(errorResponse.Errors), ShouldEqual, len(tt.errorCodes))
 			castErr := errorResponse.Errors[0].(*models.Error)
 			So(castErr.Code, ShouldEqual, tt.errorCodes[0])
 			if len(errorResponse.Errors) > 1 {

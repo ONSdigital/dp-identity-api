@@ -110,6 +110,7 @@ func TestUserParams_GeneratePassword(t *testing.T) {
 
 func TestUserParams_ValidateRegistration(t *testing.T) {
 	ctx := context.Background()
+	allowedDomains := []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
 
 	Convey("returns an InvalidForename error if an invalid forename is submitted", t, func() {
 		user := models.UserParams{
@@ -118,7 +119,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 			Lastname: "Smith",
 		}
 
-		errs := user.ValidateRegistration(ctx)
+		errs := user.ValidateRegistration(ctx, allowedDomains)
 
 		So(len(errs), ShouldEqual, 1)
 		castErr := errs[0].(*models.Error)
@@ -133,7 +134,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 			Lastname: "",
 		}
 
-		errs := user.ValidateRegistration(ctx)
+		errs := user.ValidateRegistration(ctx, allowedDomains)
 
 		So(len(errs), ShouldEqual, 1)
 		castErr := errs[0].(*models.Error)
@@ -148,7 +149,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 			Lastname: "Smith",
 		}
 
-		errs := user.ValidateRegistration(ctx)
+		errs := user.ValidateRegistration(ctx, allowedDomains)
 
 		So(len(errs), ShouldEqual, 1)
 		castErr := errs[0].(*models.Error)
@@ -163,7 +164,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 			Lastname: "Smith",
 		}
 
-		errs := user.ValidateRegistration(ctx)
+		errs := user.ValidateRegistration(ctx, allowedDomains)
 
 		So(len(errs), ShouldEqual, 1)
 		castErr := errs[0].(*models.Error)

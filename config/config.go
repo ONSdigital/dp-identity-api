@@ -37,7 +37,7 @@ func Get() (*Config, error) {
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		AWSRegion:                  "eu-west-1",
 		AWSAuthFlow:                "USER_PASSWORD_AUTH",
-		AllowedEmailDomains:        []string{"@ons.gov.uk"},
+		AllowedEmailDomains:        []string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 	}
 
 	return cfg, envconfig.Process("", cfg)
