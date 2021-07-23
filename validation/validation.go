@@ -56,11 +56,16 @@ func IsEmailValid(e string) bool {
 }
 
 // IsAllowedEmailDomain - validates email address is a valid email format and the domain is in the allowed list in config
-func IsAllowedEmailDomain(e string, allowedDomains []string) bool {
-	if !emailLengthValid(len(e)) {
-		return false
+func IsAllowedEmailDomain(email string, allowedDomains []string) bool {
+	if isValidStructure := IsEmailValid(email); !isValidStructure {
+		return isValidStructure
 	}
-	return onsEmailRegex.MatchString(strings.ToLower(e))
+	for _, domain := range allowedDomains {
+		if strings.HasSuffix(email, domain) {
+			return true
+		}
+	}
+	return false
 }
 
 func emailLengthValid(l int) bool {
