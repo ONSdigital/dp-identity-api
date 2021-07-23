@@ -55,9 +55,8 @@ func IsEmailValid(e string) bool {
 	return emailRegex.MatchString(strings.ToLower(e))
 }
 
-// ValidateONSEmail - validates email address for ons domain
-// valid if match found, else invalid
-func ValidateONSEmail(e string) bool {
+// IsAllowedEmailDomain - validates email address is a valid email format and the domain is in the allowed list in config
+func IsAllowedEmailDomain(e string, allowedDomains []string) bool {
 	if !emailLengthValid(len(e)) {
 		return false
 	}

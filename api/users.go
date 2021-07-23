@@ -32,7 +32,7 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
 	}
 
-	validationErrs := user.ValidateRegistration(ctx)
+	validationErrs := user.ValidateRegistration(ctx, api.AllowedDomains)
 
 	listUserInput := models.UsersList{}.BuildListUserRequest("email = \""+user.Email+"\"", "email", int64(1), &api.UserPoolId)
 	listUserResp, err := api.CognitoClient.ListUsers(listUserInput)
