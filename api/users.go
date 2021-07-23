@@ -3,10 +3,10 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/gorilla/mux"
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/google/uuid"
@@ -59,7 +59,7 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, responseErr)
 		}
 	}
-
+	resultUser.User.Enabled = aws.Bool(true)
 	createdUser := models.UserParams{}.MapCognitoDetails(resultUser.User)
 	jsonResponse, responseErr := createdUser.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {
@@ -136,17 +136,23 @@ func (api *API) UpdateUserHandler(ctx context.Context, w http.ResponseWriter, re
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}
 
-	userRequest := user.BuildUpdateUserRequest(api.UserPoolId)
-
-	_, err = api.CognitoClient.AdminUpdateUserAttributes(userRequest)
-	if err != nil {
-		responseErr := models.NewCognitoError(ctx, err, "AdminUpdateUserAttributes request from update user endpoint")
-		if responseErr.Code == models.UserNotFoundError {
-			return nil, models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
-		} else if responseErr.Code == models.InvalidFieldError {
-			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, responseErr)
+	if user.Active {
+		userEnableRequest := user.BuildEnableUserRequest(api.UserPoolId)
+		if _, err = api.CognitoClient.AdminEnableUser(userEnableRequest); err != nil {
+			return nil, processUpdateCognitoError(ctx, err, "AdminEnableUser request from update user endpoint")
 		}
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	} else {
+		userDisableRequest := user.BuildDisableUserRequest(api.UserPoolId)
+		if _, err = api.CognitoClient.AdminDisableUser(userDisableRequest); err != nil {
+			return nil, processUpdateCognitoError(ctx, err, "AdminDisableUser request from update user endpoint")
+		}
+	}
+
+	userUpdateRequest := user.BuildUpdateUserRequest(api.UserPoolId)
+
+	_, err = api.CognitoClient.AdminUpdateUserAttributes(userUpdateRequest)
+	if err != nil {
+		return nil, processUpdateCognitoError(ctx, err, "AdminUpdateUserAttributes request from update user endpoint")
 	}
 
 	userDetailsRequest := user.BuildAdminGetUserRequest(api.UserPoolId)
@@ -164,6 +170,16 @@ func (api *API) UpdateUserHandler(ctx context.Context, w http.ResponseWriter, re
 	}
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
+
+func processUpdateCognitoError(ctx context.Context, err error, errContext string) *models.ErrorResponse {
+	responseErr := models.NewCognitoError(ctx, err, errContext)
+	if responseErr.Code == models.UserNotFoundError {
+		return models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
+	} else if responseErr.Code == models.InvalidFieldError {
+		return models.NewErrorResponse(http.StatusBadRequest, nil, responseErr)
+	}
+	return models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 }
 
 //ChangePasswordHandler processes changes to the users password

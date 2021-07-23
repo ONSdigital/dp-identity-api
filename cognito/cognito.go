@@ -19,4 +19,8 @@ type Client interface {
 	CreateGroup(input *cognito.CreateGroupInput) (*cognito.CreateGroupOutput, error)
 	GetGroup(input *cognito.GetGroupInput) (*cognito.GetGroupOutput, error)
 	AdminUpdateUserAttributes(input *cognito.AdminUpdateUserAttributesInput) (*cognito.AdminUpdateUserAttributesOutput, error)
+	AdminEnableUser(input *cognito.AdminEnableUserInput) (*cognito.AdminEnableUserOutput, error)
+	AdminDisableUser(input *cognito.AdminDisableUserInput) (*cognito.AdminDisableUserOutput, error)
+	AdminAddUserToGroup(input *cognito.AdminAddUserToGroupInput) (*cognito.AdminAddUserToGroupOutput, error)
+	ListUsersInGroup(input *cognito.ListUsersInGroupInput) (*cognito.ListUsersInGroupOutput, error)
 }

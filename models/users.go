@@ -14,6 +14,7 @@ import (
 const (
 	NewPasswordRequiredType = "NewPasswordRequired"
 	ForgottenPasswordType   = "ForgottenPassword"
+	MaxStatusNotesLength    = 512
 )
 
 type UsersList struct {
@@ -62,13 +63,15 @@ func (p *UsersList) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, er
 
 //Model for the User
 type UserParams struct {
-	Forename string   `json:"forename"`
-	Lastname string   `json:"lastname"`
-	Email    string   `json:"email"`
-	Password string   `json:"-"`
-	Groups   []string `json:"groups"`
-	Status   string   `json:"status"`
-	ID       string   `json:"id"`
+	Forename    string   `json:"forename"`
+	Lastname    string   `json:"lastname"`
+	Email       string   `json:"email"`
+	Password    string   `json:"-"`
+	Groups      []string `json:"groups"`
+	Status      string   `json:"status"`
+	Active      bool     `json:"active"`
+	ID          string   `json:"id"`
+	StatusNotes string   `json:"status_notes"`
 }
 
 //GeneratePassword creates a password for the user and assigns it to the struct
@@ -108,6 +111,11 @@ func (p UserParams) ValidateUpdate(ctx context.Context) []error {
 	if p.Lastname == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidSurnameError, InvalidSurnameErrorDescription))
 	}
+
+	if len(p.StatusNotes) > MaxStatusNotesLength {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidStatusNotesError, TooLongStatusNotesDescription))
+	}
+
 	return validationErrs
 }
 
@@ -156,7 +164,7 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 //BuildUpdateUserRequest generates a AdminUpdateUserAttributesInput for Cognito
 func (p UserParams) BuildUpdateUserRequest(userPoolId string) *cognitoidentityprovider.AdminUpdateUserAttributesInput {
 	var (
-		forenameAttrName, surnameAttrName string = "given_name", "family_name"
+		forenameAttrName, surnameAttrName, statusNotesAttrName string = "given_name", "family_name", "custom:status_notes"
 	)
 
 	return &cognitoidentityprovider.AdminUpdateUserAttributesInput{
@@ -169,7 +177,27 @@ func (p UserParams) BuildUpdateUserRequest(userPoolId string) *cognitoidentitypr
 				Name:  &surnameAttrName,
 				Value: &p.Lastname,
 			},
+			{
+				Name:  &statusNotesAttrName,
+				Value: &p.StatusNotes,
+			},
 		},
+		UserPoolId: &userPoolId,
+		Username:   &p.ID,
+	}
+}
+
+//BuildEnableUserRequest generates a AdminEnableUserInput for Cognito
+func (p UserParams) BuildEnableUserRequest(userPoolId string) *cognitoidentityprovider.AdminEnableUserInput {
+	return &cognitoidentityprovider.AdminEnableUserInput{
+		UserPoolId: &userPoolId,
+		Username:   &p.ID,
+	}
+}
+
+//BuildDisableUserRequest generates a AdminDisableUserInput for Cognito
+func (p UserParams) BuildDisableUserRequest(userPoolId string) *cognitoidentityprovider.AdminDisableUserInput {
+	return &cognitoidentityprovider.AdminDisableUserInput{
 		UserPoolId: &userPoolId,
 		Username:   &p.ID,
 	}
@@ -184,7 +212,7 @@ func (p UserParams) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, er
 	return jsonResponse, nil
 }
 
-//BuildCreateUserRequest generates a AdminCreateUserInput for Cognito
+//BuildAdminGetUserRequest generates a AdminGetUserInput for Cognito
 func (p UserParams) BuildAdminGetUserRequest(userPoolId string) *cognitoidentityprovider.AdminGetUserInput {
 	return &cognitoidentityprovider.AdminGetUserInput{
 		UserPoolId: &userPoolId,
@@ -192,9 +220,9 @@ func (p UserParams) BuildAdminGetUserRequest(userPoolId string) *cognitoidentity
 	}
 }
 
-//MapCognitoDetails maps the details from the Cognito User model to the UserParams model
+//MapCognitoDetails maps the details from the Cognito ListUser User model to the UserParams model
 func (p UserParams) MapCognitoDetails(userDetails *cognitoidentityprovider.UserType) UserParams {
-	var forename, surname, email string
+	var forename, surname, email, statusNotes string
 	for _, attr := range userDetails.Attributes {
 		if *attr.Name == "given_name" {
 			forename = *attr.Value
@@ -202,18 +230,23 @@ func (p UserParams) MapCognitoDetails(userDetails *cognitoidentityprovider.UserT
 			surname = *attr.Value
 		} else if *attr.Name == "email" {
 			email = *attr.Value
+		} else if *attr.Name == "custom:status_notes" {
+			statusNotes = *attr.Value
 		}
 	}
 	return UserParams{
-		Forename: forename,
-		Lastname: surname,
-		Email:    email,
-		Groups:   []string{},
-		Status:   *userDetails.UserStatus,
-		ID:       *userDetails.Username,
+		Forename:    forename,
+		Lastname:    surname,
+		Email:       email,
+		Groups:      []string{},
+		Status:      *userDetails.UserStatus,
+		ID:          *userDetails.Username,
+		StatusNotes: statusNotes,
+		Active:      *userDetails.Enabled,
 	}
 }
 
+//MapCognitoGetResponse maps the details from the Cognito GetUser User model to the UserParams model
 func (p *UserParams) MapCognitoGetResponse(userDetails *cognitoidentityprovider.AdminGetUserOutput) {
 	for _, attr := range userDetails.UserAttributes {
 		if *attr.Name == "given_name" {
@@ -222,10 +255,13 @@ func (p *UserParams) MapCognitoGetResponse(userDetails *cognitoidentityprovider.
 			p.Lastname = *attr.Value
 		} else if *attr.Name == "email" {
 			p.Email = *attr.Value
+		} else if *attr.Name == "custom:status_notes" {
+			p.StatusNotes = *attr.Value
 		}
 	}
 	p.Status = *userDetails.UserStatus
 	p.Groups = []string{}
+	p.Active = *userDetails.Enabled
 }
 
 type CreateUserInput struct {

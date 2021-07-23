@@ -11,8 +11,11 @@ const (
 	JSONMarshalError             = "JSONMarshalError"
 	JSONUnmarshalError           = "JSONUnmarshalError"
 	WriteResponseError           = "WriteResponseError"
+	InvalidUserIdError           = "InvalidUserId"
+	InvalidGroupNameError        = "InvalidGroupName"
 	InvalidForenameError         = "InvalidForename"
 	InvalidSurnameError          = "InvalidSurname"
+	InvalidStatusNotesError      = "InvalidStatusNotes"
 	InvalidEmailError            = "InvalidEmail"
 	InvalidTokenError            = "InvalidToken"
 	InternalError                = "InternalServerError"
@@ -52,6 +55,8 @@ const (
 	BodyReadFailedDescription              = "endpoint returned an error reading the request body"
 	InvalidPasswordDescription             = "the submitted password could not be validated"
 	PasswordGenerationErrorDescription     = "failed to generate a valid password"
+	MissingGroupNameErrorDescription       = "the group name was missing"
+	MissingUserIdErrorDescription          = "the user id was missing"
 	InvalidForenameErrorDescription        = "the submitted user's forename could not be validated"
 	InvalidSurnameErrorDescription         = "the submitted user's lastname could not be validated"
 	InvalidEmailDescription                = "the submitted email could not be validated"
@@ -63,6 +68,7 @@ const (
 	NotImplementedDescription              = "this feature has not been implemented yet"
 	InvalidChallengeSessionDescription     = "no valid auth challenge session was provided"
 	InvalidTokenDescription                = "the submitted token could not be validated"
+	TooLongStatusNotesDescription          = "the status notes are too long"
 )
 
 // Mapping Cognito error codes to API error codes

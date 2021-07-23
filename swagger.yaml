@@ -211,7 +211,7 @@ paths:
           description: "Internal error occurred"
           schema:
             $ref: '#/definitions/ErrorResponse'
-            
+
     put:
       tags:
         - Users
@@ -225,9 +225,9 @@ paths:
           description: the users id
         - in: body
           name: user
-          description: "The forename and surname for a user."
+          description: "The forename, surname, active status and status notes for a user."
           schema:
-            required: ["forename","lastname", "status"]
+            required: ["forename","lastname", "active"]
             type: object
             properties:
               forename:
@@ -236,9 +236,11 @@ paths:
               lastname:
                 type: string
                 example: "bobbings"
-              status:
+              active:
+                type: boolean
+              status_notes:
                 type: string
-                example: "CONFIRMED"
+                example: "User has been suspended"
       responses:
         200:
           description: "The users details"
@@ -314,10 +316,8 @@ paths:
           description: "Requested unimplemented password change type"
           schema:
             $ref: '#/definitions/ErrorResponse'
-
-
   /v1/password-reset:
-    put:
+    post:
       tags:
         - Users
       summary: "Sends the user a password reset email"
@@ -348,6 +348,44 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /v1/groups/{name}/members:
+    post:
+      tags:
+        - Groups
+      summary: "Add user to group"
+      description: "Adds a user to an existing group in Cognito"
+      consumes:
+        - application/json
+      produces:
+        - "application/json"
+      parameters:
+        - in: path
+          name: name
+          type: string
+          required: true
+          description: the group's name
+        - in: body
+          name: "User id"
+          description: "The id of the user being added to the group"
+          schema:
+            required: ["user_id"]
+            type: object
+            properties:
+              user_id:
+                type: string
+      responses:
+        200:
+          description: "User added to group"
+          schema:
+            $ref: '#/definitions/Group'
+        400:
+          description: "Invalid group name or user id provided"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: "Invalid request body or unexpected Cognito response"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
 
 
 
@@ -363,6 +401,27 @@ definitions:
         type: string
         description: "Expiration Time, UTC ISO 8601"
         example: "YYYY-MM-DD hh-mm-ssZ"
+  Group:
+    description: "The group model for the response body"
+    type: object
+    properties:
+      name:
+        description: "The group name"
+        type: string
+      description:
+        description: "A description of the group"
+        type: string
+      precedence:
+        description: "The priority of the group"
+        type: integer
+      created:
+        description: "The date the group was created"
+        type: string
+      members:
+        description: "A list of members of a group for the response body"
+        type: array
+        items:
+          $ref: '#/definitions/User'
   UserList:
     description: "A list of users for the response body"
     type: object
@@ -395,6 +454,13 @@ definitions:
         items:
           description: "The groups name"
           type: string
+      active:
+        description: "Whether or not the user is active"
+        type: boolean
+      status_notes:
+        description: "Notes about the updates made to the user"
+        type: string
+        example: "User has been suspended"
       status:
         description: "The current status of the user"
         type: string
@@ -446,6 +512,9 @@ definitions:
           - "UnknownRequestType"
           - "NotImplemented"
           - "InvalidChallengeSession"
+          - "InvalidStatusNotes"
+          - "InvalidUserId"
+          - "InvalidGroupName"
       description:
         type: string
         description: "Description of the error"
