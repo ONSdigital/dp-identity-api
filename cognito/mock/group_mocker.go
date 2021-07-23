@@ -1,6 +1,9 @@
 package mock
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type Group struct {
 	Name        string
@@ -68,5 +71,21 @@ func (m *CognitoIdentityProviderClientStub) ReadGroup(groupName string) *Group {
 			return group
 		}
 	}
+	return nil
+}
+
+func (m *CognitoIdentityProviderClientStub) AddUserToGroup(username string, groupName string) error {
+	group := m.ReadGroup(groupName)
+	if group == nil {
+		return errors.New("could not find the group")
+	}
+
+	user := m.ReadUser(username)
+	if user == nil {
+		return errors.New("could not find the group")
+	}
+
+	user.Groups = append(user.Groups, group)
+	group.Members = append(group.Members, user)
 	return nil
 }

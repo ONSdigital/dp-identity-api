@@ -39,8 +39,8 @@ func NewPublisherRoleGroup() Group {
 	}
 }
 
-// ValidateAddUser validates the required fields for adding a user to a group, returns validation errors for anything that fails
-func (g *Group) ValidateAddUser(ctx context.Context, userId string) []error {
+// ValidateAddRemoveUser validates the required fields for adding a user to a group, returns validation errors for anything that fails
+func (g *Group) ValidateAddRemoveUser(ctx context.Context, userId string) []error {
 	var validationErrs []error
 	if g.Name == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupNameError, MissingGroupNameErrorDescription))
@@ -73,6 +73,15 @@ func (g *Group) BuildGetGroupRequest(userPoolId string) *cognitoidentityprovider
 // BuildAddUserToGroupRequest builds a correctly populated AdminAddUserToGroupInput object
 func (g *Group) BuildAddUserToGroupRequest(userPoolId, userId string) *cognitoidentityprovider.AdminAddUserToGroupInput {
 	return &cognitoidentityprovider.AdminAddUserToGroupInput{
+		GroupName:  &g.Name,
+		UserPoolId: &userPoolId,
+		Username:   &userId,
+	}
+}
+
+// BuildRemoveUserFromGroupRequest builds a correctly populated AdminRemoveUserFromGroupInput object
+func (g *Group) BuildRemoveUserFromGroupRequest(userPoolId, userId string) *cognitoidentityprovider.AdminRemoveUserFromGroupInput {
+	return &cognitoidentityprovider.AdminRemoveUserFromGroupInput{
 		GroupName:  &g.Name,
 		UserPoolId: &userPoolId,
 		Username:   &userId,

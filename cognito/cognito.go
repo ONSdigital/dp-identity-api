@@ -23,4 +23,5 @@ type Client interface {
 	AdminDisableUser(input *cognito.AdminDisableUserInput) (*cognito.AdminDisableUserOutput, error)
 	AdminAddUserToGroup(input *cognito.AdminAddUserToGroupInput) (*cognito.AdminAddUserToGroupOutput, error)
 	ListUsersInGroup(input *cognito.ListUsersInGroupInput) (*cognito.ListUsersInGroupOutput, error)
+	AdminRemoveUserFromGroup(input *cognito.AdminRemoveUserFromGroupInput) (*cognito.AdminRemoveUserFromGroupOutput, error)
 }

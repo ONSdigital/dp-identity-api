@@ -505,3 +505,37 @@ func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoident
 		Users: userList,
 	}, nil
 }
+
+func (m *CognitoIdentityProviderClientStub) AdminRemoveUserFromGroup(input *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error) {
+	if *input.GroupName == "internal-error" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+
+	group := m.ReadGroup(*input.GroupName)
+	if group == nil {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "the group could not be found", nil)
+	}
+
+	user := m.ReadUser(*input.Username)
+	if user == nil {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+	}
+
+	var newGroupMembersList []*User
+	for _, member := range group.Members {
+		if member.ID != user.ID {
+			newGroupMembersList = append(newGroupMembersList, member)
+		}
+	}
+	group.Members = newGroupMembersList
+
+	var newUserGroupList []*Group
+	for _, memberGroup := range user.Groups {
+		if memberGroup.Name != group.Name {
+			newUserGroupList = append(newUserGroupList, group)
+		}
+	}
+	user.Groups = newUserGroupList
+
+	return &cognitoidentityprovider.AdminRemoveUserFromGroupOutput{}, nil
+}
