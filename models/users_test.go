@@ -981,12 +981,9 @@ func TestPasswordReset_BuildCognitoRequest(t *testing.T) {
 }
 
 func TestUserParams_BuildListUserGroupsRequest(t *testing.T) {
-	Convey("builds a correctly populated Cognito AdminDisableUserInput request body with empty nextToken", t, func() {
+	Convey("builds a correctly populated Cognito AdminListUserGroupsInput request body with empty nextToken", t, func() {
 		userId := "abcd1234"
 		nextToken := ""
-		user := models.UserParams{
-			ID: userId,
-		}
 
 		userPoolId := "euwest-99-aabbcc"
 		request := user.BuildListUserGroupsRequest(userPoolId, nextToken)
@@ -996,7 +993,7 @@ func TestUserParams_BuildListUserGroupsRequest(t *testing.T) {
 		So(*request.UserPoolId, ShouldEqual, userPoolId)
 	})
 
-	Convey("builds a correctly populated Cognito AdminDisableUserInput request body with nextToken", t, func() {
+	Convey("builds a correctly populated Cognito AdminListUserGroupsInput request body with nextToken", t, func() {
 		userId := "abcd1234"
 		nextToken := "abc1234"
 		user := models.UserParams{

@@ -332,6 +332,7 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
+
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 
 }

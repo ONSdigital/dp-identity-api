@@ -25,6 +25,7 @@ type UsersList struct {
 type ListUserGroups struct {
 	UserGroups cognitoidentityprovider.AdminListGroupsForUserOutput `json:"usergroups"`
 	Count      int                                                  `json:"count"`
+	Groups     []UserParams                                         `json:"groups"`
 }
 
 //BuildListUserRequest generates a ListUsersInput object for Cognito
