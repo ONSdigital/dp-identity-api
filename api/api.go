@@ -29,6 +29,7 @@ type API struct {
 	ClientId       string
 	ClientSecret   string
 	ClientAuthFlow string
+	AllowedDomains []string
 }
 
 type baseHandler func(ctx context.Context, w http.ResponseWriter, r *http.Request) (*models.SuccessResponse, *models.ErrorResponse)
@@ -46,10 +47,10 @@ func contextAndErrors(h baseHandler) http.HandlerFunc {
 }
 
 //Setup function sets up the api and returns an api
-func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, userPoolId string, clientId string, clientSecret string, clientAuthFlow string) (*API, error) {
+func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, userPoolId string, clientId string, clientSecret string, clientAuthFlow string, allowedDomains []string) (*API, error) {
 
 	// Return an error if empty required parameter was passed.
-	if userPoolId == "" || clientId == "" || clientSecret == "" || clientAuthFlow == "" {
+	if userPoolId == "" || clientId == "" || clientSecret == "" || clientAuthFlow == "" || allowedDomains == nil || len(allowedDomains) == 0 {
 		return nil, models.NewError(ctx, nil, models.MissingConfigError, models.MissingConfigDescription)
 	}
 
@@ -64,6 +65,7 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 		ClientId:       clientId,
 		ClientSecret:   clientSecret,
 		ClientAuthFlow: clientAuthFlow,
+		AllowedDomains: allowedDomains,
 	}
 
 	r.HandleFunc("/v1/tokens", contextAndErrors(api.TokensHandler)).Methods(http.MethodPost)

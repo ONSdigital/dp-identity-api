@@ -41,7 +41,6 @@ import (
 // .my.name@myself.com - match not found - invalid
 // my.name@myself.com. - match not found - invalid
 var emailRegex = regexp.MustCompile(`^(?:[a-z0-9!#$%&'*+/=?^_` + "`" + `{|}~-]+(?:\.[a-z0-9-!#$%&'*+/=?^_` + "`" + `{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$`)
-var onsEmailRegex = regexp.MustCompile(`^(?:[a-z0-9!#$%&'*+/=?^_` + "`" + `{|}~-]+(?:\.[a-z0-9-!#$%&'*+/=?^_` + "`" + `{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(:?ext\.)?ons.gov.uk$`)
 var (
 	minimumEmailLength, maximumEmailLength int = 3, 254
 )
@@ -55,13 +54,17 @@ func IsEmailValid(e string) bool {
 	return emailRegex.MatchString(strings.ToLower(e))
 }
 
-// ValidateONSEmail - validates email address for ons domain
-// valid if match found, else invalid
-func ValidateONSEmail(e string) bool {
-	if !emailLengthValid(len(e)) {
-		return false
+// IsAllowedEmailDomain - validates email address is a valid email format and the domain is in the allowed list in config
+func IsAllowedEmailDomain(email string, allowedDomains []string) bool {
+	if isValidStructure := IsEmailValid(email); !isValidStructure {
+		return isValidStructure
 	}
-	return onsEmailRegex.MatchString(strings.ToLower(e))
+	for _, domain := range allowedDomains {
+		if strings.HasSuffix(email, domain) {
+			return true
+		}
+	}
+	return false
 }
 
 func emailLengthValid(l int) bool {

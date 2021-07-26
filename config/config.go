@@ -18,6 +18,7 @@ type Config struct {
 	AWSCognitoClientId         string        `envconfig:"AWS_COGNITO_CLIENT_ID" json:"-"`
 	AWSCognitoClientSecret     string        `envconfig:"AWS_COGNITO_CLIENT_SECRET" json:"-"`
 	AWSAuthFlow                string        `envconfig:"AWS_AUTH_FLOW" json:"-"`
+	AllowedEmailDomains        []string      `envconfig:"ALLOWED_EMAIL_DOMAINS" json:"-"`
 }
 
 var cfg *Config
@@ -36,6 +37,7 @@ func Get() (*Config, error) {
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		AWSRegion:                  "eu-west-1",
 		AWSAuthFlow:                "USER_PASSWORD_AUTH",
+		AllowedEmailDomains:        []string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 	}
 
 	return cfg, envconfig.Process("", cfg)

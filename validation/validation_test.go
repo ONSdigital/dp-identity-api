@@ -84,3 +84,52 @@ func TestEmailValidationConformsToExpectedFormat(t *testing.T) {
 	})
 
 }
+
+func TestEmailDomainValidationCorrectlyValidatesAllowedDomains(t *testing.T) {
+	allowedDomains := []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
+
+	Convey("An empty email does not conform to the expected format and is not validated", t, func() {
+		email := ""
+		emailResponse := IsAllowedEmailDomain(email, allowedDomains)
+		So(emailResponse, ShouldBeFalse)
+	})
+
+	Convey("A badly formatted email is not validated", t, func() {
+		email := "string@string@string.string"
+		emailResponse := IsAllowedEmailDomain(email, allowedDomains)
+		So(emailResponse, ShouldBeFalse)
+	})
+
+	Convey("The email conforms to the expected format but is not an allowed domain so it is not validated", t, func() {
+		email := "email.email@gmail.com"
+		emailResponse := IsAllowedEmailDomain(email, allowedDomains)
+		So(emailResponse, ShouldBeFalse)
+	})
+
+	Convey("The allowed domain is only part of the domain so it is not validated", t, func() {
+		email := "email.email@ons.gov.uk.test.com"
+		emailResponse := IsAllowedEmailDomain(email, allowedDomains)
+		So(emailResponse, ShouldBeFalse)
+	})
+
+	Convey("The email conforms to the expected format and is an allowed domain then it is validated", t, func() {
+		email := "email.email@ons.gov.uk"
+		emailResponse := IsAllowedEmailDomain(email, allowedDomains)
+		So(emailResponse, ShouldBeTrue)
+
+		email = "email.email@ext.ons.gov.uk"
+		emailResponse = IsAllowedEmailDomain(email, allowedDomains)
+		So(emailResponse, ShouldBeTrue)
+	})
+
+	Convey("A new domain is added to the allowed list, emails using it are now validated", t, func() {
+		email := "email.email@gmail.com"
+		emailResponse := IsAllowedEmailDomain(email, allowedDomains)
+		So(emailResponse, ShouldBeFalse)
+
+		newAllowedDomains := append(allowedDomains, "@gmail.com")
+
+		emailResponse = IsAllowedEmailDomain(email, newAllowedDomains)
+		So(emailResponse, ShouldBeTrue)
+	})
+}

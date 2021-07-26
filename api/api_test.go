@@ -30,7 +30,7 @@ func TestSetup(t *testing.T) {
 			}
 			return group, nil
 		}
-		api, err := Setup(ctx, r, m, "us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow")
+		api, err := Setup(ctx, r, m, "us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow", []string{"@ons.gov.uk", "@ext.ons.gov.uk"})
 
 		Convey("When created the following route(s) should have been added", func() {
 			So(hasRoute(api.Router, "/v1/tokens", http.MethodPost), ShouldBeTrue)
@@ -62,6 +62,7 @@ func TestSetup(t *testing.T) {
 			clientId       string
 			clientSecret   string
 			clientAuthFlow string
+			allowedDomains []string
 		}{
 			// missing userPoolId
 			{
@@ -70,6 +71,7 @@ func TestSetup(t *testing.T) {
 				"client-aaa-bbb",
 				"secret-ccc-ddd",
 				"authflow",
+				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 			},
 			// missing clientId
 			{
@@ -78,6 +80,7 @@ func TestSetup(t *testing.T) {
 				"",
 				"secret-ccc-ddd",
 				"authflow",
+				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 			},
 			// missing clientSecret
 			{
@@ -86,6 +89,7 @@ func TestSetup(t *testing.T) {
 				"client-aaa-bbb",
 				"",
 				"authflow",
+				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 			},
 			// missing clientAuthFlow
 			{
@@ -94,13 +98,23 @@ func TestSetup(t *testing.T) {
 				"client-aaa-bbb",
 				"secret-ccc-ddd",
 				"",
+				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
+			},
+			// missing allowedDomains
+			{
+				"missing allowedDomains",
+				"eu-west-22_bdsjhids2",
+				"client-aaa-bbb",
+				"secret-ccc-ddd",
+				"authflow",
+				nil,
 			},
 		}
 
 		for _, tt := range paramCheckTests {
 			r := mux.NewRouter()
 			ctx := context.Background()
-			_, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, tt.userPoolId, tt.clientId, tt.clientSecret, tt.clientAuthFlow)
+			_, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, tt.userPoolId, tt.clientId, tt.clientSecret, tt.clientAuthFlow, tt.allowedDomains)
 
 			Convey("Error should not be nil if require parameter is empty: "+tt.testName, func() {
 				So(err.Error(), ShouldEqual, models.MissingConfigError+": "+models.MissingConfigDescription)
@@ -120,9 +134,10 @@ func hasRoute(r *mux.Router, path, method string) bool {
 
 func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProviderClient) {
 	var (
-		ctx                                             = context.Background()
-		r                                               = mux.NewRouter()
-		poolId, clientId, clientSecret, authFlow string = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "USER_PASSWORD_AUTH"
+		ctx                                               = context.Background()
+		r                                                 = mux.NewRouter()
+		poolId, clientId, clientSecret, authFlow string   = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "USER_PASSWORD_AUTH"
+		allowedDomains                           []string = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
@@ -133,7 +148,7 @@ func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProv
 		return group, nil
 	}
 
-	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow)
+	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow, allowedDomains)
 
 	w := httptest.NewRecorder()
 
