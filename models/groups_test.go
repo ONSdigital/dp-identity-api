@@ -46,7 +46,7 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		}
 		userId := ""
 
-		errs := group.ValidateAddUser(ctx, userId)
+		errs := group.ValidateAddRemoveUser(ctx, userId)
 
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 1)
@@ -59,7 +59,7 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		group := models.Group{}
 		userId := "zzzz-9999"
 
-		errs := group.ValidateAddUser(ctx, userId)
+		errs := group.ValidateAddRemoveUser(ctx, userId)
 
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 1)
@@ -72,7 +72,7 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		group := models.Group{}
 		userId := ""
 
-		errs := group.ValidateAddUser(ctx, userId)
+		errs := group.ValidateAddRemoveUser(ctx, userId)
 
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 2)
@@ -90,7 +90,7 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		}
 		userId := "zzzz-9999"
 
-		errs := group.ValidateAddUser(ctx, userId)
+		errs := group.ValidateAddRemoveUser(ctx, userId)
 
 		So(errs, ShouldBeNil)
 	})
@@ -135,7 +135,7 @@ func TestGroup_BuildGetGroupRequest(t *testing.T) {
 }
 
 func TestGroup_BuildAddUserToGroupRequest(t *testing.T) {
-	Convey("builds a correctly populated Cognito GetGroup request body", t, func() {
+	Convey("builds a correctly populated Cognito AdminAddUserToGroup request body", t, func() {
 		group := models.Group{
 			Name: "role-test",
 		}
@@ -145,6 +145,23 @@ func TestGroup_BuildAddUserToGroupRequest(t *testing.T) {
 		response := group.BuildAddUserToGroupRequest(userPoolId, userId)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminAddUserToGroupInput{}))
+		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.GroupName, ShouldEqual, group.Name)
+		So(*response.Username, ShouldEqual, userId)
+	})
+}
+
+func TestGroup_BuildRemoveUserFromGroupRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito AdminRemoveUserFromGroup request body", t, func() {
+		group := models.Group{
+			Name: "role-test",
+		}
+		userPoolId := "euwest-99-aabbcc"
+		userId := "zzzz-9999"
+
+		response := group.BuildRemoveUserFromGroupRequest(userPoolId, userId)
+
+		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminRemoveUserFromGroupInput{}))
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
 		So(*response.GroupName, ShouldEqual, group.Name)
 		So(*response.Username, ShouldEqual, userId)

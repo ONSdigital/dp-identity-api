@@ -85,7 +85,7 @@ func (p *UserParams) GeneratePassword(ctx context.Context) error {
 }
 
 //ValidateRegistration validates the required fields for user creation, returning validation errors for any failures
-func (p UserParams) ValidateRegistration(ctx context.Context) []error {
+func (p UserParams) ValidateRegistration(ctx context.Context, allowedDomains []string) []error {
 	var validationErrs []error
 	if p.Forename == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidForenameError, InvalidForenameErrorDescription))
@@ -95,7 +95,7 @@ func (p UserParams) ValidateRegistration(ctx context.Context) []error {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidSurnameError, InvalidSurnameErrorDescription))
 	}
 
-	if !validation.ValidateONSEmail(p.Email) {
+	if !validation.IsAllowedEmailDomain(p.Email, allowedDomains) {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription))
 	}
 	return validationErrs
