@@ -293,3 +293,29 @@ func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter,
 
 	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
 }
+
+//ListUserGroupsHandler lists the users in the user pool
+func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	vars := mux.Vars(req)
+	user := models.UserParams{ID: vars["id"]}
+	listusergroups := models.ListUserGroups{}
+	userInput := user.BuildListUserGroupsRequest(api.UserPoolId)
+	userResp, err := api.CognitoClient.AdminListGroupsForUser(userInput)
+
+	if err != nil {
+		responseErr := models.NewCognitoError(ctx, err, "Cognito ListUserGroups request from ListUserGroups endpoint")
+		if responseErr.Code == models.UserNotFoundError {
+			return nil, models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
+		} else {
+			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+		}
+	}
+
+	jsonResponse, responseErr := listusergroups.BuildListUserGroupsSuccessfulJsonResponse(ctx, userResp)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+
+}
