@@ -25,6 +25,7 @@ type MockCognitoIdentityProviderClient struct {
 	AdminAddUserToGroupFunc       func(input *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error)
 	ListUsersInGroupFunc          func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
 	AdminRemoveUserFromGroupFunc  func(input *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error)
+	AdminListGroupsForUserFunc    func(input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error)
 }
 
 func (m *MockCognitoIdentityProviderClient) DescribeUserPool(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
@@ -98,4 +99,8 @@ func (m *MockCognitoIdentityProviderClient) ListUsersInGroup(input *cognitoident
 
 func (m *MockCognitoIdentityProviderClient) AdminRemoveUserFromGroup(input *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error) {
 	return m.AdminRemoveUserFromGroupFunc(input)
+}
+
+func (m *MockCognitoIdentityProviderClient) AdminListGroupsForUser(input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
+	return m.AdminListGroupsForUserFunc(input)
 }
