@@ -904,7 +904,7 @@ func TestChangePassword_ValidateForgottenPasswordRequiredRequest(t *testing.T) {
 }
 
 func TestForgottenPassword_BuildConfirmForgotPasswordRequest(t *testing.T) {
-	Convey("builds a correctly populated Cognito RespondToAuthChallengeInput request body", t, func() {
+	Convey("builds a correctly populated Cognito BuildConfirmForgotPasswordRequest request body", t, func() {
 
 		passwordChangeParams := models.ChangePassword{
 			VerificationToken: "verification_token",
@@ -977,4 +977,57 @@ func TestPasswordReset_BuildCognitoRequest(t *testing.T) {
 		So(*response.SecretHash, ShouldNotBeEmpty)
 		So(*response.ClientId, ShouldResemble, clientId)
 	})
+}
+
+func TestUserParams_BuildListUserGroupsRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito AdminDisableUserInput request body", t, func() {
+		userId := "abcd1234"
+		user := models.UserParams{
+			ID: userId,
+		}
+
+		userPoolId := "euwest-99-aabbcc"
+
+		request := user.BuildListUserGroupsRequest(userPoolId)
+
+		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminListGroupsForUserInput{}))
+		So(*request.Username, ShouldEqual, userId)
+		So(*request.UserPoolId, ShouldEqual, userPoolId)
+	})
+}
+func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) {
+	ctx := context.Background()
+	Convey("returns an InternalServerError if the Cognito response does not meet expected format", t, func() {
+		Convey("adds the returned users to the users attribute and sets the count", t, func() {
+			cognitoResponse := cognitoidentityprovider.ListUsersOutput{
+				Users: []*cognitoidentityprovider.UserType{
+					{
+						Enabled:    aws.Bool(true),
+						UserStatus: aws.String("CONFIRMED"),
+						Username:   aws.String("user-1"),
+					},
+					{
+						Enabled:    aws.Bool(true),
+						UserStatus: aws.String("CONFIRMED"),
+						Username:   aws.String("user-2"),
+					},
+				},
+			}
+			userList := models.UsersList{}
+			userList.MapCognitoUsers(&cognitoResponse)
+
+			So(len(userList.Users), ShouldEqual, len(cognitoResponse.Users))
+			So(userList.Count, ShouldEqual, len(cognitoResponse.Users))
+		})
+		input := models.ListUserGroups{}
+		result := cognitoidentityprovider.AdminListGroupsForUserOutput{
+			Groups:    []*cognitoidentityprovider.ListUsersInGroupOutput
+			NextToken: new(string),
+		}
+
+		response, err := input.BuildListUserGroupsSuccessfulJsonResponse(ctx, &result)
+		So(err, ShouldBeNil)
+
+	})
+
 }
