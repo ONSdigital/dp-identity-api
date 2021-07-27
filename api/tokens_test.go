@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
@@ -362,4 +363,200 @@ func TestAPI_RefreshHandler(t *testing.T) {
 		So(len(errorResponse.Errors), ShouldEqual, 1)
 		So(errorResponse.Errors[0].Error(), ShouldEqual, awsErr.Error())
 	})
+}
+
+func TestSignOutAllUsersHandlerAccessForProcessing(t *testing.T) {
+	var ctx = context.Background()
+
+	api, w, m := apiSetup()
+
+	Convey("Testing users global signout - handler", t, func() {
+		signOutAllUsersTests := []struct {
+			listUsersFunction              func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
+			adminUserGlobalSignOutFunction func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
+			httpResponse                   int
+		}{
+			{
+				// 200 response from Cognito - 202 from identity api
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					users := mock.BulkGenerateUsers(3, nil)
+					return users, nil
+				},
+				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+					return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
+				},
+				http.StatusAccepted,
+			},
+		}
+		for _, tt := range signOutAllUsersTests {
+			m.ListUsersFunc = tt.listUsersFunction
+			m.AdminUserGlobalSignOutFunc = tt.adminUserGlobalSignOutFunction
+			r := httptest.NewRequest(http.MethodGet, usersEndPoint, nil)
+
+			successResponse, errorResponse := api.SignOutAllUsersHandler(ctx, w, r)
+			So(successResponse.Status, ShouldEqual, tt.httpResponse)
+			So(errorResponse, ShouldBeNil)
+		}
+	})
+}
+
+func TestSignOutAllUsersHandlerInternalServerError(t *testing.T) {
+	var ctx = context.Background()
+
+	api, w, m := apiSetup()
+
+	Convey("Testing users global signout - handler", t, func() {
+		signOutAllUsersTests := []struct {
+			listUsersFunction              func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
+			adminUserGlobalSignOutFunction func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
+			httpResponse                   int
+		}{
+			{
+				// 500 response from Cognito's ListUsers API endpoint
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := "Something strange happened"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+					return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
+				},
+				http.StatusInternalServerError,
+			},
+		}
+		for _, tt := range signOutAllUsersTests {
+			m.ListUsersFunc = tt.listUsersFunction
+			m.AdminUserGlobalSignOutFunc = tt.adminUserGlobalSignOutFunction
+			r := httptest.NewRequest(http.MethodGet, usersEndPoint, nil)
+
+			successResponse, errorResponse := api.SignOutAllUsersHandler(ctx, w, r)
+			So(successResponse, ShouldBeNil)
+			So(errorResponse.Status, ShouldEqual, tt.httpResponse)
+		}
+	})
+}
+
+func TestSignOutAllUsersGoRoutine(t *testing.T) {
+
+	var ctx = context.Background()
+
+	api, _, m := apiSetup()
+
+	// a list of known UUIDs for testing
+	userNamesList := []string{
+		"41af9e4e-3bb8-46a2-ba33-19acc6698d5f",
+		"a03dfc5e-39b7-4229-a87c-a2ee91bc6870",
+		"4affc660-3c4b-4111-85bb-c83e76f7f81d",
+		"0a7a64b7-e61b-4a37-b5fc-33df36f7dfd7",
+	}
+
+	Convey("Testing users global signout - go routine", t, func() {
+		signOutAllUsersTests := []struct {
+			listUsersFunction              func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
+			adminUserGlobalSignOutFunction func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
+			globalUserSignOutMod		   models.GlobalSignOut
+			numberOfUsers				   int
+			expectedResults				   int
+			httpResponse                   int
+		}{	
+			{
+				// 200 response from Cognito - 202 from identity api
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					users := mock.BulkGenerateUsers(3, nil)
+					return users, nil
+				},
+				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+					return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
+				},
+				models.GlobalSignOut{
+					ResultsChannel: make(chan string, 4),
+					BackoffSchedule: []time.Duration{
+						1 * time.Second,
+						2 * time.Second,
+						3 * time.Second,
+					},
+					RetryAllowed: true,
+				},
+				4,
+				4,
+				http.StatusAccepted,
+			},
+			{
+				// 500 response from Cognito
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					users := mock.BulkGenerateUsers(3, userNamesList)
+					return users, nil
+				},
+				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+					if *signOutInput.Username == userNamesList[3] {
+						awsErrCode := "InternalErrorException"
+						awsErrMessage := "Something strange happened"
+						awsOrigErr := errors.New(awsErrCode)
+						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						return nil, awsErr
+					} else {
+						return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
+					}
+				},
+				models.GlobalSignOut{
+					ResultsChannel: make(chan string, 4),
+					BackoffSchedule: []time.Duration{
+						1 * time.Second,
+						2 * time.Second,
+						3 * time.Second,
+					},
+					RetryAllowed: true,
+				},
+				4,
+				3,
+				http.StatusAccepted,
+			},
+			{
+				// 429 response from Cognito
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					users := mock.BulkGenerateUsers(10, userNamesList)
+					return users, nil
+				},
+				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+					if *signOutInput.Username == userNamesList[3] {
+						awsErrCode := "TooManyRequestsException"
+						awsErrMessage := "Too many requets received"
+						awsOrigErr := errors.New(awsErrCode)
+						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						return nil, awsErr
+					} else {
+						return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
+					}
+				},
+				models.GlobalSignOut{
+					ResultsChannel: make(chan string, 10),
+					BackoffSchedule: []time.Duration{
+						1 * time.Second,
+						2 * time.Second,
+						3 * time.Second,
+					},
+					RetryAllowed: true,
+				},
+				10,
+				9,
+				http.StatusAccepted,
+			},
+		}
+		for _, tt := range signOutAllUsersTests {
+			m.ListUsersFunc = tt.listUsersFunction
+			m.AdminUserGlobalSignOutFunc = tt.adminUserGlobalSignOutFunction
+
+			// test concurrent go routine
+			usersList := models.UsersList{}
+			usersList.MapCognitoUsers(mock.BulkGenerateUsers(tt.numberOfUsers, userNamesList))
+
+			api.SignOutUsersWorker(ctx, &tt.globalUserSignOutMod, &usersList.Users)
+
+			// we should receive the expected number of processed usernames on the ResultsChannel
+			So(len(tt.globalUserSignOutMod.ResultsChannel), ShouldEqual, tt.expectedResults)
+		}
+	})
+
 }
