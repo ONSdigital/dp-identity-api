@@ -3,10 +3,11 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/gorilla/mux"
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/google/uuid"
@@ -299,8 +300,7 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 	user := models.UserParams{ID: vars["id"]}
 	listusergroups := models.ListUserGroups{}
 	userInput := user.BuildListUserGroupsRequest(api.UserPoolId)
-	userResp, err := api.CognitoClient.AdminListGroupsForUser(userInput)
-
+	userResponse, err := api.CognitoClient.AdminListGroupsForUser(userInput)
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "Cognito ListUserGroups request from ListUserGroups endpoint")
 		if responseErr.Code == models.UserNotFoundError {
@@ -310,7 +310,7 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 		}
 	}
 
-	jsonResponse, responseErr := listusergroups.BuildListUserGroupsSuccessfulJsonResponse(ctx, userResp)
+	jsonResponse, responseErr := listusergroups.BuildListUserGroupsSuccessfulJsonResponse(ctx, userResponse)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
