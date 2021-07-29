@@ -439,7 +439,6 @@ func TestSignOutAllUsersHandlerInternalServerError(t *testing.T) {
 }
 
 func TestSignOutAllUsersGoRoutine(t *testing.T) {
-
 	var ctx = context.Background()
 
 	api, _, m := apiSetup()

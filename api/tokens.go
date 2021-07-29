@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/models"
-	"github.com/ONSdigital/log.go/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
@@ -158,7 +157,8 @@ func (api *API) SignOutAllUsersHandler(ctx context.Context, w http.ResponseWrite
 	listUserInput := usersList.BuildListUserRequest("status=\"Enabled\"", "username", int64(0), &api.UserPoolId)
 	listUserResp, err := api.CognitoClient.ListUsers(listUserInput)
 	if err != nil {
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+		responseError := models.NewCognitoError(ctx, err, "Cognito ListUsers request from signout all users from group endpoint")
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseError)
 	}
 	usersList.MapCognitoUsers(listUserResp)
 	globalSignOut := &models.GlobalSignOut{
@@ -171,52 +171,82 @@ func (api *API) SignOutAllUsersHandler(ctx context.Context, w http.ResponseWrite
 		RetryAllowed: true,
 	}
 	// run api.SignOutUsersWorker concurrently
-	go api.SignOutUsersWorker(ctx, globalSignOut, &usersList.Users)
+	go api.SignOutUsersWorker(req.Context(), globalSignOut, &usersList.Users)
 	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
 }
 
 // SignOutUsersWorker - signs out users globally by invalidating user's refresh token
 func (api *API) SignOutUsersWorker(ctx context.Context, g *models.GlobalSignOut, usersList *[]models.UserParams) {
 	userSignOutRequestData := g.BuildSignOutUserRequest(usersList, &api.UserPoolId)
-	for i := range userSignOutRequestData {
+	
+	for _, userSignoutRequest := range userSignOutRequestData {
+
 		for _, backoff := range g.BackoffSchedule {
-			_, err := api.generateGlobalSignOutRequest(userSignOutRequestData[i])
-			if err != nil {
+			_, err := api.generateGlobalSignOutRequest(userSignoutRequest)
+
+			// no errors returned - add username to results channel and break to next user in list
+			if err == nil {
+
+				// the results channel is not being processed by caller currently - here for possible future extensibility
+				g.ResultsChannel <- *userSignoutRequest.Username
+				g.RetryAllowed = true
+				break
+
+			} else {
+
+				// error returned - process it
 				responseErr := models.NewCognitoError(ctx, err, "Cognito AdminUserGlobalSignOut request for sign out")
-				if responseErr.Code != models.TooManyRequestsError { // 1. Process all errors other than TooManyRequestsException (429)
-					if g.RetryAllowed { // 2. Attempt one more request to AdminUserGlobalSignOut if GlobalSignOut.RetryAllowed true, else break to next user
+
+				// is error code != models.TooManyRequestsError? If so, proceed...
+				if responseErr.Code != models.TooManyRequestsError {
+
+					// if g.RetryAllowed is true, allowed to request api again
+					if g.RetryAllowed {
+
+						// attempt one more request to api
 						g.RetryAllowed = false // 3. Set GlobalSignOut.RetryAllowed to false and request AdminUserGlobalSignOut
-						log.Event(ctx, "Error Cognito AdminUserGlobalSignOut:", log.ERROR, log.Error(err))
-						_, retryErr := api.generateGlobalSignOutRequest(userSignOutRequestData[i])
-						if retryErr != nil { // 4. If error response from request received, process it
+						_, retryErr := api.generateGlobalSignOutRequest(userSignoutRequest)
+
+						if retryErr != nil {
+
+							// if error response from request received again, process it
 							retryResponseErr := models.NewCognitoError(ctx, err, "Cognito AdminUserGlobalSignOut request for sign out")
-							if retryResponseErr.Code != models.TooManyRequestsError { // 4.1 If error is not a TooManyRequestsException (429), reset GlobalSignOut.RetryAllowed and break to next user
+
+							 // if error code != models.TooManyRequestsError break to next user
+							if retryResponseErr.Code != models.TooManyRequestsError {
 								g.RetryAllowed = true
 								break
 							}
-						} else { // 5. If request successful, reset GlobalSignOut.RetryAllowed and set original response error to nil - username will be added to GlobalSignOut.ResultsChannel
+
+						} else {
+
+							// no error on retry, add user to results channel and break to next user
+							// the results channel is not being processed by caller currently - here for possible future extensibility
+							g.ResultsChannel <- *userSignoutRequest.Username
 							g.RetryAllowed = true
-							err = nil
+							break
+
 						}
-					} else { // 6. If GlobalSignOut.RetryAllowed is already false, know that a second request already made, so reset GlobalSignOut.RetryAllowed and break to next user 
+
+					} else { 
+
+						// if GlobalSignOut.RetryAllowed already false break to next user
 						g.RetryAllowed = true
 						break
+
 					}
 				}
 			}
-			if err == nil {
-				g.ResultsChannel <- *userSignOutRequestData[i].Username
-				break
-			}
-			log.Event(ctx, "Error Cognito AdminUserGlobalSignOut:", log.ERROR, log.Error(err))
+			
+			// backoff for predetermined length of time before requesting again
 			time.Sleep(backoff)
 		}
+		
 	}
 	close(g.ResultsChannel)
 }
 
 // generateGlobalSignOutRequest - local routine to generete the global signout request per user
 func (api *API) generateGlobalSignOutRequest(user *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
-	response, error := api.CognitoClient.AdminUserGlobalSignOut(user)
-	return response, error
+	return api.CognitoClient.AdminUserGlobalSignOut(user)
 }
