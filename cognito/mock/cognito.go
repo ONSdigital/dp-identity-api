@@ -25,6 +25,9 @@ type MockCognitoIdentityProviderClient struct {
 	AdminAddUserToGroupFunc       func(input *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error)
 	ListUsersInGroupFunc          func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
 	AdminRemoveUserFromGroupFunc  func(input *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error)
+	AdminConfirmSignUpFunc        func(input *cognitoidentityprovider.AdminConfirmSignUpInput) (*cognitoidentityprovider.AdminConfirmSignUpOutput, error)
+	AdminDeleteUserFunc           func(input *cognitoidentityprovider.AdminDeleteUserInput) (*cognitoidentityprovider.AdminDeleteUserOutput, error)
+	DeleteGroupFunc               func(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error)
 }
 
 func (m *MockCognitoIdentityProviderClient) DescribeUserPool(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
@@ -98,4 +101,16 @@ func (m *MockCognitoIdentityProviderClient) ListUsersInGroup(input *cognitoident
 
 func (m *MockCognitoIdentityProviderClient) AdminRemoveUserFromGroup(input *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error) {
 	return m.AdminRemoveUserFromGroupFunc(input)
+}
+
+func (m *MockCognitoIdentityProviderClient) AdminConfirmSignUp(input *cognitoidentityprovider.AdminConfirmSignUpInput) (*cognitoidentityprovider.AdminConfirmSignUpOutput, error) {
+	return m.AdminConfirmSignUpFunc(input)
+}
+
+func (m *MockCognitoIdentityProviderClient) AdminDeleteUser(input *cognitoidentityprovider.AdminDeleteUserInput) (*cognitoidentityprovider.AdminDeleteUserOutput, error) {
+	return m.AdminDeleteUserFunc(input)
+}
+
+func (m *MockCognitoIdentityProviderClient) DeleteGroup(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error) {
+	return m.DeleteGroupFunc(input)
 }

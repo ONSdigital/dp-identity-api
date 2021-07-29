@@ -24,4 +24,7 @@ type Client interface {
 	AdminAddUserToGroup(input *cognito.AdminAddUserToGroupInput) (*cognito.AdminAddUserToGroupOutput, error)
 	ListUsersInGroup(input *cognito.ListUsersInGroupInput) (*cognito.ListUsersInGroupOutput, error)
 	AdminRemoveUserFromGroup(input *cognito.AdminRemoveUserFromGroupInput) (*cognito.AdminRemoveUserFromGroupOutput, error)
+	AdminConfirmSignUp(input *cognito.AdminConfirmSignUpInput) (*cognito.AdminConfirmSignUpOutput, error)
+	AdminDeleteUser(input *cognito.AdminDeleteUserInput) (*cognito.AdminDeleteUserOutput, error)
+	DeleteGroup(input *cognito.DeleteGroupInput) (*cognito.DeleteGroupOutput, error)
 }
