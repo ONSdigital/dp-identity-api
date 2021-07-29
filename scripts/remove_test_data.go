@@ -8,11 +8,17 @@ import (
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/service"
 	"github.com/ONSdigital/log.go/log"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/pkg/errors"
 	"os"
 	"time"
 )
+
+const RemovalLocalUserPoolName = "local-florence-users"
+
+const UserRemovalCount = 2000
+const GroupRemovalCount = 200
 
 func main() {
 	ctx := context.Background()
@@ -30,7 +36,7 @@ func runUserAndGroupsRemove(ctx context.Context) error {
 	}
 	cognitoClient := svcList.GetCognitoClient(cfg.AWSRegion)
 
-	err = checkPoolExistsAndIsLocal(ctx, cognitoClient, cfg.AWSCognitoUserPoolID)
+	err = checkPoolExistsAndIsLocalForRemove(ctx, cognitoClient, cfg.AWSCognitoUserPoolID)
 	if err != nil {
 		return errors.Wrap(err, "error checking user pool details")
 	}
@@ -46,9 +52,23 @@ func runUserAndGroupsRemove(ctx context.Context) error {
 	return nil
 }
 
+func checkPoolExistsAndIsLocalForRemove(ctx context.Context, client cognito.Client, userPoolId string) error {
+	input := cognitoidentityprovider.DescribeUserPoolInput{
+		UserPoolId: aws.String(userPoolId),
+	}
+	userPoolDetails, err := client.DescribeUserPool(&input)
+	if err != nil {
+		return models.NewCognitoError(ctx, err, "loading User Pool details for dummy data population")
+	}
+	if *userPoolDetails.UserPool.Name != RemovalLocalUserPoolName {
+		return models.NewValidationError(ctx, models.InvalidUserPoolError, models.InvalidUserPoolDescription)
+	}
+	return nil
+}
+
 func deleteUsers(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
 	baseUsername := "test-user-"
-	for i := range [UserCount]int{} {
+	for i := range [UserRemovalCount]int{} {
 		for _, backoff := range backoffSchedule {
 			username := baseUsername + fmt.Sprint(i)
 			userDeletionInput := cognitoidentityprovider.AdminDeleteUserInput{
@@ -72,7 +92,7 @@ func deleteUsers(ctx context.Context, client cognito.Client, userPoolId string, 
 func deleteGroups(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
 	baseGroupName := "test-group-"
 
-	for i := range [GroupCount]int{} {
+	for i := range [GroupRemovalCount]int{} {
 		for _, backoff := range backoffSchedule {
 			groupName := baseGroupName + fmt.Sprint(i)
 			groupDeletionInput := cognitoidentityprovider.DeleteGroupInput{

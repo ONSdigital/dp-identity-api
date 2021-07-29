@@ -18,12 +18,9 @@ import (
 
 const LocalUserPoolName = "local-florence-users"
 
-//const UserCount = 2000
-//const GroupCount = 200
-//const GroupUserCount = 500
-const UserCount = 5
-const GroupCount = 5
-const GroupUserCount = 5
+const UserCount = 2000
+const GroupCount = 200
+const GroupUserCount = 500
 
 func main() {
 	ctx := context.Background()
@@ -53,7 +50,6 @@ func runUserAndGroupsPopulate(ctx context.Context) error {
 	}
 
 	createUsers(ctx, cognitoClient, cfg.AWSCognitoUserPoolID, backoffSchedule)
-	confirmUsers(ctx, cognitoClient, cfg.AWSCognitoUserPoolID, backoffSchedule)
 	disableUsers(ctx, cognitoClient, cfg.AWSCognitoUserPoolID, backoffSchedule)
 	createGroups(ctx, cognitoClient, cfg.AWSCognitoUserPoolID, backoffSchedule)
 	addUsersToGroups(ctx, cognitoClient, cfg.AWSCognitoUserPoolID, backoffSchedule)
@@ -115,31 +111,6 @@ func createUsers(ctx context.Context, client cognito.Client, userPoolId string, 
 			_, awsErr := client.AdminCreateUser(&userCreationInput)
 			if awsErr != nil {
 				err := models.NewCognitoError(ctx, awsErr, "AdminCreateUser during dummy data creation")
-				if err.Code != models.TooManyRequestsError {
-					break
-				}
-			} else {
-				break
-			}
-			time.Sleep(backoff)
-		}
-	}
-}
-
-func confirmUsers(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
-	var (
-		baseFirstName, baseLastName, emailDomain string = "test", "user-", "@ons.gov.uk"
-	)
-	for i := range [UserCount]int{} {
-		for _, backoff := range backoffSchedule {
-			lastName := baseLastName + fmt.Sprint(i)
-			userConfirmInput := cognitoidentityprovider.AdminConfirmSignUpInput{
-				UserPoolId: &userPoolId,
-				Username:   aws.String(baseFirstName + "." + lastName + emailDomain),
-			}
-			_, awsErr := client.AdminConfirmSignUp(&userConfirmInput)
-			if awsErr != nil {
-				err := models.NewCognitoError(ctx, awsErr, "AdminConfirm during dummy data creation")
 				if err.Code != models.TooManyRequestsError {
 					break
 				}
