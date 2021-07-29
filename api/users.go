@@ -7,7 +7,10 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws"
+<<<<<<< HEAD
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+=======
+>>>>>>> f7efc88 (ListUserGroups add count and add tests for empty response)
 	"github.com/gorilla/mux"
 
 	"github.com/ONSdigital/dp-identity-api/models"
@@ -322,6 +325,12 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 		finalUserResponse.Groups = append(finalUserResponse.Groups, usergroupsResponse.Groups...)
 		if usergroupsResponse.NextToken != nil {
 			nextToken = *usergroupsResponse.NextToken
+	userInput := user.BuildListUserGroupsRequest(api.UserPoolId)
+	userResponse, err := api.CognitoClient.AdminListGroupsForUser(userInput)
+	if err != nil {
+		responseErr := models.NewCognitoError(ctx, err, "Cognito ListUserGroups request from ListUserGroups endpoint")
+		if responseErr.Code == models.UserNotFoundError {
+			return nil, models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
 		} else {
 			nextToken = ""
 		}

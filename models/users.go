@@ -283,11 +283,11 @@ type ListUsersOutput struct {
 }
 
 type ListUserGroupsInput struct {
-	ListUserGroupsInput *cognitoidentityprovider.AdminListDevicesInput
+	ListUserGroupsInput *cognitoidentityprovider.AdminListGroupsForUserInput
 }
 
 type ListUserGroupsOutput struct {
-	ListUserGroupsOutput *cognitoidentityprovider.AdminListDevicesOutput
+	ListUserGroupsOutput *cognitoidentityprovider.AdminListGroupsForUserOutput
 }
 
 type UserSignIn struct {
@@ -485,7 +485,7 @@ func (p *ListUserGroups) BuildListUserGroupsSuccessfulJsonResponse(ctx context.C
 	userGroups := &ListUserGroups{}
 	userGroups.UserGroups = *result
 
-	if userGroups.UserGroups.Groups != nil {
+	if result.Groups[0].UserPoolId != nil {
 		userGroups.Count = len(result.Groups)
 	} else {
 		userGroups.Count = 0

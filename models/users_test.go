@@ -984,9 +984,12 @@ func TestUserParams_BuildListUserGroupsRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminListUserGroupsInput request body with empty nextToken", t, func() {
 		userId := "abcd1234"
 		nextToken := ""
+		input := models.UserParams{
+			ID: userId,
+		}
 
 		userPoolId := "euwest-99-aabbcc"
-		request := user.BuildListUserGroupsRequest(userPoolId, nextToken)
+		request := input.BuildListUserGroupsRequest(userPoolId, nextToken)
 
 		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminListGroupsForUserInput{}))
 		So(*request.Username, ShouldEqual, userId)
