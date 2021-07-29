@@ -57,7 +57,7 @@ func TestUsersList_MapCognitoUsers(t *testing.T) {
 			},
 		}
 		userList := models.UsersList{}
-		userList.MapCognitoUsers(&cognitoResponse)
+		userList.MapCognitoUsers(&cognitoResponse.Users)
 
 		So(len(userList.Users), ShouldEqual, len(cognitoResponse.Users))
 		So(userList.Count, ShouldEqual, len(cognitoResponse.Users))

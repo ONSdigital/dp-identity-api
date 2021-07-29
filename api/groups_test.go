@@ -4,19 +4,21 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 )
 
 const addUserToGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/memebers"
 const removeUserFromGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/memebers/abcd1234"
+const getUsersInGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/members"
 
 func TestAddUserToGroupHandler(t *testing.T) {
 
@@ -498,3 +500,11 @@ func TestRemoveUserFromGroupHandler(t *testing.T) {
 		}
 	})
 }
+
+/*
+func TestGetUsersFromGroupHandler(t *testing.T) {
+	Convey("", t, func() {
+
+	})
+}
+*/
