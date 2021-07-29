@@ -23,7 +23,8 @@ type UsersList struct {
 }
 
 type ListUserGroups struct {
-	Groups []UserParams `json:"groups"`
+	UserGroups cognitoidentityprovider.AdminListGroupsForUserOutput `json:"usergroups"`
+	Count      int                                                  `json:"count"`
 }
 
 //BuildListUserRequest generates a ListUsersInput object for Cognito
@@ -462,7 +463,7 @@ func (p PasswordReset) BuildCognitoRequest(clientSecret string, clientId string)
 	}
 }
 
-// description of function
+// BuildListUserGroupsRequest build the require input for cognito query to obtain the groups for given user
 func (p UserParams) BuildListUserGroupsRequest(userPoolId string) *cognitoidentityprovider.AdminListGroupsForUserInput {
 	return &cognitoidentityprovider.AdminListGroupsForUserInput{
 		UserPoolId: &userPoolId,
@@ -470,14 +471,20 @@ func (p UserParams) BuildListUserGroupsRequest(userPoolId string) *cognitoidenti
 	}
 }
 
-//description of function
+//BuildListUserGroupsSuccessfulJsonResponse
 func (p *ListUserGroups) BuildListUserGroupsSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.AdminListGroupsForUserOutput) ([]byte, error) {
+	userGroups := &ListUserGroups{}
+	userGroups.UserGroups = *result
 
-	jsonResponse, err := json.Marshal(result)
+	if result.Groups[0].UserPoolId != nil {
+		userGroups.Count = len(result.Groups)
+	} else {
+		userGroups.Count = 0
+	}
+
+	jsonResponse, err := json.Marshal(userGroups)
 	if err != nil {
 		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
 	}
-
 	return jsonResponse, nil
-
 }

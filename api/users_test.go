@@ -6,10 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -1083,3 +1084,108 @@ func TestPasswordResetHandler(t *testing.T) {
 		}
 	})
 }
+
+// func TestListUserGroupsHandler(t *testing.T) {
+
+// 	var (
+// 		ctx       = context.Background()
+// 		timestamp = time.Now()
+// 		result    = &cognitoidentityprovider.AdminListGroupsForUserOutput{
+// 			Groups: []*cognitoidentityprovider.GroupType{
+// 				{
+// 					CreationDate:     &timestamp,
+// 					Description:      aws.String("A test group1"),
+// 					GroupName:        aws.String("test-group1"),
+// 					LastModifiedDate: &timestamp,
+// 					Precedence:       aws.Int64(4),
+// 					RoleArn:          aws.String(""),
+// 					UserPoolId:       aws.String(""),
+// 				},
+// 				{
+// 					CreationDate:     &timestamp,
+// 					Description:      aws.String("A test group1"),
+// 					GroupName:        aws.String("test-group1"),
+// 					LastModifiedDate: &timestamp,
+// 					Precedence:       aws.Int64(4),
+// 					RoleArn:          aws.String(""),
+// 					UserPoolId:       aws.String(""),
+// 				},
+// 			},
+// 		}
+// 	)
+
+// 	api, w, m := apiSetup()
+
+// 	Convey("Get user - check expected responses", t, func() {
+// 		listusergroups := []struct {
+// 			getUserFunction func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
+// 			httpResponse    int
+// 		}{
+// 			{
+// 				// 200 response from Cognito
+// 				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+// 					user := &cognitoidentityprovider.AdminGetUserOutput{
+// 						UserAttributes: []*cognitoidentityprovider.AttributeType{
+// 							{
+// 								Name:  &givenNameAttr,
+// 								Value: &forename,
+// 							},
+// 							{
+// 								Name:  &familyNameAttr,
+// 								Value: &lastname,
+// 							},
+// 							{
+// 								Name:  &emailAttr,
+// 								Value: &email,
+// 							},
+// 						},
+// 						UserStatus: &status,
+// 						Username:   &userId,
+// 						Enabled:    aws.Bool(true),
+// 					}
+// 					return user, nil
+// 				},
+// 				http.StatusOK,
+// 			},
+// 			{
+// 				// 500 response from Cognito
+// 				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+// 					awsErrCode := "InternalErrorException"
+// 					awsErrMessage := "Something strange happened"
+// 					awsOrigErr := errors.New(awsErrCode)
+// 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+// 					return nil, awsErr
+// 				},
+// 				http.StatusInternalServerError,
+// 			},
+// 			{
+// 				//404 response from Cognito
+// 				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+// 					awsErrCode := "UserNotFoundException"
+// 					awsErrMessage := "user could not be found"
+// 					awsOrigErr := errors.New(awsErrCode)
+// 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+// 					return nil, awsErr
+// 				},
+// 				http.StatusNotFound,
+// 			},
+// 		}
+
+// 		for _, tt := range adminGetUsersTests {
+// 			m.AdminGetUserFunc = tt.getUserFunction
+
+// 			r := httptest.NewRequest(http.MethodGet, userEndPoint, nil)
+
+// 			successResponse, errorResponse := api.GetUserHandler(ctx, w, r)
+
+// 			// Check whether testing a success or error case
+// 			if tt.httpResponse > 399 {
+// 				So(successResponse, ShouldBeNil)
+// 				So(errorResponse.Status, ShouldEqual, tt.httpResponse)
+// 			} else {
+// 				So(successResponse.Status, ShouldEqual, tt.httpResponse)
+// 				So(errorResponse, ShouldBeNil)
+// 			}
+// 		}
+// 	})
+// }

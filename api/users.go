@@ -300,8 +300,7 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 	user := models.UserParams{ID: vars["id"]}
 	listusergroups := models.ListUserGroups{}
 	userInput := user.BuildListUserGroupsRequest(api.UserPoolId)
-	userResp, err := api.CognitoClient.AdminListGroupsForUser(userInput)
-
+	userResponse, err := api.CognitoClient.AdminListGroupsForUser(userInput)
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "Cognito ListUserGroups request from ListUserGroups endpoint")
 		if responseErr.Code == models.UserNotFoundError {
@@ -311,7 +310,7 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 		}
 	}
 
-	jsonResponse, responseErr := listusergroups.BuildListUserGroupsSuccessfulJsonResponse(ctx, userResp)
+	jsonResponse, responseErr := listusergroups.BuildListUserGroupsSuccessfulJsonResponse(ctx, userResponse)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
