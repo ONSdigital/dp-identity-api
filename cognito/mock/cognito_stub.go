@@ -554,3 +554,8 @@ func (m *CognitoIdentityProviderClientStub) AdminDeleteUser(input *cognitoidenti
 func (m *CognitoIdentityProviderClientStub) DeleteGroup(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error) {
 	return nil, nil
 }
+
+//Added to fully implement interface but only used in the local dummy data builder
+func (m *CognitoIdentityProviderClientStub) AdminSetUserPassword(input *cognitoidentityprovider.AdminSetUserPasswordInput) (*cognitoidentityprovider.AdminSetUserPasswordOutput, error) {
+	return nil, nil
+}

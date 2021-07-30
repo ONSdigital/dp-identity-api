@@ -50,6 +50,7 @@ func runUserAndGroupsPopulate(ctx context.Context) error {
 	}
 
 	createUsers(ctx, cognitoClient, cfg.AWSCognitoUserPoolID, backoffSchedule)
+	confirmUsers(ctx, cognitoClient, cfg.AWSCognitoUserPoolID, backoffSchedule)
 	disableUsers(ctx, cognitoClient, cfg.AWSCognitoUserPoolID, backoffSchedule)
 	createGroups(ctx, cognitoClient, cfg.AWSCognitoUserPoolID, backoffSchedule)
 	addUsersToGroups(ctx, cognitoClient, cfg.AWSCognitoUserPoolID, backoffSchedule)
@@ -122,13 +123,48 @@ func createUsers(ctx context.Context, client cognito.Client, userPoolId string, 
 	}
 }
 
+func confirmUsers(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
+	var (
+		baseEmailPrefix, emailDomain string = "test.user-", "@ons.gov.uk"
+	)
+	for i := range [UserCount]int{} {
+		fmt.Println(math.Mod(float64(i), float64(3)))
+		if math.Mod(float64(i), float64(11)) == 0 {
+			continue
+		}
+		for _, backoff := range backoffSchedule {
+			user := models.UserParams{}
+			passwordError := user.GeneratePassword(ctx)
+			if passwordError != nil {
+				break
+			}
+			userSetPasswordInput := cognitoidentityprovider.AdminSetUserPasswordInput{
+				Password:   &user.Password,
+				Permanent:  aws.Bool(true),
+				UserPoolId: &userPoolId,
+				Username:   aws.String(baseEmailPrefix + fmt.Sprint(i) + emailDomain),
+			}
+			_, awsErr := client.AdminSetUserPassword(&userSetPasswordInput)
+			if awsErr != nil {
+				err := models.NewCognitoError(ctx, awsErr, "AdminSetUserPassword during dummy data creation")
+				if err.Code != models.TooManyRequestsError {
+					break
+				}
+			} else {
+				break
+			}
+			time.Sleep(backoff)
+		}
+	}
+}
+
 func disableUsers(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
 	var (
 		baseFirstName, baseLastName, emailDomain string = "test", "user-", "@ons.gov.uk"
 	)
 	for i := range [UserCount]int{} {
 		if math.Mod(float64(i), float64(51)) != 0 {
-			break
+			continue
 		}
 		for _, backoff := range backoffSchedule {
 			lastName := baseLastName + fmt.Sprint(i)
@@ -164,7 +200,7 @@ func createGroups(ctx context.Context, client cognito.Client, userPoolId string,
 			}
 			_, awsErr := client.CreateGroup(&groupCreationInput)
 			if awsErr != nil {
-				err := models.NewCognitoError(ctx, awsErr, "CreateUser during dummy data creation")
+				err := models.NewCognitoError(ctx, awsErr, "CreateGroup during dummy data creation")
 				if err.Code != models.TooManyRequestsError {
 					break
 				}
