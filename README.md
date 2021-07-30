@@ -6,6 +6,15 @@ An API used to manage the authorisation of users accessing data publishing servi
 
 * Run `make debug`
 
+### Dummy data
+If test data is required in the local Cognito user pool:
+
+* Run `make populate-local`
+
+To remove create test data from Cognito user pool:
+
+* Run `make remove-test-data`
+
 ### Dependencies
 
 * No further dependencies other than those defined in `go.mod`

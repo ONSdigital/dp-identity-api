@@ -38,6 +38,7 @@ const (
 	UnknownRequestTypeError      = "UnknownRequestType"
 	NotImplementedError          = "NotImplemented"
 	InvalidChallengeSessionError = "InvalidChallengeSession"
+	InvalidUserPoolError         = "InvalidUserPool"
 )
 
 // API error descriptions
@@ -69,6 +70,7 @@ const (
 	InvalidChallengeSessionDescription     = "no valid auth challenge session was provided"
 	InvalidTokenDescription                = "the submitted token could not be validated"
 	TooLongStatusNotesDescription          = "the status notes are too long"
+	InvalidUserPoolDescription             = "dummy data load being run against non local userpool"
 )
 
 // Mapping Cognito error codes to API error codes
