@@ -128,7 +128,6 @@ func confirmUsers(ctx context.Context, client cognito.Client, userPoolId string,
 		baseEmailPrefix, emailDomain string = "test.user-", "@ons.gov.uk"
 	)
 	for i := range [UserCount]int{} {
-		fmt.Println(math.Mod(float64(i), float64(3)))
 		if math.Mod(float64(i), float64(11)) == 0 {
 			continue
 		}

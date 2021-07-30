@@ -10,6 +10,8 @@ GIT_COMMIT=$(shell git rev-parse HEAD)
 VERSION ?= $(shell git tag --points-at HEAD | grep ^v | head -n 1)
 LDFLAGS=-ldflags "-w -s -X 'main.Version=${VERSION}' -X 'main.BuildTime=$(BUILD_TIME)' -X 'main.GitCommit=$(GIT_COMMIT)'"
 
+LOCAL_USER_POOL_ID=eu-west-1_Rnma9lp2q
+
 export GOOS?=$(shell go env GOOS)
 export GOARCH?=$(shell go env GOARCH)
 
@@ -27,7 +29,7 @@ build:
 
 .PHONY: debug
 debug:
-	export AWS_COGNITO_USER_POOL_ID=eu-west-1_Rnma9lp2q; \
+	export AWS_COGNITO_USER_POOL_ID=$(LOCAL_USER_POOL_ID); \
 	export AWS_COGNITO_CLIENT_ID=`aws cognito-idp list-user-pool-clients --user-pool-id $$AWS_COGNITO_USER_POOL_ID --query 'UserPoolClients[0].ClientId' --output text`; \
 	export AWS_COGNITO_CLIENT_SECRET=`aws cognito-idp describe-user-pool-client --user-pool-id $$AWS_COGNITO_USER_POOL_ID --client-id $$AWS_COGNITO_CLIENT_ID --query 'UserPoolClient.ClientSecret' --output text`; \
 	echo AWS_COGNITO_USER_POOL_ID= $$AWS_COGNITO_USER_POOL_ID;\
@@ -55,10 +57,10 @@ test-component:
 
 .PHONY: populate-local
 populate-local:
-	export AWS_COGNITO_USER_POOL_ID=eu-west-1_Rnma9lp2q; \
+	export AWS_COGNITO_USER_POOL_ID=$(LOCAL_USER_POOL_ID); \
 	HUMAN_LOG=1 go run -race ./dummy-data/import-dummy-users/populate_dummy_data.go
 
 .PHONY: remove-test-data
 remove-test-data:
-	export AWS_COGNITO_USER_POOL_ID=eu-west-1_Rnma9lp2q; \
+	export AWS_COGNITO_USER_POOL_ID=$(LOCAL_USER_POOL_ID); \
 	HUMAN_LOG=1 go run -race ./dummy-data/delete-dummy-users/remove_dummy_data.go
