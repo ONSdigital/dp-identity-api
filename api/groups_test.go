@@ -501,10 +501,103 @@ func TestRemoveUserFromGroupHandler(t *testing.T) {
 	})
 }
 
-/*
 func TestGetUsersFromGroupHandler(t *testing.T) {
-	Convey("", t, func() {
 
+	var (
+		ctx                                                       = context.Background()
+		groupNotFoundDescription, internalErrorDescription string = "group not found", "internal error"
+	)
+
+	api, w, m := apiSetup()
+
+	Convey("adds the returned users to the user list and sets the count", t, func() {
+		cognitoResponse := cognitoidentityprovider.ListUsersInGroupOutput{
+			Users: []*cognitoidentityprovider.UserType{
+				{
+					Enabled:    aws.Bool(true),
+					UserStatus: aws.String("CONFIRMED"),
+					Username:   aws.String("user-1"),
+				},
+				{
+					Enabled:    aws.Bool(true),
+					UserStatus: aws.String("CONFIRMED"),
+					Username:   aws.String("user-2"),
+				},
+			},
+		}
+		listOfUsers := models.UsersList{}
+		listOfUsers.MapCognitoUsers(&cognitoResponse.Users)
+
+		So(len(listOfUsers.Users), ShouldEqual, len(cognitoResponse.Users))
+		So(listOfUsers.Count, ShouldEqual, len(cognitoResponse.Users))
+	})
+
+	Convey("and the expected responses", t, func() {
+		listUsersInGroupTests := []struct {
+			listUsersForGroupFunction func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
+			assertions                func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+		}{
+			// 200 response - user added to group
+			{
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					return &cognitoidentityprovider.ListUsersInGroupOutput{}, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(errorResponse, ShouldBeNil)
+				},
+			},
+			// Cognito 404 response - group not found
+			{
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					var groupNotFoundException cognitoidentityprovider.ResourceNotFoundException
+					groupNotFoundException.Message_ = &groupNotFoundDescription
+					return nil, &groupNotFoundException
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.NotFoundError)
+					So(castErr.Description, ShouldEqual, groupNotFoundDescription)
+				},
+			},
+			// Cognito 500 response - internal error
+			{
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					var internalError cognitoidentityprovider.InternalErrorException
+					internalError.Message_ = &internalErrorDescription
+					return nil, &internalError
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.InternalError)
+					So(castErr.Description, ShouldEqual, internalErrorDescription)
+				},
+			},
+		}
+
+		for _, tt := range listUsersInGroupTests {
+
+			m.ListUsersInGroupFunc = tt.listUsersForGroupFunction
+
+			//postBody := map[string]interface{}{"user_id": userId}
+			//body, _ := json.Marshal(postBody)
+			r := httptest.NewRequest(http.MethodGet, getUsersInGroupEndPoint, nil)
+
+			urlVars := map[string]string{
+				"id": "efgh5678",
+			}
+			r = mux.SetURLVars(r, urlVars)
+
+			successResponse, errorResponse := api.ListUsersInGroupHandler(ctx, w, r)
+
+			tt.assertions(successResponse, errorResponse)
+		}
 	})
 }
-*/
