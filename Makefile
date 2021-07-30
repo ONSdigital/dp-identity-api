@@ -56,9 +56,9 @@ test-component:
 .PHONY: populate-local
 populate-local:
 	export AWS_COGNITO_USER_POOL_ID=eu-west-1_Rnma9lp2q; \
-	HUMAN_LOG=1 go run -race ./scripts/populate_test_data.go
+	HUMAN_LOG=1 go run -race ./impor-users/populate_dummy_data.go
 
 .PHONY: remove-test-data
 remove-test-data:
 	export AWS_COGNITO_USER_POOL_ID=eu-west-1_Rnma9lp2q; \
-	HUMAN_LOG=1 go run -race ./scripts/remove_test_data.go
+	HUMAN_LOG=1 go run -race ./import-users/remove_dummy_data.go
