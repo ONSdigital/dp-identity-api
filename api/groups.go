@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/gorilla/mux"
 )
 
@@ -75,7 +76,9 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWrit
 	group := models.Group{Name: vars["id"]}
 
 	groupMembersRequest := group.BuildListUsersInGroupRequest(api.UserPoolId)
-	groupMembersResponse, err := api.CognitoClient.ListUsersInGroup(groupMembersRequest)
+
+	listUsers, err := api.getUsersInAGroup(nil, groupMembersRequest, nil)
+	//groupMembersResponse, err := api.CognitoClient.ListUsersInGroup(groupMembersRequest)
 	if err != nil {
 		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from list users in group endpoint")
 		if cognitoErr.Code == models.NotFoundError {
@@ -85,7 +88,8 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWrit
 	}
 
 	listOfUsers := models.UsersList{}
-	listOfUsers.MapCognitoUsers(&groupMembersResponse.Users)
+	//listOfUsers.MapCognitoUsers(&groupMembersResponse.Users)
+	listOfUsers.MapCognitoUsers(&listUsers)
 
 	jsonResponse, responseErr := listOfUsers.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {
@@ -93,6 +97,22 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWrit
 	}
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
+
+func (api *API) getUsersInAGroup(listOfUsers []*cognitoidentityprovider.UserType, groupMembersRequest *cognitoidentityprovider.ListUsersInGroupInput, nextToken *string) ([]*cognitoidentityprovider.UserType, error) {
+
+	groupMembersResponse, err := api.CognitoClient.ListUsersInGroup(groupMembersRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	listOfUsers = append(listOfUsers, groupMembersResponse.Users...)
+	if groupMembersResponse.NextToken != nil {
+		token := *groupMembersResponse.NextToken
+		groupMembersRequest.SetNextToken(token)
+		return api.getUsersInAGroup(listOfUsers, groupMembersRequest, groupMembersResponse.NextToken)
+	}
+	return listOfUsers, nil
 }
 
 //RemoveUserFromGroupHandler adds a user to the specified group
