@@ -539,3 +539,23 @@ func (m *CognitoIdentityProviderClientStub) AdminRemoveUserFromGroup(input *cogn
 
 	return &cognitoidentityprovider.AdminRemoveUserFromGroupOutput{}, nil
 }
+
+//Added to fully implement interface but only used in the local dummy data builder
+func (m *CognitoIdentityProviderClientStub) AdminConfirmSignUp(input *cognitoidentityprovider.AdminConfirmSignUpInput) (*cognitoidentityprovider.AdminConfirmSignUpOutput, error) {
+	return nil, nil
+}
+
+//Added to fully implement interface but only used in the local dummy data builder
+func (m *CognitoIdentityProviderClientStub) AdminDeleteUser(input *cognitoidentityprovider.AdminDeleteUserInput) (*cognitoidentityprovider.AdminDeleteUserOutput, error) {
+	return nil, nil
+}
+
+//Added to fully implement interface but only used in the local dummy data builder
+func (m *CognitoIdentityProviderClientStub) DeleteGroup(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error) {
+	return nil, nil
+}
+
+//Added to fully implement interface but only used in the local dummy data builder
+func (m *CognitoIdentityProviderClientStub) AdminSetUserPassword(input *cognitoidentityprovider.AdminSetUserPasswordInput) (*cognitoidentityprovider.AdminSetUserPasswordOutput, error) {
+	return nil, nil
+}
