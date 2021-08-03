@@ -79,6 +79,7 @@ func (m *CognitoIdentityProviderClientStub) ReadUser(username string) *User {
 //BulkGenerateUsers - bulk generate 'n' users for testing purposes
 //                    if usernames array is nil or length is different, will auto-assign UUIDs
 func BulkGenerateUsers(userCount int, userNames []string) *cognitoidentityprovider.ListUsersOutput {
+	paginationToken := "abc-123-xyz-345-xxx"
 	usersList := &cognitoidentityprovider.ListUsersOutput{}
 	for i := 0; i < userCount; i++ {
 		var(
@@ -95,6 +96,7 @@ func BulkGenerateUsers(userCount int, userNames []string) *cognitoidentityprovid
 		user.Enabled    = &enabled
 		user.UserStatus = &status
 		usersList.Users = append(usersList.Users, user)
+		usersList.PaginationToken = &paginationToken
 	}
 	return usersList
 }

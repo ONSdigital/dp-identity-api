@@ -205,7 +205,8 @@ Feature: Users
                         "status_notes": ""
                     }
                 ],
-                "count": 2
+                "count": 2,
+                "PaginationToken": ""
             }
             """
 

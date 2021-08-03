@@ -153,26 +153,89 @@ func (api *API) RefreshHandler(ctx context.Context, w http.ResponseWriter, req *
 
 //SignOutAllUsersHandler bulk refresh token invalidation for panic sign out handling
 func (api *API) SignOutAllUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	usersList := models.UsersList{}
-	listUserInput := usersList.BuildListUserRequest("status=\"Enabled\"", "username", int64(0), &api.UserPoolId)
-	listUserResp, err := api.CognitoClient.ListUsers(listUserInput)
-	if err != nil {
-		responseError := models.NewCognitoError(ctx, err, "Cognito ListUsers request from signout all users from group endpoint")
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseError)
-	}
-	usersList.MapCognitoUsers(listUserResp)
-	globalSignOut := &models.GlobalSignOut{
-		ResultsChannel: make(chan string, len(usersList.Users)),
-		BackoffSchedule: []time.Duration{
+	var (
+		userFilterString string = "status=\"Enabled\""
+		backOff = []time.Duration{
 			1 * time.Second,
 			3 * time.Second,
 			10 * time.Second,
-		},
+		}
+	)
+	usersList, awsErr := api.ListUsersWorker(req.Context(), &userFilterString, backOff)
+	if awsErr != nil {
+		return nil, awsErr
+	}
+	globalSignOut := &models.GlobalSignOut{
+		ResultsChannel: make(chan string, len(*usersList)),
+		BackoffSchedule: backOff,
 		RetryAllowed: true,
 	}
 	// run api.SignOutUsersWorker concurrently
-	go api.SignOutUsersWorker(req.Context(), globalSignOut, &usersList.Users)
+	go api.SignOutUsersWorker(req.Context(), globalSignOut, usersList)
 	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
+}
+
+// ListUsersWorker - generates a list of users based on `userFilterString` filter string
+func (api *API) ListUsersWorker(ctx context.Context, userFilterString *string, backoffSchedule []time.Duration) (*[]models.UserParams, *models.ErrorResponse) {
+	var (
+		awsErr error
+		paginationToken *string
+		usersList models.UsersList
+		listUsersResp, result *cognitoidentityprovider.ListUsersOutput
+		listUserInput = usersList.BuildListUserRequest(
+			*userFilterString,
+			"",
+			int64(0), 
+			nil,
+			&api.UserPoolId,
+		)
+		usersListError *models.ErrorResponse
+	)
+	listUsersResp, awsErr = api.generateListUsersRequest(listUserInput)
+	if awsErr != nil {
+		err := models.NewCognitoError(ctx, awsErr, "Cognito ListUsers request from signout all users from group endpoint")
+		usersListError = models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+	} else {
+		if listUsersResp.PaginationToken != nil {
+			paginationToken = listUsersResp.PaginationToken
+		}
+		for {
+			// break from loop if:
+			// 1: Error generated in internal loop
+			// 2: No pagination token received in internal loop response
+			if usersListError != nil || paginationToken == nil {
+				break
+			} else {
+				listUserInput.PaginationToken = paginationToken
+			}
+			for _, backoff := range backoffSchedule {
+				result, awsErr = api.generateListUsersRequest(listUserInput)
+				if result != nil && awsErr == nil {
+					listUsersResp.Users = append(listUsersResp.Users, result.Users...)
+					if result.PaginationToken != nil {
+						paginationToken = result.PaginationToken
+						break
+					} else {
+						paginationToken = nil
+						break
+					}
+				} else {
+					err := models.NewCognitoError(ctx, awsErr, "Cognito ListUsers request from signout all users from group endpoint")
+					if err.Code != models.TooManyRequestsError {
+						usersListError = models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+						break
+					}
+				}
+				time.Sleep(backoff)
+			}
+		}
+	}
+	if usersListError != nil {
+		return nil, usersListError
+	} else {
+		usersList.MapCognitoUsers(listUsersResp)
+		return &usersList.Users, nil
+	}
 }
 
 // SignOutUsersWorker - signs out users globally by invalidating user's refresh token
@@ -249,4 +312,9 @@ func (api *API) SignOutUsersWorker(ctx context.Context, g *models.GlobalSignOut,
 // generateGlobalSignOutRequest - local routine to generete the global signout request per user
 func (api *API) generateGlobalSignOutRequest(user *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 	return api.CognitoClient.AdminUserGlobalSignOut(user)
+}
+
+// generateListUsersRequest - local routine to generate a list users request
+func (api *API) generateListUsersRequest(input *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+	return api.CognitoClient.ListUsers(input)
 }

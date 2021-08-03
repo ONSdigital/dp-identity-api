@@ -380,6 +380,7 @@ func TestSignOutAllUsersHandlerAccessForProcessing(t *testing.T) {
 				// 200 response from Cognito - 202 from identity api
 				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := mock.BulkGenerateUsers(3, nil)
+					users.PaginationToken = nil
 					return users, nil
 				},
 				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
@@ -391,7 +392,7 @@ func TestSignOutAllUsersHandlerAccessForProcessing(t *testing.T) {
 		for _, tt := range signOutAllUsersTests {
 			m.ListUsersFunc = tt.listUsersFunction
 			m.AdminUserGlobalSignOutFunc = tt.adminUserGlobalSignOutFunction
-			r := httptest.NewRequest(http.MethodGet, usersEndPoint, nil)
+			r := httptest.NewRequest(http.MethodPost, usersEndPoint, nil)
 
 			successResponse, errorResponse := api.SignOutAllUsersHandler(ctx, w, r)
 			So(successResponse.Status, ShouldEqual, tt.httpResponse)
@@ -464,6 +465,7 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 				// 200 response from Cognito - 202 from identity api
 				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := mock.BulkGenerateUsers(3, nil)
+					users.PaginationToken = nil
 					return users, nil
 				},
 				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
@@ -486,6 +488,7 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 				// 500 response from Cognito
 				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := mock.BulkGenerateUsers(3, userNamesList)
+					users.PaginationToken = nil
 					return users, nil
 				},
 				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
@@ -516,6 +519,7 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 				// 429 response from Cognito
 				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := mock.BulkGenerateUsers(10, userNamesList)
+					users.PaginationToken = nil
 					return users, nil
 				},
 				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
@@ -555,6 +559,100 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 
 			// we should receive the expected number of processed usernames on the ResultsChannel
 			So(len(tt.globalUserSignOutMod.ResultsChannel), ShouldEqual, tt.expectedResults)
+		}
+	})
+
+}
+
+func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
+	var ctx = context.Background()
+
+	api, _, m := apiSetup()
+
+	Convey("Testing users global signout - go routine", t, func() {
+		var(
+			paginationToken, usersFilterString string = "abc-123-xyz-345-xxx", "status=\"Enabled\""
+			backoff = []time.Duration{
+				1 * time.Second,
+				2 * time.Second,
+				3 * time.Second,
+			}
+			errCode int = 0
+		)
+		getAllUsersTests := []struct {
+			listUsersFunction func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
+			BackoffSchedule   []time.Duration
+			expectedUserNumb  int
+			httpResponse      []int
+		}{	
+			{
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					if userInput.PaginationToken != nil {
+						users := mock.BulkGenerateUsers(3, nil)
+						users.PaginationToken = nil
+						return users, nil
+					} else {
+						users := mock.BulkGenerateUsers(14, nil)
+						users.PaginationToken = &paginationToken
+						return users, nil
+					}
+				},
+				backoff,
+				17,
+				[]int{
+					http.StatusOK,
+				},
+			},
+			{
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := "Something strange happened"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				backoff,
+				0,
+				[]int {
+					http.StatusInternalServerError,
+				},
+			},
+			{
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					if userInput.PaginationToken != nil {
+						awsErrCode := "InternalErrorException"
+						awsErrMessage := "Something strange happened"
+						awsOrigErr := errors.New(awsErrCode)
+						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						// set error code index reference to 1 - expecting a http.StatusInternalServerError here
+						errCode = 1
+						return nil, awsErr
+					} else {
+						users := mock.BulkGenerateUsers(3, nil)
+						return users, nil
+					}
+				},
+				backoff,
+				3,
+				[]int{
+					http.StatusOK,
+					http.StatusInternalServerError,
+				},
+			},
+		}
+		for _, tt := range getAllUsersTests {
+			m.ListUsersFunc = tt.listUsersFunction
+			usersList, awsErr := api.ListUsersWorker(ctx, &usersFilterString, tt.BackoffSchedule)
+
+			// we should receive the expected number of processed usernames on the ResultsChannel
+			if (tt.httpResponse[errCode] >= http.StatusBadRequest) {
+				So(usersList, ShouldBeNil)
+				So(awsErr.Status, ShouldEqual, tt.httpResponse[errCode])
+			} else {
+				So(usersList, ShouldNotBeNil)
+				So(awsErr, ShouldBeNil)
+				So(len(*usersList), ShouldEqual, tt.expectedUserNumb)
+			}
 		}
 	})
 
