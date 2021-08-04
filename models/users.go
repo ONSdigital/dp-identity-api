@@ -485,7 +485,7 @@ func (p *ListUserGroups) BuildListUserGroupsSuccessfulJsonResponse(ctx context.C
 	userGroups := &ListUserGroups{}
 	userGroups.UserGroups = *result
 
-	if result.Groups[0].UserPoolId != nil {
+	if userGroups.UserGroups.Groups != nil {
 		userGroups.Count = len(result.Groups)
 	} else {
 		userGroups.Count = 0

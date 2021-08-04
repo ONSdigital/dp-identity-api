@@ -8,9 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 <<<<<<< HEAD
+<<<<<<< HEAD
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 =======
 >>>>>>> f7efc88 (ListUserGroups add count and add tests for empty response)
+=======
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+>>>>>>> ca1365f (Add Pagination)
 	"github.com/gorilla/mux"
 
 	"github.com/ONSdigital/dp-identity-api/models"
@@ -325,12 +329,15 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 		finalUserResponse.Groups = append(finalUserResponse.Groups, usergroupsResponse.Groups...)
 		if usergroupsResponse.NextToken != nil {
 			nextToken = *usergroupsResponse.NextToken
+<<<<<<< HEAD
 	userInput := user.BuildListUserGroupsRequest(api.UserPoolId)
 	userResponse, err := api.CognitoClient.AdminListGroupsForUser(userInput)
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "Cognito ListUserGroups request from ListUserGroups endpoint")
 		if responseErr.Code == models.UserNotFoundError {
 			return nil, models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
+=======
+>>>>>>> ca1365f (Add Pagination)
 		} else {
 			nextToken = ""
 		}
@@ -341,7 +348,6 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
-
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 
 }

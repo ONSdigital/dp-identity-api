@@ -1356,6 +1356,7 @@ Feature: Users
         """
         Then the HTTP status code should be "202"
 
+<<<<<<< HEAD
  #   List User Groups         
     Scenario: GET /v1/users/{id}/groups and checking the response status 200
         Given group "test-group" exists in the database
@@ -1409,3 +1410,29 @@ Scenario: GET /v1/users/{id}/groups user not found and checking the response sta
                     }
                 
             """
+=======
+# Get List User Groups
+    Scenario: Get /v1/password-reset and checking the response status 202
+        Given a user with username "abcd1234" exists in the database
+        When I GET "/v1/users/test-user-1/groups"
+        """
+            {
+                "usergroups": {
+                    "Groups": [
+                        {
+                            "CreationDate": "2021-07-30T10:56:05.574Z",
+                            "Description": "Test Group 1",
+                            "GroupName": "test-group-1",
+                            "LastModifiedDate": "2021-07-30T10:56:05.574Z",
+                            "Precedence": 3,
+                            "RoleArn": null,
+                            "UserPoolId": "eu-west-1_Rnma9lp2q"
+                        }
+                    ],
+                    "NextToken": null
+                },
+            "count": 1
+        }
+        """
+        Then I should receive the following JSON response with status "200":
+>>>>>>> ca1365f (Add Pagination)
