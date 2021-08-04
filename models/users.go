@@ -465,10 +465,18 @@ func (p PasswordReset) BuildCognitoRequest(clientSecret string, clientId string)
 }
 
 // BuildListUserGroupsRequest build the require input for cognito query to obtain the groups for given user
-func (p UserParams) BuildListUserGroupsRequest(userPoolId string) *cognitoidentityprovider.AdminListGroupsForUserInput {
-	return &cognitoidentityprovider.AdminListGroupsForUserInput{
-		UserPoolId: &userPoolId,
-		Username:   &p.ID,
+func (p UserParams) BuildListUserGroupsRequest(userPoolId string, nextToken string) *cognitoidentityprovider.AdminListGroupsForUserInput {
+	if nextToken != "" {
+		return &cognitoidentityprovider.AdminListGroupsForUserInput{
+			UserPoolId: &userPoolId,
+			Username:   &p.ID,
+			NextToken:  &nextToken,
+		}
+	} else {
+		return &cognitoidentityprovider.AdminListGroupsForUserInput{
+			UserPoolId: &userPoolId,
+			Username:   &p.ID,
+		}
 	}
 }
 
@@ -477,7 +485,7 @@ func (p *ListUserGroups) BuildListUserGroupsSuccessfulJsonResponse(ctx context.C
 	userGroups := &ListUserGroups{}
 	userGroups.UserGroups = *result
 
-	if result.Groups[0].UserPoolId != nil {
+	if userGroups.UserGroups.Groups != nil {
 		userGroups.Count = len(result.Groups)
 	} else {
 		userGroups.Count = 0

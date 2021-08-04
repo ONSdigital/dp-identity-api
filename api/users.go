@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/gorilla/mux"
 
 	"github.com/ONSdigital/dp-identity-api/models"
@@ -298,23 +299,39 @@ func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter,
 func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	user := models.UserParams{ID: vars["id"]}
+	finalUserResponse := cognitoidentityprovider.AdminListGroupsForUserOutput{}
 	listusergroups := models.ListUserGroups{}
-	userInput := user.BuildListUserGroupsRequest(api.UserPoolId)
-	userResponse, err := api.CognitoClient.AdminListGroupsForUser(userInput)
-	if err != nil {
-		responseErr := models.NewCognitoError(ctx, err, "Cognito ListUserGroups request from ListUserGroups endpoint")
-		if responseErr.Code == models.UserNotFoundError {
-			return nil, models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
-		} else {
-			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	firstTimeCheck := false
+	var nextToken string
+	for {
+		if firstTimeCheck && nextToken == "" {
+			break
 		}
+		firstTimeCheck = true
+		usergroupsInput := user.BuildListUserGroupsRequest(api.UserPoolId, nextToken)
+		usergroupsResponse, err := api.CognitoClient.AdminListGroupsForUser(usergroupsInput)
+		if err != nil {
+			responseErr := models.NewCognitoError(ctx, err, "Cognito ListUserGroups request from ListUserGroups endpoint")
+			if responseErr.Code == models.UserNotFoundError {
+				return nil, models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
+			} else {
+				return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+			}
+		}
+
+		finalUserResponse.Groups = append(finalUserResponse.Groups, usergroupsResponse.Groups...)
+		if usergroupsResponse.NextToken != nil {
+			nextToken = *usergroupsResponse.NextToken
+		} else {
+			nextToken = ""
+		}
+
 	}
 
-	jsonResponse, responseErr := listusergroups.BuildListUserGroupsSuccessfulJsonResponse(ctx, userResponse)
+	jsonResponse, responseErr := listusergroups.BuildListUserGroupsSuccessfulJsonResponse(ctx, &finalUserResponse)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
-
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 
 }
