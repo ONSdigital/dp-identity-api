@@ -981,21 +981,37 @@ func TestPasswordReset_BuildCognitoRequest(t *testing.T) {
 }
 
 func TestUserParams_BuildListUserGroupsRequest(t *testing.T) {
-	Convey("builds a correctly populated Cognito AdminDisableUserInput request body", t, func() {
+	Convey("builds a correctly populated Cognito AdminDisableUserInput request body with empty nextToken", t, func() {
 		userId := "abcd1234"
+		nextToken := ""
 		user := models.UserParams{
 			ID: userId,
 		}
 
 		userPoolId := "euwest-99-aabbcc"
+		request := user.BuildListUserGroupsRequest(userPoolId, nextToken)
 
-		request := user.BuildListUserGroupsRequest(userPoolId)
+		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminListGroupsForUserInput{}))
+		So(*request.Username, ShouldEqual, userId)
+		So(*request.UserPoolId, ShouldEqual, userPoolId)
+	})
+
+	Convey("builds a correctly populated Cognito AdminDisableUserInput request body with nextToken", t, func() {
+		userId := "abcd1234"
+		nextToken := "abc1234"
+		user := models.UserParams{
+			ID: userId,
+		}
+
+		userPoolId := "euwest-99-aabbcc"
+		request := user.BuildListUserGroupsRequest(userPoolId, nextToken)
 
 		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminListGroupsForUserInput{}))
 		So(*request.Username, ShouldEqual, userId)
 		So(*request.UserPoolId, ShouldEqual, userPoolId)
 	})
 }
+
 func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) {
 	Convey("add the returned groups for given user", t, func() {
 		ctx := context.Background()
