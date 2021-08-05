@@ -179,7 +179,6 @@ func (api *API) SignOutAllUsersHandler(ctx context.Context, w http.ResponseWrite
 func (api *API) ListUsersWorker(ctx context.Context, userFilterString *string, backoffSchedule []time.Duration) (*[]models.UserParams, *models.ErrorResponse) {
 	var (
 		awsErr error
-		paginationToken *string
 		usersList models.UsersList
 		listUsersResp, result *cognitoidentityprovider.ListUsersOutput
 		listUserInput = usersList.BuildListUserRequest(
@@ -197,43 +196,38 @@ func (api *API) ListUsersWorker(ctx context.Context, userFilterString *string, b
 		usersListError = models.NewErrorResponse(http.StatusInternalServerError, nil, err)
 	} else {
 		if listUsersResp.PaginationToken != nil {
-			paginationToken = listUsersResp.PaginationToken
-		}
-		for {
-			// break from loop if:
-			// 1: Error generated in internal loop
-			// 2: No pagination token received in internal loop response
-			if usersListError != nil || paginationToken == nil {
-				break
-			} else {
-				listUserInput.PaginationToken = paginationToken
-			}
-			for _, backoff := range backoffSchedule {
-				result, awsErr = api.generateListUsersRequest(listUserInput)
-				if result != nil && awsErr == nil {
-					listUsersResp.Users = append(listUsersResp.Users, result.Users...)
-					if result.PaginationToken != nil {
-						paginationToken = result.PaginationToken
-						break
+			listUserInput.PaginationToken = listUsersResp.PaginationToken
+			// set `loadingInProgress` to control requesting new list data
+			loadingInProgress := true
+			for loadingInProgress {
+				for _, backoff := range backoffSchedule {
+					result, awsErr = api.generateListUsersRequest(listUserInput)
+					if awsErr == nil {
+						listUsersResp.Users = append(listUsersResp.Users, result.Users...)
+						if result.PaginationToken != nil {
+							listUserInput.PaginationToken = result.PaginationToken
+							break
+						} else {
+							loadingInProgress = false
+							break
+						}
 					} else {
-						paginationToken = nil
-						break
+						err := models.NewCognitoError(ctx, awsErr, "Cognito ListUsers request from signout all users from group endpoint")
+						if err.Code != models.TooManyRequestsError {
+							usersListError = models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+							loadingInProgress = false
+							break
+						}
 					}
-				} else {
-					err := models.NewCognitoError(ctx, awsErr, "Cognito ListUsers request from signout all users from group endpoint")
-					if err.Code != models.TooManyRequestsError {
-						usersListError = models.NewErrorResponse(http.StatusInternalServerError, nil, err)
-						break
-					}
+					time.Sleep(backoff)
 				}
-				time.Sleep(backoff)
 			}
 		}
 	}
 	if usersListError != nil {
 		return nil, usersListError
 	} else {
-		usersList.MapCognitoUsers(listUsersResp)
+		usersList.MapCognitoUsers(&listUsersResp.Users)
 		return &usersList.Users, nil
 	}
 }
@@ -241,7 +235,7 @@ func (api *API) ListUsersWorker(ctx context.Context, userFilterString *string, b
 // SignOutUsersWorker - signs out users globally by invalidating user's refresh token
 func (api *API) SignOutUsersWorker(ctx context.Context, g *models.GlobalSignOut, usersList *[]models.UserParams) {
 	userSignOutRequestData := g.BuildSignOutUserRequest(usersList, &api.UserPoolId)
-	
+	 
 	for _, userSignoutRequest := range userSignOutRequestData {
 
 		for _, backoff := range g.BackoffSchedule {

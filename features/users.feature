@@ -206,7 +206,7 @@ Feature: Users
                     }
                 ],
                 "count": 2,
-                "PaginationToken": ""
+                "PaginationToken":""
             }
             """
 

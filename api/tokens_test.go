@@ -553,7 +553,8 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 
 			// test concurrent go routine
 			usersList := models.UsersList{}
-			usersList.MapCognitoUsers(mock.BulkGenerateUsers(tt.numberOfUsers, userNamesList))
+			generatedUsers := mock.BulkGenerateUsers(tt.numberOfUsers, userNamesList)
+			usersList.MapCognitoUsers(&generatedUsers.Users)
 
 			api.SignOutUsersWorker(ctx, &tt.globalUserSignOutMod, &usersList.Users)
 
