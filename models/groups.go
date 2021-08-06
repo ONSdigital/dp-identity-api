@@ -98,11 +98,18 @@ func (g *Group) BuildListUsersInGroupRequest(userPoolId string) *cognitoidentity
 }
 
 // BuildListUsersInGroupRequest builds a correctly populated ListUsersInGroupInput object with Next Token
-func (g *Group) BuildListUsersInGroupRequestWIthNextToken(userPoolId string, nextToken string) *cognitoidentityprovider.ListUsersInGroupInput {
-	return &cognitoidentityprovider.ListUsersInGroupInput{
-		GroupName:  &g.Name,
-		UserPoolId: &userPoolId,
-		NextToken:  &nextToken,
+func (g *Group) BuildListUsersInGroupRequestWithNextToken(userPoolId string, nextToken string) *cognitoidentityprovider.ListUsersInGroupInput {
+	if nextToken == "" {
+		return &cognitoidentityprovider.ListUsersInGroupInput{
+			GroupName:  &g.Name,
+			UserPoolId: &userPoolId,
+		}
+	} else {
+		return &cognitoidentityprovider.ListUsersInGroupInput{
+			GroupName:  &g.Name,
+			UserPoolId: &userPoolId,
+			NextToken:  &nextToken,
+		}
 	}
 }
 

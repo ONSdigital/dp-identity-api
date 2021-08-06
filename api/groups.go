@@ -75,10 +75,7 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWrit
 	vars := mux.Vars(req)
 	group := models.Group{Name: vars["id"]}
 
-	groupMembersRequest := group.BuildListUsersInGroupRequest(api.UserPoolId)
-
-	listUsers, err := api.getUsersInAGroup(nil, groupMembersRequest, nil)
-	//groupMembersResponse, err := api.CognitoClient.ListUsersInGroup(groupMembersRequest)
+	listUsers, err := api.getUsersInAGroup(nil, group)
 	if err != nil {
 		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from list users in group endpoint")
 		if cognitoErr.Code == models.NotFoundError {
@@ -88,7 +85,6 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWrit
 	}
 
 	listOfUsers := models.UsersList{}
-	//listOfUsers.MapCognitoUsers(&groupMembersResponse.Users)
 	listOfUsers.MapCognitoUsers(&listUsers)
 
 	jsonResponse, responseErr := listOfUsers.BuildSuccessfulJsonResponse(ctx)
@@ -99,18 +95,27 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWrit
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
-func (api *API) getUsersInAGroup(listOfUsers []*cognitoidentityprovider.UserType, groupMembersRequest *cognitoidentityprovider.ListUsersInGroupInput, nextToken *string) ([]*cognitoidentityprovider.UserType, error) {
+func (api *API) getUsersInAGroup(listOfUsers []*cognitoidentityprovider.UserType, group models.Group) ([]*cognitoidentityprovider.UserType, error) {
+	firstTimeCheck := false
+	var nextToken string
+	for {
+		if firstTimeCheck && nextToken == "" {
+			break
+		}
+		firstTimeCheck = true
 
-	groupMembersResponse, err := api.CognitoClient.ListUsersInGroup(groupMembersRequest)
-	if err != nil {
-		return nil, err
-	}
+		groupMembersRequest := group.BuildListUsersInGroupRequestWithNextToken(api.UserPoolId, nextToken)
+		groupMembersResponse, err := api.CognitoClient.ListUsersInGroup(groupMembersRequest)
+		if err != nil {
+			return nil, err
+		}
 
-	listOfUsers = append(listOfUsers, groupMembersResponse.Users...)
-	if groupMembersResponse.NextToken != nil {
-		token := *groupMembersResponse.NextToken
-		groupMembersRequest.SetNextToken(token)
-		return api.getUsersInAGroup(listOfUsers, groupMembersRequest, groupMembersResponse.NextToken)
+		listOfUsers = append(listOfUsers, groupMembersResponse.Users...)
+		if groupMembersResponse.NextToken != nil {
+			nextToken = *groupMembersResponse.NextToken
+		} else {
+			nextToken = ""
+		}
 	}
 	return listOfUsers, nil
 }

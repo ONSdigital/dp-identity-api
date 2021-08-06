@@ -3,12 +3,13 @@ package models_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/ONSdigital/dp-identity-api/models"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -247,5 +248,36 @@ func TestGroup_BuildSuccessfulJsonResponse(t *testing.T) {
 		So(userJson["name"], ShouldEqual, name)
 		So(userJson["description"], ShouldEqual, description)
 		So(userJson["precedence"], ShouldEqual, precedence)
+	})
+}
+
+func TestGroup_BuildListUsersInGroupRequestWithNextToken(t *testing.T) {
+	Convey("builds a correctly populated Cognito ListUsersInGroup request body without a nextToken", t, func() {
+		group := models.Group{
+			Name: "role-test",
+		}
+		userPoolId := "euwest-99-aabbcc"
+		nextToken := ""
+
+		response := group.BuildListUsersInGroupRequestWithNextToken(userPoolId, nextToken)
+
+		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInGroupInput{}))
+		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.GroupName, ShouldEqual, group.Name)
+	})
+
+	Convey("builds a correctly populated Cognito ListUsersInGroup request body with a nextToken", t, func() {
+		group := models.Group{
+			Name: "role-test",
+		}
+		userPoolId := "euwest-99-aabbcc"
+		nextToken := "abcd"
+
+		response := group.BuildListUsersInGroupRequestWithNextToken(userPoolId, nextToken)
+
+		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInGroupInput{}))
+		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.GroupName, ShouldEqual, group.Name)
+		So(*response.NextToken, ShouldEqual, nextToken)
 	})
 }
