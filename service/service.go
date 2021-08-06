@@ -41,19 +41,19 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
+	// hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
 
-	if err != nil {
-		log.Event(ctx, "could not instantiate healthcheck", log.FATAL, log.Error(err))
-		return nil, err
-	}
+	// if err != nil {
+	// 	log.Event(ctx, "could not instantiate healthcheck", log.FATAL, log.Error(err))
+	// 	return nil, err
+	// }
 
-	if err := registerCheckers(ctx, hc, cognitoclient, &cfg.AWSCognitoUserPoolID); err != nil {
-		return nil, errors.Wrap(err, "unable to register checkers")
-	}
+	// if err := registerCheckers(ctx, hc, cognitoclient, &cfg.AWSCognitoUserPoolID); err != nil {
+	// 	return nil, errors.Wrap(err, "unable to register checkers")
+	// }
 
-	r.StrictSlash(true).Path("/health").HandlerFunc(hc.Handler)
-	hc.Start(ctx)
+	// r.StrictSlash(true).Path("/health").HandlerFunc(hc.Handler)
+	// hc.Start(ctx)
 
 	// Run the http server in a new go-routine
 	go func() {
@@ -66,7 +66,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		Config:      cfg,
 		Router:      r,
 		Api:         a,
-		HealthCheck: hc,
+		//HealthCheck: hc,
 		ServiceList: serviceList,
 		Server:      s,
 	}, nil

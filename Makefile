@@ -60,6 +60,16 @@ populate-local:
 	export AWS_COGNITO_USER_POOL_ID=$(LOCAL_USER_POOL_ID); \
 	HUMAN_LOG=1 go run -race ./dummy-data/import-dummy-users/populate_dummy_data.go
 
+.PHONY: groups-recovery
+groups-recovery:
+	export AWS_COGNITO_USER_POOL_ID=$(LOCAL_USER_POOL_ID); \
+	HUMAN_LOG=1 go run -race ./scripts/recovery/groups/groups_recovery.go \
+
+.PHONY: users-groups-recovery
+users-groups-recovery:
+	export AWS_COGNITO_USER_POOL_ID=$(LOCAL_USER_POOL_ID); \
+	HUMAN_LOG=1 go run -race ./scripts/recovery/users_groups/groups_and_users_recovery.go \
+
 .PHONY: remove-test-data
 remove-test-data:
 	export AWS_COGNITO_USER_POOL_ID=$(LOCAL_USER_POOL_ID); \

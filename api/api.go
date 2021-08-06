@@ -82,6 +82,8 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 	r.HandleFunc("/v1/password-reset", contextAndErrors(api.PasswordResetHandler)).Methods(http.MethodPost)
 	r.HandleFunc("/v1/groups/{id}/members", contextAndErrors(api.AddUserToGroupHandler)).Methods(http.MethodPost)
 	r.HandleFunc("/v1/groups/{id}/members/{user_id}", contextAndErrors(api.RemoveUserFromGroupHandler)).Methods(http.MethodDelete)
+	r.HandleFunc("/v1/groups", contextAndErrors(api.ListGroupsHandler)).Methods(http.MethodGet)
+	r.HandleFunc("/v1/usersgroups", contextAndErrors(api.ListUsersGroupsHandler)).Methods(http.MethodGet)
 	return api, nil
 }
 

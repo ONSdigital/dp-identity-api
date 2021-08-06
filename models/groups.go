@@ -3,8 +3,9 @@ package models
 import (
 	"context"
 	"encoding/json"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"time"
+
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
 const (
@@ -94,6 +95,33 @@ func (g *Group) BuildListUsersInGroupRequest(userPoolId string) *cognitoidentity
 		GroupName:  &g.Name,
 		UserPoolId: &userPoolId,
 	}
+}
+
+// BuildListUsersInGroupRequest builds a correctly populated ListUsersInGroupInput object
+func BuildListGroupsRequest(userPoolId, nextToken string) *cognitoidentityprovider.ListGroupsInput {
+	groupsInput := &cognitoidentityprovider.ListGroupsInput{
+		UserPoolId: &userPoolId,
+	}
+
+	if nextToken != "" {
+		groupsInput.NextToken = &nextToken		
+	}
+
+	return groupsInput
+}
+
+// BuildListUsersGroupsRequest builds a correctly populated ListUsersInGroupInput object
+func BuildListUsersGroupsRequest(userPoolId, nextToken, groupName string) *cognitoidentityprovider.ListUsersInGroupInput {
+	usersGroupsInput := &cognitoidentityprovider.ListUsersInGroupInput{
+		UserPoolId: &userPoolId,
+		GroupName: &groupName,
+	}
+
+	if nextToken != "" {
+		usersGroupsInput.NextToken = &nextToken		
+	}
+
+	return usersGroupsInput
 }
 
 // MapCognitoDetails maps the group details returned from GetGroup requests

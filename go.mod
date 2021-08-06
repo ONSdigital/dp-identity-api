@@ -10,6 +10,7 @@ require (
 	github.com/ONSdigital/dp-permissions-api v0.4.0 // indirect
 	github.com/ONSdigital/log.go v1.0.1
 	github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6 // indirect
+	github.com/aws/aws-lambda-go v1.26.0
 	github.com/aws/aws-sdk-go v1.38.34
 	github.com/coreos/etcd v3.3.25+incompatible // indirect
 	github.com/cucumber/godog v0.11.0
