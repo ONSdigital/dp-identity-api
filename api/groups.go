@@ -113,10 +113,9 @@ func (api *API) getUsersInAGroup(listOfUsers []*cognitoidentityprovider.UserType
 		}
 
 		listOfUsers = append(listOfUsers, groupMembersResponse.Users...)
+		nextToken = ""
 		if groupMembersResponse.NextToken != nil {
 			nextToken = *groupMembersResponse.NextToken
-		} else {
-			nextToken = ""
 		}
 	}
 	return listOfUsers, nil

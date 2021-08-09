@@ -104,12 +104,11 @@ func (g *Group) BuildListUsersInGroupRequestWithNextToken(userPoolId string, nex
 			GroupName:  &g.Name,
 			UserPoolId: &userPoolId,
 		}
-	} else {
-		return &cognitoidentityprovider.ListUsersInGroupInput{
-			GroupName:  &g.Name,
-			UserPoolId: &userPoolId,
-			NextToken:  &nextToken,
-		}
+	}
+	return &cognitoidentityprovider.ListUsersInGroupInput{
+		GroupName:  &g.Name,
+		UserPoolId: &userPoolId,
+		NextToken:  &nextToken,
 	}
 }
 

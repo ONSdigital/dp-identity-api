@@ -264,6 +264,7 @@ func TestGroup_BuildListUsersInGroupRequestWithNextToken(t *testing.T) {
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInGroupInput{}))
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
 		So(*response.GroupName, ShouldEqual, group.Name)
+		So(response.NextToken, ShouldBeNil)
 	})
 
 	Convey("builds a correctly populated Cognito ListUsersInGroup request body with a nextToken", t, func() {
