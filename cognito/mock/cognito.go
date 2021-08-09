@@ -119,7 +119,8 @@ func (m *MockCognitoIdentityProviderClient) DeleteGroup(input *cognitoidentitypr
 
 func (m *MockCognitoIdentityProviderClient) AdminSetUserPassword(input *cognitoidentityprovider.AdminSetUserPasswordInput) (*cognitoidentityprovider.AdminSetUserPasswordOutput, error) {
 	return m.AdminSetUserPasswordFunc(input)
-	
+}
+
 func (m *MockCognitoIdentityProviderClient) AdminListGroupsForUser(input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 	return m.AdminListGroupsForUserFunc(input)
 }

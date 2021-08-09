@@ -1356,27 +1356,30 @@ Feature: Users
         """
         Then the HTTP status code should be "202"
 
-# Get List User Groups
-    Scenario: Get /v1/password-reset and checking the response status 202
-        Given a user with username "abcd1234" exists in the database
-        When I GET "/v1/users/test-user-1/groups"
-        """
+ #   List User Groups         
+    Scenario: GET /v1/users/{id}/groups and checking the response status 200
+        Given group "test-group" exists in the database
+        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And user "abcd1234" is a member of group "test-group"
+        When I GET "/v1/users/abcd1234/groups"
+        Then I should receive the following JSON response with status "200":
+            """ 
             {
-                "usergroups": {
-                    "Groups": [
+                "count":1,
+                "usergroups":{
+                    "Groups":[
                         {
-                            "CreationDate": "2021-07-30T10:56:05.574Z",
-                            "Description": "Test Group 1",
-                            "GroupName": "test-group-1",
-                            "LastModifiedDate": "2021-07-30T10:56:05.574Z",
-                            "Precedence": 3,
-                            "RoleArn": null,
-                            "UserPoolId": "eu-west-1_Rnma9lp2q"
+                            "CreationDate":     null,
+                            "Description":      "some Group Desciption",
+                            "GroupName":        "test-group",
+                            "LastModifiedDate": null,
+                            "Precedence":           97,
+                            "RoleArn":          null,
+                            "UserPoolId":       "eu-west-18_73289nds8w932"
                         }
                     ],
-                    "NextToken": null
-                },
-            "count": 1
-        }
-        """
-        Then I should receive the following JSON response with status "200":
+                    "NextToken":null
+                    }
+                }
+            
+            """
