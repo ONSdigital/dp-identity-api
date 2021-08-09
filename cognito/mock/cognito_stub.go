@@ -539,3 +539,33 @@ func (m *CognitoIdentityProviderClientStub) AdminRemoveUserFromGroup(input *cogn
 
 	return &cognitoidentityprovider.AdminRemoveUserFromGroupOutput{}, nil
 }
+
+func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
+	input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
+	if *input.Username == "internal-error" || *input.Username == "get-group-internal-error" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+	if *input.Username == "get-user-not-found" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "get user - user not found", nil)
+	}
+
+	Description := "some Group Desciption"
+	Name := "test-group"
+	var Precedence int64 = 97
+	nextToken := ""
+	usergroupList := cognitoidentityprovider.AdminListGroupsForUserOutput{}
+	group := cognitoidentityprovider.GroupType{
+		// CreationDate:     &timestamp,
+		Description: &Description,
+		GroupName:   &Name,
+		// LastModifiedDate: &timestamp,
+		Precedence: &Precedence,
+		UserPoolId: input.UserPoolId,
+	}
+	usergroupList.Groups = append(usergroupList.Groups, &group)
+
+	return &cognitoidentityprovider.AdminListGroupsForUserOutput{
+		Groups:    usergroupList.Groups,
+		NextToken: &nextToken,
+	}, nil
+}
