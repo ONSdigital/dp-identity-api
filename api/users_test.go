@@ -1210,9 +1210,13 @@ func TestListUserGroupsHandler(t *testing.T) {
 		}
 	})
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 }
 
 =======
+=======
+
+>>>>>>> c33b6e5 (Add feature tests)
 }
 >>>>>>> ca1365f (Add Pagination)

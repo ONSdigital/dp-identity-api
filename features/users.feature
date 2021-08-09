@@ -1357,6 +1357,9 @@ Feature: Users
         Then the HTTP status code should be "202"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> c33b6e5 (Add feature tests)
  #   List User Groups         
     Scenario: GET /v1/users/{id}/groups and checking the response status 200
         Given group "test-group" exists in the database
@@ -1365,6 +1368,7 @@ Feature: Users
         When I GET "/v1/users/abcd1234/groups"
         Then I should receive the following JSON response with status "200":
             """ 
+<<<<<<< HEAD
             {
                 "count":1,
                 "usergroups":{
@@ -1416,19 +1420,23 @@ Scenario: GET /v1/users/{id}/groups user not found and checking the response sta
         Given a user with username "abcd1234" exists in the database
         When I GET "/v1/users/test-user-1/groups"
         """
+=======
+>>>>>>> c33b6e5 (Add feature tests)
             {
-                "usergroups": {
-                    "Groups": [
+                "count":1,
+                "usergroups":{
+                    "Groups":[
                         {
-                            "CreationDate": "2021-07-30T10:56:05.574Z",
-                            "Description": "Test Group 1",
-                            "GroupName": "test-group-1",
-                            "LastModifiedDate": "2021-07-30T10:56:05.574Z",
-                            "Precedence": 3,
-                            "RoleArn": null,
-                            "UserPoolId": "eu-west-1_Rnma9lp2q"
+                            "CreationDate":     null,
+                            "Description":      "some Group Desciption",
+                            "GroupName":        "test-group",
+                            "LastModifiedDate": null,
+                            "Precedence":           97,
+                            "RoleArn":          null,
+                            "UserPoolId":       "eu-west-18_73289nds8w932"
                         }
                     ],
+<<<<<<< HEAD
                     "NextToken": null
                 },
             "count": 1
@@ -1436,3 +1444,10 @@ Scenario: GET /v1/users/{id}/groups user not found and checking the response sta
         """
         Then I should receive the following JSON response with status "200":
 >>>>>>> ca1365f (Add Pagination)
+=======
+                    "NextToken":null
+                    }
+                }
+            
+            """
+>>>>>>> c33b6e5 (Add feature tests)
