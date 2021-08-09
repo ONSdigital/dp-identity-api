@@ -586,8 +586,6 @@ func TestGetUsersFromGroupHandler(t *testing.T) {
 
 			m.ListUsersInGroupFunc = tt.listUsersForGroupFunction
 
-			//postBody := map[string]interface{}{"user_id": userId}
-			//body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodGet, getUsersInGroupEndPoint, nil)
 
 			urlVars := map[string]string{
@@ -599,5 +597,133 @@ func TestGetUsersFromGroupHandler(t *testing.T) {
 
 			tt.assertions(successResponse, errorResponse)
 		}
+	})
+}
+
+func TestGetUsersInAGroup(t *testing.T) {
+
+	var (
+		groupNotFoundDescription string = "group not found"
+		name                     string = "name"
+	)
+
+	getGroupData := models.Group{
+		Name: "test-group",
+	}
+
+	api, _, m := apiSetup()
+	Convey("error is returned when list users in group returns an error", t, func() {
+		m.ListUsersInGroupFunc = func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+			var groupNotFoundException cognitoidentityprovider.ResourceNotFoundException
+			groupNotFoundException.Message_ = &groupNotFoundDescription
+			return nil, &groupNotFoundException
+		}
+
+		listOfUsersResponse, errorResponse := api.getUsersInAGroup(nil, getGroupData)
+
+		So(listOfUsersResponse, ShouldBeNil)
+		So(errorResponse.Error(), ShouldResemble, "ResourceNotFoundException: group not found")
+	})
+
+	Convey("When there is no next token cognito is called once and the list of users in returned", t, func() {
+		listOfUsers := []*cognitoidentityprovider.UserType{
+			{
+				Username: &name,
+			},
+		}
+
+		m.ListUsersInGroupFunc = func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+			listUsersInGroup := &cognitoidentityprovider.ListUsersInGroupOutput{
+				Users: []*cognitoidentityprovider.UserType{
+					{
+						Username: &name,
+					},
+				},
+			}
+			return listUsersInGroup, nil
+		}
+
+		listOfUsersResponse, errorResponse := api.getUsersInAGroup(nil, getGroupData)
+
+		So(listOfUsersResponse, ShouldResemble, listOfUsers)
+		So(errorResponse, ShouldBeNil)
+
+	})
+
+	Convey("When there is a next token cognito is called more than once and the appended list of users in returned", t, func() {
+		listOfUsers := []*cognitoidentityprovider.UserType{
+			{
+				Username: &name,
+			},
+			{
+				Username: &name,
+			},
+		}
+
+		m.ListUsersInGroupFunc = func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+			nextToken := "nextToken"
+
+			if input.NextToken != nil {
+				listUsersInGroup := &cognitoidentityprovider.ListUsersInGroupOutput{
+					NextToken: nil,
+					Users: []*cognitoidentityprovider.UserType{
+						{
+							Username: &name,
+						},
+					},
+				}
+				return listUsersInGroup, nil
+			} else {
+				listUsersInGroup := &cognitoidentityprovider.ListUsersInGroupOutput{
+					NextToken: &nextToken,
+					Users: []*cognitoidentityprovider.UserType{
+						{
+							Username: &name,
+						},
+					},
+				}
+				return listUsersInGroup, nil
+			}
+		}
+
+		listOfUsersResponse, errorResponse := api.getUsersInAGroup(nil, getGroupData)
+
+		So(listOfUsersResponse, ShouldResemble, listOfUsers)
+		So(errorResponse, ShouldBeNil)
+
+	})
+
+	Convey("When GetUsersInAGroup in called with a list of users the appended list of users in returned", t, func() {
+
+		listOfUsers := []*cognitoidentityprovider.UserType{
+			{
+				Username: &name,
+			},
+		}
+
+		returnedListOfUsers := []*cognitoidentityprovider.UserType{
+			{
+				Username: &name,
+			},
+			{
+				Username: &name,
+			},
+		}
+
+		m.ListUsersInGroupFunc = func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+			listUsersInGroup := &cognitoidentityprovider.ListUsersInGroupOutput{
+				Users: []*cognitoidentityprovider.UserType{
+					{
+						Username: &name,
+					},
+				},
+			}
+			return listUsersInGroup, nil
+		}
+
+		listOfUsersResponse, errorResponse := api.getUsersInAGroup(listOfUsers, getGroupData)
+
+		So(listOfUsersResponse, ShouldResemble, returnedListOfUsers)
+		So(errorResponse, ShouldBeNil)
 	})
 }

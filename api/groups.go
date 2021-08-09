@@ -75,7 +75,9 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWrit
 	vars := mux.Vars(req)
 	group := models.Group{Name: vars["id"]}
 
-	listUsers, err := api.getUsersInAGroup(nil, group)
+	listOfUsersInput := []*cognitoidentityprovider.UserType{}
+
+	listUsers, err := api.getUsersInAGroup(listOfUsersInput, group)
 	if err != nil {
 		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from list users in group endpoint")
 		if cognitoErr.Code == models.NotFoundError {
