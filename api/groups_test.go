@@ -4,19 +4,21 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 )
 
 const addUserToGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/memebers"
 const removeUserFromGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/memebers/abcd1234"
+const getUsersInGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/members"
 
 func TestAddUserToGroupHandler(t *testing.T) {
 
@@ -496,5 +498,232 @@ func TestRemoveUserFromGroupHandler(t *testing.T) {
 				So(castErr.Code, ShouldEqual, tt.errorCodes[1])
 			}
 		}
+	})
+}
+
+func TestGetUsersFromGroupHandler(t *testing.T) {
+
+	var (
+		ctx                                                       = context.Background()
+		groupNotFoundDescription, internalErrorDescription string = "group not found", "internal error"
+	)
+
+	api, w, m := apiSetup()
+
+	Convey("adds the returned users to the user list and sets the count", t, func() {
+		cognitoResponse := cognitoidentityprovider.ListUsersInGroupOutput{
+			Users: []*cognitoidentityprovider.UserType{
+				{
+					Enabled:    aws.Bool(true),
+					UserStatus: aws.String("CONFIRMED"),
+					Username:   aws.String("user-1"),
+				},
+				{
+					Enabled:    aws.Bool(true),
+					UserStatus: aws.String("CONFIRMED"),
+					Username:   aws.String("user-2"),
+				},
+			},
+		}
+		listOfUsers := models.UsersList{}
+		listOfUsers.MapCognitoUsers(&cognitoResponse.Users)
+
+		So(len(listOfUsers.Users), ShouldEqual, len(cognitoResponse.Users))
+		So(listOfUsers.Count, ShouldEqual, len(cognitoResponse.Users))
+	})
+
+	Convey("and the expected responses", t, func() {
+		listUsersInGroupTests := []struct {
+			listUsersForGroupFunction func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
+			assertions                func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+		}{
+			// 200 response - user added to group
+			{
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					return &cognitoidentityprovider.ListUsersInGroupOutput{}, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(errorResponse, ShouldBeNil)
+				},
+			},
+			// Cognito 404 response - group not found
+			{
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					var groupNotFoundException cognitoidentityprovider.ResourceNotFoundException
+					groupNotFoundException.Message_ = &groupNotFoundDescription
+					return nil, &groupNotFoundException
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.NotFoundError)
+					So(castErr.Description, ShouldEqual, groupNotFoundDescription)
+				},
+			},
+			// Cognito 500 response - internal error
+			{
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					var internalError cognitoidentityprovider.InternalErrorException
+					internalError.Message_ = &internalErrorDescription
+					return nil, &internalError
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.InternalError)
+					So(castErr.Description, ShouldEqual, internalErrorDescription)
+				},
+			},
+		}
+
+		for _, tt := range listUsersInGroupTests {
+
+			m.ListUsersInGroupFunc = tt.listUsersForGroupFunction
+
+			r := httptest.NewRequest(http.MethodGet, getUsersInGroupEndPoint, nil)
+
+			urlVars := map[string]string{
+				"id": "efgh5678",
+			}
+			r = mux.SetURLVars(r, urlVars)
+
+			successResponse, errorResponse := api.ListUsersInGroupHandler(ctx, w, r)
+
+			tt.assertions(successResponse, errorResponse)
+		}
+	})
+}
+
+func TestGetUsersInAGroup(t *testing.T) {
+
+	var (
+		groupNotFoundDescription string = "group not found"
+		name                     string = "name"
+	)
+
+	getGroupData := models.Group{
+		Name: "test-group",
+	}
+
+	api, _, m := apiSetup()
+	Convey("error is returned when list users in group returns an error", t, func() {
+		m.ListUsersInGroupFunc = func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+			var groupNotFoundException cognitoidentityprovider.ResourceNotFoundException
+			groupNotFoundException.Message_ = &groupNotFoundDescription
+			return nil, &groupNotFoundException
+		}
+
+		listOfUsersResponse, errorResponse := api.getUsersInAGroup(nil, getGroupData)
+
+		So(listOfUsersResponse, ShouldBeNil)
+		So(errorResponse.Error(), ShouldResemble, "ResourceNotFoundException: group not found")
+	})
+
+	Convey("When there is no next token cognito is called once and the list of users in returned", t, func() {
+		listOfUsers := []*cognitoidentityprovider.UserType{
+			{
+				Username: &name,
+			},
+		}
+
+		m.ListUsersInGroupFunc = func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+			listUsersInGroup := &cognitoidentityprovider.ListUsersInGroupOutput{
+				Users: []*cognitoidentityprovider.UserType{
+					{
+						Username: &name,
+					},
+				},
+			}
+			return listUsersInGroup, nil
+		}
+
+		listOfUsersResponse, errorResponse := api.getUsersInAGroup(nil, getGroupData)
+
+		So(listOfUsersResponse, ShouldResemble, listOfUsers)
+		So(errorResponse, ShouldBeNil)
+
+	})
+
+	Convey("When there is a next token cognito is called more than once and the appended list of users in returned", t, func() {
+		listOfUsers := []*cognitoidentityprovider.UserType{
+			{
+				Username: &name,
+			},
+			{
+				Username: &name,
+			},
+		}
+
+		m.ListUsersInGroupFunc = func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+			nextToken := "nextToken"
+
+			if input.NextToken != nil {
+				listUsersInGroup := &cognitoidentityprovider.ListUsersInGroupOutput{
+					NextToken: nil,
+					Users: []*cognitoidentityprovider.UserType{
+						{
+							Username: &name,
+						},
+					},
+				}
+				return listUsersInGroup, nil
+			} else {
+				listUsersInGroup := &cognitoidentityprovider.ListUsersInGroupOutput{
+					NextToken: &nextToken,
+					Users: []*cognitoidentityprovider.UserType{
+						{
+							Username: &name,
+						},
+					},
+				}
+				return listUsersInGroup, nil
+			}
+		}
+
+		listOfUsersResponse, errorResponse := api.getUsersInAGroup(nil, getGroupData)
+
+		So(listOfUsersResponse, ShouldResemble, listOfUsers)
+		So(errorResponse, ShouldBeNil)
+
+	})
+
+	Convey("When GetUsersInAGroup in called with a list of users the appended list of users in returned", t, func() {
+
+		listOfUsers := []*cognitoidentityprovider.UserType{
+			{
+				Username: &name,
+			},
+		}
+
+		returnedListOfUsers := []*cognitoidentityprovider.UserType{
+			{
+				Username: &name,
+			},
+			{
+				Username: &name,
+			},
+		}
+
+		m.ListUsersInGroupFunc = func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+			listUsersInGroup := &cognitoidentityprovider.ListUsersInGroupOutput{
+				Users: []*cognitoidentityprovider.UserType{
+					{
+						Username: &name,
+					},
+				},
+			}
+			return listUsersInGroup, nil
+		}
+
+		listOfUsersResponse, errorResponse := api.getUsersInAGroup(listOfUsers, getGroupData)
+
+		So(listOfUsersResponse, ShouldResemble, returnedListOfUsers)
+		So(errorResponse, ShouldBeNil)
 	})
 }

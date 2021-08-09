@@ -43,12 +43,11 @@ func (p UsersList) BuildListUserRequest(filterString string, requiredAttribute s
 }
 
 //MapCognitoUsers maps the users from the cognito response into the UsersList Users attribute and sets the Count attribute
-func (p *UsersList) MapCognitoUsers(cognitoResults *cognitoidentityprovider.ListUsersOutput) {
-	var usersList []UserParams
-	for _, user := range cognitoResults.Users {
-		usersList = append(usersList, UserParams{}.MapCognitoDetails(user))
+func (p *UsersList) MapCognitoUsers(cognitoResults *[]*cognitoidentityprovider.UserType) {
+	p.Users = []UserParams{}
+	for _, user := range *cognitoResults {
+		p.Users = append(p.Users, UserParams{}.MapCognitoDetails(user))
 	}
-	p.Users = usersList
 	p.Count = len(p.Users)
 }
 

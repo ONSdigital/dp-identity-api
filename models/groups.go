@@ -3,8 +3,9 @@ package models
 import (
 	"context"
 	"encoding/json"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"time"
+
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
 const (
@@ -93,6 +94,21 @@ func (g *Group) BuildListUsersInGroupRequest(userPoolId string) *cognitoidentity
 	return &cognitoidentityprovider.ListUsersInGroupInput{
 		GroupName:  &g.Name,
 		UserPoolId: &userPoolId,
+	}
+}
+
+// BuildListUsersInGroupRequest builds a correctly populated ListUsersInGroupInput object with Next Token
+func (g *Group) BuildListUsersInGroupRequestWithNextToken(userPoolId string, nextToken string) *cognitoidentityprovider.ListUsersInGroupInput {
+	if nextToken == "" {
+		return &cognitoidentityprovider.ListUsersInGroupInput{
+			GroupName:  &g.Name,
+			UserPoolId: &userPoolId,
+		}
+	}
+	return &cognitoidentityprovider.ListUsersInGroupInput{
+		GroupName:  &g.Name,
+		UserPoolId: &userPoolId,
+		NextToken:  &nextToken,
 	}
 }
 

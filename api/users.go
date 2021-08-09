@@ -3,10 +3,11 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/gorilla/mux"
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/google/uuid"
@@ -78,7 +79,7 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint"))
 	}
 
-	usersList.MapCognitoUsers(listUserResp)
+	usersList.MapCognitoUsers(&listUserResp.Users)
 
 	jsonResponse, responseErr := usersList.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {
