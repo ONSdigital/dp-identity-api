@@ -25,10 +25,13 @@ type MockCognitoIdentityProviderClient struct {
 	AdminAddUserToGroupFunc       func(input *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error)
 	ListUsersInGroupFunc          func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
 	AdminRemoveUserFromGroupFunc  func(input *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error)
+<<<<<<< HEAD
 	AdminConfirmSignUpFunc        func(input *cognitoidentityprovider.AdminConfirmSignUpInput) (*cognitoidentityprovider.AdminConfirmSignUpOutput, error)
 	AdminDeleteUserFunc           func(input *cognitoidentityprovider.AdminDeleteUserInput) (*cognitoidentityprovider.AdminDeleteUserOutput, error)
 	DeleteGroupFunc               func(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error)
 	AdminSetUserPasswordFunc      func(input *cognitoidentityprovider.AdminSetUserPasswordInput) (*cognitoidentityprovider.AdminSetUserPasswordOutput, error)
+=======
+>>>>>>> c33b6e55b0c5cd6b7c1acc9f792b7b283c167575
 	AdminListGroupsForUserFunc    func(input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error)
 }
 
@@ -105,6 +108,7 @@ func (m *MockCognitoIdentityProviderClient) AdminRemoveUserFromGroup(input *cogn
 	return m.AdminRemoveUserFromGroupFunc(input)
 }
 
+<<<<<<< HEAD
 func (m *MockCognitoIdentityProviderClient) AdminConfirmSignUp(input *cognitoidentityprovider.AdminConfirmSignUpInput) (*cognitoidentityprovider.AdminConfirmSignUpOutput, error) {
 	return m.AdminConfirmSignUpFunc(input)
 }
@@ -121,6 +125,8 @@ func (m *MockCognitoIdentityProviderClient) AdminSetUserPassword(input *cognitoi
 	return m.AdminSetUserPasswordFunc(input)
 }
 
+=======
+>>>>>>> c33b6e55b0c5cd6b7c1acc9f792b7b283c167575
 func (m *MockCognitoIdentityProviderClient) AdminListGroupsForUser(input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 	return m.AdminListGroupsForUserFunc(input)
 }
