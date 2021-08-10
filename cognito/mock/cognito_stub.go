@@ -465,8 +465,8 @@ func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoident
 	if *input.GroupName == "internal-error" || *input.GroupName == "list-group-users-internal-error" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	}
-	if *input.GroupName == "list-group-users-not-found" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "list members - group not found", nil)
+	if *input.GroupName == "list-group-user-not-found" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "list user - user not found", nil)
 	}
 
 	group := m.ReadGroup(*input.GroupName)

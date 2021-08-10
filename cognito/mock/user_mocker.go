@@ -1,5 +1,12 @@
 package mock
 
+import (
+	"math/rand"
+	"time"
+
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+)
+
 type User struct {
 	ID          string
 	Email       string
@@ -69,4 +76,38 @@ func (m *CognitoIdentityProviderClientStub) ReadUser(username string) *User {
 		}
 	}
 	return nil
+}
+
+//BulkGenerateGroups - bulk generate 'n' groups for testing purposes
+//                    if groupnames array is nil or length is different, will autofill with
+func BulkGenerateGroups(groupCount int, groupNames []string) *cognitoidentityprovider.AdminListGroupsForUserOutput {
+	nextToken := "abc-123-xyz-345-xxx"
+	groupList := &cognitoidentityprovider.AdminListGroupsForUserOutput{}
+
+	for i := 0; i < groupCount; i++ {
+		var (
+			timestamp         = time.Now()
+			randomNum   int64 = int64(rand.Intn((100 - 3) + 3))
+			userPoolId        = "aaaa-bbbb-ccc-dddd"
+			group_name        = "group_name" + string(i)
+			description       = "group_name_description" + string(i)
+			groupName         = ""
+		)
+		if groupNames == nil || i > len(groupNames)-1 {
+			groupName = group_name
+		} else {
+			groupName = groupNames[i]
+		}
+		group := &cognitoidentityprovider.GroupType{}
+		group.CreationDate = &timestamp
+		group.Description = &description
+		group.GroupName = &groupName
+		group.LastModifiedDate = &timestamp
+		group.Precedence = &randomNum
+		group.UserPoolId = &userPoolId
+
+		groupList.Groups = append(groupList.Groups, group)
+		groupList.NextToken = &nextToken
+	}
+	return groupList
 }

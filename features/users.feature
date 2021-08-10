@@ -1383,3 +1383,29 @@ Feature: Users
                 }
             
             """
+
+Scenario: GET /v1/users/{id}/groups user not found and checking the response status 404
+        When I GET "/v1/users/get-user-not-found"
+        Then I should receive the following JSON response with status "404":
+            """
+            {
+                "errors": [
+                    {
+                        "code": "UserNotFound",
+                        "description": "the user could not be found"
+                    }
+                ]
+            }
+            """ 
+     Scenario: GET /v1/users/{id}/groups and checking the response status 200
+        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        When I GET "/v1/users/abcd1234/groups"
+        Then I should receive the following JSON response with status "200":
+            """ 
+            {
+                "count":0,
+                "usergroups":null,
+                    "NextToken":null
+                    }
+                
+            """
