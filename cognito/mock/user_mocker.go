@@ -1,10 +1,7 @@
 package mock
 
 import (
-<<<<<<< HEAD
 	"fmt"
-=======
->>>>>>> d47026707c3c9cc5b8217883e34fb1da111b238b
 	"math/rand"
 	"time"
 
