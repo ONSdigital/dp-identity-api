@@ -984,19 +984,19 @@ func TestUserParams_BuildListUserGroupsRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminListUserGroupsInput request body with empty nextToken", t, func() {
 		userId := "abcd1234"
 		nextToken := ""
-		input := models.UserParams{
+		user := models.UserParams{
 			ID: userId,
 		}
 
 		userPoolId := "euwest-99-aabbcc"
-		request := input.BuildListUserGroupsRequest(userPoolId, nextToken)
+		request := user.BuildListUserGroupsRequest(userPoolId, nextToken)
 
 		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminListGroupsForUserInput{}))
 		So(*request.Username, ShouldEqual, userId)
 		So(*request.UserPoolId, ShouldEqual, userPoolId)
 	})
 
-	Convey("builds a correctly populated Cognito AdminListUserGroupsInput request body with nextToken", t, func() {
+	Convey("builds a correctly populated Cognito AdminDisableUserInput request body with nextToken", t, func() {
 		userId := "abcd1234"
 		nextToken := "abc1234"
 		user := models.UserParams{
@@ -1075,7 +1075,7 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 		err := json.Unmarshal(response, &userGroupsJson)
 		So(err, ShouldBeNil)
 		So(len(userGroupsJson.UserGroups.Groups), ShouldEqual, len(result.Groups))
-		So(userGroupsJson.Count, ShouldEqual, 1)
+		So(userGroupsJson.Count, ShouldEqual, 0)
 		So(userGroupsJson.UserGroups.NextToken, ShouldBeNil)
 
 	})

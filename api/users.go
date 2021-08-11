@@ -6,13 +6,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-
-	"github.com/gorilla/mux"
-
-	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 //CreateUserHandler creates a new user and returns a http handler interface
@@ -335,4 +333,5 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+
 }
