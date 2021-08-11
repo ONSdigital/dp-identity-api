@@ -12,14 +12,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-<<<<<<< HEAD
-<<<<<<< HEAD
 	"github.com/gorilla/mux"
-=======
->>>>>>> f7efc88 (ListUserGroups add count and add tests for empty response)
-=======
-	"github.com/gorilla/mux"
->>>>>>> ca1365f (Add Pagination)
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -1140,19 +1133,6 @@ func TestListUserGroupsHandler(t *testing.T) {
 				},
 				http.StatusOK,
 			},
-<<<<<<< HEAD
-=======
-			// {
-			// 	// 200 response from Cognito with empty NextToken
-			// 	func(input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
-			// 		return &cognitoidentityprovider.AdminListGroupsForUserOutput{
-			// 			Groups:    userGroups,
-			// 			NextToken: &nextToken,
-			// 		}, nil
-			// 	},
-			// 	http.StatusOK,
-			// },
->>>>>>> ca1365f (Add Pagination)
 			{
 				// 200 response from Cognito with empty NextToken
 				func(input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
@@ -1209,14 +1189,4 @@ func TestListUserGroupsHandler(t *testing.T) {
 			}
 		}
 	})
-<<<<<<< HEAD
-<<<<<<< HEAD
-
 }
-
-=======
-=======
-
->>>>>>> c33b6e5 (Add feature tests)
-}
->>>>>>> ca1365f (Add Pagination)

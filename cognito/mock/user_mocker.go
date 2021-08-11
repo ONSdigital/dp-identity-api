@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -89,8 +90,8 @@ func BulkGenerateGroups(groupCount int, groupNames []string) *cognitoidentitypro
 			timestamp         = time.Now()
 			randomNum   int64 = int64(rand.Intn((100 - 3) + 3))
 			userPoolId        = "aaaa-bbbb-ccc-dddd"
-			group_name        = "group_name" + string(i)
-			description       = "group_name_description" + string(i)
+			group_name        = "group_name_" + fmt.Sprint(i)
+			description       = "group name description " + fmt.Sprint(i)
 			groupName         = ""
 		)
 		if groupNames == nil || i > len(groupNames)-1 {

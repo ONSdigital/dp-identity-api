@@ -465,8 +465,8 @@ func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoident
 	if *input.GroupName == "internal-error" || *input.GroupName == "list-group-users-internal-error" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	}
-	if *input.GroupName == "list-group-user-not-found" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "list user - user not found", nil)
+	if *input.GroupName == "list-group-users-not-found" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "list members - group not found", nil)
 	}
 
 	group := m.ReadGroup(*input.GroupName)
@@ -538,6 +538,26 @@ func (m *CognitoIdentityProviderClientStub) AdminRemoveUserFromGroup(input *cogn
 	user.Groups = newUserGroupList
 
 	return &cognitoidentityprovider.AdminRemoveUserFromGroupOutput{}, nil
+}
+
+//Added to fully implement interface but only used in the local dummy data builder
+func (m *CognitoIdentityProviderClientStub) AdminConfirmSignUp(input *cognitoidentityprovider.AdminConfirmSignUpInput) (*cognitoidentityprovider.AdminConfirmSignUpOutput, error) {
+	return nil, nil
+}
+
+//Added to fully implement interface but only used in the local dummy data builder
+func (m *CognitoIdentityProviderClientStub) AdminDeleteUser(input *cognitoidentityprovider.AdminDeleteUserInput) (*cognitoidentityprovider.AdminDeleteUserOutput, error) {
+	return nil, nil
+}
+
+//Added to fully implement interface but only used in the local dummy data builder
+func (m *CognitoIdentityProviderClientStub) DeleteGroup(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error) {
+	return nil, nil
+}
+
+//Added to fully implement interface but only used in the local dummy data builder
+func (m *CognitoIdentityProviderClientStub) AdminSetUserPassword(input *cognitoidentityprovider.AdminSetUserPasswordInput) (*cognitoidentityprovider.AdminSetUserPasswordOutput, error) {
+	return nil, nil
 }
 
 func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
