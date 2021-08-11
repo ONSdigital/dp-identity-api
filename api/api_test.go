@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
 	"github.com/ONSdigital/dp-identity-api/models"
 
@@ -43,6 +44,7 @@ func TestSetup(t *testing.T) {
 			So(hasRoute(api.Router, "/v1/users/self/password", http.MethodPut), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/password-reset", http.MethodPost), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/groups/{id}/members", http.MethodPost), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/groups/{id}/members", http.MethodGet), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/groups/{id}/members/{user_id}", http.MethodDelete), ShouldBeTrue)
 		})
 

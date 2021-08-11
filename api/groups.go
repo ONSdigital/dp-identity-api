@@ -3,10 +3,12 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/ONSdigital/dp-identity-api/models"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/gorilla/mux"
 )
 
 //AddUserToGroupHandler adds a user to the specified group
@@ -65,6 +67,58 @@ func (api *API) AddUserToGroupHandler(ctx context.Context, w http.ResponseWriter
 	}
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
+
+//ListUsersInGroupHandler list the users in the specified group
+func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+
+	vars := mux.Vars(req)
+	group := models.Group{Name: vars["id"]}
+
+	listOfUsersInput := []*cognitoidentityprovider.UserType{}
+
+	listUsers, err := api.getUsersInAGroup(listOfUsersInput, group)
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from list users in group endpoint")
+		if cognitoErr.Code == models.NotFoundError {
+			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, cognitoErr)
+		}
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+	}
+
+	listOfUsers := models.UsersList{}
+	listOfUsers.MapCognitoUsers(&listUsers)
+
+	jsonResponse, responseErr := listOfUsers.BuildSuccessfulJsonResponse(ctx)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
+
+func (api *API) getUsersInAGroup(listOfUsers []*cognitoidentityprovider.UserType, group models.Group) ([]*cognitoidentityprovider.UserType, error) {
+	firstTimeCheck := false
+	var nextToken string
+	for {
+		if firstTimeCheck && nextToken == "" {
+			break
+		}
+		firstTimeCheck = true
+
+		groupMembersRequest := group.BuildListUsersInGroupRequestWithNextToken(api.UserPoolId, nextToken)
+		groupMembersResponse, err := api.CognitoClient.ListUsersInGroup(groupMembersRequest)
+		if err != nil {
+			return nil, err
+		}
+
+		listOfUsers = append(listOfUsers, groupMembersResponse.Users...)
+		nextToken = ""
+		if groupMembersResponse.NextToken != nil {
+			nextToken = *groupMembersResponse.NextToken
+		}
+	}
+	return listOfUsers, nil
 }
 
 //RemoveUserFromGroupHandler adds a user to the specified group
