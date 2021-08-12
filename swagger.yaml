@@ -63,6 +63,19 @@ paths:
           description: "Unexpected internal error"
           schema:
             $ref: '#/definitions/ErrorResponse'
+    delete:
+      tags:
+        - Tokens
+      summary: "Enables functionality to logout all active users"
+      consumes:
+        - application/json
+      responses:
+        202:
+          description: "Request Accepted"
+        500:
+          description: "Unexpected internal error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
   /tokens/self:
     put:
       tags:

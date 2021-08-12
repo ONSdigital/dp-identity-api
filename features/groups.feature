@@ -381,7 +381,8 @@ Feature: Groups
                             "status_notes": ""
                         }
                     ],
-                    "count": 1
+                    "count": 1,
+                    "PaginationToken":""
                 }
             """
 
