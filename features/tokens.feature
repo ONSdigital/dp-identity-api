@@ -10,9 +10,9 @@ Scenario: POST /v1/tokens successful login
     }
     """
     Then the HTTP status code should be "201"
-    And the response header "Authorization" should be "Bearer accessToken"
-    And the response header "ID" should be "idToken"
-    And the response header "Refresh" should be "refreshToken"
+#    And the response header "Authorization" should be "Bearer accessToken"
+#    And the response header "ID" should be "idToken"
+#    And the response header "Refresh" should be "refreshToken"
 
 Scenario: POST /v1/tokens non-verified email successful login
     Given a user with non-verified email "new_email@ons.gov.uk" and password "TeMpPassw0rd!"
