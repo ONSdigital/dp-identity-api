@@ -237,60 +237,51 @@ func (api *API) SignOutUsersWorker(ctx context.Context, g *models.GlobalSignOut,
 	userSignOutRequestData := g.BuildSignOutUserRequest(usersList, &api.UserPoolId)
 	 
 	for _, userSignoutRequest := range userSignOutRequestData {
-
 		for _, backoff := range g.BackoffSchedule {
 			_, err := api.generateGlobalSignOutRequest(userSignoutRequest)
 
 			// no errors returned - add username to results channel and break to next user in list
 			if err == nil {
-
 				// the results channel is not being processed by caller currently - here for possible future extensibility
 				g.ResultsChannel <- *userSignoutRequest.Username
 				g.RetryAllowed = true
+
 				break
-
 			} else {
-
 				// error returned - process it
 				responseErr := models.NewCognitoError(ctx, err, "Cognito AdminUserGlobalSignOut request for sign out")
 
 				// is error code != models.TooManyRequestsError? If so, proceed...
 				if responseErr.Code != models.TooManyRequestsError {
-
 					// if g.RetryAllowed is true, allowed to request api again
 					if g.RetryAllowed {
-
 						// attempt one more request to api
 						g.RetryAllowed = false // 3. Set GlobalSignOut.RetryAllowed to false and request AdminUserGlobalSignOut
 						_, retryErr := api.generateGlobalSignOutRequest(userSignoutRequest)
 
 						if retryErr != nil {
-
 							// if error response from request received again, process it
 							retryResponseErr := models.NewCognitoError(ctx, err, "Cognito AdminUserGlobalSignOut request for sign out")
 
 							 // if error code != models.TooManyRequestsError break to next user
 							if retryResponseErr.Code != models.TooManyRequestsError {
 								g.RetryAllowed = true
+
 								break
 							}
-
 						} else {
-
 							// no error on retry, add user to results channel and break to next user
 							// the results channel is not being processed by caller currently - here for possible future extensibility
 							g.ResultsChannel <- *userSignoutRequest.Username
 							g.RetryAllowed = true
+
 							break
-
 						}
-
 					} else { 
-
 						// if GlobalSignOut.RetryAllowed already false break to next user
 						g.RetryAllowed = true
-						break
 
+						break
 					}
 				}
 			}
