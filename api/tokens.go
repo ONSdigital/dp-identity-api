@@ -64,16 +64,20 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 
 	// success headers
 	var headers map[string]string
-	//if result.AuthenticationResult != nil {
-	//	headers = map[string]string{
-	//		AccessTokenHeaderName:  "Bearer " + *result.AuthenticationResult.AccessToken,
-	//		IdTokenHeaderName:      *result.AuthenticationResult.IdToken,
-	//		RefreshTokenHeaderName: *result.AuthenticationResult.RefreshToken,
-	//	}
-	//} else {
-	//	headers = nil
-	//}
-	headers = nil
+	if result.AuthenticationResult != nil {
+		//headers = map[string]string{
+		//	AccessTokenHeaderName:  "Bearer " + *result.AuthenticationResult.AccessToken,
+		//	IdTokenHeaderName:      *result.AuthenticationResult.IdToken,
+		//	RefreshTokenHeaderName: *result.AuthenticationResult.RefreshToken,
+		//}
+		headers = map[string]string{
+			AccessTokenHeaderName:  "test-access-token-value",
+			IdTokenHeaderName:      "test-id-token-value",
+			RefreshTokenHeaderName: "test-refresh-token-value",
+		}
+	} else {
+		headers = nil
+	}
 
 	// response - http.StatusCreated by default
 	httpStatus := http.StatusCreated
