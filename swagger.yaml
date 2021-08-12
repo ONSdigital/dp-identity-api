@@ -401,7 +401,7 @@ paths:
           description: the group's name
       responses:
         200:
-          description: "User added to group"
+          description: "List of users in the group"
           schema:
             $ref: '#/definitions/UserList'
         400:
