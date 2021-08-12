@@ -1,5 +1,10 @@
 package mock
 
+import (
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/google/uuid"
+)
+
 type User struct {
 	ID          string
 	Email       string
@@ -69,4 +74,29 @@ func (m *CognitoIdentityProviderClientStub) ReadUser(username string) *User {
 		}
 	}
 	return nil
+}
+
+//BulkGenerateUsers - bulk generate 'n' users for testing purposes
+//                    if usernames array is nil or length is different, will auto-assign UUIDs
+func BulkGenerateUsers(userCount int, userNames []string) *cognitoidentityprovider.ListUsersOutput {
+	paginationToken := "abc-123-xyz-345-xxx"
+	usersList := &cognitoidentityprovider.ListUsersOutput{}
+	for i := 0; i < userCount; i++ {
+		var(
+			userId, status string = "", "CONFIRMED"
+			enabled bool = true
+		)
+		if userNames == nil || i > len(userNames)-1 {
+			userId = uuid.NewString()
+		} else {
+			userId = userNames[i]
+		}
+		user            := &cognitoidentityprovider.UserType{}
+		user.Username   = &userId
+		user.Enabled    = &enabled
+		user.UserStatus = &status
+		usersList.Users = append(usersList.Users, user)
+		usersList.PaginationToken = &paginationToken
+	}
+	return usersList
 }

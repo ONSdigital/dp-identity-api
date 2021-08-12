@@ -35,7 +35,7 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 
 	validationErrs := user.ValidateRegistration(ctx, api.AllowedDomains)
 
-	listUserInput := models.UsersList{}.BuildListUserRequest("email = \""+user.Email+"\"", "email", int64(1), &api.UserPoolId)
+	listUserInput := models.UsersList{}.BuildListUserRequest("email = \""+user.Email+"\"", "email", int64(1), nil, &api.UserPoolId)
 	listUserResp, err := api.CognitoClient.ListUsers(listUserInput)
 	if err != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint"))
@@ -73,7 +73,7 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 //ListUsersHandler lists the users in the user pool
 func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	usersList := models.UsersList{}
-	listUserInput := usersList.BuildListUserRequest("", "", int64(0), &api.UserPoolId)
+	listUserInput := usersList.BuildListUserRequest("", "", int64(0), nil, &api.UserPoolId)
 	listUserResp, err := api.CognitoClient.ListUsers(listUserInput)
 	if err != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint"))
