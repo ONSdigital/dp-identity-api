@@ -64,15 +64,16 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 
 	// success headers
 	var headers map[string]string
-	if result.AuthenticationResult != nil {
-		headers = map[string]string{
-			AccessTokenHeaderName:  "Bearer " + *result.AuthenticationResult.AccessToken,
-			IdTokenHeaderName:      *result.AuthenticationResult.IdToken,
-			RefreshTokenHeaderName: *result.AuthenticationResult.RefreshToken,
-		}
-	} else {
-		headers = nil
-	}
+	//if result.AuthenticationResult != nil {
+	//	headers = map[string]string{
+	//		AccessTokenHeaderName:  "Bearer " + *result.AuthenticationResult.AccessToken,
+	//		IdTokenHeaderName:      *result.AuthenticationResult.IdToken,
+	//		RefreshTokenHeaderName: *result.AuthenticationResult.RefreshToken,
+	//	}
+	//} else {
+	//	headers = nil
+	//}
+	headers = nil
 
 	// response - http.StatusCreated by default
 	httpStatus := http.StatusCreated
@@ -155,7 +156,7 @@ func (api *API) RefreshHandler(ctx context.Context, w http.ResponseWriter, req *
 func (api *API) SignOutAllUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	var (
 		userFilterString string = "status=\"Enabled\""
-		backOff = []time.Duration{
+		backOff                 = []time.Duration{
 			1 * time.Second,
 			3 * time.Second,
 			10 * time.Second,
@@ -166,9 +167,9 @@ func (api *API) SignOutAllUsersHandler(ctx context.Context, w http.ResponseWrite
 		return nil, awsErr
 	}
 	globalSignOut := &models.GlobalSignOut{
-		ResultsChannel: make(chan string, len(*usersList)),
+		ResultsChannel:  make(chan string, len(*usersList)),
 		BackoffSchedule: backOff,
-		RetryAllowed: true,
+		RetryAllowed:    true,
 	}
 	// run api.SignOutUsersWorker concurrently
 	go api.SignOutUsersWorker(req.Context(), globalSignOut, usersList)
@@ -178,13 +179,13 @@ func (api *API) SignOutAllUsersHandler(ctx context.Context, w http.ResponseWrite
 // ListUsersWorker - generates a list of users based on `userFilterString` filter string
 func (api *API) ListUsersWorker(ctx context.Context, userFilterString *string, backoffSchedule []time.Duration) (*[]models.UserParams, *models.ErrorResponse) {
 	var (
-		awsErr error
-		usersList models.UsersList
+		awsErr                error
+		usersList             models.UsersList
 		listUsersResp, result *cognitoidentityprovider.ListUsersOutput
-		listUserInput = usersList.BuildListUserRequest(
+		listUserInput         = usersList.BuildListUserRequest(
 			*userFilterString,
 			"",
-			int64(0), 
+			int64(0),
 			nil,
 			&api.UserPoolId,
 		)
@@ -235,7 +236,7 @@ func (api *API) ListUsersWorker(ctx context.Context, userFilterString *string, b
 // SignOutUsersWorker - signs out users globally by invalidating user's refresh token
 func (api *API) SignOutUsersWorker(ctx context.Context, g *models.GlobalSignOut, usersList *[]models.UserParams) {
 	userSignOutRequestData := g.BuildSignOutUserRequest(usersList, &api.UserPoolId)
-	 
+
 	for _, userSignoutRequest := range userSignOutRequestData {
 		for _, backoff := range g.BackoffSchedule {
 			_, err := api.generateGlobalSignOutRequest(userSignoutRequest)
@@ -263,7 +264,7 @@ func (api *API) SignOutUsersWorker(ctx context.Context, g *models.GlobalSignOut,
 							// if error response from request received again, process it
 							retryResponseErr := models.NewCognitoError(ctx, err, "Cognito AdminUserGlobalSignOut request for sign out")
 
-							 // if error code != models.TooManyRequestsError break to next user
+							// if error code != models.TooManyRequestsError break to next user
 							if retryResponseErr.Code != models.TooManyRequestsError {
 								g.RetryAllowed = true
 
@@ -277,7 +278,7 @@ func (api *API) SignOutUsersWorker(ctx context.Context, g *models.GlobalSignOut,
 
 							break
 						}
-					} else { 
+					} else {
 						// if GlobalSignOut.RetryAllowed already false break to next user
 						g.RetryAllowed = true
 
@@ -285,11 +286,11 @@ func (api *API) SignOutUsersWorker(ctx context.Context, g *models.GlobalSignOut,
 					}
 				}
 			}
-			
+
 			// backoff for predetermined length of time before requesting again
 			time.Sleep(backoff)
 		}
-		
+
 	}
 	close(g.ResultsChannel)
 }
