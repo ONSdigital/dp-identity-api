@@ -70,10 +70,11 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 		//	IdTokenHeaderName:      *result.AuthenticationResult.IdToken,
 		//	RefreshTokenHeaderName: *result.AuthenticationResult.RefreshToken,
 		//}
+		testTokenValue := "test-token-value-aezsrdxtcfygvuhbkjzdxfchgvjbknldxfgchvjbkjkncfgvhbjkfcygvhbkjtfdxcgvhjbknlmzrxdtcfygvhbjknxdcfvghbjknxdgfchvjbknxcfvyghbjknlmxcftyvghubjnkmxcfghvjbknlm-xtcfygvuhbijndcfghvbjnkdxcfghvbjdxcfghvjbkdxcfghvbjdfxcghvjbkndxcfghvjbdxcfghvjbkndxcfghvbjkndfxgchvbjknmrxtcyvubijnokmzrxdtcfyvgubhjnzxrtcyvubinozexrdtcfygvubhjnzsrxdtcfyvgubhinjezrxtcyvubinozrxtcfyvgubhinjzxtcyvubinrxtcfyvgubhinjxrtcfyvgubhijn-weroguhreoginesorighesguherpohberth-regoiuebargoiyebrgoiaerybgoaiwnbvasorhgwaeispugnerilugybawirgunaeorguhaeth-ergiwrbgabriowgbaroiygbesoivbwaoiyrgbesiohgrbeaoisyrbgselrtibguroygbesligrbeaoirgybelirygbaoiusygrbseioygbeouaybfvilreubgcioegnxoiuerhmxoeyihmxoiebrwmxoierbvxorehbvxmzoeiwrbnoiasgmxoaerihzboinuerbxmgoiepbmxgoimgoiersbgxoieaybrmoziergeirbgnxfiurygmorsbfxowyurxbouiytvoimrsxybnviorwysebzvcniuewobmrivbwouxfboiwrbgoirwgnfxoirbvonuxboiwrboxbnfoiwbfxoibnexfouwbrmoziybfovxbgobnrsoiuzbweouyfgnxbouwriybnxzoirwynbgoxiqwnbfxozmoiwnbfxoigzoiqwrbngxmonimziwhgmzoiqnrzoiqwgnrouzwbfzobmviowreybfgnrwbmgxwghfgxomiwebhmzoirwbnxoiuwfgmzoibhqrwfgnzoiwrmboiwefbd"
 		headers = map[string]string{
-			AccessTokenHeaderName:  "test-access-token-value",
-			IdTokenHeaderName:      "test-id-token-value",
-			RefreshTokenHeaderName: "test-refresh-token-value",
+			AccessTokenHeaderName:  "Bearer " + testTokenValue,
+			IdTokenHeaderName:      testTokenValue,
+			RefreshTokenHeaderName: testTokenValue,
 		}
 	} else {
 		headers = nil
