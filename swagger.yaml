@@ -63,6 +63,19 @@ paths:
           description: "Unexpected internal error"
           schema:
             $ref: '#/definitions/ErrorResponse'
+    delete:
+      tags:
+        - Tokens
+      summary: "Enables functionality to logout all active users"
+      consumes:
+        - application/json
+      responses:
+        202:
+          description: "Request Accepted"
+        500:
+          description: "Unexpected internal error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
   /tokens/self:
     put:
       tags:
@@ -384,6 +397,32 @@ paths:
             $ref: '#/definitions/ErrorResponse'
         500:
           description: "Invalid request body or unexpected Cognito response"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    get:
+      tags:
+        - Groups
+      summary: "Returns a list of users in a given group"
+      description: "Returns a list of users in a given group in Cognito"
+      produces:
+        - "application/json"
+      parameters:
+        - in: path
+          name: name
+          type: string
+          required: true
+          description: the group's name
+      responses:
+        200:
+          description: "List of users in the group"
+          schema:
+            $ref: '#/definitions/UserList'
+        400:
+          description: "Invalid group name provided"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: "Unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
   /groups/{name}/members/{user_id}:

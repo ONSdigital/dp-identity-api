@@ -20,7 +20,9 @@ func CognitoHealthCheck(cognitoClient cognitoclient.Client, userPoolID *string) 
 		_, err := cognitoClient.DescribeUserPool(&cognito.DescribeUserPoolInput{UserPoolId: userPoolID})
 
 		if err != nil {
-			state.Update(health.StatusCritical, err.Error(), http.StatusTooManyRequests)
+			if stateErr := state.Update(health.StatusCritical, err.Error(), http.StatusTooManyRequests); stateErr != nil {
+				log.Event(context.Background(), "Error updating state during identity service healthcheck", log.Error(stateErr), log.ERROR)
+			}
 			// log the error
 			log.Event(context.Background(), "Error running identity service healthcheck", log.Error(err), log.ERROR)
 			return err
@@ -31,7 +33,9 @@ func CognitoHealthCheck(cognitoClient cognitoclient.Client, userPoolID *string) 
 		_, err = cognitoClient.GetGroup(adminGroupRequest)
 
 		if err != nil {
-			state.Update(health.StatusCritical, err.Error(), http.StatusTooManyRequests)
+			if stateErr := state.Update(health.StatusCritical, err.Error(), http.StatusTooManyRequests); stateErr != nil {
+				log.Event(context.Background(), "Error updating state during identity service healthcheck", log.Error(stateErr), log.ERROR)
+			}
 			// log the error
 			log.Event(context.Background(), "Error running identity service healthcheck", log.Error(err), log.ERROR)
 			return err
@@ -42,13 +46,17 @@ func CognitoHealthCheck(cognitoClient cognitoclient.Client, userPoolID *string) 
 		_, err = cognitoClient.GetGroup(publisherGroupRequest)
 
 		if err != nil {
-			state.Update(health.StatusCritical, err.Error(), http.StatusTooManyRequests)
+			if stateErr := state.Update(health.StatusCritical, err.Error(), http.StatusTooManyRequests); stateErr != nil {
+				log.Event(context.Background(), "Error updating state during identity service healthcheck", log.Error(stateErr), log.ERROR)
+			}
 			// log the error
 			log.Event(context.Background(), "Error running identity service healthcheck", log.Error(err), log.ERROR)
 			return err
 		}
 
-		state.Update(health.StatusOK, CognitoHealthy, http.StatusOK)
+		if stateErr := state.Update(health.StatusOK, CognitoHealthy, http.StatusOK); stateErr != nil {
+			log.Event(context.Background(), "Error updating state during identity service healthcheck", log.Error(stateErr), log.ERROR)
+		}
 
 		return nil
 	}

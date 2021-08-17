@@ -20,10 +20,11 @@ const (
 type UsersList struct {
 	Users []UserParams `json:"users"`
 	Count int          `json:"count"`
+	PaginationToken string
 }
 
 //BuildListUserRequest generates a ListUsersInput object for Cognito
-func (p UsersList) BuildListUserRequest(filterString string, requiredAttribute string, limit int64, userPoolId *string) *cognitoidentityprovider.ListUsersInput {
+func (p UsersList) BuildListUserRequest(filterString string, requiredAttribute string, limit int64, paginationToken *string, userPoolId *string) *cognitoidentityprovider.ListUsersInput {
 	requestInput := &cognitoidentityprovider.ListUsersInput{
 		UserPoolId: userPoolId,
 	}
@@ -37,6 +38,9 @@ func (p UsersList) BuildListUserRequest(filterString string, requiredAttribute s
 	}
 	if limit != 0 {
 		requestInput.Limit = &limit
+	}
+	if paginationToken != nil {
+		requestInput.PaginationToken = paginationToken
 	}
 
 	return requestInput

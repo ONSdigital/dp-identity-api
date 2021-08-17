@@ -30,7 +30,7 @@ func TestUsersList_BuildListUserRequest(t *testing.T) {
 		limit := int64(1)
 		userPoolId := "euwest-99-aabbcc"
 
-		response := models.UsersList{}.BuildListUserRequest(filterString, requiredAttribute, limit, &userPoolId)
+		response := models.UsersList{}.BuildListUserRequest(filterString, requiredAttribute, limit, nil, &userPoolId)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInput{}))
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
