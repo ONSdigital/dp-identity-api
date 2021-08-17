@@ -15,7 +15,7 @@ import (
 func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer func() {
 		if err := req.Body.Close(); err != nil {
-			err = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
+			_ = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
 		}
 	}()
 

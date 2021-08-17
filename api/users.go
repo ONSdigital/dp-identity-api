@@ -17,7 +17,7 @@ import (
 func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer func() {
 		if err := req.Body.Close(); err != nil {
-			err = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
+			_ = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
 		}
 	}()
 
@@ -122,7 +122,7 @@ func (api *API) GetUserHandler(ctx context.Context, w http.ResponseWriter, req *
 func (api *API) UpdateUserHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer func() {
 		if err := req.Body.Close(); err != nil {
-			err = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
+			_ = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
 		}
 	}()
 	vars := mux.Vars(req)
@@ -195,7 +195,7 @@ func processUpdateCognitoError(ctx context.Context, err error, errContext string
 func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer func() {
 		if err := req.Body.Close(); err != nil {
-			err = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
+			_ = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
 		}
 	}()
 	var jsonResponse []byte = nil
@@ -274,7 +274,7 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer func() {
 		if err := req.Body.Close(); err != nil {
-			err = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
+			_ = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
 		}
 	}()
 
