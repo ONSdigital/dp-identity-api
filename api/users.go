@@ -15,7 +15,11 @@ import (
 
 //CreateUserHandler creates a new user and returns a http handler interface
 func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	defer req.Body.Close()
+	defer func() {
+		if err := req.Body.Close(); err != nil {
+			err = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
+		}
+	}()
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -116,7 +120,11 @@ func (api *API) GetUserHandler(ctx context.Context, w http.ResponseWriter, req *
 
 //UpdateUserHandler updates a users details in Cognito and returns a http handler interface
 func (api *API) UpdateUserHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	defer req.Body.Close()
+	defer func() {
+		if err := req.Body.Close(); err != nil {
+			err = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
+		}
+	}()
 	vars := mux.Vars(req)
 
 	body, err := ioutil.ReadAll(req.Body)
@@ -185,7 +193,11 @@ func processUpdateCognitoError(ctx context.Context, err error, errContext string
 
 //ChangePasswordHandler processes changes to the users password
 func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	defer req.Body.Close()
+	defer func() {
+		if err := req.Body.Close(); err != nil {
+			err = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
+		}
+	}()
 	var jsonResponse []byte = nil
 	var responseErr error = nil
 	var headers map[string]string = nil
@@ -260,7 +272,11 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 
 //PasswordResetHandler requests a password reset email be sent to the user and returns a http handler interface
 func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	defer req.Body.Close()
+	defer func() {
+		if err := req.Body.Close(); err != nil {
+			err = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
+		}
+	}()
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {

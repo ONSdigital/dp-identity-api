@@ -13,7 +13,11 @@ import (
 
 //TokensHandler uses submitted email address and password to sign a user in against Cognito and returns a http handler interface
 func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	defer req.Body.Close()
+	defer func() {
+		if err := req.Body.Close(); err != nil {
+			err = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
+		}
+	}()
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
