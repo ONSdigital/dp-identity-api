@@ -18,8 +18,8 @@ const (
 )
 
 type UsersList struct {
-	Users           []UserParams `json:"users"`
 	Count           int          `json:"count"`
+	Users           []UserParams `json:"users"`
 	PaginationToken string
 }
 
