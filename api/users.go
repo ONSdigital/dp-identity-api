@@ -294,13 +294,7 @@ func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter,
 	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
 }
 
-//ListUserGroupsHandler lists the users in the user pool
-func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-
-	vars := mux.Vars(req)
-	user := models.UserParams{ID: vars["id"]}
-	finalUserResponse := cognitoidentityprovider.AdminListGroupsForUserOutput{}
-	listusergroups := models.ListUserGroups{}
+func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupType, userId models.UserParams) ([]*cognitoidentityprovider.GroupType, error) {
 	firstTimeCheck := false
 	var nextToken string
 	for {
@@ -308,26 +302,40 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 			break
 		}
 		firstTimeCheck = true
-		usergroupsInput := user.BuildListUserGroupsRequest(api.UserPoolId, nextToken)
-		usergroupsResponse, err := api.CognitoClient.AdminListGroupsForUser(usergroupsInput)
+
+		userGroupsRequest := userId.BuildListUserGroupsRequest(api.UserPoolId, nextToken)
+		userGroupsResponse, err := api.CognitoClient.AdminListGroupsForUser(userGroupsRequest)
 		if err != nil {
-			responseErr := models.NewCognitoError(ctx, err, "Cognito ListUserGroups request from ListUserGroups endpoint")
-			if responseErr.Code == models.UserNotFoundError {
-				return nil, models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
-			} else {
-				return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
-			}
+			return nil, err
 		}
 
-		finalUserResponse.Groups = append(finalUserResponse.Groups, usergroupsResponse.Groups...)
-		if usergroupsResponse.NextToken != nil {
-			nextToken = *usergroupsResponse.NextToken
-		} else {
-			nextToken = ""
+		listOfGroups = append(listOfGroups, userGroupsResponse.Groups...)
+		nextToken = ""
+		if userGroupsResponse.NextToken != nil {
+			nextToken = *userGroupsResponse.NextToken
 		}
-
 	}
+	return listOfGroups, nil
+}
 
+//ListUserGroupsHandler lists the users in the user pool
+func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+
+	vars := mux.Vars(req)
+	userID := models.UserParams{ID: vars["id"]}
+	listofgroupsInput := []*cognitoidentityprovider.GroupType{}
+	finalUserResponse := cognitoidentityprovider.AdminListGroupsForUserOutput{}
+	listusergroups := models.ListUserGroups{}
+
+	listofGroupsOutput, err := api.getGroupsForUser(listofgroupsInput, userID)
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListofUserGroups request from list user groups endpoint")
+		if cognitoErr.Code == models.NotFoundError {
+			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, cognitoErr)
+		}
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+	}
+	finalUserResponse.Groups = append(finalUserResponse.Groups, listofGroupsOutput...)
 	jsonResponse, responseErr := listusergroups.BuildListUserGroupsSuccessfulJsonResponse(ctx, &finalUserResponse)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)

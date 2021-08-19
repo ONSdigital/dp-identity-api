@@ -23,8 +23,9 @@ type UsersList struct {
 }
 
 type ListUserGroups struct {
-	UserGroups cognitoidentityprovider.AdminListGroupsForUserOutput `json:"usergroups"`
-	Count      int                                                  `json:"count"`
+	Groups    []*cognitoidentityprovider.GroupType `json:"Groups"`
+	NextToken *string                              `json:"NextToken"`
+	Count     int                                  `json:"Count"`
 }
 
 //BuildListUserRequest generates a ListUsersInput object for Cognito
@@ -482,9 +483,10 @@ func (p UserParams) BuildListUserGroupsRequest(userPoolId string, nextToken stri
 //BuildListUserGroupsSuccessfulJsonResponse
 func (p *ListUserGroups) BuildListUserGroupsSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.AdminListGroupsForUserOutput) ([]byte, error) {
 	userGroups := &ListUserGroups{}
-	userGroups.UserGroups = *result
+	userGroups.Groups = result.Groups
+	userGroups.NextToken = result.NextToken
 
-	if userGroups.UserGroups.Groups != nil {
+	if userGroups.Groups != nil {
 		userGroups.Count = len(result.Groups)
 	} else {
 		userGroups.Count = 0

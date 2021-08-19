@@ -1356,30 +1356,54 @@ Feature: Users
         """
         Then the HTTP status code should be "202"
 
- #   List User Groups         
+ #   List get users for user        
     Scenario: GET /v1/users/{id}/groups and checking the response status 200
-        Given group "test-group" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And user "abcd1234" is a member of group "test-group"
-        When I GET "/v1/users/abcd1234/groups"
+        Given a user with username "listgrouptestuser" and email "email@ons.gov.uk" exists in the database
+        And there 1 groups exists in the database that username "listgrouptestuser" is a member
+        When I GET "/v1/users/listgrouptestuser/groups"
         Then I should receive the following JSON response with status "200":
-            """ 
-            {
-                "count":1,
-                "usergroups":{
-                    "Groups":[
+
+            """
+                {
+                "Count": 1,
+                "Groups": [
                         {
-                            "CreationDate":     null,
-                            "Description":      "some Group Desciption",
-                            "GroupName":        "test-group",
+                            "CreationDate": null,
+                            "Description": "group name description 0",
+                            "GroupName": "group_name_0",
                             "LastModifiedDate": null,
-                            "Precedence":           97,
-                            "RoleArn":          null,
-                            "UserPoolId":       "eu-west-18_73289nds8w932"
+                            "Precedence": 13,
+                            "RoleArn": null,
+                            "UserPoolId": null
                         }
                     ],
-                    "NextToken":null
-                    }
+                "NextToken": null
                 }
-            
             """
+
+   Scenario: GET /v1/users/{id}/groups  for 0 groups and checking the response status 200
+        Given a user with username "listgrouptestuser2" and email "email@ons.gov.uk" exists in the database
+        And there 0 groups exists in the database that username "listgrouptestuser2" is a member
+        When I GET "/v1/users/listgrouptestuser2/groups"
+        Then I should receive the following JSON response with status "200":
+            """
+                {
+                    "Count":0,
+                    "Groups":null, 
+                    "NextToken":null
+                }
+            """   
+
+  Scenario: GET /v1/users/{id}/groups  user not found returns 400
+        Given a user with username "get-user-not-found" and email "email@ons.gov.uk" exists in the database
+        And there 0 groups exists in the database that username "get-user-not-found" is a member
+        When I GET "/v1/users/get-user-not-found/groups"
+        Then I should receive the following JSON response with status "400":
+            """
+    {
+              "errors": [
+                      {"code":"NotFound", "description":"get user - user not found"}
+  
+              ]
+          }
+            """ 

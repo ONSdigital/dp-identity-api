@@ -26,8 +26,8 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^group "([^"]*)" exists in the database$`, c.groupExistsInTheDatabase)
 	ctx.Step(`^there are "([^"]*)" users in group "([^"]*)"$`, c.thereAreUsersInGroup)
 	ctx.Step(`^user "([^"]*)" is a member of group "([^"]*)"$`, c.userIsAMemberOfGroup)
-	ctx.Step(`^there are "([^"]*)" groups for username "([^"]*)"$`, c.thereAreGroupsForUsername)
 
+	ctx.Step(`^there (\d+) groups exists in the database that username "([^"]*)" is a member$`, c.thereGroupsExistsInTheDatabaseThatUsernameIsAMember)
 }
 
 func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(email, password string) error {
@@ -99,15 +99,18 @@ func (c *IdentityComponent) thereAreUsersInGroup(userCount, groupName string) er
 	return nil
 }
 
-func (c *IdentityComponent) thereAreGroupsForUsername(groupCount, userName string) error {
+func (c *IdentityComponent) thereGroupsExistsInTheDatabaseThatUsernameIsAMember(groupCount, userName string) error {
 	user := c.CognitoClient.ReadUser(userName)
 	if user == nil {
-		return errors.New("userName not found")
+		return errors.New("user not found")
 	}
 	groupCountInt, err := strconv.Atoi(groupCount)
 	if err != nil {
 		return errors.New("could not convert group count to int")
 	}
+	c.CognitoClient.BulkGenerateGroups(groupCountInt)
+	c.CognitoClient.MakeUserMember(user.ID)
+
 	assert.Equal(c.apiFeature, groupCountInt, len(user.Groups))
 	return nil
 }

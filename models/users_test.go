@@ -1048,14 +1048,14 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 		var userGroupsJson models.ListUserGroups
 		err := json.Unmarshal(response, &userGroupsJson)
 		So(err, ShouldBeNil)
-		So(len(userGroupsJson.UserGroups.Groups), ShouldEqual, len(result.Groups))
+		So(len(userGroupsJson.Groups), ShouldEqual, len(result.Groups))
 		So(userGroupsJson.Count, ShouldEqual, len(result.Groups))
-		So(userGroupsJson.UserGroups.NextToken, ShouldBeNil)
+		So(userGroupsJson.NextToken, ShouldBeNil)
 
-		So(*userGroupsJson.UserGroups.Groups[0].GroupName, ShouldEqual, *result.Groups[0].GroupName)
-		So(*userGroupsJson.UserGroups.Groups[1].GroupName, ShouldEqual, *result.Groups[1].GroupName)
-		So(*userGroupsJson.UserGroups.Groups[0].Description, ShouldEqual, *result.Groups[0].Description)
-		So(*userGroupsJson.UserGroups.Groups[1].Description, ShouldEqual, *result.Groups[1].Description)
+		So(*userGroupsJson.Groups[0].GroupName, ShouldEqual, *result.Groups[0].GroupName)
+		So(*userGroupsJson.Groups[1].GroupName, ShouldEqual, *result.Groups[1].GroupName)
+		So(*userGroupsJson.Groups[0].Description, ShouldEqual, *result.Groups[0].Description)
+		So(*userGroupsJson.Groups[1].Description, ShouldEqual, *result.Groups[1].Description)
 	})
 
 	Convey("Check empty response from cognito i.e valid user with no groups", t, func() {
@@ -1074,9 +1074,9 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 		var userGroupsJson models.ListUserGroups
 		err := json.Unmarshal(response, &userGroupsJson)
 		So(err, ShouldBeNil)
-		So(len(userGroupsJson.UserGroups.Groups), ShouldEqual, len(result.Groups))
-		So(userGroupsJson.Count, ShouldEqual, 0)
-		So(userGroupsJson.UserGroups.NextToken, ShouldBeNil)
+		So(len(userGroupsJson.Groups), ShouldEqual, len(result.Groups))
+		So(userGroupsJson.Count, ShouldEqual, 1)
+		So(userGroupsJson.NextToken, ShouldBeNil)
 
 	})
 
