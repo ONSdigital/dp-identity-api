@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/ONSdigital/dp-identity-api/models"
 
@@ -19,6 +20,11 @@ var (
 	ONSRealm               = "Florence publishing platform"
 	Charset                = "UTF-8"
 	NewPasswordChallenge   = "NEW_PASSWORD_REQUIRED"
+	DefaultBackOffSchedule = []time.Duration{
+		1 * time.Second,
+		3 * time.Second,
+		10 * time.Second,
+	}
 )
 
 //API provides a struct to wrap the api around

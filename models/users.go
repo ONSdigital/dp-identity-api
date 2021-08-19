@@ -18,8 +18,8 @@ const (
 )
 
 type UsersList struct {
-	Users []UserParams `json:"users"`
-	Count int          `json:"count"`
+	Users           []UserParams `json:"users"`
+	Count           int          `json:"count"`
 	PaginationToken string
 }
 
@@ -52,6 +52,12 @@ func (p *UsersList) MapCognitoUsers(cognitoResults *[]*cognitoidentityprovider.U
 	for _, user := range *cognitoResults {
 		p.Users = append(p.Users, UserParams{}.MapCognitoDetails(user))
 	}
+	p.Count = len(p.Users)
+}
+
+//SetUsers sets the UsersList Users attribute and sets the Count attribute
+func (p *UsersList) SetUsers(usersList *[]UserParams) {
+	p.Users = *usersList
 	p.Count = len(p.Users)
 }
 
