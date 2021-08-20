@@ -569,7 +569,8 @@ func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	}
 	if *input.Username == "get-user-not-found" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "get user - user not found", nil)
+		println(cognitoidentityprovider.ErrCodeUserNotFoundException)
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "get user - user not found", nil)
 	}
 	if *input.UserPoolId == "get-user-pool-not-found" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "get userpool  - userpool not found", nil)

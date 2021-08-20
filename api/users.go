@@ -294,6 +294,7 @@ func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter,
 	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
 }
 
+//List Groups for user pagination allows first call and then any other call if nextToken is not ""
 func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupType, userId models.UserParams) ([]*cognitoidentityprovider.GroupType, error) {
 	firstTimeCheck := false
 	var nextToken string
@@ -331,7 +332,7 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 	if err != nil {
 		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListofUserGroups request from list user groups endpoint")
 		if cognitoErr.Code == models.NotFoundError {
-			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, cognitoErr)
+			return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
 		}
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}

@@ -1062,9 +1062,35 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 		ctx := context.Background()
 		input := models.ListUserGroups{}
 
+		result := &cognitoidentityprovider.AdminListGroupsForUserOutput{}
+
+		response, error := input.BuildListUserGroupsSuccessfulJsonResponse(ctx, result)
+		So(error, ShouldBeNil)
+
+		var userGroupsJson models.ListUserGroups
+		err := json.Unmarshal(response, &userGroupsJson)
+		So(err, ShouldBeNil)
+		println(len(result.Groups))
+		So(len(userGroupsJson.Groups), ShouldEqual, len(result.Groups))
+		So(userGroupsJson.Count, ShouldEqual, 0)
+		So(userGroupsJson.NextToken, ShouldBeNil)
+
+	})
+	Convey("force json marshall error", t, func() {
+		ctx := context.Background()
+		input := models.ListUserGroups{}
+
 		result := &cognitoidentityprovider.AdminListGroupsForUserOutput{
 			Groups: []*cognitoidentityprovider.GroupType{
-				{},
+				{
+					CreationDate:     nil,
+					Description:      nil,
+					GroupName:        nil,
+					LastModifiedDate: nil,
+					Precedence:       nil,
+					RoleArn:          nil,
+					UserPoolId:       nil,
+				},
 			},
 		}
 
@@ -1074,10 +1100,10 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 		var userGroupsJson models.ListUserGroups
 		err := json.Unmarshal(response, &userGroupsJson)
 		So(err, ShouldBeNil)
+		println(len(result.Groups))
 		So(len(userGroupsJson.Groups), ShouldEqual, len(result.Groups))
 		So(userGroupsJson.Count, ShouldEqual, 1)
 		So(userGroupsJson.NextToken, ShouldBeNil)
 
 	})
-
 }
