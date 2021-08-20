@@ -25,6 +25,13 @@ func (m *CognitoIdentityProviderClientStub) AddUserWithUsername(username, email 
 	m.Users = append(m.Users, m.GenerateUser(username, email, "", "", "", isConfirmed))
 }
 
+//Generates the required number of users in the system
+func (m *CognitoIdentityProviderClientStub) AddMultipleUsers(usersCount int) {
+	for len(m.Users) < usersCount {
+		m.Users = append(m.Users, m.GenerateUser("", "", "", "", "", true))
+	}
+}
+
 func (m *CognitoIdentityProviderClientStub) GenerateUser(id, email, password, givenName, familyName string, isConfirmed bool) *User {
 	statusString := "FORCE_CHANGE_PASSWORD"
 	if isConfirmed {
@@ -82,18 +89,18 @@ func BulkGenerateUsers(userCount int, userNames []string) *cognitoidentityprovid
 	paginationToken := "abc-123-xyz-345-xxx"
 	usersList := &cognitoidentityprovider.ListUsersOutput{}
 	for i := 0; i < userCount; i++ {
-		var(
+		var (
 			userId, status string = "", "CONFIRMED"
-			enabled bool = true
+			enabled        bool   = true
 		)
 		if userNames == nil || i > len(userNames)-1 {
 			userId = uuid.NewString()
 		} else {
 			userId = userNames[i]
 		}
-		user            := &cognitoidentityprovider.UserType{}
-		user.Username   = &userId
-		user.Enabled    = &enabled
+		user := &cognitoidentityprovider.UserType{}
+		user.Username = &userId
+		user.Enabled = &enabled
 		user.UserStatus = &status
 		usersList.Users = append(usersList.Users, user)
 		usersList.PaginationToken = &paginationToken

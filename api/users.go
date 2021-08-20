@@ -77,13 +77,13 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 //ListUsersHandler lists the users in the user pool
 func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	usersList := models.UsersList{}
-	listUserInput := usersList.BuildListUserRequest("", "", int64(0), nil, &api.UserPoolId)
-	listUserResp, err := api.CognitoClient.ListUsers(listUserInput)
-	if err != nil {
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint"))
+
+	listUserResp, errResponse := api.ListUsersWorker(req.Context(), aws.String(""), DefaultBackOffSchedule)
+	if errResponse != nil {
+		return nil, errResponse
 	}
 
-	usersList.MapCognitoUsers(&listUserResp.Users)
+	usersList.SetUsers(listUserResp)
 
 	jsonResponse, responseErr := usersList.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {

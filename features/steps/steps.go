@@ -1,8 +1,10 @@
 package steps
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"strconv"
 
 	"github.com/ONSdigital/dp-identity-api/api"
@@ -25,6 +27,8 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^group "([^"]*)" exists in the database$`, c.groupExistsInTheDatabase)
 	ctx.Step(`^there are "([^"]*)" users in group "([^"]*)"$`, c.thereAreUsersInGroup)
 	ctx.Step(`^user "([^"]*)" is a member of group "([^"]*)"$`, c.userIsAMemberOfGroup)
+	ctx.Step(`^there are "([^"]*)" users in the database$`, c.thereAreRequiredNumberOfUsers)
+	ctx.Step(`^the list response should contain "([^"]*)" entries$`, c.listResponseShouldContainCorrectNumberOfEntries)
 
 }
 
@@ -94,5 +98,32 @@ func (c *IdentityComponent) thereAreUsersInGroup(userCount, groupName string) er
 		return errors.New("could not convert user count to int")
 	}
 	assert.Equal(c.apiFeature, userCountInt, len(group.Members))
+	return nil
+}
+
+// listResponseShouldContainCorrectNumberOfEntries asserts that the list response 'count' matches the expected value
+func (c *IdentityComponent) listResponseShouldContainCorrectNumberOfEntries(expectedListLength string) error {
+	responseBody := c.apiFeature.HttpResponse.Body
+	body, _ := ioutil.ReadAll(responseBody)
+	var bodyObject map[string]interface{}
+	err := json.Unmarshal(body, &bodyObject)
+	if err != nil {
+		return err
+	}
+	expectedListLengthInt, err := strconv.Atoi(expectedListLength)
+	if err != nil {
+		return err
+	}
+	assert.Equal(c.apiFeature, bodyObject["count"], expectedListLengthInt)
+	return nil
+}
+
+// thereAreRequiredNumberOfUsers asserts that the list response 'count' matches the expected value
+func (c *IdentityComponent) thereAreRequiredNumberOfUsers(requiredNumberOfUsers string) error {
+	requiredNumberOfUsersInt, err := strconv.Atoi(requiredNumberOfUsers)
+	if err != nil {
+		return err
+	}
+	c.CognitoClient.AddMultipleUsers(requiredNumberOfUsersInt)
 	return nil
 }
