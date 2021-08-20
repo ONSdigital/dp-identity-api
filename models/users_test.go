@@ -64,6 +64,36 @@ func TestUsersList_MapCognitoUsers(t *testing.T) {
 	})
 }
 
+func TestUsersList_SetUsers(t *testing.T) {
+	Convey("adds the supplied users to the users attribute and sets the count", t, func() {
+		listOfUsers := []models.UserParams{
+			{
+				Forename:    "Jane",
+				Lastname:    "Doe",
+				Email:       "jane.doe@ons.gov.uk",
+				Status:      "Confirmed",
+				Active:      true,
+				ID:          "user-1",
+				StatusNotes: "",
+			},
+			{
+				Forename:    "John",
+				Lastname:    "Doe",
+				Email:       "john.doe@ons.gov.uk",
+				Status:      "Confirmed",
+				Active:      true,
+				ID:          "user-2",
+				StatusNotes: "",
+			},
+		}
+		userList := models.UsersList{}
+		userList.SetUsers(&listOfUsers)
+
+		So(len(userList.Users), ShouldEqual, len(listOfUsers))
+		So(userList.Count, ShouldEqual, len(listOfUsers))
+	})
+}
+
 func TestUsersList_BuildSuccessfulJsonResponse(t *testing.T) {
 	Convey("returns a byte array of the response JSON", t, func() {
 		ctx := context.Background()

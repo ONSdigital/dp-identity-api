@@ -159,19 +159,14 @@ func (api *API) RefreshHandler(ctx context.Context, w http.ResponseWriter, req *
 func (api *API) SignOutAllUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	var (
 		userFilterString string = "status=\"Enabled\""
-		backOff                 = []time.Duration{
-			1 * time.Second,
-			3 * time.Second,
-			10 * time.Second,
-		}
 	)
-	usersList, awsErr := api.ListUsersWorker(req.Context(), &userFilterString, backOff)
+	usersList, awsErr := api.ListUsersWorker(req.Context(), &userFilterString, DefaultBackOffSchedule)
 	if awsErr != nil {
 		return nil, awsErr
 	}
 	globalSignOut := &models.GlobalSignOut{
 		ResultsChannel:  make(chan string, len(*usersList)),
-		BackoffSchedule: backOff,
+		BackoffSchedule: DefaultBackOffSchedule,
 		RetryAllowed:    true,
 	}
 	// run api.SignOutUsersWorker concurrently
