@@ -609,11 +609,10 @@ func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
 			Groups:    newGroups,
 			NextToken: &nextToken,
 		}, nil
-	} else {
-		return &cognitoidentityprovider.AdminListGroupsForUserOutput{
-			Groups:    newGroups,
-			NextToken: &nextTokenNil,
-		}, nil
-
 	}
+	return &cognitoidentityprovider.AdminListGroupsForUserOutput{
+		Groups:    newGroups,
+		NextToken: &nextTokenNil,
+	}, nil
+
 }
