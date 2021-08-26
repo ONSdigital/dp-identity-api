@@ -1058,7 +1058,7 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 		So(*userGroupsJson.Groups[1].Description, ShouldEqual, *result.Groups[1].Description)
 	})
 
-	/*	Convey("Check empty response from cognito i.e valid user with no groups", t, func() {
+	Convey("Check empty response from cognito i.e valid user with no groups", t, func() {
 		ctx := context.Background()
 		input := models.ListUserGroups{}
 
@@ -1075,7 +1075,7 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 		So(userGroupsJson.Count, ShouldEqual, 0)
 		So(userGroupsJson.NextToken, ShouldBeNil)
 
-	}) */
+	})
 
 	Convey("force nil return for cognitoidentityprovider.AdminListGroupsForUserOutput", t, func() {
 		var result *cognitoidentityprovider.AdminListGroupsForUserOutput
