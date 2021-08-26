@@ -205,9 +205,16 @@ Feature: Users
                         "status_notes": ""
                     }
                 ],
-                "count": 2
+                "count": 2,
+                "PaginationToken":""
             }
             """
+
+    Scenario: GET /v1/users with more than 60 users and checking the response status 200 with the correct number of users
+        Given there are "70" users in the database
+        When I GET "/v1/users"
+        Then the HTTP status code should be "200"
+        And the list response should contain "70" entries
 
     Scenario: GET /v1/users unexpected server error and checking the response status 500
         Given a user with email "internal.error@ons.gov.uk" and password "Passw0rd!" exists in the database

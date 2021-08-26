@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/ONSdigital/dp-identity-api/models"
 
@@ -19,6 +20,11 @@ var (
 	ONSRealm               = "Florence publishing platform"
 	Charset                = "UTF-8"
 	NewPasswordChallenge   = "NEW_PASSWORD_REQUIRED"
+	DefaultBackOffSchedule = []time.Duration{
+		1 * time.Second,
+		3 * time.Second,
+		10 * time.Second,
+	}
 )
 
 //API provides a struct to wrap the api around
@@ -69,6 +75,7 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 	}
 
 	r.HandleFunc("/v1/tokens", contextAndErrors(api.TokensHandler)).Methods(http.MethodPost)
+	r.HandleFunc("/v1/tokens", contextAndErrors(api.SignOutAllUsersHandler)).Methods(http.MethodDelete)
 	// self used in paths rather than identifier as the identifier is JWT tokens passed in the request headers
 	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.SignOutHandler)).Methods(http.MethodDelete)
 	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.RefreshHandler)).Methods(http.MethodPut)

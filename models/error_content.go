@@ -39,6 +39,7 @@ const (
 	NotImplementedError          = "NotImplemented"
 	InvalidChallengeSessionError = "InvalidChallengeSession"
 	InvalidUserPoolError         = "InvalidUserPool"
+	BodyCloseError               = "BodyCloseError"
 )
 
 // API error descriptions
@@ -71,6 +72,7 @@ const (
 	InvalidTokenDescription                = "the submitted token could not be validated"
 	TooLongStatusNotesDescription          = "the status notes are too long"
 	InvalidUserPoolDescription             = "dummy data load being run against non local userpool"
+	BodyClosedFailedDescription            = "the request body failed to close"
 )
 
 // Mapping Cognito error codes to API error codes

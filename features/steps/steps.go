@@ -1,7 +1,9 @@
 package steps
 
 import (
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"strconv"
 
 	"github.com/stretchr/testify/assert"
@@ -26,6 +28,8 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^group "([^"]*)" exists in the database$`, c.groupExistsInTheDatabase)
 	ctx.Step(`^there are "([^"]*)" users in group "([^"]*)"$`, c.thereAreUsersInGroup)
 	ctx.Step(`^user "([^"]*)" is a member of group "([^"]*)"$`, c.userIsAMemberOfGroup)
+	ctx.Step(`^there are "([^"]*)" users in the database$`, c.thereAreRequiredNumberOfUsers)
+	ctx.Step(`^the list response should contain "([^"]*)" entries$`, c.listResponseShouldContainCorrectNumberOfEntries)
 
 	ctx.Step(`^there (\d+) groups exists in the database that username "([^"]*)" is a member$`, c.thereGroupsExistsInTheDatabaseThatUsernameIsAMember)
 }
@@ -112,5 +116,32 @@ func (c *IdentityComponent) thereGroupsExistsInTheDatabaseThatUsernameIsAMember(
 	c.CognitoClient.MakeUserMember(user.ID)
 
 	assert.Equal(c.apiFeature, groupCountInt, len(user.Groups))
+	return nil
+}
+
+// listResponseShouldContainCorrectNumberOfEntries asserts that the list response 'count' matches the expected value
+func (c *IdentityComponent) listResponseShouldContainCorrectNumberOfEntries(expectedListLength string) error {
+	responseBody := c.apiFeature.HttpResponse.Body
+	body, _ := ioutil.ReadAll(responseBody)
+	var bodyObject map[string]interface{}
+	err := json.Unmarshal(body, &bodyObject)
+	if err != nil {
+		return err
+	}
+	expectedListLengthInt, err := strconv.Atoi(expectedListLength)
+	if err != nil {
+		return err
+	}
+	assert.Equal(c.apiFeature, bodyObject["count"], expectedListLengthInt)
+	return nil
+}
+
+// thereAreRequiredNumberOfUsers asserts that the list response 'count' matches the expected value
+func (c *IdentityComponent) thereAreRequiredNumberOfUsers(requiredNumberOfUsers string) error {
+	requiredNumberOfUsersInt, err := strconv.Atoi(requiredNumberOfUsers)
+	if err != nil {
+		return err
+	}
+	c.CognitoClient.AddMultipleUsers(requiredNumberOfUsersInt)
 	return nil
 }

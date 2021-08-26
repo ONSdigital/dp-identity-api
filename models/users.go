@@ -18,8 +18,9 @@ const (
 )
 
 type UsersList struct {
-	Users []UserParams `json:"users"`
-	Count int          `json:"count"`
+	Count           int          `json:"count"`
+	Users           []UserParams `json:"users"`
+	PaginationToken string
 }
 
 // ListGroupsForUser output structure from cognitoidentityprovider.AdminListGroupsForUserOutput but changing the
@@ -43,7 +44,7 @@ type ListUserGroups struct {
 }
 
 //BuildListUserRequest generates a ListUsersInput object for Cognito
-func (p UsersList) BuildListUserRequest(filterString string, requiredAttribute string, limit int64, userPoolId *string) *cognitoidentityprovider.ListUsersInput {
+func (p UsersList) BuildListUserRequest(filterString string, requiredAttribute string, limit int64, paginationToken *string, userPoolId *string) *cognitoidentityprovider.ListUsersInput {
 	requestInput := &cognitoidentityprovider.ListUsersInput{
 		UserPoolId: userPoolId,
 	}
@@ -58,6 +59,9 @@ func (p UsersList) BuildListUserRequest(filterString string, requiredAttribute s
 	if limit != 0 {
 		requestInput.Limit = &limit
 	}
+	if paginationToken != nil {
+		requestInput.PaginationToken = paginationToken
+	}
 
 	return requestInput
 }
@@ -68,6 +72,12 @@ func (p *UsersList) MapCognitoUsers(cognitoResults *[]*cognitoidentityprovider.U
 	for _, user := range *cognitoResults {
 		p.Users = append(p.Users, UserParams{}.MapCognitoDetails(user))
 	}
+	p.Count = len(p.Users)
+}
+
+//SetUsers sets the UsersList Users attribute and sets the Count attribute
+func (p *UsersList) SetUsers(usersList *[]UserParams) {
+	p.Users = *usersList
 	p.Count = len(p.Users)
 }
 

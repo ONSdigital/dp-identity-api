@@ -838,10 +838,10 @@ func TestChangePasswordHandler(t *testing.T) {
 func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 
 	var (
-		ctx                       = context.Background()
-		email              string = "fred.bloggs@ons.gov.uk"
-		password           string = "Password2@123456"
-		verification_token string = "999999"
+		ctx                      = context.Background()
+		email             string = "fred.bloggs@ons.gov.uk"
+		password          string = "Password2@123456"
+		verificationToken string = "999999"
 	)
 
 	api, w, m := apiSetup()
@@ -907,7 +907,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 		for _, tt := range confirmForgotPasswordTests {
 			m.ConfirmForgotPasswordFunc = tt.confirmForgotPasswordFunction
 
-			postBody := map[string]interface{}{"type": models.ForgottenPasswordType, "email": email, "password": password, "verification_token": verification_token}
+			postBody := map[string]interface{}{"type": models.ForgottenPasswordType, "email": email, "password": password, "verification_token": verificationToken}
 			body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodPut, changePasswordEndPoint, bytes.NewReader(body))
 
@@ -943,13 +943,13 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 		}{
 			// missing password change type
 			{
-				map[string]interface{}{"type": "", "email": email, "password": password, "verification_token": verification_token},
+				map[string]interface{}{"type": "", "email": email, "password": password, "verification_token": verificationToken},
 				models.UnknownRequestTypeError,
 				http.StatusBadRequest,
 			},
 			// missing a change request param
 			{
-				map[string]interface{}{"type": models.ForgottenPasswordType, "email": "", "password": password, "verification_token": verification_token},
+				map[string]interface{}{"type": models.ForgottenPasswordType, "email": "", "password": password, "verification_token": verificationToken},
 				models.InvalidEmailError,
 				http.StatusBadRequest,
 			},

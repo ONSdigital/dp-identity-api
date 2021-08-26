@@ -31,7 +31,7 @@ func TestUsersList_BuildListUserRequest(t *testing.T) {
 		limit := int64(1)
 		userPoolId := "euwest-99-aabbcc"
 
-		response := models.UsersList{}.BuildListUserRequest(filterString, requiredAttribute, limit, &userPoolId)
+		response := models.UsersList{}.BuildListUserRequest(filterString, requiredAttribute, limit, nil, &userPoolId)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInput{}))
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
@@ -62,6 +62,36 @@ func TestUsersList_MapCognitoUsers(t *testing.T) {
 
 		So(len(userList.Users), ShouldEqual, len(cognitoResponse.Users))
 		So(userList.Count, ShouldEqual, len(cognitoResponse.Users))
+	})
+}
+
+func TestUsersList_SetUsers(t *testing.T) {
+	Convey("adds the supplied users to the users attribute and sets the count", t, func() {
+		listOfUsers := []models.UserParams{
+			{
+				Forename:    "Jane",
+				Lastname:    "Doe",
+				Email:       "jane.doe@ons.gov.uk",
+				Status:      "Confirmed",
+				Active:      true,
+				ID:          "user-1",
+				StatusNotes: "",
+			},
+			{
+				Forename:    "John",
+				Lastname:    "Doe",
+				Email:       "john.doe@ons.gov.uk",
+				Status:      "Confirmed",
+				Active:      true,
+				ID:          "user-2",
+				StatusNotes: "",
+			},
+		}
+		userList := models.UsersList{}
+		userList.SetUsers(&listOfUsers)
+
+		So(len(userList.Users), ShouldEqual, len(listOfUsers))
+		So(userList.Count, ShouldEqual, len(listOfUsers))
 	})
 }
 
