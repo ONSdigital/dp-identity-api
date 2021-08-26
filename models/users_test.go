@@ -1058,7 +1058,7 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 		So(*userGroupsJson.Groups[1].Description, ShouldEqual, *result.Groups[1].Description)
 	})
 
-	Convey("Check empty response from cognito i.e valid user with no groups", t, func() {
+	/*	Convey("Check empty response from cognito i.e valid user with no groups", t, func() {
 		ctx := context.Background()
 		input := models.ListUserGroups{}
 
@@ -1075,35 +1075,20 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 		So(userGroupsJson.Count, ShouldEqual, 0)
 		So(userGroupsJson.NextToken, ShouldBeNil)
 
-	})
-	Convey("force json marshall error", t, func() {
+	}) */
+
+	Convey("force nil return for cognitoidentityprovider.AdminListGroupsForUserOutput", t, func() {
+		var result *cognitoidentityprovider.AdminListGroupsForUserOutput
 		ctx := context.Background()
 		input := models.ListUserGroups{}
 
-		result := &cognitoidentityprovider.AdminListGroupsForUserOutput{
-			Groups: []*cognitoidentityprovider.GroupType{
-				{
-					CreationDate:     nil,
-					Description:      nil,
-					GroupName:        nil,
-					LastModifiedDate: nil,
-					Precedence:       nil,
-					RoleArn:          nil,
-					UserPoolId:       nil,
-				},
-			},
-		}
+		result = nil
 
 		response, error := input.BuildListUserGroupsSuccessfulJsonResponse(ctx, result)
-		So(error, ShouldBeNil)
-
-		var userGroupsJson models.ListUserGroups
-		err := json.Unmarshal(response, &userGroupsJson)
-		So(err, ShouldBeNil)
-		println(len(result.Groups))
-		So(len(userGroupsJson.Groups), ShouldEqual, len(result.Groups))
-		So(userGroupsJson.Count, ShouldEqual, 1)
-		So(userGroupsJson.NextToken, ShouldBeNil)
+		castErr := error.(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InternalError)
+		So(response, ShouldBeNil)
 
 	})
+
 }

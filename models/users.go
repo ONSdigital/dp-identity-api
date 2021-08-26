@@ -490,6 +490,11 @@ func (p UserParams) BuildListUserGroupsRequest(userPoolId string, nextToken stri
 //BuildListUserGroupsSuccessfulJsonResponse
 // formats the output to comply with current standards and to json , adds the count of groups returned and
 func (p *ListUserGroups) BuildListUserGroupsSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.AdminListGroupsForUserOutput) ([]byte, error) {
+
+	if result == nil {
+		return nil, NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
+	}
+
 	for _, tmpGroup := range result.Groups {
 
 		newGroup := ListUserGroupType{
