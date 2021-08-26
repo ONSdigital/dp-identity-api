@@ -1,6 +1,8 @@
 package mock
 
 import (
+	"strings"
+
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/google/uuid"
 )
@@ -81,6 +83,18 @@ func (m *CognitoIdentityProviderClientStub) ReadUser(username string) *User {
 		}
 	}
 	return nil
+}
+
+func (m *CognitoIdentityProviderClientStub) MakeUserMember(userName string) {
+
+	user := m.ReadUser(userName)
+	if user != nil {
+		for _, group := range m.Groups {
+			if !strings.HasPrefix(group.Name, "role-") {
+				m.AddUserToGroup(user.ID, group.Name)
+			}
+		}
+	}
 }
 
 //BulkGenerateUsers - bulk generate 'n' users for testing purposes

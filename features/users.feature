@@ -1362,4 +1362,55 @@ Feature: Users
             }
         """
         Then the HTTP status code should be "202"
-        
+
+ #   List get users for user        
+    Scenario: GET /v1/users/{id}/groups and checking the response status 200
+        Given a user with username "listgrouptestuser" and email "email@ons.gov.uk" exists in the database
+        And there 1 groups exists in the database that username "listgrouptestuser" is a member
+        When I GET "/v1/users/listgrouptestuser/groups"
+        Then I should receive the following JSON response with status "200":
+
+            """
+                {
+                "count": 1,
+                "groups": [
+                        {
+                            "creation_date": null,
+                            "description": "group name description 0",
+                            "group_name": "group_name_0",
+                            "last_modified_date": null,
+                            "precedence": 13,
+                            "role_arn": null,
+                            "user_pool_id": null
+                        }
+                    ],
+                "next_token": null
+                }
+            """
+
+   Scenario: GET /v1/users/{id}/groups  for 0 groups and checking the response status 200
+        Given a user with username "listgrouptestuser2" and email "email@ons.gov.uk" exists in the database
+        And there 0 groups exists in the database that username "listgrouptestuser2" is a member
+        When I GET "/v1/users/listgrouptestuser2/groups"
+        Then I should receive the following JSON response with status "200":
+            """
+                {
+                    "count":0,
+                    "groups":null, 
+                    "next_token":null
+                }
+            """   
+
+  Scenario: GET /v1/users/{id}/groups  user not found returns 500
+        Given a user with username "get-user-not-found" and email "email@ons.gov.uk" exists in the database
+        And there 0 groups exists in the database that username "get-user-not-found" is a member
+        When I GET "/v1/users/get-user-not-found/groups"
+        Then I should receive the following JSON response with status "500":
+            """
+    {
+              "errors": [
+                      {"code":"UserNotFound", "description":"get user - user not found"}
+  
+              ]
+          }
+            """ 

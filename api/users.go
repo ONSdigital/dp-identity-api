@@ -6,11 +6,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/gorilla/mux"
-
 	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 //CreateUserHandler creates a new user and returns a http handler interface
@@ -308,4 +308,55 @@ func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter,
 	}
 
 	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
+}
+
+//List Groups for user pagination allows first call and then any other call if nextToken is not ""
+func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupType, userId models.UserParams) ([]*cognitoidentityprovider.GroupType, error) {
+	firstTimeCheck := false
+	var nextToken string
+	for {
+		if firstTimeCheck && nextToken == "" {
+			break
+		}
+		firstTimeCheck = true
+
+		userGroupsRequest := userId.BuildListUserGroupsRequest(api.UserPoolId, nextToken)
+		userGroupsResponse, err := api.CognitoClient.AdminListGroupsForUser(userGroupsRequest)
+		if err != nil {
+			return nil, err
+		}
+
+		listOfGroups = append(listOfGroups, userGroupsResponse.Groups...)
+		nextToken = ""
+		if userGroupsResponse.NextToken != nil {
+			nextToken = *userGroupsResponse.NextToken
+		}
+	}
+	return listOfGroups, nil
+}
+
+//ListUserGroupsHandler lists the users in the user pool
+func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+
+	vars := mux.Vars(req)
+	userID := models.UserParams{ID: vars["id"]}
+	listofgroupsInput := []*cognitoidentityprovider.GroupType{}
+	finalUserResponse := cognitoidentityprovider.AdminListGroupsForUserOutput{}
+	listusergroups := models.ListUserGroups{}
+
+	listofGroupsOutput, err := api.getGroupsForUser(listofgroupsInput, userID)
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListofUserGroups request from list user groups endpoint")
+		if cognitoErr.Code == models.NotFoundError {
+			return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
+		}
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+	}
+	finalUserResponse.Groups = append(finalUserResponse.Groups, listofGroupsOutput...)
+	jsonResponse, responseErr := listusergroups.BuildListUserGroupsSuccessfulJsonResponse(ctx, &finalUserResponse)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+
 }

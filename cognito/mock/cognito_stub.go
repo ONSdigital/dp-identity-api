@@ -559,3 +559,60 @@ func (m *CognitoIdentityProviderClientStub) DeleteGroup(input *cognitoidentitypr
 func (m *CognitoIdentityProviderClientStub) AdminSetUserPassword(input *cognitoidentityprovider.AdminSetUserPasswordInput) (*cognitoidentityprovider.AdminSetUserPasswordOutput, error) {
 	return nil, nil
 }
+
+func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
+	input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
+	nextToken := "nextToken"
+	nextTokenNil := ""
+	println("AdminListGroupsForUser", *input.Username)
+	if *input.Username == "internal-error" || *input.Username == "get-group-internal-error" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+	if *input.Username == "get-user-not-found" {
+		println(cognitoidentityprovider.ErrCodeUserNotFoundException)
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "get user - user not found", nil)
+	}
+	if *input.UserPoolId == "get-user-pool-not-found" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "get userpool  - userpool not found", nil)
+	}
+	user := m.ReadUser(*input.Username)
+	if user == nil {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+	}
+
+	var (
+		newGroups []*cognitoidentityprovider.GroupType
+	)
+
+	if user.Groups == nil {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+
+	for _, group := range user.Groups {
+
+		newGroups = append(newGroups, &cognitoidentityprovider.GroupType{
+			Description: &group.Description,
+			GroupName:   &group.Name,
+			Precedence:  &group.Precedence,
+		})
+	}
+
+	if newGroups == nil {
+		return &cognitoidentityprovider.AdminListGroupsForUserOutput{
+			Groups:    newGroups,
+			NextToken: &nextTokenNil,
+		}, nil
+	}
+
+	if input.NextToken != nil && *input.NextToken != "" {
+		return &cognitoidentityprovider.AdminListGroupsForUserOutput{
+			Groups:    newGroups,
+			NextToken: &nextToken,
+		}, nil
+	}
+	return &cognitoidentityprovider.AdminListGroupsForUserOutput{
+		Groups:    newGroups,
+		NextToken: &nextTokenNil,
+	}, nil
+
+}

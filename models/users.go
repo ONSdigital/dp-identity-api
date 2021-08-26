@@ -23,6 +23,26 @@ type UsersList struct {
 	PaginationToken string
 }
 
+// ListGroupsForUser output structure from cognitoidentityprovider.AdminListGroupsForUserOutput but changing the
+// json output
+type ListUserGroupType struct {
+	CreationDate     *time.Time `type:"timestamp" json:"creation_date"`
+	Description      *string    `type:"string" json:"description"`
+	GroupName        *string    `min:"1" type:"string" json:"group_name"`
+	LastModifiedDate *time.Time `type:"timestamp" json:"last_modified_date"`
+	Precedence       *int64     `type:"integer" json:"precedence"`
+	RoleArn          *string    `min:"20" type:"string" json:"role_arn"`
+	UserPoolId       *string    `min:"1" type:"string" json:"user_pool_id"`
+}
+
+// List groups for user output structure from cognitoidentityprovider.AdminListGroupsForUserOutput
+// with count of total groups returned
+type ListUserGroups struct {
+	Groups    []*ListUserGroupType `json:"groups"`
+	NextToken *string              `json:"next_token"`
+	Count     int                  `json:"count"`
+}
+
 //BuildListUserRequest generates a ListUsersInput object for Cognito
 func (p UsersList) BuildListUserRequest(filterString string, requiredAttribute string, limit int64, paginationToken *string, userPoolId *string) *cognitoidentityprovider.ListUsersInput {
 	requestInput := &cognitoidentityprovider.ListUsersInput{
@@ -458,4 +478,57 @@ func (p PasswordReset) BuildCognitoRequest(clientSecret string, clientId string)
 		SecretHash: &secretHash,
 		Username:   &p.Email,
 	}
+}
+
+// BuildListUserGroupsRequest build the require input for cognito query to obtain the groups for given user
+func (p UserParams) BuildListUserGroupsRequest(userPoolId string, nextToken string) *cognitoidentityprovider.AdminListGroupsForUserInput {
+
+	if nextToken != "" {
+		return &cognitoidentityprovider.AdminListGroupsForUserInput{
+			UserPoolId: &userPoolId,
+			Username:   &p.ID,
+			NextToken:  &nextToken,
+		}
+	}
+
+	return &cognitoidentityprovider.AdminListGroupsForUserInput{
+		UserPoolId: &userPoolId,
+		Username:   &p.ID}
+
+}
+
+//BuildListUserGroupsSuccessfulJsonResponse
+// formats the output to comply with current standards and to json , adds the count of groups returned and
+func (p *ListUserGroups) BuildListUserGroupsSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.AdminListGroupsForUserOutput) ([]byte, error) {
+
+	if result == nil {
+		return nil, NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
+	}
+
+	for _, tmpGroup := range result.Groups {
+
+		newGroup := ListUserGroupType{
+			CreationDate:     tmpGroup.CreationDate,
+			Description:      tmpGroup.Description,
+			GroupName:        tmpGroup.GroupName,
+			LastModifiedDate: tmpGroup.LastModifiedDate,
+			Precedence:       tmpGroup.Precedence,
+			RoleArn:          tmpGroup.RoleArn,
+			UserPoolId:       tmpGroup.UserPoolId,
+		}
+
+		p.Groups = append(p.Groups, &newGroup)
+	}
+
+	p.NextToken = result.NextToken
+	p.Count = 0
+	if p.Groups != nil {
+		p.Count = len(result.Groups)
+	}
+
+	jsonResponse, err := json.Marshal(p)
+	if err != nil {
+		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
+	}
+	return jsonResponse, nil
 }

@@ -224,6 +224,33 @@ paths:
           description: "Internal error occurred"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /users/{id}/groups/:
+    get:
+      tags:
+        - Users
+      summary: "Get groups for a user"
+      description: "Gets the details of groups that a given user is a member"
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+          description: the users id
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "The user groups details"
+          schema:
+            $ref: '#/definitions/UserGroups'
+        404:
+          description: "User not found"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: "Internal error occurred"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
 
     put:
       tags:
@@ -505,6 +532,18 @@ definitions:
           $ref: '#/definitions/User'
       count:
         type: integer
+  UserGroups:
+    description: "A list of groups that the user is a member for the response body"
+    type: object
+    properties:
+      users:
+        type: array
+        items:
+          $ref: '#/definitions/UserGroups'
+      count:
+        type: integer
+
+
   User:
     description: "The user model for the response body"
     type: object
