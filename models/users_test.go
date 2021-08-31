@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 
@@ -934,7 +935,7 @@ func TestChangePassword_ValidateForgottenPasswordRequiredRequest(t *testing.T) {
 }
 
 func TestForgottenPassword_BuildConfirmForgotPasswordRequest(t *testing.T) {
-	Convey("builds a correctly populated Cognito RespondToAuthChallengeInput request body", t, func() {
+	Convey("builds a correctly populated Cognito BuildConfirmForgotPasswordRequest request body", t, func() {
 
 		passwordChangeParams := models.ChangePassword{
 			VerificationToken: "verification_token",
@@ -1007,4 +1008,117 @@ func TestPasswordReset_BuildCognitoRequest(t *testing.T) {
 		So(*response.SecretHash, ShouldNotBeEmpty)
 		So(*response.ClientId, ShouldResemble, clientId)
 	})
+}
+
+func TestUserParams_BuildListUserGroupsRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito AdminListUserGroupsInput request body with empty nextToken", t, func() {
+		userId := "abcd1234"
+		nextToken := ""
+		user := models.UserParams{
+			ID: userId,
+		}
+
+		userPoolId := "euwest-99-aabbcc"
+		request := user.BuildListUserGroupsRequest(userPoolId, nextToken)
+
+		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminListGroupsForUserInput{}))
+		So(*request.Username, ShouldEqual, userId)
+		So(*request.UserPoolId, ShouldEqual, userPoolId)
+	})
+
+	Convey("builds a correctly populated Cognito AdminDisableUserInput request body with nextToken", t, func() {
+		userId := "abcd1234"
+		nextToken := "abc1234"
+		user := models.UserParams{
+			ID: userId,
+		}
+
+		userPoolId := "euwest-99-aabbcc"
+		request := user.BuildListUserGroupsRequest(userPoolId, nextToken)
+
+		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminListGroupsForUserInput{}))
+		So(*request.Username, ShouldEqual, userId)
+		So(*request.UserPoolId, ShouldEqual, userPoolId)
+	})
+}
+
+func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) {
+	Convey("add the returned groups for given user", t, func() {
+		ctx := context.Background()
+		input := models.ListUserGroups{}
+
+		timestamp := time.Now()
+		result := &cognitoidentityprovider.AdminListGroupsForUserOutput{
+			Groups: []*cognitoidentityprovider.GroupType{
+				{
+					CreationDate:     &timestamp,
+					Description:      aws.String("A test group1"),
+					GroupName:        aws.String("test-group1"),
+					LastModifiedDate: &timestamp,
+					Precedence:       aws.Int64(4),
+					RoleArn:          aws.String(""),
+					UserPoolId:       aws.String(""),
+				},
+				{
+					CreationDate:     &timestamp,
+					Description:      aws.String("A test group1"),
+					GroupName:        aws.String("test-group1"),
+					LastModifiedDate: &timestamp,
+					Precedence:       aws.Int64(4),
+					RoleArn:          aws.String(""),
+					UserPoolId:       aws.String(""),
+				},
+			},
+		}
+
+		response, error := input.BuildListUserGroupsSuccessfulJsonResponse(ctx, result)
+		So(error, ShouldBeNil)
+		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
+
+		var userGroupsJson models.ListUserGroups
+		err := json.Unmarshal(response, &userGroupsJson)
+		So(err, ShouldBeNil)
+		So(len(userGroupsJson.Groups), ShouldEqual, len(result.Groups))
+		So(userGroupsJson.Count, ShouldEqual, len(result.Groups))
+		So(userGroupsJson.NextToken, ShouldBeNil)
+
+		So(*userGroupsJson.Groups[0].GroupName, ShouldEqual, *result.Groups[0].GroupName)
+		So(*userGroupsJson.Groups[1].GroupName, ShouldEqual, *result.Groups[1].GroupName)
+		So(*userGroupsJson.Groups[0].Description, ShouldEqual, *result.Groups[0].Description)
+		So(*userGroupsJson.Groups[1].Description, ShouldEqual, *result.Groups[1].Description)
+	})
+
+	Convey("Check empty response from cognito i.e valid user with no groups", t, func() {
+		ctx := context.Background()
+		input := models.ListUserGroups{}
+
+		result := &cognitoidentityprovider.AdminListGroupsForUserOutput{}
+
+		response, error := input.BuildListUserGroupsSuccessfulJsonResponse(ctx, result)
+		So(error, ShouldBeNil)
+
+		var userGroupsJson models.ListUserGroups
+		err := json.Unmarshal(response, &userGroupsJson)
+		So(err, ShouldBeNil)
+		println(len(result.Groups))
+		So(len(userGroupsJson.Groups), ShouldEqual, len(result.Groups))
+		So(userGroupsJson.Count, ShouldEqual, 0)
+		So(userGroupsJson.NextToken, ShouldBeNil)
+
+	})
+
+	Convey("force nil return for cognitoidentityprovider.AdminListGroupsForUserOutput", t, func() {
+		var result *cognitoidentityprovider.AdminListGroupsForUserOutput
+		ctx := context.Background()
+		input := models.ListUserGroups{}
+
+		result = nil
+
+		response, error := input.BuildListUserGroupsSuccessfulJsonResponse(ctx, result)
+		castErr := error.(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InternalError)
+		So(response, ShouldBeNil)
+
+	})
+
 }

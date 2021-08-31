@@ -3,9 +3,10 @@ package steps
 import (
 	"encoding/json"
 	"errors"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"strconv"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ONSdigital/dp-identity-api/api"
 
@@ -30,6 +31,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^there are "([^"]*)" users in the database$`, c.thereAreRequiredNumberOfUsers)
 	ctx.Step(`^the list response should contain "([^"]*)" entries$`, c.listResponseShouldContainCorrectNumberOfEntries)
 
+	ctx.Step(`^there (\d+) groups exists in the database that username "([^"]*)" is a member$`, c.thereGroupsExistsInTheDatabaseThatUsernameIsAMember)
 }
 
 func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(email, password string) error {
@@ -98,6 +100,22 @@ func (c *IdentityComponent) thereAreUsersInGroup(userCount, groupName string) er
 		return errors.New("could not convert user count to int")
 	}
 	assert.Equal(c.apiFeature, userCountInt, len(group.Members))
+	return nil
+}
+
+func (c *IdentityComponent) thereGroupsExistsInTheDatabaseThatUsernameIsAMember(groupCount, userName string) error {
+	user := c.CognitoClient.ReadUser(userName)
+	if user == nil {
+		return errors.New("user not found")
+	}
+	groupCountInt, err := strconv.Atoi(groupCount)
+	if err != nil {
+		return errors.New("could not convert group count to int")
+	}
+	c.CognitoClient.BulkGenerateGroups(groupCountInt)
+	c.CognitoClient.MakeUserMember(user.ID)
+
+	assert.Equal(c.apiFeature, groupCountInt, len(user.Groups))
 	return nil
 }
 

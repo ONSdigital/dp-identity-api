@@ -28,4 +28,5 @@ type Client interface {
 	AdminDeleteUser(input *cognito.AdminDeleteUserInput) (*cognito.AdminDeleteUserOutput, error)
 	DeleteGroup(input *cognito.DeleteGroupInput) (*cognito.DeleteGroupOutput, error)
 	AdminSetUserPassword(input *cognito.AdminSetUserPasswordInput) (*cognito.AdminSetUserPasswordOutput, error)
+	AdminListGroupsForUser(input *cognito.AdminListGroupsForUserInput) (*cognito.AdminListGroupsForUserOutput, error)
 }

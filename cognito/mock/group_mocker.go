@@ -2,6 +2,7 @@ package mock
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -88,4 +89,25 @@ func (m *CognitoIdentityProviderClientStub) AddUserToGroup(username string, grou
 	user.Groups = append(user.Groups, group)
 	group.Members = append(group.Members, user)
 	return nil
+}
+
+//BulkGenerateGroups - bulk generate 'n' groups for testing purposes
+//                    if groupnames array is nil or length is different, will autofill with
+
+func (m *CognitoIdentityProviderClientStub) BulkGenerateGroups(groupCount int) {
+
+	for i := 0; i < groupCount; i++ {
+		D := "group name description " + fmt.Sprint(i)
+		G := "group_name_" + fmt.Sprint(i)
+		P := int64(i + 13)
+
+		group := Group{
+			Name:        G,
+			Description: D,
+			Precedence:  P,
+		}
+
+		m.Groups = append(m.Groups, &group)
+
+	}
 }
