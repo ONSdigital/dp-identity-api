@@ -31,6 +31,7 @@ func TestSetup(t *testing.T) {
 			}
 			return group, nil
 		}
+
 		api, err := Setup(ctx, r, m, "us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow", []string{"@ons.gov.uk", "@ext.ons.gov.uk"})
 
 		Convey("When created the following route(s) should have been added", func() {
@@ -191,9 +192,9 @@ func TestWriteErrorResponse(t *testing.T) {
 func TestWriteSuccessResponse(t *testing.T) {
 	Convey("test that authentication header data is successfully written in success response", t, func() {
 		ctx := context.Background()
-		body, err := json.Marshal(map[string]interface{}{"expirationTime": "12/12/2021T12:00:00Z"})
+		body, err := json.Marshal(map[string]interface{}{"expirationTime": "12/12/2021T12:00:00Z", "refreshTokenExpirationTime": "13/12/2021T11:00:00Z"})
 		So(err, ShouldBeNil)
-		successResponseBodyExample := `{"expirationTime":"12/12/2021T12:00:00Z"}`
+		successResponseBodyExample := `{"expirationTime":"12/12/2021T12:00:00Z","refreshTokenExpirationTime":"13/12/2021T11:00:00Z"}`
 		var (
 			accessTokenHeaderMessage, idTokenHeaderMessage, refreshTokenHeaderMessage string = "test-access-token-1", "test-id-token-1", "test-refresh-token-1"
 		)

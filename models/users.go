@@ -15,6 +15,7 @@ const (
 	NewPasswordRequiredType = "NewPasswordRequired"
 	ForgottenPasswordType   = "ForgottenPassword"
 	MaxStatusNotesLength    = 512
+	SecondsInDay            = 86400
 )
 
 type UsersList struct {
@@ -347,12 +348,14 @@ func (p *UserSignIn) BuildCognitoRequest(clientId string, clientSecret string, c
 }
 
 //BuildSuccessfulJsonResponse builds the UserSignIn response json for client responses
-func (p *UserSignIn) BuildSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.InitiateAuthOutput) ([]byte, error) {
+func (p *UserSignIn) BuildSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.InitiateAuthOutput, refreshTokenTTL int) ([]byte, error) {
 	if result.AuthenticationResult != nil {
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
 		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
+		refreshTokenDuration := time.Duration(SecondsInDay*refreshTokenTTL)
+		refreshTokenExpirationTime := time.Now().UTC().Add(time.Second * refreshTokenDuration).String()
 
-		postBody := map[string]interface{}{"expirationTime": expirationTime}
+		postBody := map[string]interface{}{"expirationTime": expirationTime, "refreshTokenExpirationTime": refreshTokenExpirationTime}
 
 		jsonResponse, err := json.Marshal(postBody)
 		if err != nil {

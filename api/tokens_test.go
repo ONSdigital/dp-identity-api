@@ -45,6 +45,15 @@ func TestAPI_TokensHandler(t *testing.T) {
 			},
 		}, nil
 	}
+	m.DescribeUserPoolClientFunc = func(input *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
+		tokenValidDays := int64(1)
+		userPoolClient := &cognitoidentityprovider.DescribeUserPoolClientOutput{
+			UserPoolClient: &cognitoidentityprovider.UserPoolClientType{
+				RefreshTokenValidity: &tokenValidDays,
+			},
+		}
+		return userPoolClient, nil
+	}
 
 	Convey("Sign in success: no ErrorResponse, SuccessResponse Status 201", t, func() {
 		body := map[string]interface{}{
@@ -63,6 +72,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 		err = json.Unmarshal(successResponse.Body, &responseBody)
 		So(err, ShouldBeNil)
 		So(responseBody["expirationTime"], ShouldNotBeNil)
+		So(responseBody["refreshTokenExpirationTime"], ShouldNotBeNil)	
 	})
 
 	Convey("Sign In validation error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
