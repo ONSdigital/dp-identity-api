@@ -616,3 +616,13 @@ func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
 	}, nil
 
 }
+
+func (m *CognitoIdentityProviderClientStub) DescribeUserPoolClient(input *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
+	tokenValidDays := int64(1)
+	userPoolClient := &cognitoidentityprovider.DescribeUserPoolClientOutput{
+		UserPoolClient: &cognitoidentityprovider.UserPoolClientType{
+			RefreshTokenValidity: &tokenValidDays,
+		},
+	}
+	return userPoolClient, nil
+}

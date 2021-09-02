@@ -61,7 +61,19 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 		}
 	}
 
-	jsonResponse, responseErr := userSignIn.BuildSuccessfulJsonResponse(ctx, result)
+	// Determine the refresh token TTL (DescribeUserPoolClient)
+	userPoolClient, err := api.CognitoClient.DescribeUserPoolClient(
+		&cognitoidentityprovider.DescribeUserPoolClientInput{
+			UserPoolId: &api .UserPoolId,
+			ClientId: &api.ClientId,
+		},
+	)
+	if err != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+	}
+
+	refreshTokenTTL := int(*userPoolClient.UserPoolClient.RefreshTokenValidity)
+	jsonResponse, responseErr := userSignIn.BuildSuccessfulJsonResponse(ctx, result, refreshTokenTTL)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
