@@ -352,7 +352,7 @@ func (p *UserSignIn) BuildSuccessfulJsonResponse(ctx context.Context, result *co
 	if result.AuthenticationResult != nil {
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
 		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
-		refreshTokenDuration := time.Duration(SecondsInDay*refreshTokenTTL)
+		refreshTokenDuration := time.Duration(SecondsInDay * refreshTokenTTL)
 		refreshTokenExpirationTime := time.Now().UTC().Add(time.Second * refreshTokenDuration).String()
 
 		postBody := map[string]interface{}{"expirationTime": expirationTime, "refreshTokenExpirationTime": refreshTokenExpirationTime}
@@ -437,13 +437,14 @@ func (p ChangePassword) BuildAuthChallengeSuccessfulJsonResponse(ctx context.Con
 	}
 }
 
-func (p ChangePassword) ValidateForgottenPasswordRequiredRequest(ctx context.Context) []error {
+func (p ChangePassword) ValidateForgottenPasswordRequest(ctx context.Context) []error {
 	var validationErrs []error
 	if !validation.IsPasswordValid(p.NewPassword) {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidPasswordError, InvalidPasswordDescription))
 	}
-	if !validation.IsEmailValid(p.Email) {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription))
+	// 'Email' in the forgotten password request is actually the user id, so we are only checking for presence rather than format
+	if p.Email == "" {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidUserIdError, MissingUserIdErrorDescription))
 	}
 	if p.VerificationToken == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidTokenError, InvalidTokenDescription))
