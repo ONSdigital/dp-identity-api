@@ -950,7 +950,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 			// missing a change request param
 			{
 				map[string]interface{}{"type": models.ForgottenPasswordType, "email": "", "password": password, "verification_token": verificationToken},
-				models.InvalidEmailError,
+				models.InvalidUserIdError,
 				http.StatusBadRequest,
 			},
 		}
