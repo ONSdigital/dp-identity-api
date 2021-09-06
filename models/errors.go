@@ -3,7 +3,8 @@ package models
 import (
 	"context"
 	"errors"
-	"github.com/ONSdigital/log.go/log"
+
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 )
 
@@ -26,24 +27,26 @@ func NewError(ctx context.Context, cause error, code string, description string)
 		Code:        code,
 		Description: description,
 	}
-	log.Event(ctx, description, log.Error(err), log.ERROR)
+	log.Error(ctx, description, err)
 	return err
 }
 
 func NewValidationError(ctx context.Context, code string, description string) *Error {
-	log.Event(ctx, description, log.ERROR, log.Data{"code": code})
-	return &Error{
+	err := &Error{
 		Cause:       errors.New(code),
 		Code:        code,
 		Description: description,
 	}
+
+	log.Error(ctx, description, err, log.Data{"code": code})
+	return err
 }
 
 func NewCognitoError(ctx context.Context, err error, errContext string) *Error {
-	log.Event(ctx, errContext, log.Error(err), log.ERROR)
+	log.Error(ctx, errContext, err)
 	var cognitoErr awserr.Error
 	if !errors.As(err, &cognitoErr) {
-		log.Event(ctx, CastingAWSErrorFailedDescription, log.Error(err), log.ERROR)
+		log.Error(ctx, CastingAWSErrorFailedDescription, err)
 		return &Error{
 			Cause:       err,
 			Code:        InternalError,
@@ -62,6 +65,6 @@ func MapCognitoErrorToLocalError(ctx context.Context, cognitoErr awserr.Error) s
 	if val, ok := CognitoErrorMapping[cognitoErr.Code()]; ok {
 		return val
 	}
-	log.Event(ctx, "unknown Cognito error code received", log.ERROR)
+	log.Error(ctx, "unknown Cognito error code received", errors.New("unknown Cognito error code received"))
 	return InternalError
 }

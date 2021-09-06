@@ -7,7 +7,7 @@ import (
 
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/service"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/pkg/errors"
 )
 
@@ -33,7 +33,7 @@ func main() {
 	ctx := context.Background()
 
 	if err := run(ctx); err != nil {
-		log.Event(nil, "fatal runtime error", log.Error(err), log.FATAL)
+		log.Fatal(ctx, "fatal runtime error", err)
 		os.Exit(1)
 	}
 }
@@ -46,7 +46,7 @@ func run(ctx context.Context) error {
 	svcErrors := make(chan error, 1)
 	svcList := service.NewServiceList(&service.Init{})
 
-	log.Event(ctx, "dp-identity-api version", log.INFO, log.Data{"version": Version})
+	log.Info(ctx, "dp-identity-api version", log.Data{"version": Version})
 
 	// Read config
 	cfg, err := config.Get()
@@ -55,7 +55,7 @@ func run(ctx context.Context) error {
 	}
 
 	// sensitive fields are omitted from config.String().
-	log.Event(ctx, "loaded config", log.INFO, log.Data{
+	log.Info(ctx, "loaded config", log.Data{
 		"config": cfg,
 	})
 
@@ -72,7 +72,7 @@ func run(ctx context.Context) error {
 		//  if there are any service connections like Kafka that you need to shut down
 		return errors.Wrap(err, "service error received")
 	case sig := <-signals:
-		log.Event(ctx, "os signal received", log.Data{"signal": sig}, log.INFO)
+		log.Info(ctx, "os signal received", log.Data{"signal": sig})
 	}
 	return svc.Close(ctx)
 }
