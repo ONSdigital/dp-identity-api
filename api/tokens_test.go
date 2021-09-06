@@ -72,7 +72,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 		err = json.Unmarshal(successResponse.Body, &responseBody)
 		So(err, ShouldBeNil)
 		So(responseBody["expirationTime"], ShouldNotBeNil)
-		So(responseBody["refreshTokenExpirationTime"], ShouldNotBeNil)	
+		So(responseBody["refreshTokenExpirationTime"], ShouldNotBeNil)
 	})
 
 	Convey("Sign In validation error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
