@@ -64,7 +64,7 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 	// Determine the refresh token TTL (DescribeUserPoolClient)
 	userPoolClient, err := api.CognitoClient.DescribeUserPoolClient(
 		&cognitoidentityprovider.DescribeUserPoolClientInput{
-			UserPoolId: &api .UserPoolId,
+			UserPoolId: &api.UserPoolId,
 			ClientId: &api.ClientId,
 		},
 	)
