@@ -1079,8 +1079,8 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "code": "InvalidEmail",
-                        "description": "the submitted email could not be validated"
+                        "code": "InvalidUserId",
+                        "description": "the user id was missing"
                     }
                 ]
             }
@@ -1152,8 +1152,8 @@ Feature: Users
                         "description": "the submitted password could not be validated"
                     },
                     {
-                        "code": "InvalidEmail",
-                        "description": "the submitted email could not be validated"
+                        "code": "InvalidUserId",
+                        "description": "the user id was missing"
                     }
                 ]
             }
@@ -1175,8 +1175,8 @@ Feature: Users
             {
                 "errors": [
                     {
-                        "code": "InvalidEmail",
-                        "description": "the submitted email could not be validated"
+                        "code": "InvalidUserId",
+                        "description": "the user id was missing"
                     },
                     {
                         "code": "InvalidToken",
@@ -1206,8 +1206,8 @@ Feature: Users
                         "description": "the submitted password could not be validated"
                     },
                     {
-                        "code": "InvalidEmail",
-                        "description": "the submitted email could not be validated"
+                        "code": "InvalidUserId",
+                        "description": "the user id was missing"
                     },
                     {
                         "code": "InvalidToken",

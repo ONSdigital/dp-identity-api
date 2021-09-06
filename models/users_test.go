@@ -679,7 +679,7 @@ func TestUserSignIn_BuildSuccessfulJsonResponse(t *testing.T) {
 		signIn := models.UserSignIn{}
 		result := cognitoidentityprovider.InitiateAuthOutput{}
 
-		response, err := signIn.BuildSuccessfulJsonResponse(ctx, &result)
+		response, err := signIn.BuildSuccessfulJsonResponse(ctx, &result, 1)
 
 		So(response, ShouldBeNil)
 		castErr := err.(*models.Error)
@@ -696,13 +696,14 @@ func TestUserSignIn_BuildSuccessfulJsonResponse(t *testing.T) {
 			},
 		}
 
-		response, err := signIn.BuildSuccessfulJsonResponse(ctx, &result)
+		response, err := signIn.BuildSuccessfulJsonResponse(ctx, &result, 1)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
 		var body map[string]interface{}
-		err = json.Unmarshal(response, &body)
+		_ = json.Unmarshal(response, &body)
 		So(body["expirationTime"], ShouldNotBeNil)
+		So(body["refreshTokenExpirationTime"], ShouldNotBeNil)
 	})
 }
 
@@ -850,12 +851,12 @@ func TestChangePassword_BuildAuthChallengeSuccessfulJsonResponse(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
 		var body map[string]interface{}
-		err = json.Unmarshal(response, &body)
+		_ = json.Unmarshal(response, &body)
 		So(body["expirationTime"], ShouldNotBeNil)
 	})
 }
 
-func TestChangePassword_ValidateForgottenPasswordRequiredRequest(t *testing.T) {
+func TestChangePassword_ValidateForgottenPasswordRequest(t *testing.T) {
 	ctx := context.Background()
 
 	Convey("returns validation errors if required parameters are missing", t, func() {
@@ -877,7 +878,7 @@ func TestChangePassword_ValidateForgottenPasswordRequiredRequest(t *testing.T) {
 				"≈",
 				"",
 				"Password2",
-				[]string{models.InvalidEmailError},
+				[]string{models.InvalidUserIdError},
 			},
 			{
 				// missing password
@@ -891,7 +892,7 @@ func TestChangePassword_ValidateForgottenPasswordRequiredRequest(t *testing.T) {
 				"",
 				"",
 				"Password2",
-				[]string{models.InvalidEmailError, models.InvalidTokenError},
+				[]string{models.InvalidUserIdError, models.InvalidTokenError},
 			},
 			{
 				// missing VerificationToken and password
@@ -905,14 +906,14 @@ func TestChangePassword_ValidateForgottenPasswordRequiredRequest(t *testing.T) {
 				"verification_token",
 				"",
 				"",
-				[]string{models.InvalidPasswordError, models.InvalidEmailError},
+				[]string{models.InvalidPasswordError, models.InvalidUserIdError},
 			},
 			{
 				// missing VerificationToken, email and password
 				"",
 				"",
 				"",
-				[]string{models.InvalidPasswordError, models.InvalidEmailError, models.InvalidTokenError},
+				[]string{models.InvalidPasswordError, models.InvalidUserIdError, models.InvalidTokenError},
 			},
 		}
 		for _, tt := range missingParamsTests {
@@ -923,7 +924,7 @@ func TestChangePassword_ValidateForgottenPasswordRequiredRequest(t *testing.T) {
 				NewPassword:       tt.Password,
 			}
 
-			validationErrs := passwordChangeParams.ValidateForgottenPasswordRequiredRequest(ctx)
+			validationErrs := passwordChangeParams.ValidateForgottenPasswordRequest(ctx)
 
 			So(len(validationErrs), ShouldEqual, len(tt.ExpectedErrors))
 			for i, expectedErrCode := range tt.ExpectedErrors {

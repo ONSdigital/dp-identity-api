@@ -242,7 +242,7 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 			}
 		}
 	} else if changePasswordParams.ChangeType == models.ForgottenPasswordType {
-		validationErrs := changePasswordParams.ValidateForgottenPasswordRequiredRequest(ctx)
+		validationErrs := changePasswordParams.ValidateForgottenPasswordRequest(ctx)
 		if len(validationErrs) != 0 {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 		}

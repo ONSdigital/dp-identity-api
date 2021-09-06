@@ -44,8 +44,7 @@ paths:
               type: string
               description: "Refresh token"
           schema:
-            $ref: '#/definitions/ExpirationTime'
-
+            $ref: '#/definitions/SignInExpirationTime'
         400:
           description: "Invalid request. Empty or invalid email or empty password."
           schema:
@@ -498,6 +497,17 @@ definitions:
     type: object
     properties:
       message:
+        type: string
+        description: "Expiration Time, UTC ISO 8601"
+        example: "YYYY-MM-DD hh-mm-ssZ"
+  SignInExpirationTime:
+    type: object
+    properties:
+      expirationTime:
+        type: string
+        description: "Expiration Time, UTC ISO 8601"
+        example: "YYYY-MM-DD hh-mm-ssZ"
+      refreshTokenExpirationTime:
         type: string
         description: "Expiration Time, UTC ISO 8601"
         example: "YYYY-MM-DD hh-mm-ssZ"
