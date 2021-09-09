@@ -2,6 +2,12 @@ module github.com/ONSdigital/dp-identity-api
 
 go 1.16
 
+// update to etcd 3.3.23 to fix security issues as reported by make audit
+// note we can't use this version directly because the vendor mod is broken
+// see https://github.com/etcd-io/etcd/issues/11154
+
+replace github.com/coreos/etcd => go.etcd.io/etcd v0.0.0-20200716221548-4873f5516bd9
+
 require (
 	github.com/ONSdigital/dp-component-test v0.3.0
 	github.com/ONSdigital/dp-healthcheck v1.1.0
