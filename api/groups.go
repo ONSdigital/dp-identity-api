@@ -11,6 +11,44 @@ import (
 	"github.com/gorilla/mux"
 )
 
+//CreateGroupHandler creates a new group
+func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, handleBodyReadError(ctx, err)
+	}
+
+	createGroup := models.CreateGroup{}
+	err = json.Unmarshal(body, &createGroup)
+	if err != nil {
+		return nil, handleBodyUnmarshalError(ctx, err)
+	}
+
+	validationErrs := createGroup.ValidateCreateGroupRequest(ctx)
+	if len(validationErrs) != 0 {
+		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
+	}
+
+	// build create group input
+	createGroup.GenerateGroupName()
+	input := createGroup.BuildCreateGroupInput(&api.UserPoolId)
+	_, err = api.CognitoClient.CreateGroup(input)
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito CreateGroup request from create a new group endpoint")
+		if cognitoErr.Code == models.GroupExistsError {
+			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, cognitoErr)
+		}
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+	}
+
+	jsonResponse, responseErr := createGroup.BuildSuccessfulJsonResponse(ctx)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusCreated, nil), nil
+}
+
 //AddUserToGroupHandler adds a user to the specified group
 func (api *API) AddUserToGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)

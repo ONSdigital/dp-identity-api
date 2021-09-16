@@ -3,6 +3,8 @@ package models
 import (
 	"context"
 	"encoding/json"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -11,6 +13,11 @@ import (
 const (
 	AdminRoleGroup     = "role-admin"
 	PublisherRoleGroup = "role-publisher"
+)
+
+var (
+	groupNameSpecialChars = `]£\s^\\\$\*\.\]\}\(\)\?\"\!\@\#\%\&\/\,\>\<\'\:\;\|\_\~\-`
+	groupPrecedenceMin = int64(3)
 )
 
 //Type to map for the Cognito GroupType object
@@ -135,4 +142,64 @@ func (g *Group) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error)
 		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
 	}
 	return jsonResponse, nil
+}
+
+type CreateGroup struct {
+	Description *string `json:"description"`
+	Precedence *int64 `json:"precedence"`
+	GroupName string
+}
+
+func (g *CreateGroup) ValidateCreateGroupRequest(ctx context.Context) []error {
+	var validationErrs []error
+
+	if g.Description == nil {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupDescription, MissingGroupDescription))
+	} else {
+		// check to ensure description doesn't start with reserved pattern `role_`
+		m, _ := regexp.MatchString("(?i)^role_.*", *g.Description)
+		if m {
+			validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupDescription, IncorrectPatternInGroupDescription))
+		}
+	}
+	if g.Precedence == nil {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, MissingGroupPrecedence))
+	} else {
+		if *g.Precedence < groupPrecedenceMin {
+			validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, GroupPrecedenceIncorrect))
+		}
+	}
+
+	return validationErrs
+}
+
+func (c *CreateGroup) BuildCreateGroupInput(userPoolId *string) *cognitoidentityprovider.CreateGroupInput {
+	return &cognitoidentityprovider.CreateGroupInput{
+		Description: c.Description,
+		GroupName: &c.GroupName,
+		Precedence: c.Precedence,
+		UserPoolId: userPoolId,
+	}
+}
+
+func (c *CreateGroup) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
+	jsonResponse, err := json.Marshal(c)
+	if err != nil {
+		e := NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
+		return nil, e
+	}
+	return jsonResponse, nil
+}
+
+// GenerateGroupName - New group name to be created from group description
+//                     (minus special characters, trimmed and to lowercase)
+func (c *CreateGroup) GenerateGroupName() {
+	// strip special chars out of group description string and trim
+	// special chars groupset => []£\s^\\$*.]}()?"!@#%&/,><':;|_~-]
+	regExp := regexp.MustCompile("[" + groupNameSpecialChars + "]+")
+	c.GroupName = strings.TrimSpace(
+		strings.ToLower(
+			regExp.ReplaceAllString(*c.Description, ""),
+		),
+	)
 }
