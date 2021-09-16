@@ -1262,6 +1262,50 @@ Feature: Users
         }
         """
 
+    Scenario: PUT /v1/users/self/password Cognito invalid token
+        When I PUT "/v1/users/self/password"
+        """
+            {
+                "type": "ForgottenPassword",
+                "email": "email@ons.gov.uk",
+                "password": "Password2",
+                "verification_token": "invalid-token"
+            }
+        """
+        Then I should receive the following JSON response with status "400":
+        """
+        {
+            "errors": [
+                {
+                    "code": "InvalidCode",
+                    "description": "verification token does not meet requirements"
+                }
+            ]
+        }
+        """
+
+    Scenario: PUT /v1/users/self/password Cognito expired token
+        When I PUT "/v1/users/self/password"
+        """
+            {
+                "type": "ForgottenPassword",
+                "email": "email@ons.gov.uk",
+                "password": "Password2",
+                "verification_token": "expired-token"
+            }
+        """
+        Then I should receive the following JSON response with status "400":
+        """
+        {
+            "errors": [
+                {
+                    "code": "ExpiredCode",
+                    "description": "verification token has expired"
+                }
+            ]
+        }
+        """
+
     Scenario: PUT /v1/users/self/password Cognito user not found
         When I PUT "/v1/users/self/password"
         """
@@ -1388,7 +1432,7 @@ Feature: Users
                 }
             """
 
-   Scenario: GET /v1/users/{id}/groups  for 0 groups and checking the response status 200
+    Scenario: GET /v1/users/{id}/groups  for 0 groups and checking the response status 200
         Given a user with username "listgrouptestuser2" and email "email@ons.gov.uk" exists in the database
         And there 0 groups exists in the database that username "listgrouptestuser2" is a member
         When I GET "/v1/users/listgrouptestuser2/groups"
@@ -1401,7 +1445,7 @@ Feature: Users
                 }
             """   
 
-  Scenario: GET /v1/users/{id}/groups  user not found returns 500
+    Scenario: GET /v1/users/{id}/groups  user not found returns 500
         Given a user with username "get-user-not-found" and email "email@ons.gov.uk" exists in the database
         And there 0 groups exists in the database that username "get-user-not-found" is a member
         When I GET "/v1/users/get-user-not-found/groups"

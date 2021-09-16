@@ -850,16 +850,16 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 			confirmForgotPasswordFunction func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error)
 			httpResponse                  int
 		}{
+			// Cognito successful password change
 			{
-				// Cognito successful password change
 				func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					tst := cognitoidentityprovider.ConfirmForgotPasswordOutput{}
 					return &tst, nil
 				},
 				http.StatusAccepted,
 			},
+			// Cognito internal error
 			{
-				// Cognito internal error
 				func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					awsErrCode := "InternalErrorException"
 					awsErrMessage := "Something strange happened"
@@ -869,8 +869,8 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 				},
 				http.StatusInternalServerError,
 			},
+			// Cognito invalid token
 			{
-				// Cognito invalid session
 				func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					awsErrCode := "CodeMismatchException"
 					awsErrMessage := "session invalid"
@@ -880,8 +880,19 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 				},
 				http.StatusBadRequest,
 			},
+			// Cognito expired token
 			{
-				// Cognito invalid password
+				func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+					awsErrCode := "ExpiredCodeException"
+					awsErrMessage := "token expired"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				http.StatusBadRequest,
+			},
+			// Cognito invalid password
+			{
 				func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					awsErrCode := "InvalidPasswordException"
 					awsErrMessage := "password invalid"
@@ -891,8 +902,8 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 				},
 				http.StatusBadRequest,
 			},
+			// Cognito invalid user
 			{
-				// Cognito invalid user
 				func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					awsErrCode := "UserNotFoundException"
 					awsErrMessage := "user not found"
