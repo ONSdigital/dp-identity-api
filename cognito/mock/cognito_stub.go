@@ -262,8 +262,10 @@ func (m *CognitoIdentityProviderClientStub) ConfirmForgotPassword(input *cognito
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	} else if *input.Password == "invalidpassword" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInvalidPasswordException, "password does not meet requirements", nil)
-	} else if *input.ConfirmationCode == "invalidtoken" {
+	} else if *input.ConfirmationCode == "invalid-token" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeCodeMismatchException, "verification token does not meet requirements", nil)
+	} else if *input.ConfirmationCode == "expired-token" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeExpiredCodeException, "verification token has expired", nil)
 	}
 
 	for _, user := range m.Users {
