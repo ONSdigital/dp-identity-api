@@ -619,6 +619,28 @@ func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
 
 }
 
+func (m *CognitoIdentityProviderClientStub) ListGroups(
+	input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+	nextToken := "nextToken"
+	nextTokenNil := ""
+
+	var (
+		newGroups []*cognitoidentityprovider.GroupType
+	)
+
+	if input.NextToken != nil && *input.NextToken != "" {
+		return &cognitoidentityprovider.ListGroupsOutput{
+			Groups:    newGroups,
+			NextToken: &nextToken,
+		}, nil
+	}
+	return &cognitoidentityprovider.ListGroupsOutput{
+		Groups:    newGroups,
+		NextToken: &nextTokenNil,
+	}, nil
+
+}
+
 func (m *CognitoIdentityProviderClientStub) DescribeUserPoolClient(input *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
 	tokenValidDays := int64(1)
 	userPoolClient := &cognitoidentityprovider.DescribeUserPoolClientOutput{

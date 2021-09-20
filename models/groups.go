@@ -136,3 +136,54 @@ func (g *Group) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error)
 	}
 	return jsonResponse, nil
 }
+
+//BuildListGroupsSuccessfulJsonResponse
+// formats the output to comply with current standards and to json , adds the count of groups returned and
+func (g *ListUserGroups) BuildListGroupsSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.ListGroupsOutput) ([]byte, error) {
+
+	if result == nil {
+		return nil, NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
+	}
+
+	for _, tmpGroup := range result.Groups {
+
+		newGroup := ListUserGroupType{
+			CreationDate:     tmpGroup.CreationDate,
+			Description:      tmpGroup.Description,
+			GroupName:        tmpGroup.GroupName,
+			LastModifiedDate: tmpGroup.LastModifiedDate,
+			Precedence:       tmpGroup.Precedence,
+			RoleArn:          tmpGroup.RoleArn,
+			UserPoolId:       tmpGroup.UserPoolId,
+		}
+
+		g.Groups = append(g.Groups, &newGroup)
+	}
+
+	g.NextToken = result.NextToken
+	g.Count = 0
+	if g.Groups != nil {
+		g.Count = len(result.Groups)
+	}
+
+	jsonResponse, err := json.Marshal(g)
+	if err != nil {
+		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
+	}
+	return jsonResponse, nil
+}
+
+// BuildListGroupsRequest build the require input for cognito query to obtain the groups for given user
+func (g *ListUserGroupType) BuildListGroupsRequest(userPoolId string, nextToken string) *cognitoidentityprovider.ListGroupsInput {
+
+	if nextToken != "" {
+		return &cognitoidentityprovider.ListGroupsInput{
+			UserPoolId: &userPoolId,
+			NextToken:  &nextToken,
+		}
+	}
+
+	return &cognitoidentityprovider.ListGroupsInput{
+		UserPoolId: &userPoolId}
+
+}

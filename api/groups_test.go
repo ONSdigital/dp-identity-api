@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
@@ -19,6 +21,7 @@ import (
 const addUserToGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/memebers"
 const removeUserFromGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/memebers/abcd1234"
 const getUsersInGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/members"
+const getListGroupsEndPoint = "http://localhost:25600/v1/groups"
 
 func TestAddUserToGroupHandler(t *testing.T) {
 
@@ -725,5 +728,106 @@ func TestGetUsersInAGroup(t *testing.T) {
 
 		So(listOfUsersResponse, ShouldResemble, returnedListOfUsers)
 		So(errorResponse, ShouldBeNil)
+	})
+}
+
+func TestGetListGroupsHandler(t *testing.T) {
+	var (
+		ctx                             = context.Background()
+		internalErrorDescription string = "internal error"
+		timestamp                       = time.Now()
+		// nextToken  = "abc1234"
+		groups = []*cognitoidentityprovider.GroupType{
+			{
+				CreationDate:     &timestamp,
+				Description:      aws.String("A test group1"),
+				GroupName:        aws.String("test-group1"),
+				LastModifiedDate: &timestamp,
+				Precedence:       aws.Int64(4),
+				RoleArn:          aws.String(""),
+				UserPoolId:       aws.String(""),
+			},
+			{
+				CreationDate:     &timestamp,
+				Description:      aws.String("A test group1"),
+				GroupName:        aws.String("test-group1"),
+				LastModifiedDate: &timestamp,
+				Precedence:       aws.Int64(4),
+				RoleArn:          aws.String(""),
+				UserPoolId:       aws.String(""),
+			},
+		}
+	)
+
+	api, w, m := apiSetup()
+
+	Convey("List groups for user -check expected responses", t, func() {
+		listgroups := []struct {
+			getlistGroupsFunction func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
+			httpResponse          int
+		}{
+			{
+				// 200 response from Cognito with empty NextToken
+				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					return &cognitoidentityprovider.ListGroupsOutput{
+						Groups:    groups,
+						NextToken: nil,
+					}, nil
+				},
+				http.StatusOK,
+			},
+			{
+				// 200 response from Cognito with empty NextToken
+				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					return &cognitoidentityprovider.ListGroupsOutput{
+						Groups:    []*cognitoidentityprovider.GroupType{},
+						NextToken: nil,
+					}, nil
+				},
+				http.StatusOK,
+			},
+			{
+				// 500 response from Cognito
+				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					var internalError cognitoidentityprovider.InternalErrorException
+					internalError.Message_ = &internalErrorDescription
+					return nil, &internalError
+				},
+				http.StatusInternalServerError,
+			},
+			{
+				//404 response from Cognito
+				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					awsErrCode := "UserNotFoundException"
+					awsErrMessage := "user could not be found"
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				http.StatusInternalServerError,
+			},
+		}
+
+		for _, tt := range listgroups {
+			m.ListGroupsFunc = tt.getlistGroupsFunction
+
+			r := httptest.NewRequest(http.MethodGet, getListGroupsEndPoint, nil)
+
+			urlVars := map[string]string{
+				"id": "efgh5678",
+			}
+			r = mux.SetURLVars(r, urlVars)
+
+			successResponse, errorResponse := api.ListGroupsHandler(ctx, w, r)
+
+			// Check whether testing a success or error case
+			if tt.httpResponse > 399 {
+				So(successResponse, ShouldBeNil)
+				So(errorResponse.Status, ShouldEqual, tt.httpResponse)
+			} else {
+				So(successResponse.Status, ShouldEqual, tt.httpResponse)
+				So(errorResponse, ShouldBeNil)
+			}
+		}
 	})
 }

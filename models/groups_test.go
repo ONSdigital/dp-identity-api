@@ -282,3 +282,83 @@ func TestGroup_BuildListUsersInGroupRequestWithNextToken(t *testing.T) {
 		So(*response.NextToken, ShouldEqual, nextToken)
 	})
 }
+
+func TestGroup_BuildListGroupsRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito ListGroups request body", t, func() {
+		group := models.ListUserGroupType{}
+		userPoolId := "euwest-99-aabbcc"
+		nextToken := "Next-Token"
+
+		response := group.BuildListGroupsRequest(userPoolId, nextToken)
+
+		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListGroupsInput{}))
+		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.NextToken, ShouldEqual, nextToken)
+	})
+
+	Convey("builds a correctly populated Cognito ListGroups request body", t, func() {
+		group := models.ListUserGroupType{}
+		userPoolId := "euwest-99-aabbcc"
+		nextToken := ""
+
+		response := group.BuildListGroupsRequest(userPoolId, nextToken)
+
+		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListGroupsInput{}))
+		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(response.NextToken, ShouldBeNil)
+	})
+
+	Convey("builds a nill Cognito ListGroups request body", t, func() {
+		group := models.ListUserGroupType{}
+		userPoolId := "euwest-99-aabbcc"
+		nextToken := ""
+
+		response := group.BuildListGroupsRequest(userPoolId, nextToken)
+
+		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListGroupsInput{}))
+		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(response.NextToken, ShouldBeNil)
+	})
+}
+
+func TestGroup_BuildListGroupsSuccessfulJsonResponse(t *testing.T) {
+	Convey("returns a byte array of the response JSON", t, func() {
+		ctx := context.Background()
+		name, description := "test-group", "a test group"
+		precedence := int64(100)
+		group := models.ListUserGroups{}
+		results := &cognitoidentityprovider.ListGroupsOutput{
+			Groups: []*cognitoidentityprovider.GroupType{
+				{
+					GroupName:   &name,
+					Description: &description,
+					Precedence:  &precedence,
+				},
+				{
+					GroupName:   &name,
+					Description: &description,
+					Precedence:  &precedence}},
+			NextToken: new(string),
+		}
+
+		response, err := group.BuildListGroupsSuccessfulJsonResponse(ctx, results)
+
+		So(err, ShouldBeNil)
+		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
+		var groupsJson map[string]interface{}
+		err = json.Unmarshal(response, &groupsJson)
+		So(err, ShouldBeNil)
+		So(groupsJson["next_token"], ShouldBeEmpty)
+		So(groupsJson["count"], ShouldEqual, 2)
+		So(groupsJson["groups"], ShouldNotBeNil)
+		jsonGroups := groupsJson["groups"].([]interface{})
+		So(len(jsonGroups), ShouldEqual, 2)
+		for _, testgroup := range jsonGroups {
+			jsonGroup := testgroup.(map[string]interface{})
+			So(jsonGroup["description"], ShouldEqual, description)
+			So(jsonGroup["precedence"], ShouldEqual, precedence)
+			So(jsonGroup["group_name"], ShouldEqual, name)
+		}
+
+	})
+}
