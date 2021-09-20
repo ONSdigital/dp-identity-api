@@ -16,7 +16,7 @@ const (
 )
 
 var (
-	groupNameSpecialChars = `]£\s^\\\$\*\.\]\}\(\)\?\"\!\@\#\%\&\/\,\>\<\'\:\;\|\_\~\-`
+	groupNameSpecialChars = `]£\s^\\\$\*\.\]\[\}\(\)\?\"\!\@\#\%\&\/\,\>\<\'\:\;\|\_\~\-`
 	groupPrecedenceMin = int64(3)
 )
 
@@ -155,19 +155,13 @@ func (g *CreateGroup) ValidateCreateGroupRequest(ctx context.Context) []error {
 
 	if g.Description == nil {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupDescription, MissingGroupDescription))
-	} else {
-		// check to ensure description doesn't start with reserved pattern `role_`
-		m, _ := regexp.MatchString("(?i)^role_.*", *g.Description)
-		if m {
-			validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupDescription, IncorrectPatternInGroupDescription))
-		}
+	} else if m, _ := regexp.MatchString("(?i)^role_.*", *g.Description); m {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupDescription, IncorrectPatternInGroupDescription))
 	}
 	if g.Precedence == nil {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, MissingGroupPrecedence))
-	} else {
-		if *g.Precedence < groupPrecedenceMin {
-			validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, GroupPrecedenceIncorrect))
-		}
+	} else if *g.Precedence < groupPrecedenceMin {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, GroupPrecedenceIncorrect))
 	}
 
 	return validationErrs
