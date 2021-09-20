@@ -88,6 +88,7 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 	// the user id is not yet available from the previous responses
 	r.HandleFunc("/v1/users/self/password", contextAndErrors(api.ChangePasswordHandler)).Methods(http.MethodPut)
 	r.HandleFunc("/v1/password-reset", contextAndErrors(api.PasswordResetHandler)).Methods(http.MethodPost)
+	r.HandleFunc("/v1/groups", contextAndErrors(api.CreateGroupHandler)).Methods(http.MethodPost)
 	r.HandleFunc("/v1/groups/{id}/members", contextAndErrors(api.AddUserToGroupHandler)).Methods(http.MethodPost)
 	r.HandleFunc("/v1/groups/{id}/members", contextAndErrors(api.ListUsersInGroupHandler)).Methods(http.MethodGet)
 	r.HandleFunc("/v1/groups/{id}/members/{user_id}", contextAndErrors(api.RemoveUserFromGroupHandler)).Methods(http.MethodDelete)
