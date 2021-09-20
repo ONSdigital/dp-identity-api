@@ -690,6 +690,8 @@ definitions:
           - "InvalidStatusNotes"
           - "InvalidUserId"
           - "InvalidGroupName"
+          - "InvalidGroupDescription"
+          - "InvalidGroupPrecedence"
       description:
         type: string
         description: "Description of the error"
