@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
@@ -735,9 +733,10 @@ func TestGetListGroupsHandler(t *testing.T) {
 	var (
 		ctx                             = context.Background()
 		internalErrorDescription string = "internal error"
-		timestamp                       = time.Now()
-		// nextToken  = "abc1234"
-		groups = []*cognitoidentityprovider.GroupType{
+		NotFoundDescription      string = "internal error"
+
+		timestamp = time.Now()
+		groups    = []*cognitoidentityprovider.GroupType{
 			{
 				CreationDate:     &timestamp,
 				Description:      aws.String("A test group1"),
@@ -777,7 +776,7 @@ func TestGetListGroupsHandler(t *testing.T) {
 				http.StatusOK,
 			},
 			{
-				// 200 response from Cognito with empty NextToken
+				// 200 response from Cognito with empty group
 				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					return &cognitoidentityprovider.ListGroupsOutput{
 						Groups:    []*cognitoidentityprovider.GroupType{},
@@ -798,13 +797,11 @@ func TestGetListGroupsHandler(t *testing.T) {
 			{
 				//404 response from Cognito
 				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
-					awsErrCode := "UserNotFoundException"
-					awsErrMessage := "user could not be found"
-					awsOrigErr := errors.New(awsErrCode)
-					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
-					return nil, awsErr
+					var NotFoundException cognitoidentityprovider.ResourceNotFoundException
+					NotFoundException.Message_ = &NotFoundDescription
+					return nil, &NotFoundException
 				},
-				http.StatusInternalServerError,
+				http.StatusNotFound,
 			},
 		}
 

@@ -30,8 +30,8 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^user "([^"]*)" is a member of group "([^"]*)"$`, c.userIsAMemberOfGroup)
 	ctx.Step(`^there are "([^"]*)" users in the database$`, c.thereAreRequiredNumberOfUsers)
 	ctx.Step(`^the list response should contain "([^"]*)" entries$`, c.listResponseShouldContainCorrectNumberOfEntries)
-
 	ctx.Step(`^there (\d+) groups exists in the database that username "([^"]*)" is a member$`, c.thereGroupsExistsInTheDatabaseThatUsernameIsAMember)
+	ctx.Step(`^there "([^"]*)" groups exists in the database$`, c.thereGroupsExistsInTheDatabase)
 }
 
 func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(email, password string) error {
@@ -143,5 +143,16 @@ func (c *IdentityComponent) thereAreRequiredNumberOfUsers(requiredNumberOfUsers 
 		return err
 	}
 	c.CognitoClient.AddMultipleUsers(requiredNumberOfUsersInt)
+	return nil
+}
+
+func (c *IdentityComponent) thereGroupsExistsInTheDatabase(groupCount string) error {
+
+	groupCountInt, err := strconv.Atoi(groupCount)
+	if err != nil {
+		return errors.New("could not convert group count to int")
+	}
+	c.CognitoClient.BulkGenerateGroups(groupCountInt)
+	assert.Equal(c.apiFeature, groupCountInt, len(c.CognitoClient.Groups)-2)
 	return nil
 }
