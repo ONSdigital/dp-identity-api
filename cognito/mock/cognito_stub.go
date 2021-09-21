@@ -262,8 +262,10 @@ func (m *CognitoIdentityProviderClientStub) ConfirmForgotPassword(input *cognito
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	} else if *input.Password == "invalidpassword" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInvalidPasswordException, "password does not meet requirements", nil)
-	} else if *input.ConfirmationCode == "invalidtoken" {
+	} else if *input.ConfirmationCode == "invalid-token" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeCodeMismatchException, "verification token does not meet requirements", nil)
+	} else if *input.ConfirmationCode == "expired-token" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeExpiredCodeException, "verification token has expired", nil)
 	}
 
 	for _, user := range m.Users {
@@ -335,32 +337,63 @@ func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityp
 
 func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
 	userPoolId := "aaaa-bbbb-ccc-dddd"
-
-	if *input.GroupName == "internalError" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "something went wrong", nil)
+	// non feature test functionality - input.GroupName starts with `test-group-` pattern
+	// feature test functionality by default
+	nonFeatureTesting := false
+	if input.GroupName != nil {
+		nonFeatureTesting, _ = regexp.MatchString("^test-group-.*", *input.GroupName)
 	}
+	var createGroupOutput *cognitoidentityprovider.CreateGroupOutput
+	
+	if nonFeatureTesting { // non feature test functionality
+		if *input.GroupName == "internalError" {
+			return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "something went wrong", nil)
+		}
 
-	for _, group := range m.Groups {
-		if group.Name == *input.GroupName {
-			return nil, awserr.New(cognitoidentityprovider.ErrCodeGroupExistsException, "this group already exists", nil)
+		for _, group := range m.Groups {
+			if group.Name == *input.GroupName {
+				return nil, awserr.New(cognitoidentityprovider.ErrCodeGroupExistsException, "this group already exists", nil)
+			}
+		}
+
+		newGroup, err := m.GenerateGroup(*input.GroupName, *input.Description, *input.Precedence)
+		if err != nil {
+			return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, err.Error(), nil)
+		}
+		m.Groups = append(m.Groups, newGroup)
+
+		createGroupOutput = &cognitoidentityprovider.CreateGroupOutput{
+			Group: &cognitoidentityprovider.GroupType{
+				Description:  input.Description,
+				GroupName:    input.GroupName,
+				Precedence:   input.Precedence,
+				CreationDate: &newGroup.Created,
+				UserPoolId:   &userPoolId,
+			},
+		}
+	} else { // feature test functionality
+		if *input.Description != "Internal Server Error" {
+			// 201 response - group created
+			response_201 := `Thi$s is a te||st des$%£@^c ription for  a n ew group  $`
+			createdTime, _ := time.Parse("2006-Jan-1", "2010-Jan-1")
+			if *input.Description == response_201 {
+				groupName := "thisisatestdescriptionforanewgroup"
+				createGroupOutput = &cognitoidentityprovider.CreateGroupOutput{
+					Group: &cognitoidentityprovider.GroupType{
+						Description:  input.Description,
+						GroupName:    &groupName,
+						Precedence:   input.Precedence,
+						CreationDate: &createdTime,
+						UserPoolId:   &userPoolId,
+					},
+				}
+			}
+		} else {
+			// 500 response - internal server error
+			return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 		}
 	}
-
-	newGroup, err := m.GenerateGroup(*input.GroupName, *input.Description, *input.Precedence)
-	if err != nil {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, err.Error(), nil)
-	}
-	m.Groups = append(m.Groups, newGroup)
-
-	return &cognitoidentityprovider.CreateGroupOutput{
-		Group: &cognitoidentityprovider.GroupType{
-			Description:  input.Description,
-			GroupName:    input.GroupName,
-			Precedence:   input.Precedence,
-			CreationDate: &newGroup.Created,
-			UserPoolId:   &userPoolId,
-		},
-	}, nil
+	return createGroupOutput, nil
 }
 
 func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(input *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {

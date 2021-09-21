@@ -387,6 +387,43 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /groups:
+    post:
+      tags:
+        - Groups
+      summary: "Create a new group"
+      description: "Creates a new group in Cognito user pool"
+      consumes:
+        - application/json
+      produces:
+        - "application/json"
+      parameters:
+        - in: body
+          name: "Group"
+          description: "The details of the group being created"
+          schema:
+            required: ["description", "precedence"]
+            type: object
+            properties:
+              description:
+                type: string
+                example: "Th&is is a $£test group!~"
+              precedence:
+                type: integer
+                example: 33
+      responses:
+        201:
+          description: "The group has been successfully created"
+          schema:
+            $ref: '#/definitions/NewGroup'
+        400:
+          description: "Invalid group name or group precedence provided"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: "Invalid request body or unexpected Cognito response"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
   /groups/{name}/members:
     post:
       tags:
@@ -511,6 +548,22 @@ definitions:
         type: string
         description: "Expiration Time, UTC ISO 8601"
         example: "YYYY-MM-DD hh-mm-ssZ"
+  NewGroup:
+    description: "The new group details for the response body"
+    type: object
+    properties:
+      description:
+        description: "A description of the group"
+        type: string
+        example: "Th&is is a $£test group!~"
+      precedence:
+        description: "The precedence of the group"
+        type: integer
+        example: 33
+      GroupName:
+        description: "The name of the created group"
+        type: string
+        example: "thisisatestgroup"
   Group:
     description: "The group model for the response body"
     type: object
@@ -637,6 +690,8 @@ definitions:
           - "InvalidStatusNotes"
           - "InvalidUserId"
           - "InvalidGroupName"
+          - "InvalidGroupDescription"
+          - "InvalidGroupPrecedence"
       description:
         type: string
         description: "Description of the error"
