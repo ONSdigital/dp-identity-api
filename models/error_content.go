@@ -40,6 +40,8 @@ const (
 	InvalidChallengeSessionError = "InvalidChallengeSession"
 	InvalidUserPoolError         = "InvalidUserPool"
 	BodyCloseError               = "BodyCloseError"
+	InvalidGroupDescription      = "InvalidGroupDescription"
+	InvalidGroupPrecedence       = "InvalidGroupPrecedence"
 )
 
 // API error descriptions
@@ -73,6 +75,11 @@ const (
 	TooLongStatusNotesDescription          = "the status notes are too long"
 	InvalidUserPoolDescription             = "dummy data load being run against non local userpool"
 	BodyClosedFailedDescription            = "the request body failed to close"
+	MissingGroupDescription                = "the group description was not found"
+	MissingGroupPrecedence                 = "the group precedence was not found"
+	GroupPrecedenceIncorrect               = "the group precedence needs to be a minumum of 3"
+	IncorrectPatternInGroupDescription     = "a group description cannot start with 'role_' or 'ROLE_'"
+	GroupAlreadyExistsDescription          = "a group with the name already exists"
 )
 
 // Mapping Cognito error codes to API error codes

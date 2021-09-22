@@ -1,5 +1,140 @@
 Feature: Groups
 
+#   Create new group scenarios
+    Scenario: POST /v1/groups to create group, group created returns 201
+    When I POST "/v1/groups"
+        """
+            {
+                "description": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
+                "precedence": 49
+            }
+        """
+    Then I should receive the following JSON response with status "201":
+        """
+            {
+                "description": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
+                "precedence": 49,
+                "GroupName": "thisisatestdescriptionforanewgroup"
+            }
+        """
+
+    Scenario: POST /v1/groups to create group with no description in request, group created returns 400
+    When I POST "/v1/groups"
+        """
+            {
+                "precedence": 49
+            }
+        """
+    Then I should receive the following JSON response with status "400":
+        """
+            {
+                "errors": [
+                    {
+                        "code":"InvalidGroupDescription",
+                        "description":"the group description was not found"
+                    }
+                ]
+            }
+        """
+
+    Scenario: POST /v1/groups to create group with no precedence in request, group created returns 400
+    When I POST "/v1/groups"
+        """
+            {
+                "description": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $"
+            }
+        """
+    Then I should receive the following JSON response with status "400":
+        """
+            {
+                "errors": [
+                    {
+                        "code":"InvalidGroupPrecedence",
+                        "description":"the group precedence was not found"
+                    }
+                ]
+            }
+        """
+
+    Scenario: POST /v1/groups to create group with reserved pattern in description [lower case], group created returns 400
+    When I POST "/v1/groups"
+        """
+            {
+                "description": "role_Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
+                "precedence": 49
+            }
+        """
+    Then I should receive the following JSON response with status "400":
+        """
+            {
+                "errors": [
+                    {
+                        "code":"InvalidGroupDescription",
+                        "description":"a group description cannot start with 'role_' or 'ROLE_'"
+                    }
+                ]
+            }
+        """
+
+    Scenario: POST /v1/groups to create group with reserved pattern in description [upper case], group created returns 400
+    When I POST "/v1/groups"
+        """
+            {
+                "description": "ROLE_Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
+                "precedence": 49
+            }
+        """
+    Then I should receive the following JSON response with status "400":
+        """
+            {
+                "errors": [
+                    {
+                        "code":"InvalidGroupDescription",
+                        "description":"a group description cannot start with 'role_' or 'ROLE_'"
+                    }
+                ]
+            }
+        """
+
+    Scenario: POST /v1/groups to create group group precedence doesn't meet minimum of `3`, returns 400
+    When I POST "/v1/groups"
+        """
+            {
+                "description": "This is a test description",
+                "precedence": 1
+            }
+        """
+    Then I should receive the following JSON response with status "400":
+        """
+            {
+                "errors": [
+                    {
+                        "code":"InvalidGroupPrecedence",
+                        "description":"the group precedence needs to be a minumum of 3"
+                    }
+                ]
+            }
+        """
+
+    Scenario: POST /v1/groups to create group an unexpected 500 error is returned from Cognito
+    When I POST "/v1/groups"
+        """
+            {
+                "description": "Internal Server Error",
+                "precedence": 5
+            }
+        """
+    Then I should receive the following JSON response with status "500":
+        """
+            {
+                "errors": [
+                    {
+                        "code":"InternalServerError",
+                        "description":"Something went wrong"
+                    }
+                ]
+            }
+        """
 #   Add user to group scenarios
     Scenario: POST /v1/groups/{id}/members and checking the response status 200
         Given group "test-group" exists in the database
