@@ -208,7 +208,7 @@ func (api *API) RemoveUserFromGroupHandler(ctx context.Context, w http.ResponseW
 }
 
 //List Groups for user pagination allows first call and then any other call if nextToken is not ""
-func (api *API) getListGroups() (*cognitoidentityprovider.ListGroupsOutput, error) {
+func (api *API) GetListGroups() (*cognitoidentityprovider.ListGroupsOutput, error) {
 	firstTimeCheck := false
 	var nextToken string
 	group := models.ListUserGroupType{}
@@ -241,7 +241,7 @@ func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, re
 	// vars := mux.Vars(req)
 	finalGroupsResponse := models.ListUserGroups{}
 
-	listOfGroups, err := api.getListGroups()
+	listOfGroups, err := api.GetListGroups()
 	if err != nil {
 		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListofUserGroups request from list user groups endpoint")
 		if cognitoErr.Code == models.NotFoundError {

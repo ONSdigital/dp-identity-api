@@ -388,6 +388,22 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
   /groups:
+    get:
+      tags:
+        - Groups
+      summary: "List groups"
+      description: "List all the groups in the user pool"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "The list of groups"
+          schema:
+            $ref: '#/definitions/GroupsList'
+        500:
+          description: "Internal error occurred"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
     post:
       tags:
         - Groups
@@ -522,23 +538,7 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /groups:
-    get:
-      tags:
-        - Groups
-      summary: "List groups"
-      description: "List all the groups in the user pool"
-      produces:
-        - "application/json"
-      responses:
-        200:
-          description: "The list of groups"
-          schema:
-            $ref: '#/definitions/GroupsList'
-        500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+
 
 responses:
   InternalError:

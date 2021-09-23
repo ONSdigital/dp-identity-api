@@ -282,7 +282,6 @@ func TestGroup_BuildListUsersInGroupRequestWithNextToken(t *testing.T) {
 		So(*response.NextToken, ShouldEqual, nextToken)
 	})
 }
-
 func TestGroup_BuildListGroupsRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito ListGroups request body", t, func() {
 		group := models.ListUserGroupType{}
@@ -361,4 +360,15 @@ func TestGroup_BuildListGroupsSuccessfulJsonResponse(t *testing.T) {
 		}
 
 	})
+
+	Convey("nil result", t, func() {
+		ctx := context.Background()
+		group := models.ListUserGroups{}
+		var results *cognitoidentityprovider.ListGroupsOutput = nil
+		response, err := group.BuildListGroupsSuccessfulJsonResponse(ctx, results)
+		So(response, ShouldBeNil)
+		So(err, ShouldNotBeNil)
+	},
+	)
+
 }

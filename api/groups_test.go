@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
@@ -897,46 +899,164 @@ func TestCreateNewGroup(t *testing.T) {
 	})
 }
 
-func TestGetListGroupsHandler(t *testing.T) {
-	// var (
-	// 	internalErrorDescription, NotFoundDescription string = "internal error", "not found"
+func TestGetListGroups(t *testing.T) {
+	var ()
 
-	// )
+	api, _, m := apiSetup()
+
+	Convey("When there is no next token cognito is called once and empty list of groups in returned", t, func() {
+		listOfGroups := []*cognitoidentityprovider.GroupType{
+			{},
+		}
+
+		m.ListGroupsFunc = func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+			listGroups := &cognitoidentityprovider.ListGroupsOutput{
+				NextToken: nil,
+				Groups: []*cognitoidentityprovider.GroupType{
+					{},
+				},
+			}
+			return listGroups, nil
+		}
+
+		listOfGroupsResponse, errorResponse := api.GetListGroups()
+
+		So(listOfGroupsResponse.Groups, ShouldResemble, listOfGroups)
+		So(len(listOfGroupsResponse.Groups), ShouldEqual, len(listOfGroups))
+		So(listOfGroupsResponse.NextToken, ShouldBeNil)
+		So(errorResponse, ShouldBeNil)
+
+	})
+
+	Convey("When there is no next token cognito is called with 1  entry list of groups in returned", t, func() {
+		var (
+			description, group_name string = "The publishing admins", "role-admin"
+			precedence              int64  = 1
+		)
+		listOfGroups := []*cognitoidentityprovider.GroupType{
+			{
+				Description: &description,
+				GroupName:   &group_name,
+				Precedence:  &precedence,
+			},
+		}
+
+		m.ListGroupsFunc = func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+			listGroups := &cognitoidentityprovider.ListGroupsOutput{
+				NextToken: nil,
+				Groups: []*cognitoidentityprovider.GroupType{
+					{
+						Description: &description,
+						GroupName:   &group_name,
+						Precedence:  &precedence,
+					},
+				},
+			}
+			return listGroups, nil
+		}
+
+		listOfGroupsResponse, errorResponse := api.GetListGroups()
+
+		So(listOfGroupsResponse.Groups, ShouldResemble, listOfGroups)
+		So(len(listOfGroupsResponse.Groups), ShouldEqual, len(listOfGroups))
+		So(listOfGroupsResponse.NextToken, ShouldBeNil)
+		So(errorResponse, ShouldBeNil)
+
+	})
+}
+func TestListGroupsHandler(t *testing.T) {
+
+	var (
+		ctx                             = context.Background()
+		timestamp                       = time.Now()
+		internalErrorDescription string = "internal error"
+		groups                          = []*cognitoidentityprovider.GroupType{
+			{
+				CreationDate:     &timestamp,
+				Description:      aws.String("A test group1"),
+				GroupName:        aws.String("test-group1"),
+				LastModifiedDate: &timestamp,
+				Precedence:       aws.Int64(4),
+				RoleArn:          aws.String(""),
+				UserPoolId:       aws.String(""),
+			},
+			{
+				CreationDate:     &timestamp,
+				Description:      aws.String("A test group1"),
+				GroupName:        aws.String("test-group1"),
+				LastModifiedDate: &timestamp,
+				Precedence:       aws.Int64(4),
+				RoleArn:          aws.String(""),
+				UserPoolId:       aws.String(""),
+			},
+		}
+	)
 
 	api, w, m := apiSetup()
 
-	Convey("List groups for user -check expected responses", t, func() {
-		listgroups := []struct {
-			getlistGroupsFunction func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
-			listGroupsInput,
-			expectedResponse map[string]interface{}
-			assertions func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+	Convey("List groups -check expected responses", t, func() {
+		listGroupsTest := []struct {
+			getListGroupsFunction func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
+			assertions            func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{
-			// 200 response from Cognito with empty NextToken
 			{
+				// 200 response from Cognito with empty NextToken
 				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
-					return &cognitoidentityprovider.ListGroupsOutput{}, nil
-				},
-				map[string]interface{}{},
-				map[string]interface{}{
-					"description": "This is a test description",
-					"precedence":  22,
-					"GroupName":   "thisisatestdescription",
+					return &cognitoidentityprovider.ListGroupsOutput{
+						Groups:    groups,
+						NextToken: nil,
+					}, nil
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					So(successResponse, ShouldNotBeNil)
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
+				},
+			},
+			{
+				// 200 response from Cognito with empty NextToken
+				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					return &cognitoidentityprovider.ListGroupsOutput{
+						Groups:    []*cognitoidentityprovider.GroupType{},
+						NextToken: nil,
+					}, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse, ShouldNotBeNil)
+					So(errorResponse, ShouldBeNil)
+				},
+			},
+			{
+				// 500 response from Cognito
+				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := internalErrorDescription
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.InternalError)
+					So(castErr.Description, ShouldEqual, internalErrorDescription)
 				},
 			},
 		}
 
-		for _, tt := range listgroups {
-			m.ListGroupsFunc = tt.getlistGroupsFunction
-			body, _ := json.Marshal(tt.listGroupsInput)
-			r := httptest.NewRequest(http.MethodGet, getListGroupsEndPoint, bytes.NewReader(body))
+		for _, tt := range listGroupsTest {
+			m.ListGroupsFunc = tt.getListGroupsFunction
+			r := httptest.NewRequest(http.MethodGet, getListGroupsEndPoint, nil)
 
-			successResponse, errorResponse := api.ListGroupsHandler(context.Background(), w, r)
+			urlVars := map[string]string{
+				"id": "efgh5678",
+			}
+			r = mux.SetURLVars(r, urlVars)
+
+			successResponse, errorResponse := api.ListGroupsHandler(ctx, w, r)
 
 			tt.assertions(successResponse, errorResponse)
 		}
