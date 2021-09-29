@@ -65,11 +65,12 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 	userPoolClient, err := api.CognitoClient.DescribeUserPoolClient(
 		&cognitoidentityprovider.DescribeUserPoolClientInput{
 			UserPoolId: &api.UserPoolId,
-			ClientId: &api.ClientId,
+			ClientId:   &api.ClientId,
 		},
 	)
 	if err != nil {
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+		awsErr := models.NewCognitoError(ctx, err, "Describing user pool for refresh token TTL")
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, awsErr)
 	}
 
 	refreshTokenTTL := int(*userPoolClient.UserPoolClient.RefreshTokenValidity)
