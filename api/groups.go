@@ -207,7 +207,7 @@ func (api *API) RemoveUserFromGroupHandler(ctx context.Context, w http.ResponseW
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
-//List Groups for user pagination allows first call and then any other call if nextToken is not ""
+//List Groups pagination allows first call and then any other call if nextToken is not ""
 func (api *API) GetListGroups() (*cognitoidentityprovider.ListGroupsOutput, error) {
 	firstTimeCheck := false
 	var nextToken string
@@ -237,8 +237,6 @@ func (api *API) GetListGroups() (*cognitoidentityprovider.ListGroupsOutput, erro
 
 //ListGroupsHandler lists the users in the user pool
 func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-
-	// vars := mux.Vars(req)
 	finalGroupsResponse := models.ListUserGroups{}
 
 	listOfGroups, err := api.GetListGroups()

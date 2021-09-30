@@ -222,7 +222,7 @@ func (g *ListUserGroups) BuildListGroupsSuccessfulJsonResponse(ctx context.Conte
 	}
 
 	g.NextToken = result.NextToken
-	g.Count = 0
+
 	if g.Groups != nil {
 		g.Count = len(result.Groups)
 	}

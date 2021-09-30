@@ -557,27 +557,51 @@ Feature: Groups
     Scenario: GET /v1/groups and checking the response status 200
         Given there "0" groups exists in the database
         When I GET "/v1/groups"
-        Then I should receive the following JSON response with status "200":
+        Then the response code should be 200
+        And the response should match the following json for listgroups
             """
                 {
+                    "groups":null,
                     "count":0,
-                    "groups":null, 
                     "next_token":null
                 }
             """  
 
-        Scenario: GET /v1/groups and checking the response status 200
-        Given there "100" groups exists in the database
+    Scenario: GET /v1/groups and checking the response status 200
+        Given there "2" groups exists in the database
         When I GET "/v1/groups"
-        Then I should receive the following JSON response with status "200":
+        Then the response code should be 200
+        And the response should match the following json for listgroups
             """
                 {
-                    "count":0,
-                    "groups":null, 
-                    "next_token":null
+                "count": 2,
+                "groups": [
+                    {
+                    "description": "group name description 1",
+                    "group_name": "group_name_1",
+                    "precedence": 55
+                    }
+                ],
+                "next_token": null
                 }
             """  
-
-
- 
+  
+    Scenario: GET /v1/groups and checking the response status 200
+        Given there "1" groups exists in the database
+        When I GET "/v1/groups"
+        Then the response code should be 200
+        And the response should match the following json for listgroups
+            """
+                {
+                "count": 1,
+                "groups": [
+                    {
+                    "description": "group name description 1",
+                    "group_name": "group_name_1",
+                    "precedence": 55
+                    }
+                ],
+                "next_token": null
+                }
+            """  
 
