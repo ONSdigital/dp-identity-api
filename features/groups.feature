@@ -553,7 +553,8 @@ Feature: Groups
                 }
             """
 
-#   Get listgroups scenarios        
+#   Get listgroups scenarios     
+#   list for no groups found   
     Scenario: GET /v1/groups and checking the response status 200
         Given there "0" groups exists in the database
         When I GET "/v1/groups"
@@ -566,7 +567,7 @@ Feature: Groups
                     "next_token":null
                 }
             """  
-
+#   list for one groups found  
     Scenario: GET /v1/groups and checking the response status 200
         Given there "2" groups exists in the database
         When I GET "/v1/groups"
@@ -585,15 +586,15 @@ Feature: Groups
                 "next_token": null
                 }
             """  
-  
+#   list for many groups found   given blocks of 60 for one cognito call
     Scenario: GET /v1/groups and checking the response status 200
-        Given there "1" groups exists in the database
+        Given there "100" groups exists in the database
         When I GET "/v1/groups"
         Then the response code should be 200
         And the response should match the following json for listgroups
             """
                 {
-                "count": 1,
+                "count": 100,
                 "groups": [
                     {
                     "description": "group name description 1",
@@ -604,4 +605,3 @@ Feature: Groups
                 "next_token": null
                 }
             """  
-
