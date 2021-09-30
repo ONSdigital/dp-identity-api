@@ -2,7 +2,6 @@ package mock
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"time"
 
@@ -651,7 +650,7 @@ func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
 }
 
 func (m *CognitoIdentityProviderClientStub) ListGroups(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
-	fmt.Println(*input)
+
 	if *input.UserPoolId == "internal-error" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	}
