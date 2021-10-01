@@ -3,7 +3,10 @@ package mock
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"time"
+
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
 type Group struct {
@@ -110,4 +113,39 @@ func (m *CognitoIdentityProviderClientStub) BulkGenerateGroups(groupCount int) {
 		m.Groups = append(m.Groups, &group)
 
 	}
+}
+
+func (m *CognitoIdentityProviderClientStub) BulkGenerateGroupsList(groupCount int) {
+	//Type to map for the Cognito GroupType object
+
+	var (
+		groupsList  cognitoidentityprovider.ListGroupsOutput
+		next_token  string = "next_token"
+		totalgroups        = 0
+	)
+
+	for i := 1; i <= groupCount; i++ {
+		D := "group name description " + fmt.Sprint(i)
+		G := "group_name_" + fmt.Sprint(i)
+		P := rand.Int63n(100-13) + 13
+
+		group := cognitoidentityprovider.GroupType{
+			Description: &D,
+			GroupName:   &G,
+			Precedence:  &P,
+		}
+
+		groupsList.Groups = append(groupsList.Groups, &group)
+
+		if i%60 == 0 && i > 0 {
+			groupsList.NextToken = &next_token
+			totalgroups = totalgroups + len(groupsList.Groups)
+			m.GroupsList = append(m.GroupsList, groupsList)
+			groupsList = *new(cognitoidentityprovider.ListGroupsOutput)
+		}
+
+	}
+	groupsList.NextToken = nil
+	m.GroupsList = append(m.GroupsList, groupsList)
+
 }

@@ -206,3 +206,52 @@ func (api *API) RemoveUserFromGroupHandler(ctx context.Context, w http.ResponseW
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
+
+//List Groups pagination allows first call and then any other call if nextToken is not ""
+func (api *API) GetListGroups() (*cognitoidentityprovider.ListGroupsOutput, error) {
+	firstTimeCheck := false
+	var nextToken string
+	group := models.ListUserGroupType{}
+
+	listOfGroups := cognitoidentityprovider.ListGroupsOutput{}
+	for {
+		if firstTimeCheck && nextToken == "" {
+			break
+		}
+		firstTimeCheck = true
+
+		listGroupsRequest := group.BuildListGroupsRequest(api.UserPoolId, nextToken)
+		listGroupsResponse, err := api.CognitoClient.ListGroups(listGroupsRequest)
+		if err != nil {
+			return nil, err
+		}
+
+		listOfGroups.Groups = append(listOfGroups.Groups, listGroupsResponse.Groups...)
+		nextToken = ""
+		if listGroupsResponse.NextToken != nil {
+			nextToken = *listGroupsResponse.NextToken
+		}
+	}
+	return &listOfGroups, nil
+}
+
+//ListGroupsHandler lists the users in the user pool
+func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	finalGroupsResponse := models.ListUserGroups{}
+
+	listOfGroups, err := api.GetListGroups()
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListofUserGroups request from list user groups endpoint")
+		if cognitoErr.Code == models.NotFoundError {
+			return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
+		}
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+	}
+
+	jsonResponse, responseErr := finalGroupsResponse.BuildListGroupsSuccessfulJsonResponse(ctx, listOfGroups)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+
+}

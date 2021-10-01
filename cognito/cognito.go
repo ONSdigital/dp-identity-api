@@ -30,4 +30,5 @@ type Client interface {
 	AdminSetUserPassword(input *cognito.AdminSetUserPasswordInput) (*cognito.AdminSetUserPasswordOutput, error)
 	AdminListGroupsForUser(input *cognito.AdminListGroupsForUserInput) (*cognito.AdminListGroupsForUserOutput, error)
 	DescribeUserPoolClient(input *cognito.DescribeUserPoolClientInput) (*cognito.DescribeUserPoolClientOutput, error)
+	ListGroups(input *cognito.ListGroupsInput) (*cognito.ListGroupsOutput, error)
 }

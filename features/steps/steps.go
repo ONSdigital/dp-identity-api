@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ONSdigital/dp-identity-api/api"
+	"github.com/ONSdigital/dp-identity-api/models"
 
 	"github.com/cucumber/godog"
 )
@@ -30,8 +31,11 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^user "([^"]*)" is a member of group "([^"]*)"$`, c.userIsAMemberOfGroup)
 	ctx.Step(`^there are "([^"]*)" users in the database$`, c.thereAreRequiredNumberOfUsers)
 	ctx.Step(`^the list response should contain "([^"]*)" entries$`, c.listResponseShouldContainCorrectNumberOfEntries)
-
 	ctx.Step(`^there (\d+) groups exists in the database that username "([^"]*)" is a member$`, c.thereGroupsExistsInTheDatabaseThatUsernameIsAMember)
+	ctx.Step(`^there "([^"]*)" groups exists in the database$`, c.thereGroupsExistsInTheDatabase)
+	ctx.Step(`^the response code should be (\d+)$`, c.theResponseCodeShouldBe)
+	ctx.Step(`^the response should match the following json for listgroups$`, c.theResponseShouldMatchTheFollowingJsonForListgroups)
+
 }
 
 func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(email, password string) error {
@@ -110,7 +114,7 @@ func (c *IdentityComponent) thereGroupsExistsInTheDatabaseThatUsernameIsAMember(
 	}
 	groupCountInt, err := strconv.Atoi(groupCount)
 	if err != nil {
-		return errors.New("could not convert group count to int")
+		return errors.New("could not convert " + groupCount + " to int")
 	}
 	c.CognitoClient.BulkGenerateGroups(groupCountInt)
 	c.CognitoClient.MakeUserMember(user.ID)
@@ -143,5 +147,66 @@ func (c *IdentityComponent) thereAreRequiredNumberOfUsers(requiredNumberOfUsers 
 		return err
 	}
 	c.CognitoClient.AddMultipleUsers(requiredNumberOfUsersInt)
+	return nil
+}
+
+func (c *IdentityComponent) thereGroupsExistsInTheDatabase(groupCount string) error {
+
+	groupCountInt, err := strconv.Atoi(groupCount)
+	if err != nil {
+		return errors.New("could not convert" + groupCount + "to int")
+	}
+	c.CognitoClient.BulkGenerateGroupsList(groupCountInt)
+	tmpGroupsList := c.CognitoClient.GroupsList
+	lengroups := 0
+	for _, x := range tmpGroupsList {
+		lengroups = lengroups + len(x.Groups)
+	}
+
+	assert.Equal(c.apiFeature, groupCountInt, lengroups)
+	return nil
+}
+
+func (c *IdentityComponent) theResponseCodeShouldBe(code int) error {
+	expectedStatusString := strconv.Itoa(code)
+	actualStatusString := strconv.Itoa(c.apiFeature.HttpResponse.StatusCode)
+	if code != c.apiFeature.HttpResponse.StatusCode {
+		return errors.New("expected response status code to be: " + expectedStatusString + ", but actual is: " + actualStatusString)
+	}
+	return nil
+}
+
+func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroups(body *godog.DocString) (err error) {
+	var expected, actual models.ListUserGroups
+
+	// re-encode expected response
+	if err = json.Unmarshal([]byte(body.Content), &expected); err != nil {
+		return
+	}
+
+	responseBody := c.apiFeature.HttpResponse.Body
+	resBody, _ := ioutil.ReadAll(responseBody)
+	if err = json.Unmarshal(resBody, &actual); err != nil {
+		return
+	}
+
+	// the matching may be adapted per different requirements.
+
+	assert.Equal(c.apiFeature, expected.NextToken, actual.NextToken)
+	assert.Equal(c.apiFeature, expected.Count, actual.Count)
+	assert.Equal(c.apiFeature, len(expected.Groups), actual.Count)
+	// if actual.Count > 0 && expected.Count > 0 {
+	if actual.Count > 0 {
+
+		assert.Equal(c.apiFeature, *expected.Groups[0].Description, *actual.Groups[0].Description)
+		assert.Equal(c.apiFeature, *expected.Groups[0].GroupName, *actual.Groups[0].GroupName)
+		tmpPrecedence := int(*expected.Groups[0].Precedence)
+		assert.GreaterOrEqual(c.apiFeature, 13, tmpPrecedence)
+		assert.LessOrEqual(c.apiFeature, 100, tmpPrecedence)
+		tmpPrecedence = int(*actual.Groups[0].Precedence)
+		assert.GreaterOrEqual(c.apiFeature, 13, tmpPrecedence)
+		assert.LessOrEqual(c.apiFeature, 100, tmpPrecedence)
+
+	}
 	return nil
 }

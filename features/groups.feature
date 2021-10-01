@@ -535,6 +535,8 @@ Feature: Groups
                     ]
                 }
             """   
+
+        
  Scenario: GET /v1/groups/{id}/members, internal server error returns 500
         Given group "internal-error" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
@@ -550,3 +552,56 @@ Feature: Groups
                     ]
                 }
             """
+
+#   Get listgroups scenarios     
+#   list for no groups found   
+    Scenario: GET /v1/groups and checking the response status 200
+        Given there "0" groups exists in the database
+        When I GET "/v1/groups"
+        Then the response code should be 200
+        And the response should match the following json for listgroups
+            """
+                {
+                    "groups":null,
+                    "count":0,
+                    "next_token":null
+                }
+            """  
+#   list for one groups found  
+    Scenario: GET /v1/groups and checking the response status 200
+        Given there "2" groups exists in the database
+        When I GET "/v1/groups"
+        Then the response code should be 200
+        And the response should match the following json for listgroups
+            """
+                {
+                "count": 2,
+                "groups": [
+                    {
+                    "description": "group name description 1",
+                    "group_name": "group_name_1",
+                    "precedence": 55
+                    }
+                ],
+                "next_token": null
+                }
+            """  
+#   list for many groups found   given blocks of 60 for one cognito call
+    Scenario: GET /v1/groups and checking the response status 200
+        Given there "100" groups exists in the database
+        When I GET "/v1/groups"
+        Then the response code should be 200
+        And the response should match the following json for listgroups
+            """
+                {
+                "count": 100,
+                "groups": [
+                    {
+                    "description": "group name description 1",
+                    "group_name": "group_name_1",
+                    "precedence": 55
+                    }
+                ],
+                "next_token": null
+                }
+            """  

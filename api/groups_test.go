@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,16 +12,18 @@ import (
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 const (
-	addUserToGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/memebers"
+	addUserToGroupEndPoint      = "http://localhost:25600/v1/groups/efgh5678/memebers"
 	removeUserFromGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/memebers/abcd1234"
-	getUsersInGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/members"
-	createGroupEndPoint = "http://localhost:25600/v1/groups"
+	getUsersInGroupEndPoint     = "http://localhost:25600/v1/groups/efgh5678/members"
+	createGroupEndPoint         = "http://localhost:25600/v1/groups"
+	getListGroupsEndPoint       = "http://localhost:25600/v1/groups"
 )
 
 func TestAddUserToGroupHandler(t *testing.T) {
@@ -733,17 +736,17 @@ func TestGetUsersInAGroup(t *testing.T) {
 
 func TestCreateNewGroup(t *testing.T) {
 	var (
-		groupAlreadyExistsMessage, internalErrorDescription string = "a group with the name already exists",  "internal error"
+		groupAlreadyExistsMessage, internalErrorDescription string = "a group with the name already exists", "internal error"
 	)
 
 	api, w, m := apiSetup()
 
 	Convey("Create a new group - check responses", t, func() {
 		createGroupTests := []struct {
-			createNewGroupFunction	func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error)
+			createNewGroupFunction func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error)
 			createGroupInput,
-			expectedResponse        map[string]interface{}
-			assertions              func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+			expectedResponse map[string]interface{}
+			assertions func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{
 			// 201 response - group created
 			{
@@ -752,12 +755,12 @@ func TestCreateNewGroup(t *testing.T) {
 				},
 				map[string]interface{}{
 					"description": "This is a test description",
-					"precedence": 22,
+					"precedence":  22,
 				},
 				map[string]interface{}{
 					"description": "This is a test description",
-					"precedence": 22,
-					"GroupName": "thisisatestdescription",
+					"precedence":  22,
+					"GroupName":   "thisisatestdescription",
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(successResponse, ShouldNotBeNil)
@@ -775,7 +778,7 @@ func TestCreateNewGroup(t *testing.T) {
 				},
 				map[string]interface{}{
 					"description": "This is a test description",
-					"precedence": 22,
+					"precedence":  22,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -830,7 +833,7 @@ func TestCreateNewGroup(t *testing.T) {
 				},
 				map[string]interface{}{
 					"description": "role_This is a test description",
-					"precedence": 22,
+					"precedence":  22,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -841,7 +844,7 @@ func TestCreateNewGroup(t *testing.T) {
 					So(castErr.Code, ShouldEqual, models.InvalidGroupDescription)
 					So(castErr.Description, ShouldEqual, models.IncorrectPatternInGroupDescription)
 				},
-			}, 
+			},
 			// 400 response - group precedence setting not minimum of `3`
 			{
 				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
@@ -849,7 +852,7 @@ func TestCreateNewGroup(t *testing.T) {
 				},
 				map[string]interface{}{
 					"description": "This is a test description",
-					"precedence": 1,
+					"precedence":  1,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -870,7 +873,7 @@ func TestCreateNewGroup(t *testing.T) {
 				},
 				map[string]interface{}{
 					"description": "This is a test description",
-					"precedence": 4,
+					"precedence":  4,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -894,4 +897,242 @@ func TestCreateNewGroup(t *testing.T) {
 			tt.assertions(successResponse, errorResponse)
 		}
 	})
+}
+
+func TestGetListGroups(t *testing.T) {
+
+	api, _, m := apiSetup()
+
+	Convey("When there is no next token cognito is called once and an empty list of groups is returned", t, func() {
+		listOfGroups := []*cognitoidentityprovider.GroupType{
+			{},
+		}
+		var count int = 0
+		m.ListGroupsFunc = func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+			count++
+			listGroups := &cognitoidentityprovider.ListGroupsOutput{
+				NextToken: nil,
+				Groups: []*cognitoidentityprovider.GroupType{
+					{},
+				},
+			}
+			return listGroups, nil
+		}
+
+		listOfGroupsResponse, errorResponse := api.GetListGroups()
+
+		So(errorResponse, ShouldBeNil)
+
+		So(listOfGroupsResponse.Groups, ShouldResemble, listOfGroups)
+		So(listOfGroupsResponse.Groups, ShouldHaveLength, len(listOfGroups))
+		So(listOfGroupsResponse.NextToken, ShouldBeNil)
+		So(count, ShouldEqual, 1)
+
+	})
+
+	Convey("When there is no next token cognito is called with 1  entry list of groups in returned", t, func() {
+		var (
+			description, group_name string = "The publishing admins", "role-admin"
+			precedence              int64  = 1
+			count                   int    = 0
+		)
+		listOfGroups := []*cognitoidentityprovider.GroupType{
+			{
+				Description: &description,
+				GroupName:   &group_name,
+				Precedence:  &precedence,
+			},
+		}
+
+		m.ListGroupsFunc = func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+			count++
+			listGroups := &cognitoidentityprovider.ListGroupsOutput{
+
+				NextToken: nil,
+				Groups: []*cognitoidentityprovider.GroupType{
+					{
+						Description: &description,
+						GroupName:   &group_name,
+						Precedence:  &precedence,
+					},
+				},
+			}
+			return listGroups, nil
+		}
+
+		listOfGroupsResponse, errorResponse := api.GetListGroups()
+
+		So(errorResponse, ShouldBeNil)
+		So(listOfGroupsResponse.NextToken, ShouldBeNil)
+		So(listOfGroupsResponse.Groups, ShouldResemble, listOfGroups)
+		So(listOfGroupsResponse.Groups, ShouldHaveSameTypeAs, listOfGroups)
+		So(listOfGroupsResponse.Groups, ShouldHaveLength, len(listOfGroups))
+		So(count, ShouldEqual, 1)
+
+	})
+}
+func TestListGroupsHandler(t *testing.T) {
+
+	var (
+		ctx       = context.Background()
+		timestamp = time.Now()
+		// internalErrorDescription string = "internal error"
+		// next_token                      = "next_token"
+		groups = []*cognitoidentityprovider.GroupType{
+			{
+				CreationDate:     &timestamp,
+				Description:      aws.String("A test group1"),
+				GroupName:        aws.String("test-group1"),
+				LastModifiedDate: &timestamp,
+				Precedence:       aws.Int64(4),
+				RoleArn:          aws.String(""),
+				UserPoolId:       aws.String(""),
+			},
+			{
+				CreationDate:     &timestamp,
+				Description:      aws.String("A test group1"),
+				GroupName:        aws.String("test-group1"),
+				LastModifiedDate: &timestamp,
+				Precedence:       aws.Int64(4),
+				RoleArn:          aws.String(""),
+				UserPoolId:       aws.String(""),
+			},
+		}
+	)
+
+	api, w, m := apiSetup()
+
+	Convey("List groups -check expected responses", t, func() {
+		internalErrorDescription := ""
+		listGroupsTest := []struct {
+			description           string
+			next_token            string
+			getListGroupsFunction func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
+			assertions            func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+		}{
+			{
+				"200 response from Cognito with empty NextToken",
+				"",
+				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					return &cognitoidentityprovider.ListGroupsOutput{
+						Groups:    groups,
+						NextToken: nil,
+					}, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+
+					So(errorResponse, ShouldBeNil)
+
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Body, ShouldNotBeNil)
+
+					var responseBody = models.ListUserGroups{}
+					json.Unmarshal(successResponse.Body, &responseBody)
+
+					So(responseBody.NextToken, ShouldBeNil)
+					So(responseBody.Count, ShouldEqual, 2)
+					So(responseBody.Groups, ShouldNotBeNil)
+					So(responseBody.Groups, ShouldHaveLength, responseBody.Count)
+					So(*responseBody.Groups[0].Description, ShouldEqual, *groups[0].Description)
+				},
+			},
+			{
+				"200 response from Cognito with no groups",
+				"",
+				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					return &cognitoidentityprovider.ListGroupsOutput{
+						Groups:    []*cognitoidentityprovider.GroupType{},
+						NextToken: nil,
+					}, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+
+					So(errorResponse, ShouldBeNil)
+
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Body, ShouldNotBeNil)
+
+					var responseBody = models.ListUserGroups{}
+					json.Unmarshal(successResponse.Body, &responseBody)
+					So(responseBody.NextToken, ShouldBeNil)
+					So(responseBody.Count, ShouldEqual, 0)
+					So(responseBody.Groups, ShouldBeNil)
+					So(responseBody.Groups, ShouldHaveLength, responseBody.Count)
+				},
+			},
+			{
+				"200 response from Cognito with populated NextToken",
+				"next_token",
+				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					return &cognitoidentityprovider.ListGroupsOutput{
+						Groups:    groups,
+						NextToken: nil,
+					}, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+
+					So(errorResponse, ShouldBeNil)
+
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Body, ShouldNotBeNil)
+
+					var responseBody = models.ListUserGroups{}
+					json.Unmarshal(successResponse.Body, &responseBody)
+
+					So(responseBody.NextToken, ShouldBeNil)
+					So(responseBody.Count, ShouldEqual, 2)
+					So(responseBody.Groups, ShouldNotBeNil)
+					So(responseBody.Groups, ShouldHaveLength, responseBody.Count)
+					So(*responseBody.Groups[0].Description, ShouldEqual, *groups[0].Description)
+				},
+			},
+
+			{
+				"500 response from Cognito",
+				"",
+				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := internalErrorDescription
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.InternalError)
+					So(castErr.Description, ShouldEqual, internalErrorDescription)
+
+					So(successResponse, ShouldBeNil)
+				},
+			},
+		}
+
+		for _, tt := range listGroupsTest {
+			Convey(tt.description, func() {
+				m.ListGroupsFunc = tt.getListGroupsFunction
+
+				postBody := map[string]interface{}{"NextToken": tt.next_token}
+				body, err := json.Marshal(postBody)
+				So(err, ShouldBeNil)
+
+				r := httptest.NewRequest(http.MethodGet, getListGroupsEndPoint, bytes.NewReader(body))
+
+				urlVars := map[string]string{
+					"id": "efgh5678",
+				}
+				r = mux.SetURLVars(r, urlVars)
+
+				successResponse, errorResponse := api.ListGroupsHandler(ctx, w, r)
+
+				tt.assertions(successResponse, errorResponse)
+			})
+		}
+	})
+
 }
