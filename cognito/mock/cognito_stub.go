@@ -373,7 +373,7 @@ func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentitypr
 			},
 		}
 	} else { // feature test functionality
-		if *input.Description != "Internal Server Error" {
+		if *input.Description != "internalservererror" {
 			// 201 response - group created
 			response_201 := `Thi$s is a te||st des$%£@^c ription for  a n ew group  $`
 			createdTime, _ := time.Parse("2006-Jan-1", "2010-Jan-1")

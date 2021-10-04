@@ -11,8 +11,12 @@ import (
 )
 
 const (
-	AdminRoleGroup     = "role-admin"
-	PublisherRoleGroup = "role-publisher"
+	AdminRoleGroup                  = "role-admin"
+	AdminRoleGroupPrecedence        = 2
+	AdminRoleGroupHumanReadable     = "roleadmin"
+	PublisherRoleGroup              = "role-publisher"
+	PublisherRoleGroupPrecedence    = 3
+	PublisherRoleGroupHumanReadable = "rolepublisher"
 )
 
 var (
@@ -33,8 +37,8 @@ type Group struct {
 func NewAdminRoleGroup() Group {
 	return Group{
 		Name:        AdminRoleGroup,
-		Description: "The publishing admins",
-		Precedence:  1,
+		Description: AdminRoleGroupHumanReadable,
+		Precedence:  AdminRoleGroupPrecedence,
 	}
 }
 
@@ -42,8 +46,8 @@ func NewAdminRoleGroup() Group {
 func NewPublisherRoleGroup() Group {
 	return Group{
 		Name:        PublisherRoleGroup,
-		Description: "The publishers",
-		Precedence:  2,
+		Description: PublisherRoleGroupHumanReadable,
+		Precedence:  PublisherRoleGroupPrecedence,
 	}
 }
 
@@ -145,18 +149,23 @@ func (g *Group) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error)
 }
 
 type CreateGroup struct {
-	Description *string `json:"description"`
+	Description *string `json:"name"`
 	Precedence  *int64  `json:"precedence"`
 	GroupName   string
+}
+
+type CreateGroupResponse struct {
+	Name *string
+	Precedence  *int64
 }
 
 func (g *CreateGroup) ValidateCreateGroupRequest(ctx context.Context) []error {
 	var validationErrs []error
 
 	if g.Description == nil {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupDescription, MissingGroupDescription))
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, MissingGroupName))
 	} else if m, _ := regexp.MatchString("(?i)^role_.*", *g.Description); m {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupDescription, IncorrectPatternInGroupDescription))
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, IncorrectPatternInGroupName))
 	}
 	if g.Precedence == nil {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, MissingGroupPrecedence))
@@ -185,17 +194,37 @@ func (c *CreateGroup) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, 
 	return jsonResponse, nil
 }
 
-// GenerateGroupName - New group name to be created from group description
-//                     (minus special characters, trimmed and to lowercase)
-func (c *CreateGroup) GenerateGroupName() {
+// CleanGroupDescription - New group name to be created from group description
+//                        (minus special characters, trimmed and to lowercase)
+func (c *CreateGroup) CleanGroupDescription() {
 	// strip special chars out of group description string and trim
 	// special chars groupset => []£\s^\\$*.]}()?"!@#%&/,><':;|_~-]
 	regExp := regexp.MustCompile("[" + groupNameSpecialChars + "]+")
-	c.GroupName = strings.TrimSpace(
+	*c.Description = strings.TrimSpace(
 		strings.ToLower(
 			regExp.ReplaceAllString(*c.Description, ""),
 		),
 	)
+}
+
+// NewSuccessResponse - returns a custom response where group description is returned as group name
+func (c *CreateGroup) NewSuccessResponse(jsonBody []byte, statusCode int, headers map[string]string) *SuccessResponse {
+	// unmarshall response and transform: API_Req:name -> Cognito:Description -> API_Resp:name
+	var cg = CreateGroup{}
+	_ = json.Unmarshal(jsonBody, &cg)
+
+	cgr := CreateGroupResponse{
+		Name: cg.Description,
+		Precedence: cg.Precedence,
+	}
+
+	jsonResponse, _ := json.Marshal(cgr)
+
+	return &SuccessResponse{
+		Body:    jsonResponse,
+		Status:  statusCode,
+		Headers: headers,
+	}
 }
 
 //BuildListGroupsSuccessfulJsonResponse

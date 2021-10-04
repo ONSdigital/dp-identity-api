@@ -5,16 +5,16 @@ Feature: Groups
     When I POST "/v1/groups"
         """
             {
-                "description": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
+                "name": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
                 "precedence": 49
             }
         """
     Then I should receive the following JSON response with status "201":
         """
             {
-                "description": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
-                "precedence": 49,
-                "GroupName": "thisisatestdescriptionforanewgroup"
+                "Name": "thisisatestdescriptionforanewgroup",
+                "Precedence": 49
+               
             }
         """
 
@@ -30,8 +30,8 @@ Feature: Groups
             {
                 "errors": [
                     {
-                        "code":"InvalidGroupDescription",
-                        "description":"the group description was not found"
+                        "code":"InvalidGroupName",
+                        "description":"the group name was not found"
                     }
                 ]
             }
@@ -41,7 +41,7 @@ Feature: Groups
     When I POST "/v1/groups"
         """
             {
-                "description": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $"
+                "name": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $"
             }
         """
     Then I should receive the following JSON response with status "400":
@@ -60,7 +60,7 @@ Feature: Groups
     When I POST "/v1/groups"
         """
             {
-                "description": "role_Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
+                "name": "role_Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
                 "precedence": 49
             }
         """
@@ -69,8 +69,8 @@ Feature: Groups
             {
                 "errors": [
                     {
-                        "code":"InvalidGroupDescription",
-                        "description":"a group description cannot start with 'role_' or 'ROLE_'"
+                        "code":"InvalidGroupName",
+                        "description":"a group name cannot start with 'role_' or 'ROLE_'"
                     }
                 ]
             }
@@ -80,7 +80,7 @@ Feature: Groups
     When I POST "/v1/groups"
         """
             {
-                "description": "ROLE_Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
+                "name": "ROLE_Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
                 "precedence": 49
             }
         """
@@ -89,8 +89,8 @@ Feature: Groups
             {
                 "errors": [
                     {
-                        "code":"InvalidGroupDescription",
-                        "description":"a group description cannot start with 'role_' or 'ROLE_'"
+                        "code":"InvalidGroupName",
+                        "description":"a group name cannot start with 'role_' or 'ROLE_'"
                     }
                 ]
             }
@@ -100,7 +100,7 @@ Feature: Groups
     When I POST "/v1/groups"
         """
             {
-                "description": "This is a test description",
+                "name": "This is a test description",
                 "precedence": 1
             }
         """
@@ -120,7 +120,7 @@ Feature: Groups
     When I POST "/v1/groups"
         """
             {
-                "description": "Internal Server Error",
+                "name": "Internal Server Error",
                 "precedence": 5
             }
         """
