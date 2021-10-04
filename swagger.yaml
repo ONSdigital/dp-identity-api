@@ -522,8 +522,8 @@ paths:
         200:
           description: "List of users in the group"
           schema:
-            $ref: '#/definitions/UserList'
-        400:
+            $ref: '#/definitions/Group'
+        404:
           description: "Invalid group name provided"
           schema:
             $ref: '#/definitions/ErrorResponse'
@@ -722,6 +722,7 @@ definitions:
           - "NotFound"
           - "UserNotFound"
           - "GroupExists"
+          - "GroupNotFound"
           - "DeliveryFailure"
           - "InvalidCode"
           - "ExpiredCode"
