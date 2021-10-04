@@ -1134,5 +1134,106 @@ func TestListGroupsHandler(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestGetGroupHandler(t *testing.T) {
+
+	var (
+		ctx       = context.Background()
+		timestamp = time.Now()
+		getgroup  = cognitoidentityprovider.GroupType{
+			CreationDate:     &timestamp,
+			Description:      aws.String("A test group1"),
+			GroupName:        aws.String("test-group1"),
+			LastModifiedDate: &timestamp,
+			Precedence:       aws.Int64(4),
+			RoleArn:          aws.String(""),
+			UserPoolId:       aws.String(""),
+		}
+	)
+
+	api, w, m := apiSetup()
+
+	Convey("Get group -check expected responses", t, func() {
+		var groupNotFoundDescription, internalErrorDescription string = "group not found", "internal error"
+		GetGroupTest := []struct {
+			description      string
+			getGroupFunction func(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error)
+			assertions       func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+		}{
+			{
+				"200 response from Cognito ",
+				func(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+					return &cognitoidentityprovider.GetGroupOutput{
+						Group: &getgroup,
+					}, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+
+					So(errorResponse, ShouldBeNil)
+
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Body, ShouldNotBeNil)
+
+					var responseBody = models.ListUserGroups{}
+					json.Unmarshal(successResponse.Body, &responseBody)
+
+					So(responseBody, ShouldNotBeNil)
+
+				},
+			},
+			{
+				"404 response from Cognito ",
+				func(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+					var groupNotFoundException cognitoidentityprovider.ResourceNotFoundException
+					groupNotFoundException.Message_ = &groupNotFoundDescription
+					return nil, &groupNotFoundException
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+
+					So(errorResponse, ShouldNotBeNil)
+
+					So(errorResponse.Status, ShouldEqual, http.StatusNotFound)
+					So(successResponse, ShouldBeNil)
+				},
+			},
+			{
+				"500 response from Cognito ",
+				func(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+					var internalError cognitoidentityprovider.InternalErrorException
+					internalError.Message_ = &internalErrorDescription
+					return nil, &internalError
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+
+					So(errorResponse, ShouldNotBeNil)
+
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+					So(successResponse, ShouldBeNil)
+				},
+			}}
+
+		for _, tt := range GetGroupTest {
+			Convey(tt.description, func() {
+				m.GetGroupFunc = tt.getGroupFunction
+
+				postBody := map[string]interface{}{"GroupName": "group_name_test"}
+				body, err := json.Marshal(postBody)
+				So(err, ShouldBeNil)
+
+				r := httptest.NewRequest(http.MethodGet, getListGroupsEndPoint, bytes.NewReader(body))
+
+				urlVars := map[string]string{
+					"id": "efgh5678",
+				}
+				r = mux.SetURLVars(r, urlVars)
+
+				successResponse, errorResponse := api.GetGroupHandler(ctx, w, r)
+
+				tt.assertions(successResponse, errorResponse)
+			})
+		}
+	})
 
 }

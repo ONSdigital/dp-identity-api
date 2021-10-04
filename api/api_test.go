@@ -46,6 +46,8 @@ func TestSetup(t *testing.T) {
 			So(hasRoute(api.Router, "/v1/users/{id}", http.MethodPut), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/users/self/password", http.MethodPut), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/password-reset", http.MethodPost), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/groups", http.MethodGet), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/groups/{id}", http.MethodGet), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/groups/{id}/members", http.MethodPost), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/groups/{id}/members", http.MethodGet), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/groups/{id}/members/{user_id}", http.MethodDelete), ShouldBeTrue)

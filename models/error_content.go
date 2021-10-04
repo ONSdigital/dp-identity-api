@@ -22,6 +22,7 @@ const (
 	NotFoundError                = "NotFound"
 	UserNotFoundError            = "UserNotFound"
 	GroupExistsError             = "GroupExists"
+	GroupNotFoundError           = "GroupNotFound"
 	DeliveryFailureError         = "DeliveryFailure"
 	InvalidCodeError             = "InvalidCode"
 	ExpiredCodeError             = "ExpiredCode"

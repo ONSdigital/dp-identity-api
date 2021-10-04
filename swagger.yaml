@@ -440,6 +440,33 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /groups/{name}:
+    get:
+      tags:
+        - Groups
+      summary: "Returns  given group details "
+      description: "Returns given group details"
+      produces:
+        - "application/json"
+      parameters:
+        - in: path
+          name: name
+          type: string
+          required: true
+          description: the group's name
+      responses:
+        200:
+          description: "The list group details"
+          schema:
+            $ref: '#/definitions/GroupsList'
+        400:
+          description: "Invalid group name provided"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: "Internal error occurred"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
   /groups/{name}/members:
     post:
       tags:
