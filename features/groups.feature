@@ -605,3 +605,48 @@ Feature: Groups
                 "next_token": null
                 }
             """  
+
+#   Get getGroup scenarios     
+#   successful return   
+    Scenario: GET /v1/groups and checking the response status 200
+        Given group "test-group" exists in the database
+        When I GET "/v1/groups/test-group"
+        Then I should receive the following JSON response with status "200":
+            """
+                {
+                    "name":"test-group",
+                    "description":"A test group",
+                    "precedence": 100,
+                    "created": "2010-01-01T00:00:00Z",
+                    "members": null
+                }
+            """  
+#   404 return   
+    Scenario: GET /v1/groups and checking the response status 404
+        Given group "get-group-not-found" exists in the database
+        When I GET "/v1/groups/get-group-not-found"
+        Then I should receive the following JSON response with status "404":
+            """
+                {
+                    "errors": [
+                        {
+                            "code": "NotFound",
+                            "description": "get group - group not found"
+                        }
+                    ]
+                }
+            """
+   Scenario: GET /v1/groups/{id} internal server error returns 500
+        Given group "internal-error" exists in the database
+        When I GET "/v1/groups/internal-error"
+        Then I should receive the following JSON response with status "500":
+            """
+                {
+                    "errors": [
+                        {
+                            "code": "InternalServerError",
+                            "description": "Something went wrong"
+                        }
+                    ]
+                }
+            """
