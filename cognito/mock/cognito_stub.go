@@ -15,10 +15,11 @@ import (
 
 type CognitoIdentityProviderClientStub struct {
 	cognitoidentityprovideriface.CognitoIdentityProviderAPI
-	UserPools []string
-	Users     []*User
-	Sessions  []Session
-	Groups    []*Group
+	UserPools  []string
+	Users      []*User
+	Sessions   []Session
+	Groups     []*Group
+	GroupsList []cognitoidentityprovider.ListGroupsOutput
 }
 
 func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
@@ -344,7 +345,7 @@ func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentitypr
 		nonFeatureTesting, _ = regexp.MatchString("^test-group-.*", *input.GroupName)
 	}
 	var createGroupOutput *cognitoidentityprovider.CreateGroupOutput
-	
+
 	if nonFeatureTesting { // non feature test functionality
 		if *input.GroupName == "internalError" {
 			return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "something went wrong", nil)
@@ -597,7 +598,6 @@ func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
 	input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 	nextToken := "nextToken"
 	nextTokenNil := ""
-	println("AdminListGroupsForUser", *input.Username)
 	if *input.Username == "internal-error" || *input.Username == "get-group-internal-error" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	}
@@ -647,6 +647,20 @@ func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
 		Groups:    newGroups,
 		NextToken: &nextTokenNil,
 	}, nil
+}
+
+func (m *CognitoIdentityProviderClientStub) ListGroups(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+
+	if *input.UserPoolId == "internal-error" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+
+	output := cognitoidentityprovider.ListGroupsOutput{}
+	for _, group := range m.GroupsList {
+		output.Groups = append(output.Groups, group.Groups...)
+		output.NextToken = group.NextToken
+	}
+	return &output, nil
 
 }
 

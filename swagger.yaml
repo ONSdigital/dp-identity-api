@@ -388,6 +388,22 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
   /groups:
+    get:
+      tags:
+        - Groups
+      summary: "List groups"
+      description: "List all the groups in the user pool"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "The list of groups"
+          schema:
+            $ref: '#/definitions/GroupsList'
+        500:
+          description: "Internal error occurred"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
     post:
       tags:
         - Groups
@@ -524,7 +540,6 @@ paths:
             $ref: '#/definitions/ErrorResponse'
 
 
-
 responses:
   InternalError:
     description: "Failed to process the request due to an internal error"
@@ -585,6 +600,16 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/User'
+  GroupsList:
+    description: "A list of groups for the response body"
+    type: object
+    properties:
+      users:
+        type: array
+        items:
+          $ref: '#/definitions/Group'
+      count:
+        type: integer
   UserList:
     description: "A list of users for the response body"
     type: object
