@@ -544,11 +544,11 @@ func TestGroup_CreateGroupNewSuccessResponse(t *testing.T) {
 
 		So(reflect.TypeOf(*successResponse), ShouldEqual, reflect.TypeOf(models.SuccessResponse{}))
 
-		createGroupResponse := models.CreateGroupResponse{}
-
+		createGroupResponse := make(map[string]interface{})
 		_ = json.Unmarshal(successResponse.Body, &createGroupResponse)
-		So(*createGroupResponse.Name, ShouldEqual, name)
-		So(*createGroupResponse.Precedence, ShouldEqual, precedence)
+
+		So(createGroupResponse["name"].(string), ShouldEqual, name)
+		So(int64(createGroupResponse["precedence"].(float64)), ShouldEqual, precedence)
 
 	})
 }

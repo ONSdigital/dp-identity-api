@@ -13,10 +13,10 @@ import (
 const (
 	AdminRoleGroup                  = "role-admin"
 	AdminRoleGroupPrecedence        = 2
-	AdminRoleGroupHumanReadable     = "roleadmin"
+	AdminRoleGroupHumanReadable     = "Administrators"
 	PublisherRoleGroup              = "role-publisher"
 	PublisherRoleGroupPrecedence    = 3
-	PublisherRoleGroupHumanReadable = "rolepublisher"
+	PublisherRoleGroupHumanReadable = "Publishing Officers"
 )
 
 var (
@@ -154,11 +154,6 @@ type CreateGroup struct {
 	GroupName   string
 }
 
-type CreateGroupResponse struct {
-	Name *string
-	Precedence  *int64
-}
-
 func (g *CreateGroup) ValidateCreateGroupRequest(ctx context.Context) []error {
 	var validationErrs []error
 
@@ -213,12 +208,12 @@ func (c *CreateGroup) NewSuccessResponse(jsonBody []byte, statusCode int, header
 	var cg = CreateGroup{}
 	_ = json.Unmarshal(jsonBody, &cg)
 
-	cgr := CreateGroupResponse{
-		Name: cg.Description,
-		Precedence: cg.Precedence,
-	}
-
-	jsonResponse, _ := json.Marshal(cgr)
+	jsonResponse, _ := json.Marshal(
+		map[string]interface{}{
+			"name": cg.Description,
+			"precedence": cg.Precedence,
+		},
+	)
 
 	return &SuccessResponse{
 		Body:    jsonResponse,

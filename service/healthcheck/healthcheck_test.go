@@ -3,11 +3,10 @@ package healthcheck_test
 import (
 	"context"
 	"errors"
-	"net/http"
-	"testing"
-
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"net/http"
+	"testing"
 
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
