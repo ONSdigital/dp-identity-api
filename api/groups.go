@@ -255,3 +255,29 @@ func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, re
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 
 }
+
+//GetGroupHandler gets group details for given groups
+func (api *API) GetGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+
+	vars := mux.Vars(req)
+	group := models.Group{Name: vars["id"]}
+	groupGetRequest := group.BuildGetGroupRequest(api.UserPoolId)
+	groupGetResponse, err := api.CognitoClient.GetGroup(groupGetRequest)
+	if err != nil {
+
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito GetGroup request from Get group endpoint")
+		if cognitoErr.Code == models.NotFoundError {
+			return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
+		}
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+	}
+
+	group.MapCognitoDetails(groupGetResponse.Group)
+
+	jsonResponse, responseErr := group.BuildSuccessfulJsonResponse(ctx)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
