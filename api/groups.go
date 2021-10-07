@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/google/uuid"
+
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/gorilla/mux"
@@ -19,6 +21,8 @@ func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 	}
 
 	createGroup := models.CreateGroup{}
+	// GroupName is UUID
+	createGroup.GroupName = uuid.NewString()
 	err = json.Unmarshal(body, &createGroup)
 	if err != nil {
 		return nil, handleBodyUnmarshalError(ctx, err)
@@ -30,7 +34,7 @@ func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 	}
 
 	// build create group input
-	createGroup.GenerateGroupName()
+	createGroup.CleanGroupDescription()
 	input := createGroup.BuildCreateGroupInput(&api.UserPoolId)
 	_, err = api.CognitoClient.CreateGroup(input)
 	if err != nil {
@@ -46,7 +50,7 @@ func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	return models.NewSuccessResponse(jsonResponse, http.StatusCreated, nil), nil
+	return createGroup.NewSuccessResponse(jsonResponse, http.StatusCreated, nil), nil
 }
 
 //AddUserToGroupHandler adds a user to the specified group
