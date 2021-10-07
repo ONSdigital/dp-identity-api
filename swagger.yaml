@@ -567,18 +567,14 @@ definitions:
     description: "The new group details for the response body"
     type: object
     properties:
-      description:
-        description: "A description of the group"
+      name:
+        description: "The human readable name of the group"
         type: string
-        example: "Th&is is a $£test group!~"
+        example: "thisisatestgroup"
       precedence:
         description: "The precedence of the group"
         type: integer
         example: 33
-      GroupName:
-        description: "The name of the created group"
-        type: string
-        example: "thisisatestgroup"
   Group:
     description: "The group model for the response body"
     type: object
