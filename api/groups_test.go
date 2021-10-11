@@ -754,13 +754,12 @@ func TestCreateNewGroup(t *testing.T) {
 					return &cognitoidentityprovider.CreateGroupOutput{}, nil
 				},
 				map[string]interface{}{
-					"description": "This is a test description",
+					"name": "This is a test name",
 					"precedence":  22,
 				},
 				map[string]interface{}{
-					"description": "This is a test description",
+					"name": "thisisatestdescription",
 					"precedence":  22,
-					"GroupName":   "thisisatestdescription",
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(successResponse, ShouldNotBeNil)
@@ -777,7 +776,7 @@ func TestCreateNewGroup(t *testing.T) {
 					return nil, &groupExistsException
 				},
 				map[string]interface{}{
-					"description": "This is a test description",
+					"name": "This is a test name",
 					"precedence":  22,
 				},
 				nil,
@@ -804,8 +803,8 @@ func TestCreateNewGroup(t *testing.T) {
 					So(errorResponse.Status, ShouldNotBeNil)
 					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
 					castErr := errorResponse.Errors[0].(*models.Error)
-					So(castErr.Code, ShouldEqual, models.InvalidGroupDescription)
-					So(castErr.Description, ShouldEqual, models.MissingGroupDescription)
+					So(castErr.Code, ShouldEqual, models.InvalidGroupName)
+					So(castErr.Description, ShouldEqual, models.MissingGroupName)
 				},
 			},
 			// 400 response - no precedence field in request body
@@ -814,7 +813,7 @@ func TestCreateNewGroup(t *testing.T) {
 					return &cognitoidentityprovider.CreateGroupOutput{}, nil
 				},
 				map[string]interface{}{
-					"description": "This is a test description",
+					"name": "This is a test name",
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -832,7 +831,7 @@ func TestCreateNewGroup(t *testing.T) {
 					return &cognitoidentityprovider.CreateGroupOutput{}, nil
 				},
 				map[string]interface{}{
-					"description": "role_This is a test description",
+					"name": "role_This is a test name",
 					"precedence":  22,
 				},
 				nil,
@@ -841,8 +840,8 @@ func TestCreateNewGroup(t *testing.T) {
 					So(errorResponse.Status, ShouldNotBeNil)
 					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
 					castErr := errorResponse.Errors[0].(*models.Error)
-					So(castErr.Code, ShouldEqual, models.InvalidGroupDescription)
-					So(castErr.Description, ShouldEqual, models.IncorrectPatternInGroupDescription)
+					So(castErr.Code, ShouldEqual, models.InvalidGroupName)
+					So(castErr.Description, ShouldEqual, models.IncorrectPatternInGroupName)
 				},
 			},
 			// 400 response - group precedence setting not minimum of `3`
@@ -851,7 +850,7 @@ func TestCreateNewGroup(t *testing.T) {
 					return &cognitoidentityprovider.CreateGroupOutput{}, nil
 				},
 				map[string]interface{}{
-					"description": "This is a test description",
+					"name": "This is a test name",
 					"precedence":  1,
 				},
 				nil,
@@ -872,7 +871,7 @@ func TestCreateNewGroup(t *testing.T) {
 					return nil, &internalError
 				},
 				map[string]interface{}{
-					"description": "This is a test description",
+					"name": "This is a test name",
 					"precedence":  4,
 				},
 				nil,
