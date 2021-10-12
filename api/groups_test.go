@@ -24,6 +24,7 @@ const (
 	getUsersInGroupEndPoint     = "http://localhost:25600/v1/groups/efgh5678/members"
 	createGroupEndPoint         = "http://localhost:25600/v1/groups"
 	getListGroupsEndPoint       = "http://localhost:25600/v1/groups"
+	updateGroupEndPoint         = "http://localhost:25600/v1/groups/123e4567-e89b-12d3-a456-426614174000"
 )
 
 func TestAddUserToGroupHandler(t *testing.T) {
@@ -736,14 +737,34 @@ func TestGetUsersInAGroup(t *testing.T) {
 
 func TestCreateNewGroup(t *testing.T) {
 	var (
-		groupAlreadyExistsMessage, internalErrorDescription string = "a group with the name already exists", "internal error"
+		internalErrorDescription string = "internal error"
 	)
 
 	api, w, m := apiSetup()
 
+	// ListGroupsFunction template - success
+	listGroupsFuncSuccess := func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error){
+		d := "thisisamocktestname"
+		g := "123e4567-e89b-12d3-a456-426614174000"
+		p := int64(12)
+		groupsList := cognitoidentityprovider.ListGroupsOutput{
+			NextToken: nil,
+			Groups: []*cognitoidentityprovider.GroupType{
+				{
+					Description: &d,
+					GroupName:   &g,
+					Precedence:  &p,
+				},
+			},
+		}
+
+		return &groupsList, nil
+	}
+
 	Convey("Create a new group - check responses", t, func() {
 		createGroupTests := []struct {
 			createNewGroupFunction func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error)
+			listGroupsFunction     func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
 			createGroupInput,
 			expectedResponse map[string]interface{}
 			assertions func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
@@ -753,6 +774,7 @@ func TestCreateNewGroup(t *testing.T) {
 				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
 					return &cognitoidentityprovider.CreateGroupOutput{}, nil
 				},
+				listGroupsFuncSuccess,
 				map[string]interface{}{
 					"name": "This is a test name",
 					"precedence":  22,
@@ -767,33 +789,10 @@ func TestCreateNewGroup(t *testing.T) {
 					So(errorResponse, ShouldBeNil)
 				},
 			},
-			// 400 response - group already exists
-			{
-				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
-					var groupExistsException cognitoidentityprovider.GroupExistsException
-					groupExistsException.Message_ = &groupAlreadyExistsMessage
-
-					return nil, &groupExistsException
-				},
-				map[string]interface{}{
-					"name": "This is a test name",
-					"precedence":  22,
-				},
-				nil,
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					So(successResponse, ShouldBeNil)
-					So(errorResponse.Status, ShouldNotBeNil)
-					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
-					castErr := errorResponse.Errors[0].(*models.Error)
-					So(castErr.Code, ShouldEqual, models.GroupExistsError)
-					So(castErr.Description, ShouldEqual, models.GroupAlreadyExistsDescription)
-				},
-			},
 			// 400 response - no description field in request body
 			{
-				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
-					return &cognitoidentityprovider.CreateGroupOutput{}, nil
-				},
+				nil,
+				listGroupsFuncSuccess,
 				map[string]interface{}{
 					"precedence": 22,
 				},
@@ -809,9 +808,8 @@ func TestCreateNewGroup(t *testing.T) {
 			},
 			// 400 response - no precedence field in request body
 			{
-				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
-					return &cognitoidentityprovider.CreateGroupOutput{}, nil
-				},
+				nil,
+				listGroupsFuncSuccess,
 				map[string]interface{}{
 					"name": "This is a test name",
 				},
@@ -827,9 +825,8 @@ func TestCreateNewGroup(t *testing.T) {
 			},
 			// 400 response - group description begins with reserved string `role_`
 			{
-				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
-					return &cognitoidentityprovider.CreateGroupOutput{}, nil
-				},
+				nil,
+				listGroupsFuncSuccess,
 				map[string]interface{}{
 					"name": "role_This is a test name",
 					"precedence":  22,
@@ -844,11 +841,168 @@ func TestCreateNewGroup(t *testing.T) {
 					So(castErr.Description, ShouldEqual, models.IncorrectPatternInGroupName)
 				},
 			},
-			// 400 response - group precedence setting not minimum of `3`
+			// 400 response - group precedence setting not minimum of `10`
+			{
+				nil,
+				listGroupsFuncSuccess,
+				map[string]interface{}{
+					"name": "This is a test name",
+					"precedence":  1,
+				},
+				nil,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.InvalidGroupPrecedence)
+					So(castErr.Description, ShouldEqual, models.GroupPrecedenceIncorrect)
+				},
+			},
+			// 400 response - group name already exists
+			{
+				nil,
+				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error){
+					var internalError cognitoidentityprovider.InternalErrorException
+					internalError.Message_ = &internalErrorDescription
+					return nil, &internalError
+				},
+				map[string]interface{}{
+					"name": "This&^ is- a MOCK. test**() NAMe",
+					"precedence":  12,
+				},
+				nil,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.InternalError)
+					So(castErr.Description, ShouldEqual, internalErrorDescription)
+				},
+			},
+			// 500 response - internal server error from Cognito
 			{
 				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
-					return &cognitoidentityprovider.CreateGroupOutput{}, nil
+					var internalError cognitoidentityprovider.InternalErrorException
+					internalError.Message_ = &internalErrorDescription
+					return nil, &internalError
 				},
+				listGroupsFuncSuccess,
+				map[string]interface{}{
+					"name": "This is a test name",
+					"precedence":  12,
+				},
+				nil,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.InternalError)
+					So(castErr.Description, ShouldEqual, internalErrorDescription)
+				},
+			},
+		}
+
+		for _, tt := range createGroupTests {
+			m.CreateGroupFunc = tt.createNewGroupFunction
+			m.ListGroupsFunc = tt.listGroupsFunction
+			body, _ := json.Marshal(tt.createGroupInput)
+			r := httptest.NewRequest(http.MethodPost, createGroupEndPoint, bytes.NewReader(body))
+
+			successResponse, errorResponse := api.CreateGroupHandler(context.Background(), w, r)
+
+			tt.assertions(successResponse, errorResponse)
+		}
+	})
+}
+
+func TestUpdateGroup(t *testing.T) {
+	var (
+		internalErrorDescription, notFoundErrorDescription string = "internal error", "not found error"
+	)
+
+	api, w, m := apiSetup()
+
+	Convey("Update a group - check responses", t, func() {
+		createGroupTests := []struct {
+			updateGroupFunction func(input *cognitoidentityprovider.UpdateGroupInput) (*cognitoidentityprovider.UpdateGroupOutput, error)
+			updateGroupInput,
+			expectedResponse map[string]interface{}
+			assertions func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+		}{
+			// 200 response - group updated
+			{
+				func(input *cognitoidentityprovider.UpdateGroupInput) (*cognitoidentityprovider.UpdateGroupOutput, error) {
+					return &cognitoidentityprovider.UpdateGroupOutput{}, nil
+				},
+				map[string]interface{}{
+					"name": "This is a test name",
+					"precedence":  22,
+				},
+				map[string]interface{}{
+					"name": "thisisatestdescription",
+					"precedence":  22,
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(errorResponse, ShouldBeNil)
+				},
+			},
+			// 400 response - no description field in request body
+			{
+				nil,
+				map[string]interface{}{
+					"precedence": 22,
+				},
+				nil,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.InvalidGroupName)
+					So(castErr.Description, ShouldEqual, models.MissingGroupName)
+				},
+			},
+			// 400 response - no precedence field in request body
+			{
+				nil,
+				map[string]interface{}{
+					"name": "This is a test name",
+				},
+				nil,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.InvalidGroupPrecedence)
+					So(castErr.Description, ShouldEqual, models.MissingGroupPrecedence)
+				},
+			},
+			// 400 response - group description begins with reserved string `role_`
+			{
+				nil,
+				map[string]interface{}{
+					"name": "role_This is a test name",
+					"precedence":  22,
+				},
+				nil,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.InvalidGroupName)
+					So(castErr.Description, ShouldEqual, models.IncorrectPatternInGroupName)
+				},
+			},
+			// 400 response - group precedence setting not minimum of `10`
+			{
+				nil,
 				map[string]interface{}{
 					"name": "This is a test name",
 					"precedence":  1,
@@ -865,14 +1019,14 @@ func TestCreateNewGroup(t *testing.T) {
 			},
 			// 500 response - internal server error from Cognito
 			{
-				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+				func(input *cognitoidentityprovider.UpdateGroupInput) (*cognitoidentityprovider.UpdateGroupOutput, error) {
 					var internalError cognitoidentityprovider.InternalErrorException
 					internalError.Message_ = &internalErrorDescription
 					return nil, &internalError
 				},
 				map[string]interface{}{
 					"name": "This is a test name",
-					"precedence":  4,
+					"precedence":  12,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -884,14 +1038,35 @@ func TestCreateNewGroup(t *testing.T) {
 					So(castErr.Description, ShouldEqual, internalErrorDescription)
 				},
 			},
+			// 404 response - resource not found from Cognito
+			{
+				func(input *cognitoidentityprovider.UpdateGroupInput) (*cognitoidentityprovider.UpdateGroupOutput, error) {
+					var notFoundError cognitoidentityprovider.ResourceNotFoundException
+					notFoundError.Message_ = &notFoundErrorDescription
+					return nil, &notFoundError
+				},
+				map[string]interface{}{
+					"name": "This is a test name",
+					"precedence":  12,
+				},
+				nil,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusNotFound)
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.NotFoundError)
+					So(castErr.Description, ShouldEqual, notFoundErrorDescription)
+				},
+			},
 		}
 
 		for _, tt := range createGroupTests {
-			m.CreateGroupFunc = tt.createNewGroupFunction
-			body, _ := json.Marshal(tt.createGroupInput)
-			r := httptest.NewRequest(http.MethodPost, createGroupEndPoint, bytes.NewReader(body))
+			m.UpdateGroupFunc = tt.updateGroupFunction
+			body, _ := json.Marshal(tt.updateGroupInput)
+			r := httptest.NewRequest(http.MethodPut, updateGroupEndPoint, bytes.NewReader(body))
 
-			successResponse, errorResponse := api.CreateGroupHandler(context.Background(), w, r)
+			successResponse, errorResponse := api.UpdateGroupHandler(context.Background(), w, r)
 
 			tt.assertions(successResponse, errorResponse)
 		}

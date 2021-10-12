@@ -673,3 +673,33 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPoolClient(input *cognit
 	}
 	return userPoolClient, nil
 }
+
+func (m *CognitoIdentityProviderClientStub) UpdateGroup(input *cognitoidentityprovider.UpdateGroupInput) (*cognitoidentityprovider.UpdateGroupOutput, error) {
+	var (
+		updateGroupOutput *cognitoidentityprovider.UpdateGroupOutput
+		response_200 = `thisisatestdescriptionforexistinggroup`
+		response_500 = `internalservererror`
+		userPoolId   = `aaaa-bbbb-ccc-dddd`
+	)
+	if *input.Description == response_200 {
+		// 200 response - group updated
+		createdTime, _ := time.Parse("2006-Jan-1", "2010-Jan-1")
+		groupName := "123e4567-e89b-12d3-a456-426614174000"
+		updateGroupOutput = &cognitoidentityprovider.UpdateGroupOutput{
+			Group: &cognitoidentityprovider.GroupType{
+				Description:  &response_200,
+				GroupName:    &groupName,
+				Precedence:   input.Precedence,
+				CreationDate: &createdTime,
+				UserPoolId:   &userPoolId,
+			},
+		}
+	} else if *input.Description == response_500 {
+		// 500 response - internal server error
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	} else {
+		// 404 response - resource not found error
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "Resource not found", nil)
+	}
+	return updateGroupOutput, nil
+}

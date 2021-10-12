@@ -96,7 +96,7 @@ Feature: Groups
             }
         """
 
-    Scenario: POST /v1/groups to create group group precedence doesn't meet minimum of `3`, returns 400
+    Scenario: POST /v1/groups to create group group precedence doesn't meet minimum of `10`, returns 400
     When I POST "/v1/groups"
         """
             {
@@ -110,7 +110,7 @@ Feature: Groups
                 "errors": [
                     {
                         "code":"InvalidGroupPrecedence",
-                        "description":"the group precedence needs to be a minumum of 3"
+                        "description":"the group precedence needs to be a minumum of 10 and maximum of 100"
                     }
                 ]
             }
@@ -121,7 +121,7 @@ Feature: Groups
         """
             {
                 "name": "Internal Server Error",
-                "precedence": 5
+                "precedence": 17
             }
         """
     Then I should receive the following JSON response with status "500":
@@ -131,6 +131,161 @@ Feature: Groups
                     {
                         "code":"InternalServerError",
                         "description":"Something went wrong"
+                    }
+                ]
+            }
+        """
+#   Update group scenarios
+    Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group, group updated returns 200
+    When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
+        """
+            {
+                "name": "Thi$s is a te||st des$%£@^c ription for  existing group  $",
+                "precedence": 49
+            }
+        """
+    Then I should receive the following JSON response with status "200":
+        """
+            {
+                "name": "thisisatestdescriptionforexistinggroup",
+                "precedence": 49
+               
+            }
+        """
+
+    Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group with no description in request, group update returns 400
+    When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
+        """
+            {
+                "precedence": 49
+            }
+        """
+    Then I should receive the following JSON response with status "400":
+        """
+            {
+                "errors": [
+                    {
+                        "code":"InvalidGroupName",
+                        "description":"the group name was not found"
+                    }
+                ]
+            }
+        """
+
+    Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group with no precedence in request, group update returns 400
+    When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
+        """
+            {
+                "name": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $"
+            }
+        """
+    Then I should receive the following JSON response with status "400":
+        """
+            {
+                "errors": [
+                    {
+                        "code":"InvalidGroupPrecedence",
+                        "description":"the group precedence was not found"
+                    }
+                ]
+            }
+        """
+
+    Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group with reserved pattern in description [lower case], group update returns 400
+    When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
+        """
+            {
+                "name": "role_Thi$s is a te||st des$%£@^c ription for  existing group  $",
+                "precedence": 49
+            }
+        """
+    Then I should receive the following JSON response with status "400":
+        """
+            {
+                "errors": [
+                    {
+                        "code":"InvalidGroupName",
+                        "description":"a group name cannot start with 'role_' or 'ROLE_'"
+                    }
+                ]
+            }
+         """
+
+    Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group with reserved pattern in description [upper case], group update returns 400
+    When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
+        """
+            {
+                "name": "ROLE_Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
+                "precedence": 49
+            }
+        """
+    Then I should receive the following JSON response with status "400":
+        """
+            {
+                "errors": [
+                    {
+                        "code":"InvalidGroupName",
+                        "description":"a group name cannot start with 'role_' or 'ROLE_'"
+                    }
+                ]
+            }
+        """
+
+    Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group group precedence doesn't meet minimum of `10`, returns 400
+    When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
+        """
+            {
+                "name": "This is a test description",
+                "precedence": 1
+            }
+        """
+    Then I should receive the following JSON response with status "400":
+        """
+            {
+                "errors": [
+                    {
+                        "code":"InvalidGroupPrecedence",
+                        "description":"the group precedence needs to be a minumum of 10 and maximum of 100"
+                    }
+                ]
+            }
+        """
+
+    Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group an unexpected 500 error is returned from Cognito
+    When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
+        """
+            {
+                "name": "Internal Server Error",
+                "precedence": 12
+            }
+        """
+    Then I should receive the following JSON response with status "500":
+        """
+            {
+                "errors": [
+                    {
+                        "code":"InternalServerError",
+                        "description":"Something went wrong"
+                    }
+                ]
+            }
+        """
+
+    Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group a resource not found 404 error is returned
+    When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
+        """
+            {
+                "name": "resource not found",
+                "precedence": 12
+            }
+        """
+    Then I should receive the following JSON response with status "404":
+        """
+            {
+                "errors": [
+                    {
+                        "code":"NotFound",
+                        "description":"Resource not found"
                     }
                 ]
             }

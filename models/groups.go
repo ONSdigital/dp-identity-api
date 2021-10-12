@@ -21,7 +21,8 @@ const (
 
 var (
 	groupNameSpecialChars = `]£\s^\\\$\*\.\]\[\}\(\)\?\"\!\@\#\%\&\/\,\>\<\'\:\;\|\_\~\-`
-	groupPrecedenceMin    = int64(3)
+	groupPrecedenceMin    = int64(10)
+	groupPrecedenceMax    = int64(100)
 )
 
 //Type to map for the Cognito GroupType object
@@ -148,39 +149,62 @@ func (g *Group) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error)
 	return jsonResponse, nil
 }
 
-type CreateGroup struct {
+type CreateUpdateGroup struct {
 	Description *string `json:"name"`
 	Precedence  *int64  `json:"precedence"`
-	GroupName   string
+	GroupName   *string
+	GroupsList  *cognitoidentityprovider.ListGroupsOutput
 }
 
-func (g *CreateGroup) ValidateCreateGroupRequest(ctx context.Context) []error {
+//ValidateCreateGroupRequest validate the create group request
+func (g *CreateUpdateGroup) ValidateCreateUpdateGroupRequest(ctx context.Context) []error {
 	var validationErrs []error
 
 	if g.Description == nil {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, MissingGroupName))
 	} else if m, _ := regexp.MatchString("(?i)^role_.*", *g.Description); m {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, IncorrectPatternInGroupName))
+	} else {
+		//ensure groups name in description doesn't already exist - creation only
+		if g.GroupsList != nil {
+			g.CleanGroupDescription()
+			for _, group := range g.GroupsList.Groups {
+				if group.Description != nil && *group.Description == *g.Description {
+					validationErrs = append(validationErrs, NewValidationError(ctx, GroupExistsError, GroupAlreadyExistsDescription))
+					break	
+				}
+			}
+		}
 	}
 	if g.Precedence == nil {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, MissingGroupPrecedence))
-	} else if *g.Precedence < groupPrecedenceMin {
+	} else if *g.Precedence < groupPrecedenceMin || *g.Precedence > groupPrecedenceMax {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, GroupPrecedenceIncorrect))
 	}
 
 	return validationErrs
 }
 
-func (c *CreateGroup) BuildCreateGroupInput(userPoolId *string) *cognitoidentityprovider.CreateGroupInput {
+func (c *CreateUpdateGroup) BuildCreateGroupInput(userPoolId *string) *cognitoidentityprovider.CreateGroupInput {
 	return &cognitoidentityprovider.CreateGroupInput{
 		Description: c.Description,
-		GroupName:   &c.GroupName,
+		GroupName:   c.GroupName,
 		Precedence:  c.Precedence,
 		UserPoolId:  userPoolId,
 	}
 }
 
-func (c *CreateGroup) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
+// BuildUpdateGroupInput builds a correctly populated UpdateGroupInput object using Groups values
+func (g *CreateUpdateGroup) BuildUpdateGroupInput(userPoolId string) *cognitoidentityprovider.UpdateGroupInput {
+	return &cognitoidentityprovider.UpdateGroupInput {
+		GroupName: g.GroupName,
+		Description: g.Description,
+		Precedence: g.Precedence,
+		UserPoolId: &userPoolId,
+	}
+}
+
+func (c *CreateUpdateGroup) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
 	jsonResponse, err := json.Marshal(c)
 	if err != nil {
 		e := NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
@@ -191,7 +215,7 @@ func (c *CreateGroup) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, 
 
 // CleanGroupDescription - New group name to be created from group description
 //                        (minus special characters, trimmed and to lowercase)
-func (c *CreateGroup) CleanGroupDescription() {
+func (c *CreateUpdateGroup) CleanGroupDescription() {
 	// strip special chars out of group description string and trim
 	// special chars groupset => []£\s^\\$*.]}()?"!@#%&/,><':;|_~-]
 	regExp := regexp.MustCompile("[" + groupNameSpecialChars + "]+")
@@ -203,9 +227,9 @@ func (c *CreateGroup) CleanGroupDescription() {
 }
 
 // NewSuccessResponse - returns a custom response where group description is returned as group name
-func (c *CreateGroup) NewSuccessResponse(jsonBody []byte, statusCode int, headers map[string]string) *SuccessResponse {
+func (c *CreateUpdateGroup) NewSuccessResponse(jsonBody []byte, statusCode int, headers map[string]string) *SuccessResponse {
 	// unmarshall response and transform: API_Req:name -> Cognito:Description -> API_Resp:name
-	var cg = CreateGroup{}
+	var cg = CreateUpdateGroup{}
 	_ = json.Unmarshal(jsonBody, &cg)
 
 	jsonResponse, _ := json.Marshal(
