@@ -71,9 +71,9 @@ func (api *API) UpdateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 
 	gn := vars["id"]
 	updateGroup := models.CreateUpdateGroup{
-		GroupName: &gn,	
+		GroupName: &gn,
 	}
-	
+
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
@@ -89,7 +89,7 @@ func (api *API) UpdateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}
 
-	input := updateGroup.BuildUpdateGroupInput(api.UserPoolId)	
+	input := updateGroup.BuildUpdateGroupInput(api.UserPoolId)
 	_, err = api.CognitoClient.UpdateGroup(input)
 	if err != nil {
 		cognitoErr := models.NewCognitoError(ctx, err, "Cognito UpdateGroup request from update a group endpoint")
@@ -340,3 +340,21 @@ func (api *API) GetGroupHandler(ctx context.Context, w http.ResponseWriter, req 
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
+//DeleteGroupHandler deletes the group for the given group id
+func (api *API) DeleteGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+
+	vars := mux.Vars(req)
+	group := models.Group{Name: vars["id"]}
+	groupDeleteRequest := group.BuildDeleteGroupRequest(api.UserPoolId)
+	_, err := api.CognitoClient.DeleteGroup(groupDeleteRequest)
+	if err != nil {
+
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito DeleteGroup request from Delete group endpoint")
+		if cognitoErr.Code == models.NotFoundError {
+			return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
+		}
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+	}
+
+	return &models.SuccessResponse{Status: http.StatusOK}, nil
+}

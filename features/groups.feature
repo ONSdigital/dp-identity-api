@@ -807,3 +807,19 @@ Feature: Groups
                     ]
                 }
             """
+
+#   Delete deleteGroup scenarios
+#   successful return
+    Scenario: GET /v1/groups/{id} and checking the response status 200
+        Given group "test-group" exists in the database
+        When I GET "/v1/groups/test-group"
+        Then the HTTP status code should be "200"
+
+#   404 return
+    Scenario: GET /v1/groups/{id} and checking the response status 404
+        When I GET "/v1/groups/get-group-not-found"
+        Then the HTTP status code should be "404"
+
+    Scenario: GET /v1/groups/{id} internal server error returns 500
+        When I GET "/v1/groups/internal-error"
+        Then the HTTP status code should be "500"

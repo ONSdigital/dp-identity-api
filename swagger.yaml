@@ -512,6 +512,26 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
+    delete:
+      tags:
+        - Groups
+      summary: "Deletes given group"
+      description: "Deletes given group"
+      produces:
+        - "application/json"
+      parameters:
+        - in: path
+          name: name
+          type: string
+          required: true
+          description: the group's name
+      responses:
+        200:
+          description: "Deleted group "
+        400:
+          description: "Invalid group name provided"
+        500:
+          description: "Internal error occurred"
   /groups/{name}/members:
     post:
       tags:
