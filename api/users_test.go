@@ -21,6 +21,8 @@ import (
 )
 
 const usersEndPoint = "http://localhost:25600/v1/users"
+const usersEndPointWithFilter = "http://localhost:25600/v1/users?active=true"
+
 const userEndPoint = "http://localhost:25600/v1/users/abcd1234"
 const changePasswordEndPoint = "http://localhost:25600/v1/users/self/password"
 const requestResetEndPoint = "http://localhost:25600/v1/password-reset"
@@ -270,9 +272,10 @@ func TestListUserHandler(t *testing.T) {
 		for _, tt := range adminCreateUsersTests {
 			m.ListUsersFunc = tt.listUsersFunction
 
-			r := httptest.NewRequest(http.MethodGet, usersEndPoint, nil)
-
-			successResponse, errorResponse := api.ListUsersHandler(ctx, w, r)
+			// r := httptest.NewRequest(http.MethodGet, usersEndPoint, nil)
+			rFilter := httptest.NewRequest(http.MethodGet, usersEndPointWithFilter, nil)
+			println(rFilter.URL.RawQuery)
+			successResponse, errorResponse := api.ListUsersHandler(ctx, w, rFilter)
 
 			// Check whether testing a success or error case
 			if tt.httpResponse > 399 {

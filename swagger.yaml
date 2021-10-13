@@ -142,6 +142,11 @@ paths:
             $ref: '#/definitions/ErrorResponse'
   /users:
     get:
+      parameters:
+        - in: query
+          name: active
+          type: boolean
+          description: filter on user active state.
       tags:
         - Users
       summary: "List users"

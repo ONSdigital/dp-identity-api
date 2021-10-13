@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -76,6 +77,10 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 
 //ListUsersHandler lists the users in the user pool
 func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+
+	vars := mux.Vars(req)
+
+	fmt.Println(vars["query"])
 	usersList := models.UsersList{}
 
 	listUserResp, errResponse := api.ListUsersWorker(req.Context(), aws.String(""), DefaultBackOffSchedule)
