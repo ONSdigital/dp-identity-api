@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -17,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 
+	authorisation "github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 )
 
@@ -24,6 +24,7 @@ func TestSetup(t *testing.T) {
 	Convey("Given an API instance", t, func() {
 		r := mux.NewRouter()
 		ctx := context.Background()
+		authorisationMiddleware := newAuthorisationMiddlwareMock()
 
 		m := &mock.MockCognitoIdentityProviderClient{}
 		m.CreateGroupFunc = func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
@@ -33,7 +34,10 @@ func TestSetup(t *testing.T) {
 			return group, nil
 		}
 
-		api, err := Setup(ctx, r, m, "us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow", []string{"@ons.gov.uk", "@ext.ons.gov.uk"})
+		api, err := Setup(ctx, r, m,
+			"us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow",
+			[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
+			authorisationMiddleware)
 
 		Convey("When created the following route(s) should have been added", func() {
 			So(hasRoute(api.Router, "/v1/tokens", http.MethodPost), ShouldBeTrue)
@@ -65,6 +69,7 @@ func TestSetup(t *testing.T) {
 	})
 
 	Convey("Given an API instance with an empty required parameter passed", t, func() {
+		authorisationMiddleware := newAuthorisationMiddlwareMock()
 		paramCheckTests := []struct {
 			testName       string
 			userPoolId     string
@@ -123,7 +128,7 @@ func TestSetup(t *testing.T) {
 		for _, tt := range paramCheckTests {
 			r := mux.NewRouter()
 			ctx := context.Background()
-			_, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, tt.userPoolId, tt.clientId, tt.clientSecret, tt.clientAuthFlow, tt.allowedDomains)
+			_, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, tt.userPoolId, tt.clientId, tt.clientSecret, tt.clientAuthFlow, tt.allowedDomains, authorisationMiddleware)
 
 			Convey("Error should not be nil if require parameter is empty: "+tt.testName, func() {
 				So(err.Error(), ShouldEqual, models.MissingConfigError+": "+models.MissingConfigDescription)
@@ -149,6 +154,7 @@ func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProv
 		allowedDomains                           []string = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
 	)
 
+	authorisationMiddleware := newAuthorisationMiddlwareMock()
 	m := &mock.MockCognitoIdentityProviderClient{}
 	m.CreateGroupFunc = func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
 		group := &cognitoidentityprovider.CreateGroupOutput{
@@ -157,7 +163,7 @@ func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProv
 		return group, nil
 	}
 
-	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow, allowedDomains)
+	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow, allowedDomains, authorisationMiddleware)
 
 	w := httptest.NewRecorder()
 
@@ -334,4 +340,12 @@ func TestInitialiseRoleGroups(t *testing.T) {
 			}
 		}
 	})
+}
+
+func newAuthorisationMiddlwareMock() *authorisation.MiddlewareMock {
+	return &authorisation.MiddlewareMock{
+		RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+			return handlerFunc
+		},
+	}
 }

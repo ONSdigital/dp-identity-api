@@ -2,6 +2,7 @@ Feature: Users
 
 #   Create User
     Scenario: POST /v1/users and checking the response status 201
+        Given I am an admin user
         When I POST "/v1/users"
             """
             {
@@ -24,7 +25,19 @@ Feature: Users
             }
             """
 
+    Scenario: POST /v1/users without a JWT token and checking the response status 403
+        Given I POST "/v1/users"
+        """"""
+        Then the HTTP status code should be "403"
+
+    Scenario: POST /v1/users as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I POST "/v1/users"
+        """"""
+        Then the HTTP status code should be "403"
+
     Scenario: POST /v1/users missing email and checking the response status 400
+        Given I am an admin user
         When I POST "/v1/users"
             """
             {
@@ -46,6 +59,7 @@ Feature: Users
             """
 
     Scenario: POST /v1/users missing forename and checking the response status 400
+        Given I am an admin user
         When I POST "/v1/users"
             """
             {
@@ -67,6 +81,7 @@ Feature: Users
             """
 
     Scenario: POST /v1/users missing lastname and checking the response status 400
+        Given I am an admin user
         When I POST "/v1/users"
             """
             {
@@ -88,6 +103,7 @@ Feature: Users
             """
 
     Scenario: POST /v1/users and checking the response status 400
+        Given I am an admin user
         When I POST "/v1/users"
             """
             {
@@ -117,6 +133,7 @@ Feature: Users
             """
 
     Scenario: POST /v1/users and checking the response status 500
+        Given I am an admin user
         When I POST "/v1/users"
             """
 
@@ -134,6 +151,7 @@ Feature: Users
             """
 
     Scenario: POST /v1/users unexpected server error and checking the response status 500
+        Given I am an admin user
         When I POST "/v1/users"
             """
             {
@@ -155,6 +173,7 @@ Feature: Users
             """
 
     Scenario: POST /v1/users duplicate email found and checking the response status 400
+        Given I am an admin user
         When I POST "/v1/users"
             """
             {

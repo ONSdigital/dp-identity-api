@@ -3,6 +3,8 @@ package service_test
 import (
 	"context"
 	"fmt"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
+	authorisationMock "github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
 	"net/http"
 	"sync"
 	"testing"
@@ -91,9 +93,10 @@ func TestRun(t *testing.T) {
 		Convey("Given that initialising healthcheck returns an error", func() {
 			// setup (run before each `Convey` at this scope / indentation):
 			initMock := &serviceMock.InitialiserMock{
-				DoGetHTTPServerFunc:    funcDoGetHTTPServerNil,
-				DoGetHealthCheckFunc:   funcDoGetHealthcheckErr,
-				DoGetCognitoClientFunc: DoGetCognitoClient,
+				DoGetHTTPServerFunc:              funcDoGetHTTPServerNil,
+				DoGetHealthCheckFunc:             funcDoGetHealthcheckErr,
+				DoGetCognitoClientFunc:           DoGetCognitoClient,
+				DoGetAuthorisationMiddlewareFunc: DoGetAuthorisationMiddleware,
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -113,9 +116,10 @@ func TestRun(t *testing.T) {
 
 			// setup (run before each `Convey` at this scope / indentation):
 			initMock := &serviceMock.InitialiserMock{
-				DoGetHTTPServerFunc:    funcDoGetHTTPServer,
-				DoGetHealthCheckFunc:   funcDoGetHealthcheckOk,
-				DoGetCognitoClientFunc: DoGetCognitoClient,
+				DoGetHTTPServerFunc:              funcDoGetHTTPServer,
+				DoGetHealthCheckFunc:             funcDoGetHealthcheckOk,
+				DoGetCognitoClientFunc:           DoGetCognitoClient,
+				DoGetAuthorisationMiddlewareFunc: DoGetAuthorisationMiddleware,
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -128,10 +132,12 @@ func TestRun(t *testing.T) {
 			})
 
 			Convey("The checkers are registered and the healthcheck and http server started", func() {
-				So(len(hcMock.AddCheckCalls()), ShouldEqual, 1)
+				So(len(hcMock.AddCheckCalls()), ShouldEqual, 2)
 				So(len(initMock.DoGetHTTPServerCalls()), ShouldEqual, 1)
 				So(initMock.DoGetHealthCheckCalls(), ShouldHaveLength, 1)
 				So(initMock.DoGetHTTPServerCalls()[0].BindAddr, ShouldEqual, "localhost:25600")
+				So(initMock.DoGetCognitoClientCalls(), ShouldHaveLength, 1)
+				So(initMock.DoGetAuthorisationMiddlewareCalls(), ShouldHaveLength, 1)
 				So(len(hcMock.StartCalls()), ShouldEqual, 1)
 				//!!! a call needed to stop the server, maybe ?
 				serverWg.Wait() // Wait for HTTP server go-routine to finish
@@ -180,9 +186,10 @@ func TestRun(t *testing.T) {
 
 			// setup (run before each `Convey` at this scope / indentation):
 			initMock := &serviceMock.InitialiserMock{
-				DoGetHealthCheckFunc:   funcDoGetHealthcheckOk,
-				DoGetHTTPServerFunc:    funcDoGetFailingHTTPSerer,
-				DoGetCognitoClientFunc: DoGetCognitoClient,
+				DoGetHealthCheckFunc:             funcDoGetHealthcheckOk,
+				DoGetHTTPServerFunc:              funcDoGetFailingHTTPSerer,
+				DoGetCognitoClientFunc:           DoGetCognitoClient,
+				DoGetAuthorisationMiddlewareFunc: DoGetAuthorisationMiddleware,
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -198,6 +205,25 @@ func TestRun(t *testing.T) {
 
 			Reset(func() {
 				// This reset is run after each `Convey` at the same scope (indentation)
+			})
+		})
+
+		Convey("Given that initialisation of the authorisation middleware fails", func() {
+			expectedError := errors.New("failed to init authorisation middleware")
+			initMock := &serviceMock.InitialiserMock{
+				DoGetHealthCheckFunc:   funcDoGetHealthcheckOk,
+				DoGetHTTPServerFunc:    funcDoGetFailingHTTPSerer,
+				DoGetCognitoClientFunc: DoGetCognitoClient,
+				DoGetAuthorisationMiddlewareFunc: func(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+					return nil, expectedError
+				},
+			}
+			svcErrors := make(chan error, 1)
+			svcList := service.NewServiceList(initMock)
+			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+
+			Convey("Then service Run fails with the expected error", func() {
+				So(err, ShouldEqual, expectedError)
 			})
 		})
 	})
@@ -236,6 +262,14 @@ func TestClose(t *testing.T) {
 				return nil
 			},
 		}
+		authorisationMiddleware := &authorisationMock.MiddlewareMock{
+			RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+				return handlerFunc
+			},
+			CloseFunc: func(ctx context.Context) error {
+				return nil
+			},
+		}
 
 		Convey("Closing the service results in all the dependencies being closed in the expected order", func() {
 
@@ -245,6 +279,9 @@ func TestClose(t *testing.T) {
 					return hcMock, nil
 				},
 				DoGetCognitoClientFunc: DoGetCognitoClient,
+				DoGetAuthorisationMiddlewareFunc: func(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+					return authorisationMiddleware, nil
+				},
 			}
 
 			svcErrors := make(chan error, 1)
@@ -256,6 +293,7 @@ func TestClose(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(len(hcMock.StopCalls()), ShouldEqual, 1)
 			So(len(serverMock.ShutdownCalls()), ShouldEqual, 1)
+			So(len(authorisationMiddleware.CloseCalls()), ShouldEqual, 1)
 		})
 
 		Convey("If services fail to stop, the Close operation tries to close all dependencies and returns an error", func() {
@@ -266,6 +304,14 @@ func TestClose(t *testing.T) {
 					return errors.New("Failed to stop http server")
 				},
 			}
+			authorisationMiddleware := &authorisationMock.MiddlewareMock{
+				RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+					return handlerFunc
+				},
+				CloseFunc: func(ctx context.Context) error {
+					return errors.New("failed to close authorisation middleware")
+				},
+			}
 
 			initMock := &mock.InitialiserMock{
 				DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer { return failingserverMock },
@@ -273,6 +319,9 @@ func TestClose(t *testing.T) {
 					return hcMock, nil
 				},
 				DoGetCognitoClientFunc: DoGetCognitoClient,
+				DoGetAuthorisationMiddlewareFunc: func(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+					return authorisationMiddleware, nil
+				},
 			}
 
 			svcErrors := make(chan error, 1)
@@ -284,6 +333,7 @@ func TestClose(t *testing.T) {
 			//So(err, ShouldNotBeNil)
 			So(len(hcMock.StopCalls()), ShouldEqual, 1)
 			So(len(failingserverMock.ShutdownCalls()), ShouldEqual, 1)
+			So(len(authorisationMiddleware.CloseCalls()), ShouldEqual, 1)
 		})
 
 		Convey("If service times out while shutting down, the Close operation fails with the expected error", func() {
@@ -316,4 +366,12 @@ func TestClose(t *testing.T) {
 
 func DoGetCognitoClient(AWSRegion string) cognito.Client {
 	return &cognitoMock.CognitoIdentityProviderClientStub{}
+}
+
+func DoGetAuthorisationMiddleware(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+	return &authorisationMock.MiddlewareMock{
+		RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+			return handlerFunc
+		},
+	}, nil
 }

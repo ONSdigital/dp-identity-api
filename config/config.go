@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -19,6 +20,7 @@ type Config struct {
 	AWSCognitoClientSecret     string        `envconfig:"AWS_COGNITO_CLIENT_SECRET" json:"-"`
 	AWSAuthFlow                string        `envconfig:"AWS_AUTH_FLOW" json:"-"`
 	AllowedEmailDomains        []string      `envconfig:"ALLOWED_EMAIL_DOMAINS" json:"-"`
+	AuthorisationConfig        *authorisation.Config
 }
 
 var cfg *Config
@@ -38,6 +40,7 @@ func Get() (*Config, error) {
 		AWSRegion:                  "eu-west-1",
 		AWSAuthFlow:                "USER_PASSWORD_AUTH",
 		AllowedEmailDomains:        []string{"@ons.gov.uk", "@ext.ons.gov.uk"},
+		AuthorisationConfig:        authorisation.NewDefaultConfig(),
 	}
 
 	return cfg, envconfig.Process("", cfg)

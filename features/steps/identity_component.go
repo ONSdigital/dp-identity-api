@@ -2,6 +2,8 @@ package steps
 
 import (
 	"context"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
 	"net/http"
 
 	"github.com/ONSdigital/dp-identity-api/cognito"
@@ -16,15 +18,16 @@ import (
 )
 
 type IdentityComponent struct {
-	ErrorFeature   componenttest.ErrorFeature
-	svcList        *service.ExternalServiceList
-	svc            *service.Service
-	errorChan      chan error
-	Config         *config.Config
-	HTTPServer     *http.Server
-	ServiceRunning bool
-	apiFeature     *componenttest.APIFeature
-	CognitoClient  *cognitoMock.CognitoIdentityProviderClientStub
+	ErrorFeature            componenttest.ErrorFeature
+	svcList                 *service.ExternalServiceList
+	svc                     *service.Service
+	errorChan               chan error
+	Config                  *config.Config
+	HTTPServer              *http.Server
+	ServiceRunning          bool
+	apiFeature              *componenttest.APIFeature
+	CognitoClient           *cognitoMock.CognitoIdentityProviderClientStub
+	AuthorisationMiddleware authorisation.Middleware
 }
 
 func NewIdentityComponent() (*IdentityComponent, error) {
@@ -49,10 +52,14 @@ func NewIdentityComponent() (*IdentityComponent, error) {
 	c.Config.AWSCognitoClientSecret = "secret-ccc-ddd"
 	c.Config.AWSAuthFlow = "USER_PASSWORD_AUTH"
 
+	fakePermissionsAPI := authorisationtest.NewFakePermissionsAPI()
+	c.Config.AuthorisationConfig.PermissionsAPIURL = fakePermissionsAPI.URL()
+
 	initMock := &mock.InitialiserMock{
-		DoGetHealthCheckFunc:   c.DoGetHealthcheckOk,
-		DoGetHTTPServerFunc:    c.DoGetHTTPServer,
-		DoGetCognitoClientFunc: c.DoGetCognitoClient,
+		DoGetHealthCheckFunc:             c.DoGetHealthcheckOk,
+		DoGetHTTPServerFunc:              c.DoGetHTTPServer,
+		DoGetCognitoClientFunc:           c.DoGetCognitoClient,
+		DoGetAuthorisationMiddlewareFunc: c.DoGetAuthorisationMiddleware,
 	}
 
 	c.svcList = service.NewServiceList(initMock)
@@ -102,4 +109,14 @@ func (c *IdentityComponent) DoGetHTTPServer(bindAddr string, router http.Handler
 func (c *IdentityComponent) DoGetCognitoClient(AWSRegion string) cognito.Client {
 	c.CognitoClient = &cognitoMock.CognitoIdentityProviderClientStub{}
 	return c.CognitoClient
+}
+
+func (c *IdentityComponent) DoGetAuthorisationMiddleware(ctx context.Context, cfg *authorisation.Config) (authorisation.Middleware, error) {
+	middleware, err := authorisation.NewMiddlewareFromConfig(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	c.AuthorisationMiddleware = middleware
+	return c.AuthorisationMiddleware, nil
 }

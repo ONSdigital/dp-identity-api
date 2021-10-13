@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"net/http"
 	"time"
 
@@ -54,7 +55,12 @@ func contextAndErrors(h baseHandler) http.HandlerFunc {
 }
 
 //Setup function sets up the api and returns an api
-func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, userPoolId string, clientId string, clientSecret string, clientAuthFlow string, allowedDomains []string) (*API, error) {
+func Setup(ctx context.Context,
+	r *mux.Router,
+	cognitoClient cognito.Client,
+	userPoolId, clientId, clientSecret, clientAuthFlow string,
+	allowedDomains []string,
+	auth authorisation.Middleware) (*API, error) {
 
 	// Return an error if empty required parameter was passed.
 	if userPoolId == "" || clientId == "" || clientSecret == "" || clientAuthFlow == "" || allowedDomains == nil || len(allowedDomains) == 0 {
@@ -86,7 +92,8 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 	// self used in paths rather than identifier as the identifier is JWT tokens passed in the request headers
 	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.SignOutHandler)).Methods(http.MethodDelete)
 	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.RefreshHandler)).Methods(http.MethodPut)
-	r.HandleFunc("/v1/users", contextAndErrors(api.CreateUserHandler)).Methods(http.MethodPost)
+	r.HandleFunc("/v1/users", auth.Require("users:create", contextAndErrors(api.CreateUserHandler))).
+		Methods(http.MethodPost)
 	r.HandleFunc("/v1/users", contextAndErrors(api.ListUsersHandler)).Methods(http.MethodGet)
 	r.HandleFunc("/v1/users/{id}", contextAndErrors(api.GetUserHandler)).Methods(http.MethodGet)
 	r.HandleFunc("/v1/users/{id}", contextAndErrors(api.UpdateUserHandler)).Methods(http.MethodPut)
