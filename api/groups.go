@@ -21,12 +21,15 @@ func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 	}
 
 	createGroup := models.CreateUpdateGroup{}
-	// GroupName is UUID
-	uuid := uuid.NewString()
-	createGroup.GroupName = &uuid
 	err = json.Unmarshal(body, &createGroup)
 	if err != nil {
 		return nil, handleBodyUnmarshalError(ctx, err)
+	}
+
+	// no groupname in body, set UUID
+	if createGroup.GroupName == nil {
+		uuid := uuid.NewString()
+		createGroup.GroupName = &uuid
 	}
 
 	createGroup.GroupsList, err = api.GetListGroups()
@@ -43,8 +46,6 @@ func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}
 
-	// remove special chars from description
-	createGroup.CleanGroupDescription()
 	// build create group input
 	input := createGroup.BuildCreateGroupInput(&api.UserPoolId)
 	_, err = api.CognitoClient.CreateGroup(input)
@@ -88,8 +89,6 @@ func (api *API) UpdateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}
 
-	// build update group input
-	updateGroup.CleanGroupDescription()
 	input := updateGroup.BuildUpdateGroupInput(api.UserPoolId)	
 	_, err = api.CognitoClient.UpdateGroup(input)
 	if err != nil {

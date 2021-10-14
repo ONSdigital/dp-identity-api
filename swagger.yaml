@@ -477,9 +477,14 @@ paths:
       produces:
         - "application/json"
       parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+          description: the group's name
         - in: body
           name: "Group"
-          description: "The updated details of the group"
+          description: "The updated details for the group"
           schema:
             required: ["name", "precedence"]
             type: object

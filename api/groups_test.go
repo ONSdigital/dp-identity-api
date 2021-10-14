@@ -780,7 +780,7 @@ func TestCreateNewGroup(t *testing.T) {
 					"precedence":  22,
 				},
 				map[string]interface{}{
-					"name": "thisisatestdescription",
+					"name": "This is a test name",
 					"precedence":  22,
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -823,12 +823,12 @@ func TestCreateNewGroup(t *testing.T) {
 					So(castErr.Description, ShouldEqual, models.MissingGroupPrecedence)
 				},
 			},
-			// 400 response - group description begins with reserved string `role_`
+			// 400 response - group description begins with reserved string `role-`
 			{
 				nil,
 				listGroupsFuncSuccess,
 				map[string]interface{}{
-					"name": "role_This is a test name",
+					"name": "role-This is a test name",
 					"precedence":  22,
 				},
 				nil,
@@ -942,7 +942,7 @@ func TestUpdateGroup(t *testing.T) {
 					"precedence":  22,
 				},
 				map[string]interface{}{
-					"name": "thisisatestdescription",
+					"name": "This is a test name",
 					"precedence":  22,
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -983,11 +983,11 @@ func TestUpdateGroup(t *testing.T) {
 					So(castErr.Description, ShouldEqual, models.MissingGroupPrecedence)
 				},
 			},
-			// 400 response - group description begins with reserved string `role_`
+			// 400 response - group description begins with reserved string `role-`
 			{
 				nil,
 				map[string]interface{}{
-					"name": "role_This is a test name",
+					"name": "role-This is a test name",
 					"precedence":  22,
 				},
 				nil,

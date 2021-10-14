@@ -373,16 +373,15 @@ func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentitypr
 			},
 		}
 	} else { // feature test functionality
-		if *input.Description != "internalservererror" {
+		if *input.Description != "Internal Server Error" {
 			// 201 response - group created
 			response_201 := `Thi$s is a te||st des$%£@^c ription for  a n ew group  $`
 			createdTime, _ := time.Parse("2006-Jan-1", "2010-Jan-1")
 			if *input.Description == response_201 {
-				groupName := "thisisatestdescriptionforanewgroup"
 				createGroupOutput = &cognitoidentityprovider.CreateGroupOutput{
 					Group: &cognitoidentityprovider.GroupType{
 						Description:  input.Description,
-						GroupName:    &groupName,
+						GroupName:    input.GroupName,
 						Precedence:   input.Precedence,
 						CreationDate: &createdTime,
 						UserPoolId:   &userPoolId,
@@ -677,8 +676,8 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPoolClient(input *cognit
 func (m *CognitoIdentityProviderClientStub) UpdateGroup(input *cognitoidentityprovider.UpdateGroupInput) (*cognitoidentityprovider.UpdateGroupOutput, error) {
 	var (
 		updateGroupOutput *cognitoidentityprovider.UpdateGroupOutput
-		response_200 = `thisisatestdescriptionforexistinggroup`
-		response_500 = `internalservererror`
+		response_200 = `Thi$s is a te||st des$%£@^c ription for  existing group  $`
+		response_500 = `Internal Server Error`
 		userPoolId   = `aaaa-bbbb-ccc-dddd`
 	)
 	if *input.Description == response_200 {

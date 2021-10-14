@@ -152,7 +152,7 @@ func (g *Group) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error)
 type CreateUpdateGroup struct {
 	Description *string `json:"name"`
 	Precedence  *int64  `json:"precedence"`
-	GroupName   *string
+	GroupName   *string `json:"groupname"`
 	GroupsList  *cognitoidentityprovider.ListGroupsOutput
 }
 
@@ -162,14 +162,13 @@ func (g *CreateUpdateGroup) ValidateCreateUpdateGroupRequest(ctx context.Context
 
 	if g.Description == nil {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, MissingGroupName))
-	} else if m, _ := regexp.MatchString("(?i)^role_.*", *g.Description); m {
+	} else if m, _ := regexp.MatchString("(?i)^role-.*", *g.Description); m {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, IncorrectPatternInGroupName))
 	} else {
-		//ensure groups name in description doesn't already exist - creation only
+		//ensure group name in description doesn't already exist - creation only - g.GroupsList not set on updates
 		if g.GroupsList != nil {
-			g.CleanGroupDescription()
 			for _, group := range g.GroupsList.Groups {
-				if group.Description != nil && *group.Description == *g.Description {
+				if group.Description != nil && CleanString(*group.Description) == CleanString(*g.Description) {
 					validationErrs = append(validationErrs, NewValidationError(ctx, GroupExistsError, GroupAlreadyExistsDescription))
 					break	
 				}
@@ -213,19 +212,6 @@ func (c *CreateUpdateGroup) BuildSuccessfulJsonResponse(ctx context.Context) ([]
 	return jsonResponse, nil
 }
 
-// CleanGroupDescription - New group name to be created from group description
-//                        (minus special characters, trimmed and to lowercase)
-func (c *CreateUpdateGroup) CleanGroupDescription() {
-	// strip special chars out of group description string and trim
-	// special chars groupset => []£\s^\\$*.]}()?"!@#%&/,><':;|_~-]
-	regExp := regexp.MustCompile("[" + groupNameSpecialChars + "]+")
-	*c.Description = strings.TrimSpace(
-		strings.ToLower(
-			regExp.ReplaceAllString(*c.Description, ""),
-		),
-	)
-}
-
 // NewSuccessResponse - returns a custom response where group description is returned as group name
 func (c *CreateUpdateGroup) NewSuccessResponse(jsonBody []byte, statusCode int, headers map[string]string) *SuccessResponse {
 	// unmarshall response and transform: API_Req:name -> Cognito:Description -> API_Resp:name
@@ -236,6 +222,7 @@ func (c *CreateUpdateGroup) NewSuccessResponse(jsonBody []byte, statusCode int, 
 		map[string]interface{}{
 			"name": cg.Description,
 			"precedence": cg.Precedence,
+			"groupname": cg.GroupName,
 		},
 	)
 
@@ -292,4 +279,16 @@ func (g *ListUserGroupType) BuildListGroupsRequest(userPoolId string, nextToken 
 	return &cognitoidentityprovider.ListGroupsInput{
 		UserPoolId: &userPoolId}
 
+}
+
+// CleanString - strip special chars out of incoming string and trim
+func CleanString(description string) string {
+	// strip special chars out of group description string and trim
+	// special chars groupset => []£\s^\\$*.]}()?"!@#%&/,><':;|_~-]
+	regExp := regexp.MustCompile("[" + groupNameSpecialChars + "]+")
+	return strings.TrimSpace(
+		strings.ToLower(
+			regExp.ReplaceAllString(description, ""),
+		),
+	)
 }

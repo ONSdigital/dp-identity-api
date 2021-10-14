@@ -6,15 +6,16 @@ Feature: Groups
         """
             {
                 "name": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
-                "precedence": 49
+                "precedence": 49,
+                "groupname": "123e4567-e89b-12d3-a456-426614174000"
             }
         """
     Then I should receive the following JSON response with status "201":
         """
             {
-                "name": "thisisatestdescriptionforanewgroup",
-                "precedence": 49
-               
+                "name": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
+                "precedence": 49,
+                "groupname": "123e4567-e89b-12d3-a456-426614174000"
             }
         """
 
@@ -60,7 +61,7 @@ Feature: Groups
     When I POST "/v1/groups"
         """
             {
-                "name": "role_Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
+                "name": "role-Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
                 "precedence": 49
             }
         """
@@ -70,7 +71,7 @@ Feature: Groups
                 "errors": [
                     {
                         "code":"InvalidGroupName",
-                        "description":"a group name cannot start with 'role_' or 'ROLE_'"
+                        "description":"a group name cannot start with 'role-' or 'ROLE-'"
                     }
                 ]
             }
@@ -80,7 +81,7 @@ Feature: Groups
     When I POST "/v1/groups"
         """
             {
-                "name": "ROLE_Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
+                "name": "ROLE-Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
                 "precedence": 49
             }
         """
@@ -90,13 +91,13 @@ Feature: Groups
                 "errors": [
                     {
                         "code":"InvalidGroupName",
-                        "description":"a group name cannot start with 'role_' or 'ROLE_'"
+                        "description":"a group name cannot start with 'role-' or 'ROLE-'"
                     }
                 ]
             }
         """
 
-    Scenario: POST /v1/groups to create group group precedence doesn't meet minimum of `10`, returns 400
+    Scenario: POST /v1/groups to create group group precedence doesn't meet minimum of `3`, returns 400
     When I POST "/v1/groups"
         """
             {
@@ -121,7 +122,7 @@ Feature: Groups
         """
             {
                 "name": "Internal Server Error",
-                "precedence": 17
+                "precedence": 12
             }
         """
     Then I should receive the following JSON response with status "500":
@@ -147,8 +148,9 @@ Feature: Groups
     Then I should receive the following JSON response with status "200":
         """
             {
-                "name": "thisisatestdescriptionforexistinggroup",
-                "precedence": 49
+                "name": "Thi$s is a te||st des$%£@^c ription for  existing group  $",
+                "precedence": 49,
+                "groupname": "123e4567-e89b-12d3-a456-426614174000"
                
             }
         """
@@ -195,7 +197,7 @@ Feature: Groups
     When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
         """
             {
-                "name": "role_Thi$s is a te||st des$%£@^c ription for  existing group  $",
+                "name": "role-Thi$s is a te||st des$%£@^c ription for  existing group  $",
                 "precedence": 49
             }
         """
@@ -205,7 +207,7 @@ Feature: Groups
                 "errors": [
                     {
                         "code":"InvalidGroupName",
-                        "description":"a group name cannot start with 'role_' or 'ROLE_'"
+                        "description":"a group name cannot start with 'role-' or 'ROLE-'"
                     }
                 ]
             }
@@ -215,7 +217,7 @@ Feature: Groups
     When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
         """
             {
-                "name": "ROLE_Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
+                "name": "ROLE-Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
                 "precedence": 49
             }
         """
@@ -225,7 +227,7 @@ Feature: Groups
                 "errors": [
                     {
                         "code":"InvalidGroupName",
-                        "description":"a group name cannot start with 'role_' or 'ROLE_'"
+                        "description":"a group name cannot start with 'role-' or 'ROLE-'"
                     }
                 ]
             }

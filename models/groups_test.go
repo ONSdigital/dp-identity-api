@@ -353,7 +353,7 @@ func TestGroup_ValidateCreateUpdateGroupRequest(t *testing.T) {
 	var(
 		ctx = context.Background()
 		name = "This^& is a £Tes\\t GRoup n%$ame"
-		nameWithRole = "role_This^& is a £Tes\t GRoup n%$ame"
+		nameWithRole = "role-This^& is a £Tes\t GRoup n%$ame"
 		precedence = int64(100)
 		lowPrecedence = int64(1)
 		d = "thisisatestgroupname"
@@ -529,7 +529,6 @@ func TestGroup_CreateUpdateGroupCleanGroupDescription(t *testing.T) {
 
 		var(
 			name = "This^& is a £Tes\\t GRoup n%$ame"
-			cleanGroupName = "thisisatestgroupname"
 			precedence = int64(100)
 			groupName = "123e4567-e89b-12d3-a456-426614174000"
 		)
@@ -541,10 +540,6 @@ func TestGroup_CreateUpdateGroupCleanGroupDescription(t *testing.T) {
 		}
 
 		So(*group.Description, ShouldEqual, name)
-
-		group.CleanGroupDescription()
-
-		So(*group.Description, ShouldEqual, cleanGroupName)
 	})
 }
 
