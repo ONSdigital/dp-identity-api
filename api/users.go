@@ -77,13 +77,19 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 
 //ListUsersHandler lists the users in the user pool
 func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-
-	vars := mux.Vars(req)
-
-	fmt.Println(vars["query"])
+	var (
+		filterString          = aws.String("")
+		activeFilterString    = "AttributeName status \"True\""
+		notActiveFilterString = "AttributeName status \"False\""
+	)
+	fmt.Printf(req.URL.RawQuery)
 	usersList := models.UsersList{}
-
-	listUserResp, errResponse := api.ListUsersWorker(req.Context(), aws.String(""), DefaultBackOffSchedule)
+	if req.URL.RawQuery == "active=true" {
+		filterString = &activeFilterString
+	} else if req.URL.RawQuery == "active=false" {
+		filterString = &notActiveFilterString
+	}
+	listUserResp, errResponse := api.ListUsersWorker(req.Context(), filterString, DefaultBackOffSchedule)
 	if errResponse != nil {
 		return nil, errResponse
 	}
@@ -96,6 +102,7 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 	}
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+
 }
 
 //GetUserHandler lists the users in the user pool

@@ -21,7 +21,8 @@ import (
 )
 
 const usersEndPoint = "http://localhost:25600/v1/users"
-const usersEndPointWithFilter = "http://localhost:25600/v1/users?active=true"
+const usersEndPointWithActiveFilterTrue = "http://localhost:25600/v1/users?active=true"
+const usersEndPointWithActiveFilterFalse = "http://localhost:25600/v1/users?active=false"
 
 const userEndPoint = "http://localhost:25600/v1/users/abcd1234"
 const changePasswordEndPoint = "http://localhost:25600/v1/users/self/password"
@@ -272,10 +273,8 @@ func TestListUserHandler(t *testing.T) {
 		for _, tt := range adminCreateUsersTests {
 			m.ListUsersFunc = tt.listUsersFunction
 
-			// r := httptest.NewRequest(http.MethodGet, usersEndPoint, nil)
-			rFilter := httptest.NewRequest(http.MethodGet, usersEndPointWithFilter, nil)
-			println(rFilter.URL.RawQuery)
-			successResponse, errorResponse := api.ListUsersHandler(ctx, w, rFilter)
+			r := httptest.NewRequest(http.MethodGet, usersEndPoint, nil)
+			successResponse, errorResponse := api.ListUsersHandler(ctx, w, r)
 
 			// Check whether testing a success or error case
 			if tt.httpResponse > 399 {
@@ -285,6 +284,72 @@ func TestListUserHandler(t *testing.T) {
 				So(successResponse.Status, ShouldEqual, tt.httpResponse)
 				So(errorResponse, ShouldBeNil)
 			}
+		}
+	})
+}
+
+func TestListUserHandlerWithFilter(t *testing.T) {
+	var ctx = context.Background()
+	api, w, m := apiSetup()
+
+	Convey("List user - check expected responses", t, func() {
+		listUsersTest := []struct {
+			description       string
+			endpoint          *http.Request
+			listUsersFunction func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
+			assertions        func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+		}{
+			{
+				"200 response from Cognito active filter true",
+				httptest.NewRequest(http.MethodGet, usersEndPointWithActiveFilterTrue, nil),
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					users := &cognitoidentityprovider.ListUsersOutput{
+						Users: []*cognitoidentityprovider.UserType{},
+					}
+					return users, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(errorResponse, ShouldBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Body, ShouldNotBeNil)
+					// var responseBody = models.UsersList()
+					// json.Unmarshal(successResponse.Body, &responseBody)
+
+				},
+			},
+			{
+				"200 response from Cognito active filter false",
+				httptest.NewRequest(http.MethodGet, usersEndPointWithActiveFilterFalse, nil),
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					users := &cognitoidentityprovider.ListUsersOutput{
+						Users: []*cognitoidentityprovider.UserType{},
+					}
+					return users, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(errorResponse, ShouldBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Body, ShouldNotBeNil)
+					// var responseBody = models.UsersList()
+					// json.Unmarshal(successResponse.Body, &responseBody)
+
+				},
+			},
+		}
+
+		for _, tt := range listUsersTest {
+			Convey(tt.description, func() {
+				m.ListUsersFunc = tt.listUsersFunction
+
+				r := tt.endpoint
+				successResponse, errorResponse := api.ListUsersHandler(ctx, w, r)
+
+				tt.assertions(successResponse, errorResponse)
+
+			},
+			)
 		}
 	})
 }
