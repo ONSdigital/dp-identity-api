@@ -418,10 +418,10 @@ paths:
           name: "Group"
           description: "The details of the group being created"
           schema:
-            required: ["description", "precedence"]
+            required: ["name", "precedence"]
             type: object
             properties:
-              description:
+              name:
                 type: string
                 example: "Th&is is a $£test group!~"
               precedence:
@@ -444,7 +444,7 @@ paths:
     get:
       tags:
         - Groups
-      summary: "Returns  given group details "
+      summary: "Returns given group details "
       description: "Returns given group details"
       produces:
         - "application/json"
@@ -465,6 +465,51 @@ paths:
             $ref: '#/definitions/ErrorResponse'
         500:
           description: "Internal error occurred"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    put:
+      tags:
+        - Groups
+      summary: "Update an existing group"
+      description: "Update an existing group in Cognito user pool"
+      consumes:
+        - application/json
+      produces:
+        - "application/json"
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+          description: the group's name
+        - in: body
+          name: "Group"
+          description: "The updated details for the group"
+          schema:
+            required: ["name", "precedence"]
+            type: object
+            properties:
+              name:
+                type: string
+                example: "Th&is is a $£test group!~"
+              precedence:
+                type: integer
+                example: 33
+      responses:
+        200:
+          description: "The group has been successfully updated"
+          schema:
+            $ref: '#/definitions/NewGroup'
+        400:
+          description: "Invalid group name or group precedence provided"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        404:
+          description: "Group resource to be updated cannot be found"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
   /groups/{name}/members:

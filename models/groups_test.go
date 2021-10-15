@@ -349,25 +349,28 @@ func TestGroup_BuildListGroupsSuccessfulJsonResponse(t *testing.T) {
 
 }
 
-func TestGroup_ValidateCreateGroupRequest(t *testing.T) {
+func TestGroup_ValidateCreateUpdateGroupRequest(t *testing.T) {
 	var(
 		ctx = context.Background()
-		name = "This^& is a £Tes\t GRoup n%$ame"
-		nameWithRole = "role_This^& is a £Tes\t GRoup n%$ame"
+		name = "This^& is a £Tes\\t GRoup n%$ame"
+		nameWithRole = "role-This^& is a £Tes\t GRoup n%$ame"
 		precedence = int64(100)
 		lowPrecedence = int64(1)
+		d = "thisisatestgroupname"
+		g = "123e4567-e89b-12d3-a456-426614174000"
+		p = int64(12)
 	)
 
 	Convey("No errors generated", t, func() {
-		createGroupTests := []struct {
+		CreateUpdateGroupTests := []struct {
 			description string
-			createGroup models.CreateGroup
+			CreateUpdateGroup models.CreateUpdateGroup
 			expectedResponse map[string]interface{}
 			expectedErrors []string
 		}{
 			{
 				"No errors generated",
-				models.CreateGroup{
+				models.CreateUpdateGroup{
 					Description: &name,
 					Precedence:  &precedence,
 				},
@@ -379,7 +382,7 @@ func TestGroup_ValidateCreateGroupRequest(t *testing.T) {
 			},
 			{
 				"Invalid group name error generated",
-				models.CreateGroup{
+				models.CreateUpdateGroup{
 					Precedence:  &precedence,
 				},
 				nil,
@@ -389,7 +392,7 @@ func TestGroup_ValidateCreateGroupRequest(t *testing.T) {
 			},
 			{
 				"Invalid group pattern error generated",
-				models.CreateGroup{
+				models.CreateUpdateGroup{
 					Description: &nameWithRole,
 					Precedence:  &precedence,
 				},
@@ -400,7 +403,7 @@ func TestGroup_ValidateCreateGroupRequest(t *testing.T) {
 			},
 			{
 				"Invalid group precedence error generated",
-				models.CreateGroup{
+				models.CreateUpdateGroup{
 					Description: &name,
 				},
 				nil,
@@ -410,7 +413,7 @@ func TestGroup_ValidateCreateGroupRequest(t *testing.T) {
 			},
 			{
 				"Group precedence incorrect error generated",
-				models.CreateGroup{
+				models.CreateUpdateGroup{
 					Description: &name,
 					Precedence: &lowPrecedence,
 				},
@@ -421,18 +424,39 @@ func TestGroup_ValidateCreateGroupRequest(t *testing.T) {
 			},
 			{
 				"No group name and precedence in request body error generated",
-				models.CreateGroup{},
+				models.CreateUpdateGroup{},
 				nil,
 				[]string{
 					models.InvalidGroupName,
 					models.InvalidGroupPrecedence,
 				},
 			},
+			{
+				"Group name already exists error generated",
+				models.CreateUpdateGroup{
+					Description: &name,
+					Precedence:  &precedence,
+					GroupsList:  &cognitoidentityprovider.ListGroupsOutput{
+						NextToken: nil,
+						Groups: []*cognitoidentityprovider.GroupType{
+							{
+								Description: &d,
+								GroupName:   &g,
+								Precedence:  &p,
+							},
+						},
+					},
+				},
+				nil,
+				[]string{
+					models.GroupExistsError,
+				},
+			},
 		}
 		
-		for _, tt := range createGroupTests {
+		for _, tt := range CreateUpdateGroupTests {
 			Convey(tt.description, func() {
-				validationErrs := tt.createGroup.ValidateCreateGroupRequest(ctx)
+				validationErrs := tt.CreateUpdateGroup.ValidateCreateUpdateGroupRequest(ctx)
 				if tt.expectedErrors != nil {
 					for i, err := range tt.expectedErrors {
 						So(len(validationErrs), ShouldEqual, len(tt.expectedErrors))
@@ -446,18 +470,18 @@ func TestGroup_ValidateCreateGroupRequest(t *testing.T) {
 	})
 }
 
-func TestGroup_BuildCreateGroupRequest(t *testing.T) {
-	Convey("builds a correctly populated Cognito CreateGroup request body", t, func() {
+func TestGroup_BuildCreateUpdateGroupRequest(t *testing.T) {
+	Convey("builds a correctly populated Cognito CreateUpdateGroup request body", t, func() {
 		var(
 			name = "This^& is a £Tes\t GRoup n%$ame"
 			precedence = int64(100)
 			groupName = "123e4567-e89b-12d3-a456-426614174000"
 		)
 
-		group := models.CreateGroup{
+		group := models.CreateUpdateGroup{
 			Description: &name,
 			Precedence:  &precedence,
-			GroupName: groupName,
+			GroupName:   &groupName,
 		}
 
 		userPoolId := "euwest-99-aabbcc"
@@ -466,13 +490,13 @@ func TestGroup_BuildCreateGroupRequest(t *testing.T) {
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.CreateGroupInput{}))
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
-		So(*response.GroupName, ShouldEqual, group.GroupName)
+		So(*response.GroupName, ShouldEqual, *group.GroupName)
 		So(*response.Description, ShouldEqual, *group.Description)
 		So(*response.Precedence, ShouldEqual, *group.Precedence)
 	})
 }
 
-func TestGroup_BuildCreateGroupSuccessfulJsonResponse(t *testing.T) {
+func TestGroup_BuildCreateUpdateGroupSuccessfulJsonResponse(t *testing.T) {
 	Convey("returns a byte array of the response JSON", t, func() {
 
 		var(
@@ -482,8 +506,8 @@ func TestGroup_BuildCreateGroupSuccessfulJsonResponse(t *testing.T) {
 			groupName = "123e4567-e89b-12d3-a456-426614174000"
 		)
 
-		group := models.CreateGroup{
-			GroupName:   groupName,
+		group := models.CreateUpdateGroup{
+			GroupName:   &groupName,
 			Description: &name,
 			Precedence:  &precedence,
 		}
@@ -500,32 +524,27 @@ func TestGroup_BuildCreateGroupSuccessfulJsonResponse(t *testing.T) {
 	})
 }
 
-func TestGroup_CreateGroupCleanGroupDescription(t *testing.T) {
+func TestGroup_CreateUpdateGroupCleanGroupDescription(t *testing.T) {
 	Convey("return a cleaned group name from description", t, func() {
 
 		var(
 			name = "This^& is a £Tes\\t GRoup n%$ame"
-			cleanGroupName = "thisisatestgroupname"
 			precedence = int64(100)
 			groupName = "123e4567-e89b-12d3-a456-426614174000"
 		)
 
-		group := models.CreateGroup{
-			GroupName:   groupName,
+		group := models.CreateUpdateGroup{
+			GroupName:   &groupName,
 			Description: &name,
 			Precedence:  &precedence,
 		}
 
 		So(*group.Description, ShouldEqual, name)
-
-		group.CleanGroupDescription()
-
-		So(*group.Description, ShouldEqual, cleanGroupName)
 	})
 }
 
-func TestGroup_CreateGroupNewSuccessResponse(t *testing.T) {
-	Convey("builds correctly populated api response for successful CreateGroup request", t, func() {
+func TestGroup_CreateUpdateGroupNewSuccessResponse(t *testing.T) {
+	Convey("builds correctly populated api response for successful CreateUpdateGroup request", t, func() {
 		var(
 			ctx = context.Background()
 			name = "thisisatestgroupname"
@@ -533,8 +552,8 @@ func TestGroup_CreateGroupNewSuccessResponse(t *testing.T) {
 			groupName = "123e4567-e89b-12d3-a456-426614174000"
 		)
 
-		group := models.CreateGroup{
-			GroupName:   groupName,
+		group := models.CreateUpdateGroup{
+			GroupName:   &groupName,
 			Description: &name,
 			Precedence:  &precedence,
 		}
@@ -544,11 +563,11 @@ func TestGroup_CreateGroupNewSuccessResponse(t *testing.T) {
 
 		So(reflect.TypeOf(*successResponse), ShouldEqual, reflect.TypeOf(models.SuccessResponse{}))
 
-		createGroupResponse := make(map[string]interface{})
-		_ = json.Unmarshal(successResponse.Body, &createGroupResponse)
+		CreateUpdateGroupResponse := make(map[string]interface{})
+		_ = json.Unmarshal(successResponse.Body, &CreateUpdateGroupResponse)
 
-		So(createGroupResponse["name"].(string), ShouldEqual, name)
-		So(int64(createGroupResponse["precedence"].(float64)), ShouldEqual, precedence)
+		So(CreateUpdateGroupResponse["name"].(string), ShouldEqual, name)
+		So(int64(CreateUpdateGroupResponse["precedence"].(float64)), ShouldEqual, precedence)
 
 	})
 }
