@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
+	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	"net/http"
 
 	"github.com/ONSdigital/dp-identity-api/cognito"
@@ -52,7 +53,7 @@ func NewIdentityComponent() (*IdentityComponent, error) {
 	c.Config.AWSCognitoClientSecret = "secret-ccc-ddd"
 	c.Config.AWSAuthFlow = "USER_PASSWORD_AUTH"
 
-	fakePermissionsAPI := authorisationtest.NewFakePermissionsAPI()
+	fakePermissionsAPI := setupFakePermissionsAPI()
 	c.Config.AuthorisationConfig.PermissionsAPIURL = fakePermissionsAPI.URL()
 
 	initMock := &mock.InitialiserMock{
@@ -73,6 +74,33 @@ func NewIdentityComponent() (*IdentityComponent, error) {
 	c.apiFeature = componenttest.NewAPIFeature(c.InitialiseService)
 
 	return c, nil
+}
+
+func setupFakePermissionsAPI() *authorisationtest.FakePermissionsAPI {
+	fakePermissionsAPI := authorisationtest.NewFakePermissionsAPI()
+	bundle := getPermissionsBundle()
+	fakePermissionsAPI.Reset()
+	fakePermissionsAPI.UpdatePermissionsBundleResponse(bundle)
+	return fakePermissionsAPI
+}
+
+func getPermissionsBundle() *permissions.Bundle {
+	return &permissions.Bundle{
+		"users:create": { // role
+			"groups/role-admin": { // group
+				{
+					ID: "1", // policy
+				},
+			},
+		},
+		"users:read": { // role
+			"groups/role-admin": { // group
+				{
+					ID: "2", // policy
+				},
+			},
+		},
+	}
 }
 
 func (c *IdentityComponent) Reset() *IdentityComponent {

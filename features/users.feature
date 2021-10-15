@@ -198,6 +198,7 @@ Feature: Users
     Scenario: GET /v1/users and checking the response status 200
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
         And a user with non-verified email "new_email@ons.gov.uk" and password "TeMpPassw0rd!"
+        And I am an admin user
         When I GET "/v1/users"
         Then I should receive the following JSON response with status "200":
             """
@@ -229,8 +230,18 @@ Feature: Users
             }
             """
 
-   Scenario: GET /v1/users with more than 60 active users and  30 inactive users checking the response status 200 with the correct number of users
+    Scenario: GET /v1/users without a JWT token and checking the response status 403
+        When I GET "/v1/users"
+        Then the HTTP status code should be "403"
+
+    Scenario: GET /v1/users as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I GET "/v1/users"
+        Then the HTTP status code should be "403"
+
+    Scenario: GET /v1/users with more than 60 active users and  30 inactive users checking the response status 200 with the correct number of users
         Given there are "70" active users and "30" inactive users in the database
+        And I am an admin user
         When I GET "/v1/users"
         Then the HTTP status code should be "200"
         And the list response should contain "100" entries
@@ -240,7 +251,7 @@ Feature: Users
         When I GET "/v1/users?active=true"
         Then the HTTP status code should be "200"
         And the list response should contain "70" entries
-    
+
     Scenario: GET /v1/users?active=false with more than 60 active users and  30 inactive users checking the response status 200 with the correct number of users
         Given there are "70" active users and "30" inactive users in the database
         When I GET "/v1/users?active=false"
@@ -251,7 +262,7 @@ Feature: Users
         Given there are "70" active users and "30" inactive users in the database
         When I GET "/v1/users?active=anything"
         Then the HTTP status code should be "400"
-    
+
     Scenario: GET /v1/user?active=false with more than 60 active users and checking the response status 404 with the correct number of users
         Given there are "70" active users and "30" inactive users in the database
         When I GET "/v1/user?active=false"
@@ -259,6 +270,7 @@ Feature: Users
 
     Scenario: GET /v1/users unexpected server error and checking the response status 500
         Given a user with email "internal.error@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I GET "/v1/users"
         Then I should receive the following JSON response with status "500":
             """

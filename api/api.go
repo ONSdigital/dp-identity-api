@@ -94,7 +94,8 @@ func Setup(ctx context.Context,
 	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.RefreshHandler)).Methods(http.MethodPut)
 	r.HandleFunc("/v1/users", auth.Require("users:create", contextAndErrors(api.CreateUserHandler))).
 		Methods(http.MethodPost)
-	r.HandleFunc("/v1/users", contextAndErrors(api.ListUsersHandler)).Methods(http.MethodGet)
+	r.HandleFunc("/v1/users", auth.Require("users:read", contextAndErrors(api.ListUsersHandler))).
+		Methods(http.MethodGet)
 	r.HandleFunc("/v1/users/{id}", contextAndErrors(api.GetUserHandler)).Methods(http.MethodGet)
 	r.HandleFunc("/v1/users/{id}", contextAndErrors(api.UpdateUserHandler)).Methods(http.MethodPut)
 	r.HandleFunc("/v1/users/{id}/groups", contextAndErrors(api.ListUserGroupsHandler)).Methods(http.MethodGet)
