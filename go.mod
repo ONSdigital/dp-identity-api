@@ -28,7 +28,7 @@ require (
 )
 
 require (
-	github.com/ONSdigital/dp-authorisation/v2 v2.0.0-20211014144836-53655d480fc6
+	github.com/ONSdigital/dp-authorisation/v2 v2.0.0
 	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
 	github.com/ONSdigital/dp-mongodb-in-memory v1.0.0 // indirect
 	github.com/cucumber/gherkin-go/v19 v19.0.3 // indirect
