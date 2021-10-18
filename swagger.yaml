@@ -526,9 +526,9 @@ paths:
           required: true
           description: the group's name
       responses:
-        200:
+        204:
           description: "Deleted group "
-        400:
+        404:
           description: "Invalid group name provided"
         500:
           description: "Internal error occurred"
