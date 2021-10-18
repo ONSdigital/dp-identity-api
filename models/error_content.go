@@ -78,8 +78,8 @@ const (
 	BodyClosedFailedDescription            = "the request body failed to close"
 	MissingGroupName                       = "the group name was not found"
 	MissingGroupPrecedence                 = "the group precedence was not found"
-	GroupPrecedenceIncorrect               = "the group precedence needs to be a minumum of 3"
-	IncorrectPatternInGroupName            = "a group name cannot start with 'role_' or 'ROLE_'"
+	GroupPrecedenceIncorrect               = "the group precedence needs to be a minumum of 10 and maximum of 100"
+	IncorrectPatternInGroupName            = "a group name cannot start with 'role-' or 'ROLE-'"
 	GroupAlreadyExistsDescription          = "a group with the name already exists"
 )
 

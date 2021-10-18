@@ -20,21 +20,33 @@ func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 		return nil, handleBodyReadError(ctx, err)
 	}
 
-	createGroup := models.CreateGroup{}
-	// GroupName is UUID
-	createGroup.GroupName = uuid.NewString()
+	createGroup := models.CreateUpdateGroup{}
 	err = json.Unmarshal(body, &createGroup)
 	if err != nil {
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
 
-	validationErrs := createGroup.ValidateCreateGroupRequest(ctx)
+	// no groupname in body, set UUID
+	if createGroup.GroupName == nil {
+		uuid := uuid.NewString()
+		createGroup.GroupName = &uuid
+	}
+
+	createGroup.GroupsList, err = api.GetListGroups()
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListGroups request from update group endpoint")
+		if cognitoErr.Code == models.NotFoundError {
+			return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
+		}
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+	}
+
+	validationErrs := createGroup.ValidateCreateUpdateGroupRequest(ctx)
 	if len(validationErrs) != 0 {
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}
 
 	// build create group input
-	createGroup.CleanGroupDescription()
 	input := createGroup.BuildCreateGroupInput(&api.UserPoolId)
 	_, err = api.CognitoClient.CreateGroup(input)
 	if err != nil {
@@ -51,6 +63,48 @@ func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 	}
 
 	return createGroup.NewSuccessResponse(jsonResponse, http.StatusCreated, nil), nil
+}
+
+//UpdateGroupHandler update group details for a given group by id (GroupName)
+func (api *API) UpdateGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	vars := mux.Vars(req)
+
+	gn := vars["id"]
+	updateGroup := models.CreateUpdateGroup{
+		GroupName: &gn,	
+	}
+	
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, handleBodyReadError(ctx, err)
+	}
+
+	err = json.Unmarshal(body, &updateGroup)
+	if err != nil {
+		return nil, handleBodyUnmarshalError(ctx, err)
+	}
+
+	validationErrs := updateGroup.ValidateCreateUpdateGroupRequest(ctx)
+	if len(validationErrs) != 0 {
+		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
+	}
+
+	input := updateGroup.BuildUpdateGroupInput(api.UserPoolId)	
+	_, err = api.CognitoClient.UpdateGroup(input)
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito UpdateGroup request from update a group endpoint")
+		if cognitoErr.Code == models.NotFoundError {
+			return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
+		}
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+	}
+
+	jsonResponse, responseErr := updateGroup.BuildSuccessfulJsonResponse(ctx)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
+	return updateGroup.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
 //AddUserToGroupHandler adds a user to the specified group
@@ -285,3 +339,4 @@ func (api *API) GetGroupHandler(ctx context.Context, w http.ResponseWriter, req 
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
+
