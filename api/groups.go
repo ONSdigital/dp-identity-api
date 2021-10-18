@@ -356,5 +356,5 @@ func (api *API) DeleteGroupHandler(ctx context.Context, w http.ResponseWriter, r
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
 
-	return &models.SuccessResponse{Status: http.StatusOK}, nil
+	return models.NewSuccessResponse(nil, http.StatusNoContent, nil), nil
 }

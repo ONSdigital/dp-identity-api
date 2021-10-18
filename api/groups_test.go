@@ -1427,13 +1427,13 @@ func TestDeleteGroupHandler(t *testing.T) {
 			DeleteGroupFunction func(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error)
 			assertions          func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{{
-			"200 response from Cognito ",
+			"204 response from Cognito ",
 			func(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error) {
 				return &cognitoidentityprovider.DeleteGroupOutput{}, nil
 			},
 			func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 				So(errorResponse, ShouldBeNil)
-				So(successResponse.Status, ShouldEqual, http.StatusOK)
+				So(successResponse.Status, ShouldEqual, http.StatusNoContent)
 				So(successResponse, ShouldNotBeNil)
 			},
 		},
