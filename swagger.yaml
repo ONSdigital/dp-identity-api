@@ -158,6 +158,8 @@ paths:
           description: "The list of users"
           schema:
             $ref: '#/definitions/UserList'
+        400:
+          description: "the query filter was not of expected format"
         500:
           description: "Internal error occurred"
           schema:
@@ -743,6 +745,7 @@ definitions:
           - "InvalidChallengeSession"
           - "InvalidStatusNotes"
           - "InvalidUserId"
+          - "InvalidFilterQuery"
           - "InvalidGroupName"
           - "InvalidGroupDescription"
           - "InvalidGroupPrecedence"

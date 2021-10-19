@@ -210,11 +210,33 @@ Feature: Users
             }
             """
 
-    Scenario: GET /v1/users with more than 60 users and checking the response status 200 with the correct number of users
-        Given there are "70" users in the database
+   Scenario: GET /v1/users with more than 60 active users and  70 inactive users checking the response status 200 with the correct number of users
+        Given there are "70" active users and "30" inactive users in the database
         When I GET "/v1/users"
         Then the HTTP status code should be "200"
+        And the list response should contain "100" entries
+
+    Scenario: GET /v1/users?active=true with more than 60 active users and  70 inactive users checking the response status 200 with the correct number of users
+        Given there are "70" active users and "30" inactive users in the database
+        When I GET "/v1/users?active=true"
+        Then the HTTP status code should be "200"
         And the list response should contain "70" entries
+    
+    Scenario: GET /v1/users?active=false with more than 60 active users and  70 inactive users checking the response status 200 with the correct number of users
+        Given there are "70" active users and "30" inactive users in the database
+        When I GET "/v1/users?active=false"
+        Then the HTTP status code should be "200"
+        And the list response should contain "30" entries
+
+    Scenario: GET /v1/users?active=anything with more than 60 active users and checking the response status 200 with the correct number of users
+        Given there are "70" active users and "30" inactive users in the database
+        When I GET "/v1/users?active=anything"
+        Then the HTTP status code should be "400"
+    
+    Scenario: GET /v1/user?active=false with more than 60 active users and checking the response status 200 with the correct number of users
+        Given there are "70" active users and "30" inactive users in the database
+        When I GET "/v1/user?active=false"
+        Then the HTTP status code should be "404"
 
     Scenario: GET /v1/users unexpected server error and checking the response status 500
         Given a user with email "internal.error@ons.gov.uk" and password "Passw0rd!" exists in the database

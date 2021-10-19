@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -78,17 +77,19 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 //ListUsersHandler lists the users in the user pool
 func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	var (
-		filterString          = aws.String("")
-		activeFilterString    = "AttributeName status \"True\""
-		notActiveFilterString = "AttributeName status \"False\""
+		filterString   = aws.String("")
+		validationErrs error
 	)
-	fmt.Printf(req.URL.RawQuery)
+
 	usersList := models.UsersList{}
-	if req.URL.RawQuery == "active=true" {
-		filterString = &activeFilterString
-	} else if req.URL.RawQuery == "active=false" {
-		filterString = &notActiveFilterString
+
+	if req.URL.RawQuery != "" {
+		*filterString, validationErrs = GetFilterStringAndValidate(req.URL.Path, req.URL.RawQuery)
+		if validationErrs != nil {
+			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs)
+		}
 	}
+
 	listUserResp, errResponse := api.ListUsersWorker(req.Context(), filterString, DefaultBackOffSchedule)
 	if errResponse != nil {
 		return nil, errResponse
@@ -370,5 +371,28 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+
+}
+
+func GetFilterStringAndValidate(endpoint string, query string) (string, error) {
+	ctx := context.Background()
+
+	filters := map[string]map[string]string{
+		"active=true": {
+			"endpoint":     "/v1/users",
+			"filterstring": "status=\"Enabled\"",
+		},
+		"active=false": {
+			"endpoint":     "/v1/users",
+			"filterstring": "status=\"Disabled\"",
+		},
+	}
+	for key, value := range filters {
+		if key == query && value["endpoint"] == endpoint {
+			return value["filterstring"], nil
+		}
+	}
+
+	return "", models.NewValidationError(ctx, models.InvalidFilterQuery, models.InvalidFilterQueryDescription)
 
 }
