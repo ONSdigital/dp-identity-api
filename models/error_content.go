@@ -43,6 +43,7 @@ const (
 	BodyCloseError               = "BodyCloseError"
 	InvalidGroupName             = "InvalidGroupName"
 	InvalidGroupPrecedence       = "InvalidGroupPrecedence"
+	InvalidFilterQuery           = "InvalidFilterQuery"
 )
 
 // API error descriptions
@@ -81,6 +82,7 @@ const (
 	GroupPrecedenceIncorrect               = "the group precedence needs to be a minumum of 10 and maximum of 100"
 	IncorrectPatternInGroupName            = "a group name cannot start with 'role-' or 'ROLE-'"
 	GroupAlreadyExistsDescription          = "a group with the name already exists"
+	InvalidFilterQueryDescription          = "the submitted query could not be validated"
 )
 
 // Mapping Cognito error codes to API error codes

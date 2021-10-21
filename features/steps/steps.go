@@ -30,6 +30,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^there are "([^"]*)" users in group "([^"]*)"$`, c.thereAreUsersInGroup)
 	ctx.Step(`^user "([^"]*)" is a member of group "([^"]*)"$`, c.userIsAMemberOfGroup)
 	ctx.Step(`^there are "([^"]*)" users in the database$`, c.thereAreRequiredNumberOfUsers)
+	ctx.Step(`^there are "([^"]*)" active users and "([^"]*)" inactive users in the database$`, c.thereAreRequiredNumberOfActiveUsers)
 	ctx.Step(`^the list response should contain "([^"]*)" entries$`, c.listResponseShouldContainCorrectNumberOfEntries)
 	ctx.Step(`^there (\d+) groups exists in the database that username "([^"]*)" is a member$`, c.thereGroupsExistsInTheDatabaseThatUsernameIsAMember)
 	ctx.Step(`^there "([^"]*)" groups exists in the database$`, c.thereGroupsExistsInTheDatabase)
@@ -147,6 +148,18 @@ func (c *IdentityComponent) thereAreRequiredNumberOfUsers(requiredNumberOfUsers 
 		return err
 	}
 	c.CognitoClient.AddMultipleUsers(requiredNumberOfUsersInt)
+	return nil
+}
+func (c *IdentityComponent) thereAreRequiredNumberOfActiveUsers(requiredNumberOfActiveUsers, requiredNumberOfInActiveUsers string) error {
+	requiredNumberOfActiveUsersInt, err := strconv.Atoi(requiredNumberOfActiveUsers)
+	if err != nil {
+		return err
+	}
+	requiredNumberOfInActiveUsersInt, err := strconv.Atoi(requiredNumberOfInActiveUsers)
+	if err != nil {
+		return err
+	}
+	c.CognitoClient.AddMultipleActiveUsers(requiredNumberOfActiveUsersInt, requiredNumberOfInActiveUsersInt)
 	return nil
 }
 

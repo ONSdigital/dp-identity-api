@@ -21,6 +21,10 @@ import (
 )
 
 const usersEndPoint = "http://localhost:25600/v1/users"
+const usersEndPointWithActiveFilterTrue = "http://localhost:25600/v1/users?active=true"
+const usersEndPointWithActiveFilterFalse = "http://localhost:25600/v1/users?active=false"
+const usersEndPointWithActiveFilterError = "http://localhost:25600/v1/user?active=false"
+
 const userEndPoint = "http://localhost:25600/v1/users/abcd1234"
 const changePasswordEndPoint = "http://localhost:25600/v1/users/self/password"
 const requestResetEndPoint = "http://localhost:25600/v1/password-reset"
@@ -271,7 +275,6 @@ func TestListUserHandler(t *testing.T) {
 			m.ListUsersFunc = tt.listUsersFunction
 
 			r := httptest.NewRequest(http.MethodGet, usersEndPoint, nil)
-
 			successResponse, errorResponse := api.ListUsersHandler(ctx, w, r)
 
 			// Check whether testing a success or error case
@@ -282,6 +285,96 @@ func TestListUserHandler(t *testing.T) {
 				So(successResponse.Status, ShouldEqual, tt.httpResponse)
 				So(errorResponse, ShouldBeNil)
 			}
+		}
+	})
+}
+
+func TestListUserHandlerWithFilter(t *testing.T) {
+	var ctx = context.Background()
+	api, w, m := apiSetup()
+
+	Convey("List user - check expected responses", t, func() {
+		listUsersTest := []struct {
+			description       string
+			endpoint          *http.Request
+			listUsersFunction func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
+			assertions        func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+		}{
+			{
+				"200 response from Cognito active filter true",
+				httptest.NewRequest(http.MethodGet, usersEndPointWithActiveFilterTrue, nil),
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					users := &cognitoidentityprovider.ListUsersOutput{
+						Users: []*cognitoidentityprovider.UserType{},
+					}
+					return users, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(errorResponse, ShouldBeNil)
+					So(successResponse, ShouldNotBeNil)
+
+				},
+			},
+			{
+				"200 response from Cognito active filter false",
+				httptest.NewRequest(http.MethodGet, usersEndPointWithActiveFilterFalse, nil),
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					users := &cognitoidentityprovider.ListUsersOutput{
+						Users: []*cognitoidentityprovider.UserType{},
+					}
+					return users, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(errorResponse, ShouldBeNil)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, 200)
+
+				},
+			},
+			{
+				"200 response from Cognito no active filter",
+				httptest.NewRequest(http.MethodGet, usersEndPoint, nil),
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					users := &cognitoidentityprovider.ListUsersOutput{
+						Users: []*cognitoidentityprovider.UserType{},
+					}
+					return users, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(errorResponse, ShouldBeNil)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, 200)
+
+				},
+			},
+
+			{
+				"400 response from Cognito active filter incorrect",
+				httptest.NewRequest(http.MethodGet, usersEndPointWithActiveFilterError, nil),
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					users := &cognitoidentityprovider.ListUsersOutput{
+						Users: []*cognitoidentityprovider.UserType{},
+					}
+					return users, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(errorResponse, ShouldNotBeNil)
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, 400)
+					So(errorResponse.Errors[0].Error(), ShouldResemble, "InvalidFilterQuery")
+
+				},
+			},
+		}
+
+		for _, tt := range listUsersTest {
+			Convey(tt.description, func() {
+				m.ListUsersFunc = tt.listUsersFunction
+				r := tt.endpoint
+				successResponse, errorResponse := api.ListUsersHandler(ctx, w, r)
+				tt.assertions(successResponse, errorResponse)
+			},
+			)
 		}
 	})
 }
@@ -1338,5 +1431,76 @@ func TestGetGroupsforUser(t *testing.T) {
 
 		So(listGroupsForUseResponse, ShouldResemble, returnedlistOfGroups)
 		So(errorResponse, ShouldBeNil)
+	})
+}
+
+func TestIsValidFilter(t *testing.T) {
+	api, _, _ := apiSetup()
+
+	Convey("Validate Filter - check expected responses", t, func() {
+		validateFilterTest := []struct {
+			description string
+			path        string
+			query       string
+			assertions  func(successResponse string, errorResponse error)
+		}{
+			{
+				"active true",
+				"/v1/users",
+				"active=true",
+				func(successResponse string, errorResponse error) {
+					So(errorResponse, ShouldBeNil)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse, ShouldResemble, "status=\"Enabled\"")
+
+				},
+			},
+			{
+				"active false",
+				"/v1/users",
+				"active=false",
+				func(successResponse string, errorResponse error) {
+					So(errorResponse, ShouldBeNil)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse, ShouldResemble, "status=\"Disabled\"")
+
+				},
+			},
+			{
+				"active another string",
+				"v1/user",
+				"active=string",
+				func(successResponse string, errorResponse error) {
+					So(errorResponse, ShouldNotBeNil)
+					So(successResponse, ShouldBeEmpty)
+					So(errorResponse.Error(), ShouldResemble, "InvalidFilterQuery")
+					castErr := errorResponse.(*models.Error)
+					So(castErr.Code, ShouldEqual, models.InvalidFilterQuery)
+					So(castErr.Description, ShouldEqual, models.InvalidFilterQueryDescription)
+				},
+			},
+			{
+				"active another path",
+				"v1/group",
+				"active=true",
+				func(successResponse string, errorResponse error) {
+					So(errorResponse, ShouldNotBeNil)
+					So(successResponse, ShouldBeEmpty)
+					castErr := errorResponse.(*models.Error)
+					So(castErr.Code, ShouldEqual, models.InvalidFilterQuery)
+					So(castErr.Description, ShouldEqual, models.InvalidFilterQueryDescription)
+
+				},
+			},
+		}
+
+		for _, tt := range validateFilterTest {
+			Convey(tt.description, func() {
+				successResponse, errorResponse := api.GetFilterStringAndValidate(tt.path, tt.query)
+				tt.assertions(successResponse, errorResponse)
+
+			},
+			)
+		}
 	})
 }
