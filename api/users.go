@@ -84,7 +84,7 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 	usersList := models.UsersList{}
 
 	if req.URL.RawQuery != "" {
-		*filterString, validationErrs = GetFilterStringAndValidate(req.URL.Path, req.URL.RawQuery)
+		*filterString, validationErrs = api.GetFilterStringAndValidate(req.URL.Path, req.URL.RawQuery)
 		if validationErrs != nil {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs)
 		}
@@ -374,25 +374,12 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 
 }
 
-func GetFilterStringAndValidate(endpoint string, query string) (string, error) {
+func (api *API) GetFilterStringAndValidate(path string, query string) (string, error) {
 	ctx := context.Background()
 
-	filters := map[string]map[string]string{
-		"active=true": {
-			"endpoint":     "/v1/users",
-			"filterstring": "status=\"Enabled\"",
-		},
-		"active=false": {
-			"endpoint":     "/v1/users",
-			"filterstring": "status=\"Disabled\"",
-		},
+	if api.APIRequestFilter[path] != nil && api.APIRequestFilter[path][query] != "" {
+		return api.APIRequestFilter[path][query], nil
+	} else {
+		return "", models.NewValidationError(ctx, models.InvalidFilterQuery, models.InvalidFilterQueryDescription)
 	}
-	for key, value := range filters {
-		if key == query && value["endpoint"] == endpoint {
-			return value["filterstring"], nil
-		}
-	}
-
-	return "", models.NewValidationError(ctx, models.InvalidFilterQuery, models.InvalidFilterQueryDescription)
-
 }

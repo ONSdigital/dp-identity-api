@@ -332,6 +332,23 @@ func TestListUserHandlerWithFilter(t *testing.T) {
 				},
 			},
 			{
+				"200 response from Cognito no active filter",
+				httptest.NewRequest(http.MethodGet, usersEndPoint, nil),
+				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+					users := &cognitoidentityprovider.ListUsersOutput{
+						Users: []*cognitoidentityprovider.UserType{},
+					}
+					return users, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(errorResponse, ShouldBeNil)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, 200)
+
+				},
+			},
+
+			{
 				"400 response from Cognito active filter incorrect",
 				httptest.NewRequest(http.MethodGet, usersEndPointWithActiveFilterError, nil),
 				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
@@ -1418,6 +1435,7 @@ func TestGetGroupsforUser(t *testing.T) {
 }
 
 func TestIsValidFilter(t *testing.T) {
+	api, _, _ := apiSetup()
 
 	Convey("Validate Filter - check expected responses", t, func() {
 		validateFilterTest := []struct {
@@ -1478,7 +1496,7 @@ func TestIsValidFilter(t *testing.T) {
 
 		for _, tt := range validateFilterTest {
 			Convey(tt.description, func() {
-				successResponse, errorResponse := GetFilterStringAndValidate(tt.path, tt.query)
+				successResponse, errorResponse := api.GetFilterStringAndValidate(tt.path, tt.query)
 				tt.assertions(successResponse, errorResponse)
 
 			},
