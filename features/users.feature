@@ -248,23 +248,27 @@ Feature: Users
 
     Scenario: GET /v1/users?active=true with more than 60 active users and  30 inactive users checking the response status 200 with the correct number of users
         Given there are "70" active users and "30" inactive users in the database
+        And I am an admin user
         When I GET "/v1/users?active=true"
         Then the HTTP status code should be "200"
         And the list response should contain "70" entries
 
     Scenario: GET /v1/users?active=false with more than 60 active users and  30 inactive users checking the response status 200 with the correct number of users
         Given there are "70" active users and "30" inactive users in the database
+        And I am an admin user
         When I GET "/v1/users?active=false"
         Then the HTTP status code should be "200"
         And the list response should contain "30" entries
 
     Scenario: GET /v1/users?active=anything with more than 60 active users and checking the response status 400 with the correct number of users
         Given there are "70" active users and "30" inactive users in the database
+        And I am an admin user
         When I GET "/v1/users?active=anything"
         Then the HTTP status code should be "400"
 
     Scenario: GET /v1/user?active=false with more than 60 active users and checking the response status 404 with the correct number of users
         Given there are "70" active users and "30" inactive users in the database
+        And I am an admin user
         When I GET "/v1/user?active=false"
         Then the HTTP status code should be "404"
 
