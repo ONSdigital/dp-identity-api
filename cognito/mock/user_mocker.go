@@ -34,6 +34,16 @@ func (m *CognitoIdentityProviderClientStub) AddMultipleUsers(usersCount int) {
 	}
 }
 
+//Generates the required number of users in the system
+func (m *CognitoIdentityProviderClientStub) AddMultipleActiveUsers(activeusersCount, inactiveusersCount int) {
+	for len(m.Users) < activeusersCount {
+		m.Users = append(m.Users, m.GenerateUser("", "", "", "", "", true))
+	}
+	for len(m.Users) < inactiveusersCount {
+		m.Users = append(m.Users, m.GenerateUser("", "", "", "", "", false))
+	}
+}
+
 func (m *CognitoIdentityProviderClientStub) GenerateUser(id, email, password, givenName, familyName string, isConfirmed bool) *User {
 	statusString := "FORCE_CHANGE_PASSWORD"
 	if isConfirmed {

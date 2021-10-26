@@ -76,9 +76,21 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 
 //ListUsersHandler lists the users in the user pool
 func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	var (
+		filterString   = aws.String("")
+		validationErrs error
+	)
+
 	usersList := models.UsersList{}
 
-	listUserResp, errResponse := api.ListUsersWorker(req.Context(), aws.String(""), DefaultBackOffSchedule)
+	if req.URL.RawQuery != "" {
+		*filterString, validationErrs = api.GetFilterStringAndValidate(req.URL.Path, req.URL.RawQuery)
+		if validationErrs != nil {
+			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs)
+		}
+	}
+
+	listUserResp, errResponse := api.ListUsersWorker(req.Context(), filterString, DefaultBackOffSchedule)
 	if errResponse != nil {
 		return nil, errResponse
 	}
@@ -91,6 +103,7 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 	}
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+
 }
 
 //GetUserHandler lists the users in the user pool
@@ -359,4 +372,14 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 	}
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 
+}
+
+func (api *API) GetFilterStringAndValidate(path string, query string) (string, error) {
+	ctx := context.Background()
+
+	if api.APIRequestFilter[path] != nil && api.APIRequestFilter[path][query] != "" {
+		return api.APIRequestFilter[path][query], nil
+	} else {
+		return "", models.NewValidationError(ctx, models.InvalidFilterQuery, models.InvalidFilterQueryDescription)
+	}
 }

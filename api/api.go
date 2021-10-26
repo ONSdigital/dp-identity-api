@@ -29,13 +29,14 @@ var (
 
 //API provides a struct to wrap the api around
 type API struct {
-	Router         *mux.Router
-	CognitoClient  cognito.Client
-	UserPoolId     string
-	ClientId       string
-	ClientSecret   string
-	ClientAuthFlow string
-	AllowedDomains []string
+	Router           *mux.Router
+	CognitoClient    cognito.Client
+	UserPoolId       string
+	ClientId         string
+	ClientSecret     string
+	ClientAuthFlow   string
+	AllowedDomains   []string
+	APIRequestFilter map[string]map[string]string
 }
 
 type baseHandler func(ctx context.Context, w http.ResponseWriter, r *http.Request) (*models.SuccessResponse, *models.ErrorResponse)
@@ -72,6 +73,12 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 		ClientSecret:   clientSecret,
 		ClientAuthFlow: clientAuthFlow,
 		AllowedDomains: allowedDomains,
+		APIRequestFilter: map[string]map[string]string{
+			"/v1/users": {
+				"active=true":  "status=\"Enabled\"",
+				"active=false": "status=\"Disabled\"",
+			},
+		},
 	}
 
 	r.HandleFunc("/v1/tokens", contextAndErrors(api.TokensHandler)).Methods(http.MethodPost)
