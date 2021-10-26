@@ -92,6 +92,7 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 	r.HandleFunc("/v1/groups", contextAndErrors(api.CreateGroupHandler)).Methods(http.MethodPost)
 	r.HandleFunc("/v1/groups/{id}", contextAndErrors(api.GetGroupHandler)).Methods(http.MethodGet)
 	r.HandleFunc("/v1/groups/{id}", contextAndErrors(api.UpdateGroupHandler)).Methods(http.MethodPut)
+	r.HandleFunc("/v1/groups/{id}", contextAndErrors(api.DeleteGroupHandler)).Methods(http.MethodDelete)
 	r.HandleFunc("/v1/groups/{id}/members", contextAndErrors(api.AddUserToGroupHandler)).Methods(http.MethodPost)
 	r.HandleFunc("/v1/groups/{id}/members", contextAndErrors(api.ListUsersInGroupHandler)).Methods(http.MethodGet)
 	r.HandleFunc("/v1/groups/{id}/members/{user_id}", contextAndErrors(api.RemoveUserFromGroupHandler)).Methods(http.MethodDelete)

@@ -27,6 +27,8 @@ const (
 	updateGroupEndPoint         = "http://localhost:25600/v1/groups/123e4567-e89b-12d3-a456-426614174000"
 )
 
+var groupNotFoundDescription, internalErrorDescription string = "group not found", "internal error"
+
 func TestAddUserToGroupHandler(t *testing.T) {
 
 	var (
@@ -1329,7 +1331,6 @@ func TestGetGroupHandler(t *testing.T) {
 	api, w, m := apiSetup()
 
 	Convey("Get group -check expected responses", t, func() {
-		var groupNotFoundDescription, internalErrorDescription string = "group not found", "internal error"
 		GetGroupTest := []struct {
 			description      string
 			getGroupFunction func(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error)
@@ -1404,6 +1405,85 @@ func TestGetGroupHandler(t *testing.T) {
 				r = mux.SetURLVars(r, urlVars)
 
 				successResponse, errorResponse := api.GetGroupHandler(ctx, w, r)
+
+				tt.assertions(successResponse, errorResponse)
+			})
+		}
+	})
+
+}
+
+func TestDeleteGroupHandler(t *testing.T) {
+
+	var (
+		ctx = context.Background()
+	)
+
+	api, w, m := apiSetup()
+
+	Convey("Delete group -check expected responses", t, func() {
+		DeleteGroupTest := []struct {
+			description         string
+			DeleteGroupFunction func(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error)
+			assertions          func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+		}{{
+			"204 response from Cognito ",
+			func(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error) {
+				return &cognitoidentityprovider.DeleteGroupOutput{}, nil
+			},
+			func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+				So(errorResponse, ShouldBeNil)
+				So(successResponse.Status, ShouldEqual, http.StatusNoContent)
+				So(successResponse, ShouldNotBeNil)
+			},
+		},
+			{
+				"404 response from Cognito ",
+				func(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error) {
+					var groupNotFoundException cognitoidentityprovider.ResourceNotFoundException
+					groupNotFoundException.Message_ = &groupNotFoundDescription
+					return nil, &groupNotFoundException
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+
+					So(errorResponse, ShouldNotBeNil)
+
+					So(errorResponse.Status, ShouldEqual, http.StatusNotFound)
+					So(successResponse, ShouldBeNil)
+				},
+			},
+			{
+				"500 response from Cognito ",
+				func(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error) {
+					var internalError cognitoidentityprovider.InternalErrorException
+					internalError.Message_ = &internalErrorDescription
+					return nil, &internalError
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+
+					So(errorResponse, ShouldNotBeNil)
+
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+					So(successResponse, ShouldBeNil)
+				},
+			}}
+
+		for _, tt := range DeleteGroupTest {
+			Convey(tt.description, func() {
+				m.DeleteGroupFunc = tt.DeleteGroupFunction
+
+				postBody := map[string]interface{}{"GroupName": "group_name_test"}
+				body, err := json.Marshal(postBody)
+				So(err, ShouldBeNil)
+
+				r := httptest.NewRequest(http.MethodGet, getListGroupsEndPoint, bytes.NewReader(body))
+
+				urlVars := map[string]string{
+					"id": "efgh5678",
+				}
+				r = mux.SetURLVars(r, urlVars)
+
+				successResponse, errorResponse := api.DeleteGroupHandler(ctx, w, r)
 
 				tt.assertions(successResponse, errorResponse)
 			})

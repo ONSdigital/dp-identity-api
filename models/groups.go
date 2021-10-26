@@ -83,6 +83,14 @@ func (g *Group) BuildGetGroupRequest(userPoolId string) *cognitoidentityprovider
 	}
 }
 
+// BuildDeleteGroupRequest builds a correctly populated DeleteGroupInput object using the Groups values
+func (g *Group) BuildDeleteGroupRequest(userPoolId string) *cognitoidentityprovider.DeleteGroupInput {
+	return &cognitoidentityprovider.DeleteGroupInput{
+		GroupName:  &g.Name,
+		UserPoolId: &userPoolId,
+	}
+}
+
 // BuildAddUserToGroupRequest builds a correctly populated AdminAddUserToGroupInput object
 func (g *Group) BuildAddUserToGroupRequest(userPoolId, userId string) *cognitoidentityprovider.AdminAddUserToGroupInput {
 	return &cognitoidentityprovider.AdminAddUserToGroupInput{
@@ -220,7 +228,7 @@ func (c *CreateUpdateGroup) NewSuccessResponse(jsonBody []byte, statusCode int, 
 
 	jsonResponse, _ := json.Marshal(
 		map[string]interface{}{
-			"name": cg.Description,
+			"name":       cg.Description,
 			"precedence": cg.Precedence,
 			"groupname": cg.GroupName,
 		},

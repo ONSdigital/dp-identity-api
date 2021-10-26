@@ -585,6 +585,12 @@ func (m *CognitoIdentityProviderClientStub) AdminDeleteUser(input *cognitoidenti
 
 //Added to fully implement interface but only used in the local dummy data builder
 func (m *CognitoIdentityProviderClientStub) DeleteGroup(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error) {
+	if *input.GroupName == "internal-error" || *input.GroupName == "get-group-internal-error" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+	}
+	if *input.GroupName == "delete-group-not-found" {
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "get group - group not found", nil)
+	}
 	return nil, nil
 }
 
