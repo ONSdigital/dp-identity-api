@@ -107,6 +107,27 @@ func getPermissionsBundle() *permissions.Bundle {
 				},
 			},
 		},
+		"groups:create": { // role
+			"groups/role-admin": { // group
+				{
+					ID: "1", // policy
+				},
+			},
+		},
+		"groups:read": { // role
+			"groups/role-admin": { // group
+				{
+					ID: "2", // policy
+				},
+			},
+		},
+		"groups:edit": { // role
+			"groups/role-admin": { // group
+				{
+					ID: "2", // policy
+				},
+			},
+		},
 	}
 }
 

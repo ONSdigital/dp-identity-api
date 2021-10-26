@@ -2,6 +2,7 @@ Feature: Groups
 
 #   Create new group scenarios
     Scenario: POST /v1/groups to create group, group created returns 201
+    Given I am an admin user
     When I POST "/v1/groups"
         """
             {
@@ -19,7 +20,19 @@ Feature: Groups
             }
         """
 
+    Scenario: POST /v1/groups without a JWT token and checking the response status 403
+        When I POST "/v1/groups"
+        """"""
+        Then the HTTP status code should be "403"
+
+    Scenario: POST /v1/groups as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I POST "/v1/groups"
+        """"""
+        Then the HTTP status code should be "403"
+
     Scenario: POST /v1/groups to create group with no description in request, group created returns 400
+    Given I am an admin user
     When I POST "/v1/groups"
         """
             {
@@ -39,6 +52,7 @@ Feature: Groups
         """
 
     Scenario: POST /v1/groups to create group with no precedence in request, group created returns 400
+    Given I am an admin user
     When I POST "/v1/groups"
         """
             {
@@ -58,6 +72,7 @@ Feature: Groups
         """
 
     Scenario: POST /v1/groups to create group with reserved pattern in description [lower case], group created returns 400
+    Given I am an admin user
     When I POST "/v1/groups"
         """
             {
@@ -78,6 +93,7 @@ Feature: Groups
         """
 
     Scenario: POST /v1/groups to create group with reserved pattern in description [upper case], group created returns 400
+    Given I am an admin user
     When I POST "/v1/groups"
         """
             {
@@ -98,6 +114,7 @@ Feature: Groups
         """
 
     Scenario: POST /v1/groups to create group group precedence doesn't meet minimum of `3`, returns 400
+    Given I am an admin user
     When I POST "/v1/groups"
         """
             {
@@ -118,6 +135,7 @@ Feature: Groups
         """
 
     Scenario: POST /v1/groups to create group an unexpected 500 error is returned from Cognito
+    Given I am an admin user
     When I POST "/v1/groups"
         """
             {
@@ -151,7 +169,7 @@ Feature: Groups
                 "name": "Thi$s is a te||st des$%£@^c ription for  existing group  $",
                 "precedence": 49,
                 "groupname": "123e4567-e89b-12d3-a456-426614174000"
-               
+
             }
         """
 
@@ -297,6 +315,7 @@ Feature: Groups
         Given group "test-group" exists in the database
         And there are "0" users in group "test-group"
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I POST "/v1/groups/test-group/members"
             """
                 {
@@ -325,10 +344,22 @@ Feature: Groups
                 }
             """
 
+    Scenario: POST /v1/groups/{id}/members without a JWT token and checking the response status 403
+        When I POST "/v1/groups/test-group/members"
+        """"""
+        Then the HTTP status code should be "403"
+
+    Scenario: POST /v1/groups/{id}}/members as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I POST "/v1/groups/test-group/members"
+        """"""
+        Then the HTTP status code should be "403"
+
     Scenario: POST /v1/groups/{id}/members with no user Id submitted and checking the response status 400
         Given group "test-group" exists in the database
         And there are "0" users in group "test-group"
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I POST "/v1/groups/test-group/members"
             """
                 {
@@ -349,6 +380,7 @@ Feature: Groups
 
     Scenario: POST /v1/groups/{id}/members add user to group, group not found returns 400
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I POST "/v1/groups/test-group/members"
             """
                 {
@@ -370,6 +402,7 @@ Feature: Groups
     Scenario: POST /v1/groups/{id}/members add user to group, user not found returns 400
         Given group "test-group" exists in the database
         And there are "0" users in group "test-group"
+        And I am an admin user
         When I POST "/v1/groups/test-group/members"
             """
                 {
@@ -391,6 +424,7 @@ Feature: Groups
     Scenario: POST /v1/groups/{id}/members add user to group, internal server error returns 500
         Given group "internal-error" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I POST "/v1/groups/internal-error/members"
             """
                 {
@@ -412,6 +446,7 @@ Feature: Groups
     Scenario: POST /v1/groups/{id}/members get group, internal server error returns 500
         Given group "get-group-internal-error" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I POST "/v1/groups/get-group-internal-error/members"
             """
                 {
@@ -433,6 +468,7 @@ Feature: Groups
     Scenario: POST /v1/groups/{id}/members get group, group not found returns 500
         Given group "get-group-not-found" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I POST "/v1/groups/get-group-not-found/members"
             """
                 {
@@ -454,6 +490,7 @@ Feature: Groups
     Scenario: POST /v1/groups/{id}/members get group, internal server error returns 500
         Given group "list-group-users-internal-error" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I POST "/v1/groups/list-group-users-internal-error/members"
             """
                 {
@@ -475,6 +512,7 @@ Feature: Groups
     Scenario: POST /v1/groups/{id}/members get group, group not found returns 500
         Given group "list-group-users-not-found" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I POST "/v1/groups/list-group-users-not-found/members"
             """
                 {
@@ -499,6 +537,7 @@ Feature: Groups
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And user "abcd1234" is a member of group "test-group"
         And there are "1" users in group "test-group"
+        And I am an admin user
         When I DELETE "/v1/groups/test-group/members/abcd1234"
         Then I should receive the following JSON response with status "200":
             """
@@ -511,6 +550,15 @@ Feature: Groups
                 }
             """
 
+    Scenario: DELETE /v1/groups/{id}/members/{user_id} without a JWT token and checking the response status 403
+        When I DELETE "/v1/groups/test-group/members/{user_id}"
+        Then the HTTP status code should be "403"
+
+    Scenario: DELETE /v1/groups/{id}/members/{user_id} as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I DELETE "/v1/groups/test-group/members/{user_id}"
+        Then the HTTP status code should be "403"
+
     Scenario: DELETE /v1/groups/{id}/members/{user_id} and checking the response status 200 with other members listed
         Given group "test-group" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
@@ -518,6 +566,7 @@ Feature: Groups
         And user "abcd1234" is a member of group "test-group"
         And user "efgh5678" is a member of group "test-group"
         And there are "2" users in group "test-group"
+        And I am an admin user
         When I DELETE "/v1/groups/test-group/members/abcd1234"
         Then I should receive the following JSON response with status "200":
             """
@@ -543,6 +592,7 @@ Feature: Groups
 
     Scenario: DELETE /v1/groups/{id}/members/{user_id} remove user from group, group not found returns 400
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I DELETE "/v1/groups/test-group/members/abcd1234"
         Then I should receive the following JSON response with status "400":
             """
@@ -559,6 +609,7 @@ Feature: Groups
     Scenario: DELETE /v1/groups/{id}/members/{user_id} remove user from group, user not found returns 400
         Given group "test-group" exists in the database
         And there are "0" users in group "test-group"
+        And I am an admin user
         When I DELETE "/v1/groups/test-group/members/abcd1234"
         Then I should receive the following JSON response with status "400":
             """
@@ -575,6 +626,7 @@ Feature: Groups
     Scenario: DELETE /v1/groups/{id}/members/{user_id} remove user from group, internal server error returns 500
         Given group "internal-error" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I DELETE "/v1/groups/internal-error/members/abcd1234"
         Then I should receive the following JSON response with status "500":
             """
@@ -591,6 +643,7 @@ Feature: Groups
     Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, internal server error returns 500
         Given group "get-group-internal-error" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I DELETE "/v1/groups/get-group-internal-error/members/abcd1234"
         Then I should receive the following JSON response with status "500":
             """
@@ -607,6 +660,7 @@ Feature: Groups
     Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, group not found returns 500
         Given group "get-group-not-found" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I DELETE "/v1/groups/get-group-not-found/members/abcd1234"
         Then I should receive the following JSON response with status "500":
             """
@@ -623,6 +677,7 @@ Feature: Groups
     Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, internal server error returns 500
         Given group "list-group-users-internal-error" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I DELETE "/v1/groups/list-group-users-internal-error/members/abcd1234"
         Then I should receive the following JSON response with status "500":
             """
@@ -639,6 +694,7 @@ Feature: Groups
     Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, group not found returns 500
         Given group "list-group-users-not-found" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I DELETE "/v1/groups/list-group-users-not-found/members/abcd1234"
         Then I should receive the following JSON response with status "500":
             """
@@ -657,6 +713,7 @@ Feature: Groups
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And user "abcd1234" is a member of group "test-group"
         And there are "1" users in group "test-group"
+        And I am an admin user
         When I GET "/v1/groups/test-group/members"
         Then I should receive the following JSON response with status "200":
             """
@@ -678,8 +735,18 @@ Feature: Groups
                 }
             """
 
+    Scenario: GET /v1/groups/{id}/members without a JWT token and checking the response status 403
+        When I GET "/v1/groups/test-group/members"
+        Then the HTTP status code should be "403"
+
+    Scenario: GET /v1/groups/{id}/members as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I GET "/v1/groups/test-group/members"
+        Then the HTTP status code should be "403"
+
     Scenario: GET /v1/groups/{id}/members, group not found returns 400
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I GET "/v1/groups/test-group/members"
         Then I should receive the following JSON response with status "400":
             """
@@ -697,6 +764,7 @@ Feature: Groups
  Scenario: GET /v1/groups/{id}/members, internal server error returns 500
         Given group "internal-error" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I GET "/v1/groups/internal-error/members"
         Then I should receive the following JSON response with status "500":
             """
@@ -714,6 +782,7 @@ Feature: Groups
 #   list for no groups found   
     Scenario: GET /v1/groups and checking the response status 200
         Given there "0" groups exists in the database
+        And I am an admin user
         When I GET "/v1/groups"
         Then the response code should be 200
         And the response should match the following json for listgroups
@@ -727,6 +796,7 @@ Feature: Groups
 #   list for one groups found  
     Scenario: GET /v1/groups and checking the response status 200
         Given there "2" groups exists in the database
+        And I am an admin user
         When I GET "/v1/groups"
         Then the response code should be 200
         And the response should match the following json for listgroups
@@ -746,6 +816,7 @@ Feature: Groups
 #   list for many groups found   given blocks of 60 for one cognito call
     Scenario: GET /v1/groups and checking the response status 200
         Given there "100" groups exists in the database
+        And I am an admin user
         When I GET "/v1/groups"
         Then the response code should be 200
         And the response should match the following json for listgroups
@@ -767,6 +838,7 @@ Feature: Groups
 #   successful return   
     Scenario: GET /v1/groups and checking the response status 200
         Given group "test-group" exists in the database
+        And I am an admin user
         When I GET "/v1/groups/test-group"
         Then I should receive the following JSON response with status "200":
             """
@@ -781,6 +853,7 @@ Feature: Groups
 #   404 return   
     Scenario: GET /v1/groups and checking the response status 404
         Given group "get-group-not-found" exists in the database
+        And I am an admin user
         When I GET "/v1/groups/get-group-not-found"
         Then I should receive the following JSON response with status "404":
             """
@@ -795,6 +868,7 @@ Feature: Groups
             """
    Scenario: GET /v1/groups/{id} internal server error returns 500
         Given group "internal-error" exists in the database
+        And I am an admin user
         When I GET "/v1/groups/internal-error"
         Then I should receive the following JSON response with status "500":
             """
@@ -807,6 +881,16 @@ Feature: Groups
                     ]
                 }
             """
+
+   Scenario: GET /v1/groups/{id} without a JWT token and checking the response status 403
+        When I GET "/v1/groups/test-group"
+        Then the HTTP status code should be "403"
+
+    Scenario: GET /v1/groups/{id} as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I GET "/v1/groups/test-group"
+        Then the HTTP status code should be "403"
+
 
 #   Delete deleteGroup scenarios
 #   successful return

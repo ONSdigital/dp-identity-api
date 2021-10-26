@@ -88,7 +88,8 @@ func Setup(ctx context.Context,
 	}
 
 	r.HandleFunc("/v1/tokens", contextAndErrors(api.TokensHandler)).Methods(http.MethodPost)
-	r.HandleFunc("/v1/tokens", contextAndErrors(api.SignOutAllUsersHandler)).Methods(http.MethodDelete)
+	r.HandleFunc("/v1/tokens", auth.Require("users:update", contextAndErrors(api.SignOutAllUsersHandler))).
+		Methods(http.MethodDelete)
 	// self used in paths rather than identifier as the identifier is JWT tokens passed in the request headers
 	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.SignOutHandler)).Methods(http.MethodDelete)
 	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.RefreshHandler)).Methods(http.MethodPut)
@@ -108,14 +109,20 @@ func Setup(ctx context.Context,
 		Methods(http.MethodPut)
 	r.HandleFunc("/v1/password-reset", auth.Require("users:update", contextAndErrors(api.PasswordResetHandler))).
 		Methods(http.MethodPost)
-	r.HandleFunc("/v1/groups", contextAndErrors(api.ListGroupsHandler)).Methods(http.MethodGet)
-	r.HandleFunc("/v1/groups", contextAndErrors(api.CreateGroupHandler)).Methods(http.MethodPost)
-	r.HandleFunc("/v1/groups/{id}", contextAndErrors(api.GetGroupHandler)).Methods(http.MethodGet)
+	r.HandleFunc("/v1/groups", auth.Require("groups:read", contextAndErrors(api.ListGroupsHandler))).
+		Methods(http.MethodGet)
+	r.HandleFunc("/v1/groups", auth.Require("groups:create", contextAndErrors(api.CreateGroupHandler))).
+		Methods(http.MethodPost)
+	r.HandleFunc("/v1/groups/{id}", auth.Require("groups:read", contextAndErrors(api.GetGroupHandler))).
+		Methods(http.MethodGet)
 	r.HandleFunc("/v1/groups/{id}", contextAndErrors(api.UpdateGroupHandler)).Methods(http.MethodPut)
 	r.HandleFunc("/v1/groups/{id}", contextAndErrors(api.DeleteGroupHandler)).Methods(http.MethodDelete)
-	r.HandleFunc("/v1/groups/{id}/members", contextAndErrors(api.AddUserToGroupHandler)).Methods(http.MethodPost)
-	r.HandleFunc("/v1/groups/{id}/members", contextAndErrors(api.ListUsersInGroupHandler)).Methods(http.MethodGet)
-	r.HandleFunc("/v1/groups/{id}/members/{user_id}", contextAndErrors(api.RemoveUserFromGroupHandler)).Methods(http.MethodDelete)
+	r.HandleFunc("/v1/groups/{id}/members", auth.Require("groups:edit", contextAndErrors(api.AddUserToGroupHandler))).
+		Methods(http.MethodPost)
+	r.HandleFunc("/v1/groups/{id}/members", auth.Require("groups:read", contextAndErrors(api.ListUsersInGroupHandler))).
+		Methods(http.MethodGet)
+	r.HandleFunc("/v1/groups/{id}/members/{user_id}", auth.Require("groups:edit", contextAndErrors(api.RemoveUserFromGroupHandler))).
+		Methods(http.MethodDelete)
 	return api, nil
 }
 
