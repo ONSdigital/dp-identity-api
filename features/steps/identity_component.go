@@ -128,6 +128,13 @@ func getPermissionsBundle() *permissions.Bundle {
 				},
 			},
 		},
+		"groups:delete": { // role
+			"groups/role-admin": { // group
+				{
+					ID: "2", // policy
+				},
+			},
+		},
 	}
 }
 

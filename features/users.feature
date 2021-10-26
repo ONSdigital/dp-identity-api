@@ -1346,7 +1346,7 @@ Feature: Users
             }
             """
 
-    Scenario: PUT /v1/users/self/password Cognito internal error
+    Scenario: PUT /v1/users/self/password Cognito internal error for ForgottenPassword
         Given an internal server error is returned from Cognito
         And I am an admin user
         When I PUT "/v1/users/self/password"
@@ -1370,7 +1370,7 @@ Feature: Users
         }
         """
 
-    Scenario: PUT /v1/users/self/password Cognito invalid password
+    Scenario: PUT /v1/users/self/password Cognito invalid password for forgottenPassword
         Given I am an admin user
         When I PUT "/v1/users/self/password"
         """
@@ -1464,12 +1464,12 @@ Feature: Users
             """
         Then the HTTP status code should be "202"
 
-    Scenario: POST /v1/users/{id} without a JWT token and checking the response status 403
+    Scenario: POST /v1/password-reset without a JWT token and checking the response status 403
         When I POST "/v1/password-reset"
         """"""
         Then the HTTP status code should be "403"
 
-    Scenario: POST /v1/users/{id} as a publisher user and checking the response status 403
+    Scenario: POST /v1/password-reset as a publisher user and checking the response status 403
         Given I am a publisher user
         When I POST "/v1/password-reset"
         """"""

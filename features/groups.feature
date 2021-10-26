@@ -156,6 +156,7 @@ Feature: Groups
         """
 #   Update group scenarios
     Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group, group updated returns 200
+    Given I am an admin user
     When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
         """
             {
@@ -173,7 +174,19 @@ Feature: Groups
             }
         """
 
+    Scenario: PUT /v1/groups/{id} without a JWT token and checking the response status 403
+        When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
+        """"""
+        Then the HTTP status code should be "403"
+
+    Scenario: PUT /v1/groups/{id} as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
+        """"""
+        Then the HTTP status code should be "403"
+
     Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group with no description in request, group update returns 400
+    Given I am an admin user
     When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
         """
             {
@@ -193,6 +206,7 @@ Feature: Groups
         """
 
     Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group with no precedence in request, group update returns 400
+    Given I am an admin user
     When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
         """
             {
@@ -212,6 +226,7 @@ Feature: Groups
         """
 
     Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group with reserved pattern in description [lower case], group update returns 400
+    Given I am an admin user
     When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
         """
             {
@@ -232,6 +247,7 @@ Feature: Groups
          """
 
     Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group with reserved pattern in description [upper case], group update returns 400
+    Given I am an admin user
     When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
         """
             {
@@ -252,6 +268,7 @@ Feature: Groups
         """
 
     Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group group precedence doesn't meet minimum of `10`, returns 400
+    Given I am an admin user
     When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
         """
             {
@@ -272,6 +289,7 @@ Feature: Groups
         """
 
     Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group an unexpected 500 error is returned from Cognito
+    Given I am an admin user
     When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
         """
             {
@@ -292,6 +310,7 @@ Feature: Groups
         """
 
     Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group a resource not found 404 error is returned
+    Given I am an admin user
     When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
         """
             {
@@ -349,7 +368,7 @@ Feature: Groups
         """"""
         Then the HTTP status code should be "403"
 
-    Scenario: POST /v1/groups/{id}}/members as a publisher user and checking the response status 403
+    Scenario: POST /v1/groups/{id}/members as a publisher user and checking the response status 403
         Given I am a publisher user
         When I POST "/v1/groups/test-group/members"
         """"""
@@ -551,12 +570,12 @@ Feature: Groups
             """
 
     Scenario: DELETE /v1/groups/{id}/members/{user_id} without a JWT token and checking the response status 403
-        When I DELETE "/v1/groups/test-group/members/{user_id}"
+        When I DELETE "/v1/groups/test-group/members/abcd1234"
         Then the HTTP status code should be "403"
 
     Scenario: DELETE /v1/groups/{id}/members/{user_id} as a publisher user and checking the response status 403
         Given I am a publisher user
-        When I DELETE "/v1/groups/test-group/members/{user_id}"
+        When I DELETE "/v1/groups/test-group/members/abcd1234"
         Then the HTTP status code should be "403"
 
     Scenario: DELETE /v1/groups/{id}/members/{user_id} and checking the response status 200 with other members listed
@@ -674,7 +693,7 @@ Feature: Groups
                 }
             """
 
-    Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, internal server error returns 500
+    Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, internal server error returns internal server error
         Given group "list-group-users-internal-error" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
@@ -896,14 +915,28 @@ Feature: Groups
 #   successful return
     Scenario: DELETE /v1/groups/{id} and checking the response status 204
         Given group "test-group" exists in the database
+        And I am an admin user
         When I DELETE "/v1/groups/test-group"
         Then the HTTP status code should be "204"
 
+    Scenario: DELETE /v1/groups/{id} without a JWT token and checking the response status 403
+        When I DELETE "/v1/groups/test-group"
+        """"""
+        Then the HTTP status code should be "403"
+
+    Scenario: DELETE /v1/groups/{id} as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I DELETE "/v1/groups/test-group"
+        """"""
+        Then the HTTP status code should be "403"
+
 #   404 return
     Scenario: DELETE /v1/groups/{id} and checking the response status 404
+        Given I am an admin user
         When I DELETE "/v1/groups/delete-group-not-found"
         Then the HTTP status code should be "404"
 
     Scenario: DELETE /v1/groups/{id} internal server error returns 500
+        Given I am an admin user
         When I DELETE "/v1/groups/internal-error"
         Then the HTTP status code should be "500"

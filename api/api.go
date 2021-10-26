@@ -115,8 +115,10 @@ func Setup(ctx context.Context,
 		Methods(http.MethodPost)
 	r.HandleFunc("/v1/groups/{id}", auth.Require("groups:read", contextAndErrors(api.GetGroupHandler))).
 		Methods(http.MethodGet)
-	r.HandleFunc("/v1/groups/{id}", contextAndErrors(api.UpdateGroupHandler)).Methods(http.MethodPut)
-	r.HandleFunc("/v1/groups/{id}", contextAndErrors(api.DeleteGroupHandler)).Methods(http.MethodDelete)
+	r.HandleFunc("/v1/groups/{id}", auth.Require("groups:edit", contextAndErrors(api.UpdateGroupHandler))).
+		Methods(http.MethodPut)
+	r.HandleFunc("/v1/groups/{id}", auth.Require("groups:delete", contextAndErrors(api.DeleteGroupHandler))).
+		Methods(http.MethodDelete)
 	r.HandleFunc("/v1/groups/{id}/members", auth.Require("groups:edit", contextAndErrors(api.AddUserToGroupHandler))).
 		Methods(http.MethodPost)
 	r.HandleFunc("/v1/groups/{id}/members", auth.Require("groups:read", contextAndErrors(api.ListUsersInGroupHandler))).
