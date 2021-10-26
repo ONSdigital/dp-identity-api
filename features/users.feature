@@ -287,6 +287,7 @@ Feature: Users
 #   Get User
     Scenario: GET /v1/users/{id} and checking the response status 200
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I GET "/v1/users/abcd1234"
         Then I should receive the following JSON response with status "200":
             """
@@ -301,8 +302,17 @@ Feature: Users
                 "status_notes": ""
             }
             """
+    Scenario: GET /v1/users/{id} without a JWT token and checking the response status 403
+        When I GET "/v1/users/abcd1234"
+        Then the HTTP status code should be "403"
+
+    Scenario: GET /v1/users/{id} as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I GET "/v1/users/abcd1234"
+        Then the HTTP status code should be "403"
 
     Scenario: GET /v1/users/{id} user not found and checking the response status 404
+        Given I am an admin user
         When I GET "/v1/users/abcd1234"
         Then I should receive the following JSON response with status "404":
             """
@@ -318,6 +328,7 @@ Feature: Users
 
     Scenario: GET /v1/users/{id} unexpected server error and checking the response status 500
         Given a user with username "abcd1234" and email "internal.error@ons.gov.uk" exists in the database
+        And I am an admin user
         When I GET "/v1/users/abcd1234"
         Then I should receive the following JSON response with status "500":
             """
@@ -334,6 +345,7 @@ Feature: Users
 #   Update User
     Scenario: PUT /v1/users/{id} to update users names and checking the response status 200
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
         """
             {
@@ -359,6 +371,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} set user disabled and checking the response status 200
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
         """
             {
@@ -385,6 +398,7 @@ Feature: Users
     Scenario: PUT /v1/users/{id} set user enabled and checking the response status 200
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And user "abcd1234" active is "false"
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
         """
             {
@@ -410,6 +424,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} set user disabled and change names and checking the response status 200
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
         """
             {
@@ -436,6 +451,7 @@ Feature: Users
     Scenario: PUT /v1/users/{id} set user enabled and change names and checking the response status 200
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And user "abcd1234" active is "false"
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
         """
             {
@@ -459,8 +475,20 @@ Feature: Users
             }
             """
 
+    Scenario: PUT /v1/users/{id} without a JWT token and checking the response status 403
+        When I PUT "/v1/users/abcd1234"
+        """"""
+        Then the HTTP status code should be "403"
+
+    Scenario: PUT /v1/users/{id} as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I PUT "/v1/users/abcd1234"
+        """"""
+        Then the HTTP status code should be "403"
+
     Scenario: PUT /v1/users/{id} missing forename and checking the response status 400
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
         """
             {
@@ -484,6 +512,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} missing lastname and checking the response status 400
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
         """
             {
@@ -507,6 +536,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} invalid notes and checking the response status 400
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
         """
             {
@@ -530,6 +560,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} missing forename and lastname and checking the response status 400
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
         """
             {
@@ -557,6 +588,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} missing forename and invalid notes and checking the response status 400
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
         """
             {
@@ -584,6 +616,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} missing lastname and invalid notes and checking the response status 400
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
         """
             {
@@ -611,6 +644,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} missing forename, lastname and invalid notes and checking the response status 400
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
         """
             {
@@ -641,6 +675,7 @@ Feature: Users
             """
 
     Scenario: PUT /v1/users/{id} user not found and checking the response status 404
+        Given I am an admin user
         When I PUT "/v1/users/abcd1234"
             """
             {
@@ -664,6 +699,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} unexpected server error disabling user and checking the response status 500
         Given a user with username "abcd1234" and email "disable.internalerror@ons.gov.uk" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
             """
             {
@@ -688,6 +724,7 @@ Feature: Users
     Scenario: PUT /v1/users/{id} unexpected server error enabling user and checking the response status 500
         Given a user with username "abcd1234" and email "enable.internalerror@ons.gov.uk" exists in the database
         And user "abcd1234" active is "false"
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
             """
             {
@@ -711,6 +748,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} unexpected server error updating user and checking the response status 500
         Given a user with username "abcd1234" and email "update.internalerror@ons.gov.uk" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
             """
             {
@@ -734,6 +772,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} unexpected server error loading updated user and checking the response status 500
         Given a user with username "abcd1234" and email "internal.error@ons.gov.uk" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/abcd1234"
             """
             {
@@ -758,6 +797,7 @@ Feature: Users
 #   Change password - auth challenge
     Scenario: PUT /v1/users/self/password and checking the response status 202
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -772,8 +812,20 @@ Feature: Users
         And the response header "ID" should be "idToken"
         And the response header "Refresh" should be "refreshToken"
 
+    Scenario: PUT /v1/users/self/password without a JWT token and checking the response status 403
+        When I PUT "/v1/users/self/password"
+        """"""
+        Then the HTTP status code should be "403"
+
+    Scenario: PUT /v1/users/self/password as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I PUT "/v1/users/self/password"
+        """"""
+        Then the HTTP status code should be "403"
+
     Scenario: PUT /v1/users/self/password missing type and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -797,6 +849,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password new password required type with verification token and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -820,6 +873,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password missing email and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -843,6 +897,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password missing password and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -866,6 +921,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password missing session and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -889,6 +945,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password missing email and password and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -916,6 +973,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password missing email and session and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -943,6 +1001,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password missing password and session and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -970,6 +1029,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password missing email and password and session and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -1001,6 +1061,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password Cognito internal error
         Given an internal server error is returned from Cognito
+        And I am an admin user
         When I PUT "/v1/users/self/password"
         """
             {
@@ -1023,6 +1084,7 @@ Feature: Users
         """
 
     Scenario: PUT /v1/users/self/password Cognito invalid password
+        Given I am an admin user
         When I PUT "/v1/users/self/password"
         """
             {
@@ -1045,6 +1107,7 @@ Feature: Users
         """
 
     Scenario: PUT /v1/users/self/password Cognito user not found
+        Given I am an admin user
         When I PUT "/v1/users/self/password"
         """
             {
@@ -1059,6 +1122,7 @@ Feature: Users
 #   Change password - forgotten password
     Scenario: PUT /v1/users/self/password forgotten password type and checking the response status 202
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -1072,6 +1136,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password missing type and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -1095,6 +1160,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password forgotten password type with challenge session and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -1118,6 +1184,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password missing email and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -1141,6 +1208,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password missing password and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -1164,6 +1232,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password missing verification token and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -1187,6 +1256,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password missing email and password and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -1214,6 +1284,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password missing email and verification token and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -1241,6 +1312,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password missing email and password and verification token and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I PUT "/v1/users/self/password"
             """
             {
@@ -1272,6 +1344,7 @@ Feature: Users
 
     Scenario: PUT /v1/users/self/password Cognito internal error
         Given an internal server error is returned from Cognito
+        And I am an admin user
         When I PUT "/v1/users/self/password"
         """
             {
@@ -1294,6 +1367,7 @@ Feature: Users
         """
 
     Scenario: PUT /v1/users/self/password Cognito invalid password
+        Given I am an admin user
         When I PUT "/v1/users/self/password"
         """
             {
@@ -1316,6 +1390,7 @@ Feature: Users
         """
 
     Scenario: PUT /v1/users/self/password Cognito invalid token
+        Given I am an admin user
         When I PUT "/v1/users/self/password"
         """
             {
@@ -1338,6 +1413,7 @@ Feature: Users
         """
 
     Scenario: PUT /v1/users/self/password Cognito expired token
+        Given I am an admin user
         When I PUT "/v1/users/self/password"
         """
             {
@@ -1360,6 +1436,7 @@ Feature: Users
         """
 
     Scenario: PUT /v1/users/self/password Cognito user not found
+        Given I am an admin user
         When I PUT "/v1/users/self/password"
         """
             {
@@ -1374,6 +1451,7 @@ Feature: Users
 #   Request password reset
     Scenario: POST /v1/password-reset and checking the response status 202
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I POST "/v1/password-reset"
             """
                 {
@@ -1382,8 +1460,20 @@ Feature: Users
             """
         Then the HTTP status code should be "202"
 
+    Scenario: POST /v1/users/{id} without a JWT token and checking the response status 403
+        When I POST "/v1/password-reset"
+        """"""
+        Then the HTTP status code should be "403"
+
+    Scenario: POST /v1/users/{id} as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I POST "/v1/password-reset"
+        """"""
+        Then the HTTP status code should be "403"
+
     Scenario: POST /v1/password-reset missing email and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
+        And I am an admin user
         When I POST "/v1/password-reset"
             """
                 {
@@ -1403,6 +1493,7 @@ Feature: Users
             """
 
     Scenario: POST /v1/password-reset non ONS email address and checking the response status 202
+        Given I am an admin user
         When I POST "/v1/password-reset"
         """
             {
@@ -1413,6 +1504,7 @@ Feature: Users
 
     Scenario: POST /v1/password-reset Cognito internal error
         Given an internal server error is returned from Cognito
+        And I am an admin user
         When I POST "/v1/password-reset"
         """
             {
@@ -1433,6 +1525,7 @@ Feature: Users
 
     Scenario: POST /v1/password-reset Cognito too many requests error
         Given an internal server error is returned from Cognito
+        And I am an admin user
         When I POST "/v1/password-reset"
         """
             {
@@ -1452,6 +1545,7 @@ Feature: Users
         """
 
     Scenario: POST /v1/password-reset Cognito user not found
+        Given I am an admin user
         When I POST "/v1/password-reset"
         """
             {
@@ -1463,6 +1557,7 @@ Feature: Users
  #   List get users for user        
     Scenario: GET /v1/users/{id}/groups and checking the response status 200
         Given a user with username "listgrouptestuser" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         And there 1 groups exists in the database that username "listgrouptestuser" is a member
         When I GET "/v1/users/listgrouptestuser/groups"
         Then I should receive the following JSON response with status "200":
@@ -1487,6 +1582,7 @@ Feature: Users
 
     Scenario: GET /v1/users/{id}/groups  for 0 groups and checking the response status 200
         Given a user with username "listgrouptestuser2" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         And there 0 groups exists in the database that username "listgrouptestuser2" is a member
         When I GET "/v1/users/listgrouptestuser2/groups"
         Then I should receive the following JSON response with status "200":
@@ -1500,6 +1596,7 @@ Feature: Users
 
     Scenario: GET /v1/users/{id}/groups  user not found returns 500
         Given a user with username "get-user-not-found" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
         And there 0 groups exists in the database that username "get-user-not-found" is a member
         When I GET "/v1/users/get-user-not-found/groups"
         Then I should receive the following JSON response with status "500":
@@ -1510,4 +1607,13 @@ Feature: Users
   
               ]
           }
-            """ 
+            """
+
+    Scenario: GET /v1/users/{id}/groups without a JWT token and checking the response status 403
+        When I GET "/v1/users/listgrouptestuser/groups"
+        Then the HTTP status code should be "403"
+
+    Scenario: GET /v1/users/{id}/groups as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I GET "/v1/users/listgrouptestuser/groups"
+        Then the HTTP status code should be "403"

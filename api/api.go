@@ -96,13 +96,18 @@ func Setup(ctx context.Context,
 		Methods(http.MethodPost)
 	r.HandleFunc("/v1/users", auth.Require("users:read", contextAndErrors(api.ListUsersHandler))).
 		Methods(http.MethodGet)
-	r.HandleFunc("/v1/users/{id}", contextAndErrors(api.GetUserHandler)).Methods(http.MethodGet)
-	r.HandleFunc("/v1/users/{id}", contextAndErrors(api.UpdateUserHandler)).Methods(http.MethodPut)
-	r.HandleFunc("/v1/users/{id}/groups", contextAndErrors(api.ListUserGroupsHandler)).Methods(http.MethodGet)
+	r.HandleFunc("/v1/users/{id}", auth.Require("users:read", contextAndErrors(api.GetUserHandler))).
+		Methods(http.MethodGet)
+	r.HandleFunc("/v1/users/{id}", auth.Require("users:update", contextAndErrors(api.UpdateUserHandler))).
+		Methods(http.MethodPut)
+	r.HandleFunc("/v1/users/{id}/groups", auth.Require("users:read", contextAndErrors(api.ListUserGroupsHandler))).
+		Methods(http.MethodGet)
 	// self used in paths rather than identifier as the identifier is a Cognito Session string in change password requests
 	// the user id is not yet available from the previous responses
-	r.HandleFunc("/v1/users/self/password", contextAndErrors(api.ChangePasswordHandler)).Methods(http.MethodPut)
-	r.HandleFunc("/v1/password-reset", contextAndErrors(api.PasswordResetHandler)).Methods(http.MethodPost)
+	r.HandleFunc("/v1/users/self/password", auth.Require("users:update", contextAndErrors(api.ChangePasswordHandler))).
+		Methods(http.MethodPut)
+	r.HandleFunc("/v1/password-reset", auth.Require("users:update", contextAndErrors(api.PasswordResetHandler))).
+		Methods(http.MethodPost)
 	r.HandleFunc("/v1/groups", contextAndErrors(api.ListGroupsHandler)).Methods(http.MethodGet)
 	r.HandleFunc("/v1/groups", contextAndErrors(api.CreateGroupHandler)).Methods(http.MethodPost)
 	r.HandleFunc("/v1/groups/{id}", contextAndErrors(api.GetGroupHandler)).Methods(http.MethodGet)
