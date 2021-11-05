@@ -24,7 +24,6 @@ func TestSetup(t *testing.T) {
 	Convey("Given an API instance", t, func() {
 		r := mux.NewRouter()
 		ctx := context.Background()
-		authorisationMiddleware := newAuthorisationMiddlwareMock()
 
 		m := &mock.MockCognitoIdentityProviderClient{}
 		m.CreateGroupFunc = func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
@@ -36,8 +35,7 @@ func TestSetup(t *testing.T) {
 
 		api, err := Setup(ctx, r, m,
 			"us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow",
-			[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
-			authorisationMiddleware)
+			[]string{"@ons.gov.uk", "@ext.ons.gov.uk"}, newAuthorisationMiddlwareMock())
 
 		Convey("When created the following route(s) should have been added", func() {
 			So(hasRoute(api.Router, "/v1/tokens", http.MethodPost), ShouldBeTrue)
@@ -154,7 +152,6 @@ func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProv
 		allowedDomains                           []string = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
 	)
 
-	authorisationMiddleware := newAuthorisationMiddlwareMock()
 	m := &mock.MockCognitoIdentityProviderClient{}
 	m.CreateGroupFunc = func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
 		group := &cognitoidentityprovider.CreateGroupOutput{
@@ -163,7 +160,7 @@ func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProv
 		return group, nil
 	}
 
-	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow, allowedDomains, authorisationMiddleware)
+	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow, allowedDomains, newAuthorisationMiddlwareMock())
 
 	w := httptest.NewRecorder()
 

@@ -13,6 +13,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const (
+	GroupsCreatePermission string = "users:create"
+	GroupsReadPermission          = "users:read"
+	GroupsEditPermission        = "users:update"
+	GroupsDeletePermission        = "users:update"
+)
+
 //CreateGroupHandler creates a new group
 func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	body, err := ioutil.ReadAll(req.Body)
