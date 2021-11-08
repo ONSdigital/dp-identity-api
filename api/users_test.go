@@ -842,6 +842,16 @@ func TestChangePasswordHandler(t *testing.T) {
 
 	api, w, m := apiSetup()
 
+	m.DescribeUserPoolClientFunc = func(input *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
+		tokenValidDays := int64(1)
+		userPoolClient := &cognitoidentityprovider.DescribeUserPoolClientOutput{
+			UserPoolClient: &cognitoidentityprovider.UserPoolClientType{
+				RefreshTokenValidity: &tokenValidDays,
+			},
+		}
+		return userPoolClient, nil
+	}
+
 	Convey("RespondToAuthChallenge - check expected responses", t, func() {
 		respondToAuthChallengeTests := []struct {
 			respondToAuthChallengeFunction func(input *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error)
