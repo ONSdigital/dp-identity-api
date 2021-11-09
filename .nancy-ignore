@@ -1,2 +1,3 @@
 CVE-2020-26160 # No upgrade path for github.com/dgrijalva/jwt-go. See: https://ossindex.sonatype.org/vulnerability/c16fb56d-9de6-4065-9fca-d2b4cfb13020?component-type=golang&component-name=github.com%2Fdgrijalva%2Fjwt-go&utm_source=nancy-client&utm_medium=integration&utm_content=0.0.0-dev
+CVE-2021-3121 # No upgrade path for golang/github.com/gogo/protobuf. See: https://ossindex.sonatype.org/vulnerability/dcf6da03-f9dd-4a4e-b792-0262de36a0b1?component-type=golang&component-name=github.com%2Fgogo%2Fprotobuf&utm_source=nancy-client&utm_medium=integration&utm_content=1.0.17
 
