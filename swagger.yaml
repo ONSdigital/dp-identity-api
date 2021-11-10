@@ -349,7 +349,7 @@ paths:
               type: string
               description: "Refresh token"
           schema:
-            $ref: '#/definitions/ExpirationTime'
+            $ref: '#/definitions/SignInExpirationTime'
         400:
           description: "Unable to validate the type, email, passowrd or session in the request"
           schema:
