@@ -420,12 +420,14 @@ func (p ChangePassword) BuildAuthChallengeResponseRequest(clientSecret string, c
 }
 
 //BuildAuthChallengeSuccessfulJsonResponse builds the ChangePassword response json for client responses to NewPasswordRequired changes
-func (p ChangePassword) BuildAuthChallengeSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.RespondToAuthChallengeOutput) ([]byte, error) {
+func (p ChangePassword) BuildAuthChallengeSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.RespondToAuthChallengeOutput, refreshTokenTTL int) ([]byte, error) {
 	if result.AuthenticationResult != nil {
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
 		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
+		refreshTokenDuration := time.Duration(SecondsInDay * refreshTokenTTL)
+		refreshTokenExpirationTime := time.Now().UTC().Add(time.Second * refreshTokenDuration).String()
 
-		postBody := map[string]interface{}{"expirationTime": expirationTime}
+		postBody := map[string]interface{}{"expirationTime": expirationTime, "refreshTokenExpirationTime": refreshTokenExpirationTime}
 
 		jsonResponse, err := json.Marshal(postBody)
 		if err != nil {

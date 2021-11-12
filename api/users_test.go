@@ -842,10 +842,20 @@ func TestChangePasswordHandler(t *testing.T) {
 
 	api, w, m := apiSetup()
 
+	m.DescribeUserPoolClientFunc = func(input *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
+		tokenValidDays := int64(1)
+		userPoolClient := &cognitoidentityprovider.DescribeUserPoolClientOutput{
+			UserPoolClient: &cognitoidentityprovider.UserPoolClientType{
+				RefreshTokenValidity: &tokenValidDays,
+			},
+		}
+		return userPoolClient, nil
+	}
+
 	Convey("RespondToAuthChallenge - check expected responses", t, func() {
 		respondToAuthChallengeTests := []struct {
 			respondToAuthChallengeFunction func(input *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error)
-			httpResponse                   int
+			assertions                     func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{
 			{
 				// Cognito successful password change
@@ -859,7 +869,15 @@ func TestChangePasswordHandler(t *testing.T) {
 						},
 					}, nil
 				},
-				http.StatusAccepted,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					var responseBody map[string]interface{}
+					_ = json.Unmarshal(successResponse.Body, &responseBody)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusAccepted)
+					So(errorResponse, ShouldBeNil)
+					So(responseBody["expirationTime"], ShouldNotBeNil)
+					So(responseBody["refreshTokenExpirationTime"], ShouldNotBeNil)
+				},
 			},
 			{
 				// Cognito internal error
@@ -870,7 +888,10 @@ func TestChangePasswordHandler(t *testing.T) {
 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					return nil, awsErr
 				},
-				http.StatusInternalServerError,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+				},
 			},
 			{
 				// Cognito invalid session
@@ -881,7 +902,10 @@ func TestChangePasswordHandler(t *testing.T) {
 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					return nil, awsErr
 				},
-				http.StatusBadRequest,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+				},
 			},
 			{
 				// Cognito invalid password
@@ -892,7 +916,10 @@ func TestChangePasswordHandler(t *testing.T) {
 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					return nil, awsErr
 				},
-				http.StatusBadRequest,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+				},
 			},
 			{
 				// Cognito invalid user
@@ -903,27 +930,20 @@ func TestChangePasswordHandler(t *testing.T) {
 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					return nil, awsErr
 				},
-				http.StatusAccepted,
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusAccepted)
+					So(errorResponse, ShouldBeNil)
+				},
 			},
 		}
-
 		for _, tt := range respondToAuthChallengeTests {
 			m.RespondToAuthChallengeFunc = tt.respondToAuthChallengeFunction
-
 			postBody := map[string]interface{}{"type": models.NewPasswordRequiredType, "email": email, "password": password, "session": session}
 			body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodPut, changePasswordEndPoint, bytes.NewReader(body))
-
 			successResponse, errorResponse := api.ChangePasswordHandler(ctx, w, r)
-
-			// Check whether testing a success or error case
-			if tt.httpResponse > 399 {
-				So(successResponse, ShouldBeNil)
-				So(errorResponse.Status, ShouldEqual, tt.httpResponse)
-			} else {
-				So(successResponse.Status, ShouldEqual, tt.httpResponse)
-				So(errorResponse, ShouldBeNil)
-			}
+			tt.assertions(successResponse, errorResponse)
 		}
 	})
 }

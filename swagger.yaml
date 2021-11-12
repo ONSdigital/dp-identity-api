@@ -349,7 +349,7 @@ paths:
               type: string
               description: "Refresh token"
           schema:
-            $ref: '#/definitions/ExpirationTime'
+            $ref: '#/definitions/PasswordResetExpirationTime'
         400:
           description: "Unable to validate the type, email, passowrd or session in the request"
           schema:
@@ -661,6 +661,17 @@ definitions:
       refreshTokenExpirationTime:
         type: string
         description: "Expiration Time, UTC ISO 8601"
+        example: "YYYY-MM-DD hh-mm-ssZ"
+  PasswordResetExpirationTime:
+    type: object
+    properties:
+      expirationTime:
+        type: string
+        description: "Expiration Time, UTC ISO 8601"
+        example: "YYYY-MM-DD hh-mm-ssZ"
+      refreshTokenExpirationTime:
+        type: string
+        description: "Refresh Token Expiration Time, UTC ISO 8601"
         example: "YYYY-MM-DD hh-mm-ssZ"
   NewGroup:
     description: "The new group details for the response body"
