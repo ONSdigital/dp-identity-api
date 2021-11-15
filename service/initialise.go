@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	cognitoclient "github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -52,6 +54,11 @@ func (e *ExternalServiceList) GetCognitoClient(region string) cognitoclient.Clie
 	return client
 }
 
+// GetAuthorisationMiddleware creates a new instance of authorisation.Middlware
+func (e *ExternalServiceList) GetAuthorisationMiddleware(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+	return e.Init.DoGetAuthorisationMiddleware(ctx, authorisationConfig)
+}
+
 // DoGetHTTPServer creates an HTTP Server with the provided bind address and router
 func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer {
 	s := dphttp.NewServer(bindAddr, router)
@@ -75,4 +82,9 @@ func (e *Init) DoGetCognitoClient(AWSRegion string) cognitoclient.Client {
 		SharedConfigState: session.SharedConfigEnable,
 	})), &aws.Config{Region: &AWSRegion})
 	return client
+}
+
+// DoGetAuthorisationMiddleware creates authorisation middleware for the given config
+func (e *Init) DoGetAuthorisationMiddleware(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+	return authorisation.NewFeatureFlaggedMiddleware(ctx, authorisationConfig)
 }

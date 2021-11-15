@@ -4,7 +4,9 @@
 package mock
 
 import (
-	cognitoclient "github.com/ONSdigital/dp-identity-api/cognito"
+	"context"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
+	"github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/service"
 	"net/http"
@@ -17,34 +19,55 @@ var _ service.Initialiser = &InitialiserMock{}
 
 // InitialiserMock is a mock implementation of service.Initialiser.
 //
-// 	func TestSomethingThatUsesInitialiser(t *testing.T) {
+//     func TestSomethingThatUsesInitialiser(t *testing.T) {
 //
-// 		// make and configure a mocked service.Initialiser
-// 		mockedInitialiser := &InitialiserMock{
-// 			DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer {
-// 				panic("mock out the DoGetHTTPServer method")
-// 			},
-// 			DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
-// 				panic("mock out the DoGetHealthCheck method")
-// 			},
-// 		}
+//         // make and configure a mocked service.Initialiser
+//         mockedInitialiser := &InitialiserMock{
+//             DoGetAuthorisationMiddlewareFunc: func(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+// 	               panic("mock out the DoGetAuthorisationMiddleware method")
+//             },
+//             DoGetCognitoClientFunc: func(region string) cognito.Client {
+// 	               panic("mock out the DoGetCognitoClient method")
+//             },
+//             DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer {
+// 	               panic("mock out the DoGetHTTPServer method")
+//             },
+//             DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
+// 	               panic("mock out the DoGetHealthCheck method")
+//             },
+//         }
 //
-// 		// use mockedInitialiser in code that requires service.Initialiser
-// 		// and then make assertions.
+//         // use mockedInitialiser in code that requires service.Initialiser
+//         // and then make assertions.
 //
-// 	}
+//     }
 type InitialiserMock struct {
+	// DoGetAuthorisationMiddlewareFunc mocks the DoGetAuthorisationMiddleware method.
+	DoGetAuthorisationMiddlewareFunc func(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error)
+
+	// DoGetCognitoClientFunc mocks the DoGetCognitoClient method.
+	DoGetCognitoClientFunc func(region string) cognito.Client
+
 	// DoGetHTTPServerFunc mocks the DoGetHTTPServer method.
 	DoGetHTTPServerFunc func(bindAddr string, router http.Handler) service.HTTPServer
 
 	// DoGetHealthCheckFunc mocks the DoGetHealthCheck method.
 	DoGetHealthCheckFunc func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error)
 
-	// DoGetCognitoClientFunc mocks the DoGetCognitoClient method.
-	DoGetCognitoClientFunc func(AWSRegion string) cognitoclient.Client
-
 	// calls tracks calls to the methods.
 	calls struct {
+		// DoGetAuthorisationMiddleware holds details about calls to the DoGetAuthorisationMiddleware method.
+		DoGetAuthorisationMiddleware []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// AuthorisationConfig is the authorisationConfig argument value.
+			AuthorisationConfig *authorisation.Config
+		}
+		// DoGetCognitoClient holds details about calls to the DoGetCognitoClient method.
+		DoGetCognitoClient []struct {
+			// Region is the region argument value.
+			Region string
+		}
 		// DoGetHTTPServer holds details about calls to the DoGetHTTPServer method.
 		DoGetHTTPServer []struct {
 			// BindAddr is the bindAddr argument value.
@@ -64,8 +87,76 @@ type InitialiserMock struct {
 			Version string
 		}
 	}
-	lockDoGetHTTPServer  sync.RWMutex
-	lockDoGetHealthCheck sync.RWMutex
+	lockDoGetAuthorisationMiddleware sync.RWMutex
+	lockDoGetCognitoClient           sync.RWMutex
+	lockDoGetHTTPServer              sync.RWMutex
+	lockDoGetHealthCheck             sync.RWMutex
+}
+
+// DoGetAuthorisationMiddleware calls DoGetAuthorisationMiddlewareFunc.
+func (mock *InitialiserMock) DoGetAuthorisationMiddleware(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+	if mock.DoGetAuthorisationMiddlewareFunc == nil {
+		panic("InitialiserMock.DoGetAuthorisationMiddlewareFunc: method is nil but Initialiser.DoGetAuthorisationMiddleware was just called")
+	}
+	callInfo := struct {
+		Ctx                 context.Context
+		AuthorisationConfig *authorisation.Config
+	}{
+		Ctx:                 ctx,
+		AuthorisationConfig: authorisationConfig,
+	}
+	mock.lockDoGetAuthorisationMiddleware.Lock()
+	mock.calls.DoGetAuthorisationMiddleware = append(mock.calls.DoGetAuthorisationMiddleware, callInfo)
+	mock.lockDoGetAuthorisationMiddleware.Unlock()
+	return mock.DoGetAuthorisationMiddlewareFunc(ctx, authorisationConfig)
+}
+
+// DoGetAuthorisationMiddlewareCalls gets all the calls that were made to DoGetAuthorisationMiddleware.
+// Check the length with:
+//     len(mockedInitialiser.DoGetAuthorisationMiddlewareCalls())
+func (mock *InitialiserMock) DoGetAuthorisationMiddlewareCalls() []struct {
+	Ctx                 context.Context
+	AuthorisationConfig *authorisation.Config
+} {
+	var calls []struct {
+		Ctx                 context.Context
+		AuthorisationConfig *authorisation.Config
+	}
+	mock.lockDoGetAuthorisationMiddleware.RLock()
+	calls = mock.calls.DoGetAuthorisationMiddleware
+	mock.lockDoGetAuthorisationMiddleware.RUnlock()
+	return calls
+}
+
+// DoGetCognitoClient calls DoGetCognitoClientFunc.
+func (mock *InitialiserMock) DoGetCognitoClient(region string) cognito.Client {
+	if mock.DoGetCognitoClientFunc == nil {
+		panic("InitialiserMock.DoGetCognitoClientFunc: method is nil but Initialiser.DoGetCognitoClient was just called")
+	}
+	callInfo := struct {
+		Region string
+	}{
+		Region: region,
+	}
+	mock.lockDoGetCognitoClient.Lock()
+	mock.calls.DoGetCognitoClient = append(mock.calls.DoGetCognitoClient, callInfo)
+	mock.lockDoGetCognitoClient.Unlock()
+	return mock.DoGetCognitoClientFunc(region)
+}
+
+// DoGetCognitoClientCalls gets all the calls that were made to DoGetCognitoClient.
+// Check the length with:
+//     len(mockedInitialiser.DoGetCognitoClientCalls())
+func (mock *InitialiserMock) DoGetCognitoClientCalls() []struct {
+	Region string
+} {
+	var calls []struct {
+		Region string
+	}
+	mock.lockDoGetCognitoClient.RLock()
+	calls = mock.calls.DoGetCognitoClient
+	mock.lockDoGetCognitoClient.RUnlock()
+	return calls
 }
 
 // DoGetHTTPServer calls DoGetHTTPServerFunc.
@@ -144,9 +235,4 @@ func (mock *InitialiserMock) DoGetHealthCheckCalls() []struct {
 	calls = mock.calls.DoGetHealthCheck
 	mock.lockDoGetHealthCheck.RUnlock()
 	return calls
-}
-
-// DoGetCognitoClient creates a CognitoClient with the provided region
-func (mock *InitialiserMock) DoGetCognitoClient(AWSRegion string) cognitoclient.Client {
-	return mock.DoGetCognitoClientFunc(AWSRegion)
 }

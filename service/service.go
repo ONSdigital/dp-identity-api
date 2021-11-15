@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-identity-api/api"
 	cognitoClient "github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/ONSdigital/dp-identity-api/config"
@@ -14,12 +14,13 @@ import (
 
 // Service contains all the configs, server and clients to run the dp-identity-api API
 type Service struct {
-	Config      *config.Config
-	Server      HTTPServer
-	Router      *mux.Router
-	Api         *api.API
-	ServiceList *ExternalServiceList
-	HealthCheck HealthChecker
+	Config                  *config.Config
+	Server                  HTTPServer
+	Router                  *mux.Router
+	Api                     *api.API
+	ServiceList             *ExternalServiceList
+	HealthCheck             HealthChecker
+	authorisationMiddleware authorisation.Middleware
 }
 
 // Run the service
@@ -35,7 +36,13 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	cognitoclient := serviceList.GetCognitoClient(cfg.AWSRegion)
 
-	a, err := api.Setup(ctx, r, cognitoclient, cfg.AWSCognitoUserPoolID, cfg.AWSCognitoClientId, cfg.AWSCognitoClientSecret, cfg.AWSAuthFlow, cfg.AllowedEmailDomains)
+	authorisationMiddleware, err := serviceList.GetAuthorisationMiddleware(ctx, cfg.AuthorisationConfig)
+	if err != nil {
+		log.Fatal(ctx, "could not instantiate authorisation middleware", err)
+		return nil, err
+	}
+
+	a, err := api.Setup(ctx, r, cognitoclient, cfg.AWSCognitoUserPoolID, cfg.AWSCognitoClientId, cfg.AWSCognitoClientSecret, cfg.AWSAuthFlow, cfg.AllowedEmailDomains, authorisationMiddleware)
 	if err != nil {
 		log.Fatal(ctx, "error returned from api setup", err)
 		return nil, err
@@ -48,7 +55,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	if err := registerCheckers(ctx, hc, cognitoclient, &cfg.AWSCognitoUserPoolID); err != nil {
+	if err := registerCheckers(ctx, hc, cognitoclient, &cfg.AWSCognitoUserPoolID, authorisationMiddleware); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -63,12 +70,13 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}()
 
 	return &Service{
-		Config:      cfg,
-		Router:      r,
-		Api:         a,
-		HealthCheck: hc,
-		ServiceList: serviceList,
-		Server:      s,
+		Config:                  cfg,
+		Router:                  r,
+		Api:                     a,
+		HealthCheck:             hc,
+		ServiceList:             serviceList,
+		Server:                  s,
+		authorisationMiddleware: authorisationMiddleware,
 	}, nil
 }
 
@@ -95,7 +103,10 @@ func (svc *Service) Close(ctx context.Context) error {
 			hasShutdownError = true
 		}
 
-		// ADD CODE HERE: Close other dependencies, in the expected order
+		if err := svc.authorisationMiddleware.Close(ctx); err != nil {
+			log.Error(ctx, "failed to close authorisation middleware", err)
+			hasShutdownError = true
+		}
 	}()
 
 	// wait for shutdown success (via cancel) or failure (timeout)
@@ -118,12 +129,17 @@ func (svc *Service) Close(ctx context.Context) error {
 	return nil
 }
 
-func registerCheckers(ctx context.Context, hc HealthChecker, client cognitoClient.Client, userPoolID *string) (err error) {
+func registerCheckers(ctx context.Context, hc HealthChecker, client cognitoClient.Client, userPoolID *string, authorisationMiddleware authorisation.Middleware) (err error) {
 	hasErrors := false
 
 	if err := hc.AddCheck("cognito healthchecker", health.CognitoHealthCheck(client, userPoolID)); err != nil {
 		hasErrors = true
 		log.Error(ctx, "error adding check for cognito client", err)
+	}
+
+	if err := hc.AddCheck("permissions cache health check", authorisationMiddleware.HealthCheck); err != nil {
+		hasErrors = true
+		log.Error(ctx, "error adding check for permissions cache", err)
 	}
 
 	if hasErrors {

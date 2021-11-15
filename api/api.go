@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"net/http"
 	"time"
 
@@ -54,7 +55,12 @@ func contextAndErrors(h baseHandler) http.HandlerFunc {
 }
 
 //Setup function sets up the api and returns an api
-func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, userPoolId string, clientId string, clientSecret string, clientAuthFlow string, allowedDomains []string) (*API, error) {
+func Setup(ctx context.Context,
+	r *mux.Router,
+	cognitoClient cognito.Client,
+	userPoolId, clientId, clientSecret, clientAuthFlow string,
+	allowedDomains []string,
+	auth authorisation.Middleware) (*API, error) {
 
 	// Return an error if empty required parameter was passed.
 	if userPoolId == "" || clientId == "" || clientSecret == "" || clientAuthFlow == "" || allowedDomains == nil || len(allowedDomains) == 0 {
@@ -82,27 +88,43 @@ func Setup(ctx context.Context, r *mux.Router, cognitoClient cognito.Client, use
 	}
 
 	r.HandleFunc("/v1/tokens", contextAndErrors(api.TokensHandler)).Methods(http.MethodPost)
-	r.HandleFunc("/v1/tokens", contextAndErrors(api.SignOutAllUsersHandler)).Methods(http.MethodDelete)
+	r.HandleFunc("/v1/tokens", auth.Require(UsersUpdatePermission, contextAndErrors(api.SignOutAllUsersHandler))).
+		Methods(http.MethodDelete)
 	// self used in paths rather than identifier as the identifier is JWT tokens passed in the request headers
 	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.SignOutHandler)).Methods(http.MethodDelete)
 	r.HandleFunc("/v1/tokens/self", contextAndErrors(api.RefreshHandler)).Methods(http.MethodPut)
-	r.HandleFunc("/v1/users", contextAndErrors(api.CreateUserHandler)).Methods(http.MethodPost)
-	r.HandleFunc("/v1/users", contextAndErrors(api.ListUsersHandler)).Methods(http.MethodGet)
-	r.HandleFunc("/v1/users/{id}", contextAndErrors(api.GetUserHandler)).Methods(http.MethodGet)
-	r.HandleFunc("/v1/users/{id}", contextAndErrors(api.UpdateUserHandler)).Methods(http.MethodPut)
-	r.HandleFunc("/v1/users/{id}/groups", contextAndErrors(api.ListUserGroupsHandler)).Methods(http.MethodGet)
+	r.HandleFunc("/v1/users", auth.Require(UsersCreatePermission, contextAndErrors(api.CreateUserHandler))).
+		Methods(http.MethodPost)
+	r.HandleFunc("/v1/users", auth.Require(UsersReadPermission, contextAndErrors(api.ListUsersHandler))).
+		Methods(http.MethodGet)
+	r.HandleFunc("/v1/users/{id}", auth.Require(UsersReadPermission, contextAndErrors(api.GetUserHandler))).
+		Methods(http.MethodGet)
+	r.HandleFunc("/v1/users/{id}", auth.Require(UsersUpdatePermission, contextAndErrors(api.UpdateUserHandler))).
+		Methods(http.MethodPut)
+	r.HandleFunc("/v1/users/{id}/groups", auth.Require(UsersReadPermission, contextAndErrors(api.ListUserGroupsHandler))).
+		Methods(http.MethodGet)
 	// self used in paths rather than identifier as the identifier is a Cognito Session string in change password requests
 	// the user id is not yet available from the previous responses
-	r.HandleFunc("/v1/users/self/password", contextAndErrors(api.ChangePasswordHandler)).Methods(http.MethodPut)
-	r.HandleFunc("/v1/password-reset", contextAndErrors(api.PasswordResetHandler)).Methods(http.MethodPost)
-	r.HandleFunc("/v1/groups", contextAndErrors(api.ListGroupsHandler)).Methods(http.MethodGet)
-	r.HandleFunc("/v1/groups", contextAndErrors(api.CreateGroupHandler)).Methods(http.MethodPost)
-	r.HandleFunc("/v1/groups/{id}", contextAndErrors(api.GetGroupHandler)).Methods(http.MethodGet)
-	r.HandleFunc("/v1/groups/{id}", contextAndErrors(api.UpdateGroupHandler)).Methods(http.MethodPut)
-	r.HandleFunc("/v1/groups/{id}", contextAndErrors(api.DeleteGroupHandler)).Methods(http.MethodDelete)
-	r.HandleFunc("/v1/groups/{id}/members", contextAndErrors(api.AddUserToGroupHandler)).Methods(http.MethodPost)
-	r.HandleFunc("/v1/groups/{id}/members", contextAndErrors(api.ListUsersInGroupHandler)).Methods(http.MethodGet)
-	r.HandleFunc("/v1/groups/{id}/members/{user_id}", contextAndErrors(api.RemoveUserFromGroupHandler)).Methods(http.MethodDelete)
+	r.HandleFunc("/v1/users/self/password", auth.Require(UsersUpdatePermission, contextAndErrors(api.ChangePasswordHandler))).
+		Methods(http.MethodPut)
+	r.HandleFunc("/v1/password-reset", auth.Require(UsersUpdatePermission, contextAndErrors(api.PasswordResetHandler))).
+		Methods(http.MethodPost)
+	r.HandleFunc("/v1/groups", auth.Require(GroupsReadPermission, contextAndErrors(api.ListGroupsHandler))).
+		Methods(http.MethodGet)
+	r.HandleFunc("/v1/groups", auth.Require(GroupsCreatePermission, contextAndErrors(api.CreateGroupHandler))).
+		Methods(http.MethodPost)
+	r.HandleFunc("/v1/groups/{id}", auth.Require(GroupsReadPermission, contextAndErrors(api.GetGroupHandler))).
+		Methods(http.MethodGet)
+	r.HandleFunc("/v1/groups/{id}", auth.Require(GroupsEditPermission, contextAndErrors(api.UpdateGroupHandler))).
+		Methods(http.MethodPut)
+	r.HandleFunc("/v1/groups/{id}", auth.Require(GroupsDeletePermission, contextAndErrors(api.DeleteGroupHandler))).
+		Methods(http.MethodDelete)
+	r.HandleFunc("/v1/groups/{id}/members", auth.Require(GroupsEditPermission, contextAndErrors(api.AddUserToGroupHandler))).
+		Methods(http.MethodPost)
+	r.HandleFunc("/v1/groups/{id}/members", auth.Require(GroupsReadPermission, contextAndErrors(api.ListUsersInGroupHandler))).
+		Methods(http.MethodGet)
+	r.HandleFunc("/v1/groups/{id}/members/{user_id}", auth.Require(GroupsEditPermission, contextAndErrors(api.RemoveUserFromGroupHandler))).
+		Methods(http.MethodDelete)
 	return api, nil
 }
 

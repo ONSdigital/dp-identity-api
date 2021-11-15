@@ -3,6 +3,7 @@ package steps
 import (
 	"encoding/json"
 	"errors"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
 	"io/ioutil"
 	"strconv"
 
@@ -21,6 +22,8 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^a user with username "([^"]*)" and email "([^"]*)" exists in the database$`, c.aUserWithUsernameAndEmailExistsInTheDatabase)
 	ctx.Step(`^an internal server error is returned from Cognito$`, c.anInternalServerErrorIsReturnedFromCognito)
 	ctx.Step(`^an error is returned from Cognito$`, c.anErrorIsReturnedFromCognito)
+	ctx.Step(`^I am an admin user$`, c.adminJWTToken)
+	ctx.Step(`^I am a publisher user$`, c.publisherJWTToken)
 	ctx.Step(`^I have an active session with access token "([^"]*)"$`, c.iHaveAnActiveSessionWithAccessToken)
 	ctx.Step(`I have a valid ID header for user "([^"]*)"$`, c.iHaveAValidIDHeaderForUser)
 	ctx.Step(`^the AdminUserGlobalSignOut endpoint in cognito returns an internal server error$`, c.theAdminUserGlobalSignOutEndpointInCognitoReturnsAnInternalServerError)
@@ -68,6 +71,16 @@ func (c *IdentityComponent) iHaveAValidIDHeaderForUser(email string) error {
 		return errors.New("id token generation failed")
 	}
 	err := c.apiFeature.ISetTheHeaderTo(api.IdTokenHeaderName, idToken)
+	return err
+}
+
+func (c *IdentityComponent) adminJWTToken() error {
+	err := c.apiFeature.ISetTheHeaderTo(api.AccessTokenHeaderName, authorisationtest.AdminJWTToken)
+	return err
+}
+
+func (c *IdentityComponent) publisherJWTToken() error {
+	err := c.apiFeature.ISetTheHeaderTo(api.AccessTokenHeaderName, authorisationtest.PublisherJWTToken)
 	return err
 }
 

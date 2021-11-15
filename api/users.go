@@ -13,6 +13,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const (
+	UsersCreatePermission string = "users:create"
+	UsersReadPermission          = "users:read"
+	UsersUpdatePermission        = "users:update"
+)
+
 //CreateUserHandler creates a new user and returns a http handler interface
 func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer func() {

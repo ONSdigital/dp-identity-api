@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	cognitoclient "github.com/ONSdigital/dp-identity-api/cognito"
 	"net/http"
 
@@ -18,6 +19,7 @@ type Initialiser interface {
 	DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer
 	DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error)
 	DoGetCognitoClient(region string) cognitoclient.Client
+	DoGetAuthorisationMiddleware(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error)
 }
 
 // HTTPServer defines the required methods from the HTTP server
