@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -89,8 +90,9 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 
 	usersList := models.UsersList{}
 
-	if req.URL.RawQuery != "" {
-		*filterString, validationErrs = api.GetFilterStringAndValidate(req.URL.Path, req.URL.RawQuery)
+	if req.URL.Query().Get("active") != "" {
+		queryStr := fmt.Sprintf("%s%s", "active=", req.URL.Query().Get("active"))
+		*filterString, validationErrs = api.GetFilterStringAndValidate(req.URL.Path, queryStr)
 		if validationErrs != nil {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs)
 		}
