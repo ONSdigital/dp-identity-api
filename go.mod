@@ -9,7 +9,7 @@ go 1.17
 replace github.com/coreos/etcd => go.etcd.io/etcd v0.0.0-20200716221548-4873f5516bd9
 
 require (
-	github.com/ONSdigital/dp-authorisation/v2 v2.2.0
+	github.com/ONSdigital/dp-authorisation/v2 v2.11.0
 	github.com/ONSdigital/dp-component-test v0.3.0
 	github.com/ONSdigital/dp-healthcheck v1.1.2
 	github.com/ONSdigital/dp-net v1.2.0
