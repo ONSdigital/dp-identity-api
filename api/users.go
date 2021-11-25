@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -89,8 +90,9 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 
 	usersList := models.UsersList{}
 
-	if req.URL.RawQuery != "" {
-		*filterString, validationErrs = api.GetFilterStringAndValidate(req.URL.Path, req.URL.RawQuery)
+	if req.URL.Query().Get("active") != "" {
+		queryStr := fmt.Sprintf("%s%s", "active=", req.URL.Query().Get("active"))
+		*filterString, validationErrs = api.GetFilterStringAndValidate(req.URL.Path, queryStr)
 		if validationErrs != nil {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs)
 		}
@@ -250,8 +252,21 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 				return nil, models.NewErrorResponse(http.StatusBadRequest, nil, parsedErr)
 			}
 		} else {
-			jsonResponse, responseErr = changePasswordParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, result)
+			// Determine the refresh token TTL (DescribeUserPoolClient)
+			userPoolClient, err := api.CognitoClient.DescribeUserPoolClient(
+				&cognitoidentityprovider.DescribeUserPoolClientInput{
+					UserPoolId: &api.UserPoolId,
+					ClientId:   &api.ClientId,
+				},
+			)
+			if err != nil {
+				awsErr := models.NewCognitoError(ctx, err, "Describing user pool for refresh token TTL")
+				return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, awsErr)
+			}
 
+			refreshTokenTTL := int(*userPoolClient.UserPoolClient.RefreshTokenValidity)
+
+			jsonResponse, responseErr = changePasswordParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, result, refreshTokenTTL)
 			if responseErr == nil {
 				headers = map[string]string{
 					AccessTokenHeaderName:  "Bearer " + *result.AuthenticationResult.AccessToken,

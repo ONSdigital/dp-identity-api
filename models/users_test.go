@@ -829,7 +829,7 @@ func TestChangePassword_BuildAuthChallengeSuccessfulJsonResponse(t *testing.T) {
 		passwordChangeParams := models.ChangePassword{}
 		result := cognitoidentityprovider.RespondToAuthChallengeOutput{}
 
-		response, err := passwordChangeParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, &result)
+		response, err := passwordChangeParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, &result, 1)
 
 		So(response, ShouldBeNil)
 		castErr := err.(*models.Error)
@@ -846,13 +846,14 @@ func TestChangePassword_BuildAuthChallengeSuccessfulJsonResponse(t *testing.T) {
 			},
 		}
 
-		response, err := passwordChangeParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, &result)
+		response, err := passwordChangeParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, &result, 1)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
 		var body map[string]interface{}
 		_ = json.Unmarshal(response, &body)
 		So(body["expirationTime"], ShouldNotBeNil)
+		So(body["refreshTokenExpirationTime"], ShouldNotBeNil)
 	})
 }
 
