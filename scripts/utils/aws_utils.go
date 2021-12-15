@@ -2,7 +2,6 @@ package utils
 
 import (
 	"context"
-	"encoding/csv"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -13,14 +12,9 @@ import (
 )
 
 type S3Reader struct {
-	responseBody *io.ReadCloser
 }
 
-func (s S3Reader) Close() {
-	s.Close()
-}
-
-func (s S3Reader) GetS3Reader(ctx context.Context, region string, s3Bucket string, s3FilePath string) *csv.Reader {
+func (s S3Reader) GetS3Reader(ctx context.Context, region string, s3Bucket string, s3FilePath string) io.ReadCloser {
 	s3Client := s3.New(session.Must(session.NewSession(&aws.Config{Region: aws.String(region)})))
 	objectInput := &s3.GetObjectInput{
 		Bucket: aws.String(s3Bucket),
@@ -31,9 +25,7 @@ func (s S3Reader) GetS3Reader(ctx context.Context, region string, s3Bucket strin
 		log.Error(ctx, "failed to read groups file from s3", err)
 		os.Exit(1)
 	}
-	s.responseBody = &objectOutput.Body
-
-	return csv.NewReader(objectOutput.Body)
+	return objectOutput.Body
 }
 
 func GetCognitoClient(region string) *cognito.CognitoIdentityProvider {
