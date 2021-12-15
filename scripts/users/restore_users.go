@@ -8,44 +8,26 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/google/uuid"
+	"github.com/kelseyhightower/envconfig"
 	"io"
-	"os"
 	"strconv"
-	"strings"
 )
 
-type userRestoreConfig struct {
-	userFileName                  string
-	s3Bucket, s3BaseDir, s3Region string
-	awsCognitoUserPoolID          string
+type Config struct {
+	UserFileName         string `envconfig:"FILENAME" required:"true"`
+	S3Bucket             string `envconfig:"S3_BUCKET" required:"true"`
+	S3BaseDir            string `envconfig:"S3_BASE_DIR" required:"true"`
+	S3Region             string `envconfig:"S3_REGION" required:"true"`
+	AWSCognitoUserPoolID string `envconfig:"USER_POOL_ID" required:"true"`
 }
 
-func (c userRestoreConfig) getS3UsersFilePath() string {
-	return fmt.Sprintf("%s%s", c.s3BaseDir, c.userFileName)
+func (c Config) getS3UsersFilePath() string {
+	return fmt.Sprintf("%s%s", c.S3BaseDir, c.UserFileName)
 }
 
-func getConfig() *userRestoreConfig {
-	conf := &userRestoreConfig{}
-	for _, e := range os.Environ() {
-		pair := strings.SplitN(e, "=", 2)
-		switch pair[0] {
-		case "filename":
-			conf.userFileName = pair[1]
-		case "s3_bucket":
-			conf.s3Bucket = pair[1]
-		case "s3_base_dir":
-			conf.s3BaseDir = pair[1]
-		case "s3_region":
-			conf.s3Region = pair[1]
-		case "user_pool_id":
-			conf.awsCognitoUserPoolID = pair[1]
-		}
-	}
-	if conf.userFileName == "" {
-		fmt.Println("Please set Environment Variables ")
-		os.Exit(1)
-	}
-
+func getConfig() *Config {
+	conf := &Config{}
+	envconfig.Process("", conf)
 	return conf
 }
 
@@ -56,14 +38,14 @@ func main() {
 	importUsersFromS3(ctx, config)
 }
 
-func importUsersFromS3(ctx context.Context, config *userRestoreConfig) {
+func importUsersFromS3(ctx context.Context, config *Config) {
 	log.Info(ctx, fmt.Sprintf("started restoring users to cognito from s3 file: %v", config.getS3UsersFilePath()))
 
 	s3FileReader := utils.S3Reader{}
-	reader := s3FileReader.GetS3Reader(ctx, config.s3Region, config.s3Bucket, config.getS3UsersFilePath())
+	reader := s3FileReader.GetS3Reader(ctx, config.S3Region, config.S3Bucket, config.getS3UsersFilePath())
 	defer s3FileReader.Close()
 
-	client := utils.GetCognitoClient(config.s3Region)
+	client := utils.GetCognitoClient(config.S3Region)
 
 	for {
 		line, err := reader.Read()
@@ -77,12 +59,12 @@ func importUsersFromS3(ctx context.Context, config *userRestoreConfig) {
 	log.Info(ctx, "Successfully processed all the users in S3 file")
 }
 
-func createUser(ctx context.Context, client *cognitoidentityprovider.CognitoIdentityProvider, line []string, config *userRestoreConfig) {
+func createUser(ctx context.Context, client *cognitoidentityprovider.CognitoIdentityProvider, line []string, config *Config) {
 	isActive, _ := strconv.ParseBool(line[12])
 	userInfo := models.UserParams{Forename: line[2], Lastname: line[3], Email: line[10], Active: isActive}
 	userInfo.GeneratePassword(ctx)
 
-	_, err := client.AdminCreateUser(userInfo.BuildCreateUserRequest(uuid.NewString(), config.awsCognitoUserPoolID))
+	_, err := client.AdminCreateUser(userInfo.BuildCreateUserRequest(uuid.NewString(), config.AWSCognitoUserPoolID))
 	if err != nil {
 		log.Error(ctx, fmt.Sprintf("failed to create user: %+v", userInfo), err)
 	}

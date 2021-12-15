@@ -7,54 +7,33 @@ import (
 	"github.com/ONSdigital/dp-identity-api/scripts/utils"
 	"github.com/ONSdigital/log.go/v2/log"
 	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/kelseyhightower/envconfig"
 	"io"
-	"os"
 	"strconv"
 	"strings"
 )
 
-type config struct {
-	groupsFilename       string `envconfig:"groups_filename"`
-	groupUsersFilename   string `envconfig:"groupusers_filename"`
-	s3Bucket             string `envconfig:"s3_bucket"`
-	s3BaseDir            string `envconfig:"s3_base_dir"`
-	s3Region             string `envconfig:"s3_region"`
-	awsCognitoUserPoolID string `envconfig:"user_pool_id"`
+type Config struct {
+	GroupsFilename       string `envconfig:"GROUPS_FILENAME" required:"true"`
+	GroupUsersFilename   string `envconfig:"GROUPUSERS_FILENAME" required:"true"`
+	S3Bucket             string `envconfig:"S3_BUCKET" required:"true"`
+	S3BaseDir            string `envconfig:"S3_BASE_DIR" required:"true"`
+	S3Region             string `envconfig:"S3_REGION" required:"true"`
+	AWSCognitoUserPoolID string `envconfig:"USER_POOL_ID" required:"true"`
 }
 
-func (c config) getS3GroupsFilePath() string {
-	return fmt.Sprintf("%s%s", c.s3BaseDir, c.groupsFilename)
+func (c Config) getS3GroupsFilePath() string {
+	return fmt.Sprintf("%s%s", c.S3BaseDir, c.GroupsFilename)
 }
 
-func (c config) getS3GroupUsersFilePath() string {
-	return fmt.Sprintf("%s%s", c.s3BaseDir, c.groupUsersFilename)
+func (c Config) getS3GroupUsersFilePath() string {
+	return fmt.Sprintf("%s%s", c.S3BaseDir, c.GroupUsersFilename)
 }
 
-func readConfig() *config {
-	conf := &config{}
+func readConfig() *Config {
+	conf := &Config{}
 
-	for _, e := range os.Environ() {
-		pair := strings.SplitN(e, "=", 2)
-		switch pair[0] {
-		case "groups_filename":
-			conf.groupsFilename = pair[1]
-		case "groupusers_filename":
-			conf.groupUsersFilename = pair[1]
-		case "s3_bucket":
-			conf.s3Bucket = pair[1]
-		case "s3_base_dir":
-			conf.s3BaseDir = pair[1]
-		case "s3_region":
-			conf.s3Region = pair[1]
-		case "user_pool_id":
-			conf.awsCognitoUserPoolID = pair[1]
-		}
-	}
-
-	if conf.groupsFilename == "" || conf.groupUsersFilename == "" {
-		fmt.Println("Please set Environment Variables ")
-		os.Exit(1)
-	}
+	envconfig.Process("", conf)
 
 	return conf
 }
@@ -63,18 +42,18 @@ func main() {
 	ctx := context.Background()
 	conf := readConfig()
 
-	fmt.Printf("config: %+v", conf)
+	fmt.Printf("Config: %+v", conf)
 	importGroupsFromS3(ctx, conf)
 	importGroupsMembersFromS3(ctx, conf)
 }
 
-func importGroupsFromS3(ctx context.Context, config *config) {
+func importGroupsFromS3(ctx context.Context, config *Config) {
 	log.Info(ctx, fmt.Sprintf("started restoring groups to cognito from s3 file: %v", config.getS3GroupsFilePath()))
 
 	s3FileReader := utils.S3Reader{}
-	reader := s3FileReader.GetS3Reader(ctx, config.s3Region, config.s3Bucket, config.getS3GroupsFilePath())
+	reader := s3FileReader.GetS3Reader(ctx, config.S3Region, config.S3Bucket, config.getS3GroupsFilePath())
 	defer s3FileReader.Close()
-	client := utils.GetCognitoClient(config.s3Region)
+	client := utils.GetCognitoClient(config.S3Region)
 
 	for {
 		line, err := reader.Read()
@@ -88,13 +67,13 @@ func importGroupsFromS3(ctx context.Context, config *config) {
 	log.Info(ctx, "Successfully processed all the groups in S3 file")
 }
 
-func importGroupsMembersFromS3(ctx context.Context, config *config) {
+func importGroupsMembersFromS3(ctx context.Context, config *Config) {
 	log.Info(ctx, fmt.Sprintf("started restoring group members to cognito from s3 file: %v", config.getS3GroupsFilePath()))
 
 	s3FileReader := utils.S3Reader{}
-	reader := s3FileReader.GetS3Reader(ctx, config.s3Region, config.s3Bucket, config.getS3GroupUsersFilePath())
+	reader := s3FileReader.GetS3Reader(ctx, config.S3Region, config.S3Bucket, config.getS3GroupUsersFilePath())
 	defer s3FileReader.Close()
-	client := utils.GetCognitoClient(config.s3Region)
+	client := utils.GetCognitoClient(config.S3Region)
 
 	for {
 		line, err := reader.Read()
@@ -103,7 +82,7 @@ func importGroupsMembersFromS3(ctx context.Context, config *config) {
 				break
 			}
 		}
-		adduserToGroup(ctx, client, line, config.awsCognitoUserPoolID)
+		adduserToGroup(ctx, client, line, config.AWSCognitoUserPoolID)
 		fmt.Println(line)
 	}
 	log.Info(ctx, "Successfully processed all the group members in S3 file")
