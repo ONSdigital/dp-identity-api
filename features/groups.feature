@@ -8,7 +8,7 @@ Feature: Groups
             {
                 "name": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
                 "precedence": 49,
-                "groupname": "123e4567-e89b-12d3-a456-426614174000"
+                "id": "123e4567-e89b-12d3-a456-426614174000"
             }
         """
     Then I should receive the following JSON response with status "201":
@@ -16,7 +16,7 @@ Feature: Groups
             {
                 "name": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
                 "precedence": 49,
-                "groupname": "123e4567-e89b-12d3-a456-426614174000"
+                "id": "123e4567-e89b-12d3-a456-426614174000"
             }
         """
 
@@ -169,7 +169,7 @@ Feature: Groups
             {
                 "name": "Thi$s is a te||st des$%£@^c ription for  existing group  $",
                 "precedence": 49,
-                "groupname": "123e4567-e89b-12d3-a456-426614174000"
+                "id": "123e4567-e89b-12d3-a456-426614174000"
 
             }
         """
@@ -344,8 +344,8 @@ Feature: Groups
         Then I should receive the following JSON response with status "200":
             """
                 {
-                    "name": "test-group",
-                    "description": "A test group",
+                    "id": "test-group",
+                    "name": "A test group",
                     "precedence": 100,
                     "created": "2010-01-01T00:00:00Z",
                     "members": [
@@ -561,8 +561,8 @@ Feature: Groups
         Then I should receive the following JSON response with status "200":
             """
                 {
-                    "name": "test-group",
-                    "description": "A test group",
+                    "id": "test-group",
+                    "name": "A test group",
                     "precedence": 100,
                     "created": "2010-01-01T00:00:00Z",
                     "members": []
@@ -590,8 +590,8 @@ Feature: Groups
         Then I should receive the following JSON response with status "200":
             """
                 {
-                    "name": "test-group",
-                    "description": "A test group",
+                    "id": "test-group",
+                    "name": "A test group",
                     "precedence": 100,
                     "created": "2010-01-01T00:00:00Z",
                     "members": [
@@ -862,8 +862,8 @@ Feature: Groups
         Then I should receive the following JSON response with status "200":
             """
                 {
-                    "name":"test-group",
-                    "description":"A test group",
+                    "id":"test-group",
+                    "name":"A test group",
                     "precedence": 100,
                     "created": "2010-01-01T00:00:00Z",
                     "members": null

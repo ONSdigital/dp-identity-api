@@ -12,7 +12,7 @@ const (
 	JSONUnmarshalError           = "JSONUnmarshalError"
 	WriteResponseError           = "WriteResponseError"
 	InvalidUserIdError           = "InvalidUserId"
-	InvalidGroupNameError        = "InvalidGroupName"
+	InvalidGroupIDError          = "InvalidGroupID"
 	InvalidForenameError         = "InvalidForename"
 	InvalidSurnameError          = "InvalidSurname"
 	InvalidStatusNotesError      = "InvalidStatusNotes"
@@ -61,7 +61,7 @@ const (
 	BodyReadFailedDescription              = "endpoint returned an error reading the request body"
 	InvalidPasswordDescription             = "the submitted password could not be validated"
 	PasswordGenerationErrorDescription     = "failed to generate a valid password"
-	MissingGroupNameErrorDescription       = "the group name was missing"
+	MissingGroupIDErrorDescription       = "the group ID was missing"
 	MissingUserIdErrorDescription          = "the user id was missing"
 	InvalidForenameErrorDescription        = "the submitted user's forename could not be validated"
 	InvalidSurnameErrorDescription         = "the submitted user's lastname could not be validated"
@@ -85,7 +85,7 @@ const (
 	InvalidFilterQueryDescription          = "the submitted query could not be validated"
 )
 
-// Mapping Cognito error codes to API error codes
+// CognitoErrorMapping mapping Cognito error codes to API error codes
 var CognitoErrorMapping = map[string]string{
 	cognitoidentityprovider.ErrCodeInternalErrorException:          InternalError,
 	cognitoidentityprovider.ErrCodeCodeDeliveryFailureException:    DeliveryFailureError,

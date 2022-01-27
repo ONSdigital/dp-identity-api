@@ -476,7 +476,7 @@ func TestRemoveUserFromGroupHandler(t *testing.T) {
 			{
 				map[string]string{"user_id": "abcd1234", "id": ""},
 				[]string{
-					models.InvalidGroupNameError,
+					models.InvalidGroupIDError,
 				},
 				http.StatusBadRequest,
 			},
@@ -484,7 +484,7 @@ func TestRemoveUserFromGroupHandler(t *testing.T) {
 			{
 				map[string]string{"user_id": "", "id": ""},
 				[]string{
-					models.InvalidGroupNameError,
+					models.InvalidGroupIDError,
 					models.InvalidUserIdError,
 				},
 				http.StatusBadRequest,
@@ -617,7 +617,7 @@ func TestGetUsersInAGroup(t *testing.T) {
 	)
 
 	getGroupData := models.Group{
-		Name: "test-group",
+		ID: "test-group",
 	}
 
 	api, _, m := apiSetup()

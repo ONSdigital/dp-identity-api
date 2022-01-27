@@ -447,7 +447,7 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /groups/{name}:
+  /groups/{id}:
     get:
       tags:
         - Groups
@@ -457,10 +457,10 @@ paths:
         - "application/json"
       parameters:
         - in: path
-          name: name
+          name: id
           type: string
           required: true
-          description: the group's name
+          description: the group's ID
       responses:
         200:
           description: "The list group details"
@@ -496,6 +496,9 @@ paths:
             required: ["name", "precedence"]
             type: object
             properties:
+              id:
+                type: string
+                example: "123-abc-456-def-789-ghi-0"
               name:
                 type: string
                 example: "Th&is is a $£test group!~"
@@ -528,7 +531,7 @@ paths:
         - "application/json"
       parameters:
         - in: path
-          name: name
+          name: id
           type: string
           required: true
           description: the group's name
@@ -539,7 +542,7 @@ paths:
           description: "Invalid group name provided"
         500:
           description: "Internal error occurred"
-  /groups/{name}/members:
+  /groups/{id}/members:
     post:
       tags:
         - Groups
@@ -551,10 +554,10 @@ paths:
         - "application/json"
       parameters:
         - in: path
-          name: name
+          name: id
           type: string
           required: true
-          description: the group's name
+          description: the group's ID
         - in: body
           name: "User id"
           description: "The id of the user being added to the group"
@@ -586,7 +589,7 @@ paths:
         - "application/json"
       parameters:
         - in: path
-          name: name
+          name: id
           type: string
           required: true
           description: the group's name
@@ -603,7 +606,7 @@ paths:
           description: "Unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /groups/{name}/members/{user_id}:
+  /groups/{id}/members/{user_id}:
     delete:
       tags:
         - Groups
@@ -615,10 +618,10 @@ paths:
         - "application/json"
       parameters:
         - in: path
-          name: name
+          name: id
           type: string
           required: true
-          description: the groups name
+          description: the groups ID
         - in: path
           name: user_id
           type: string
@@ -677,6 +680,10 @@ definitions:
     description: "The new group details for the response body"
     type: object
     properties:
+      id:
+        description: "The unique ID of the group"
+        type: string
+        example: "123-abc-456-def-789-ghi-0"
       name:
         description: "The human readable name of the group"
         type: string
@@ -689,11 +696,11 @@ definitions:
     description: "The group model for the response body"
     type: object
     properties:
+      id:
+        description: "The group id"
+        type: string
       name:
         description: "The group name"
-        type: string
-      description:
-        description: "A description of the group"
         type: string
       precedence:
         description: "The priority of the group"

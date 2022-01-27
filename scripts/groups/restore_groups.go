@@ -4,15 +4,16 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"io"
+	"strconv"
+	"strings"
+
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/scripts/utils"
 	"github.com/ONSdigital/log.go/v2/log"
 	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
-	"io"
-	"strconv"
-	"strings"
 )
 
 type Config struct {
@@ -103,11 +104,11 @@ func createGroup(lineNumber int, line []string, client *cognito.CognitoIdentityP
 		return
 	}
 	createGroup := models.CreateUpdateGroup{}
-	createGroup.GroupName = &line[0]
+	createGroup.ID = &line[0]
 	precedence, _ := strconv.Atoi(line[4])
 	precedence1 := int64(precedence)
 	createGroup.Precedence = &precedence1
-	createGroup.Description = &line[2]
+	createGroup.Name = &line[2]
 	input := createGroup.BuildCreateGroupInput(&line[1])
 
 	_, err := client.CreateGroup(input)
