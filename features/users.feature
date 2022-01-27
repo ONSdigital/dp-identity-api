@@ -140,14 +140,7 @@ Feature: Users
             """
         Then I should receive the following JSON response with status "500":
             """
-            {
-                "errors": [
-                    {
-                        "code": "JSONUnmarshalError",
-                        "description": "failed to unmarshal the request body"
-                    }
-                ]
-            }
+            {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: POST /v1/users unexpected server error and checking the response status 500
@@ -162,14 +155,7 @@ Feature: Users
             """
         Then I should receive the following JSON response with status "500":
             """
-            {
-                "errors": [
-                    {
-                        "code": "InternalServerError",
-                        "description": "Failed to create new user in user pool"
-                    }
-                ]
-            }
+            {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: POST /v1/users duplicate email found and checking the response status 400
@@ -278,14 +264,7 @@ Feature: Users
         When I GET "/v1/users"
         Then I should receive the following JSON response with status "500":
             """
-            {
-                "errors": [
-                    {
-                        "code": "InternalServerError",
-                        "description": "Something went wrong"
-                    }
-                ]
-            }
+           {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
 #   Get User
@@ -336,14 +315,7 @@ Feature: Users
         When I GET "/v1/users/abcd1234"
         Then I should receive the following JSON response with status "500":
             """
-            {
-                "errors": [
-                    {
-                        "code": "InternalServerError",
-                        "description": "Something went wrong"
-                    }
-                ]
-            }
+             {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
 #   Update User
@@ -715,14 +687,7 @@ Feature: Users
             """
         Then I should receive the following JSON response with status "500":
             """
-            {
-                "errors": [
-                    {
-                        "code": "InternalServerError",
-                        "description": "Something went wrong whilst disabling"
-                    }
-                ]
-            }
+            {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: PUT /v1/users/{id} unexpected server error enabling user and checking the response status 500
@@ -740,14 +705,7 @@ Feature: Users
             """
         Then I should receive the following JSON response with status "500":
             """
-            {
-                "errors": [
-                    {
-                        "code": "InternalServerError",
-                        "description": "Something went wrong whilst enabling"
-                    }
-                ]
-            }
+             {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: PUT /v1/users/{id} unexpected server error updating user and checking the response status 500
@@ -764,14 +722,7 @@ Feature: Users
             """
         Then I should receive the following JSON response with status "500":
             """
-            {
-                "errors": [
-                    {
-                        "code": "InternalServerError",
-                        "description": "Something went wrong"
-                    }
-                ]
-            }
+            {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: PUT /v1/users/{id} unexpected server error loading updated user and checking the response status 500
@@ -788,14 +739,7 @@ Feature: Users
             """
         Then I should receive the following JSON response with status "500":
             """
-            {
-                "errors": [
-                    {
-                        "code": "InternalServerError",
-                        "description": "Something went wrong"
-                    }
-                ]
-            }
+             {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
 #   Change password - auth challenge
@@ -1077,14 +1021,7 @@ Feature: Users
         """
         Then I should receive the following JSON response with status "500":
         """
-        {
-            "errors": [
-                {
-                    "code": "InternalServerError",
-                    "description": "Something went wrong"
-                }
-            ]
-        }
+        {"code":"InternalServerError", "description":"Internal Server Error"}
         """
 
     Scenario: PUT /v1/users/self/password Cognito invalid password
@@ -1360,14 +1297,7 @@ Feature: Users
         """
         Then I should receive the following JSON response with status "500":
         """
-        {
-            "errors": [
-                {
-                    "code": "InternalServerError",
-                    "description": "Something went wrong"
-                }
-            ]
-        }
+        {"code":"InternalServerError", "description":"Internal Server Error"}
         """
 
     Scenario: PUT /v1/users/self/password Cognito invalid password for forgottenPassword
@@ -1517,14 +1447,7 @@ Feature: Users
         """
         Then I should receive the following JSON response with status "500":
         """
-            {
-                "errors": [
-                    {
-                        "code": "InternalServerError",
-                        "description": "Something went wrong"
-                    }
-                ]
-            }
+             {"code":"InternalServerError", "description":"Internal Server Error"}
         """
 
     Scenario: POST /v1/password-reset Cognito too many requests error
@@ -1605,12 +1528,7 @@ Feature: Users
         When I GET "/v1/users/get-user-not-found/groups"
         Then I should receive the following JSON response with status "500":
             """
-    {
-              "errors": [
-                      {"code":"UserNotFound", "description":"get user - user not found"}
-  
-              ]
-          }
+                {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: GET /v1/users/{id}/groups without a JWT token and checking the response status 403

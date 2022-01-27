@@ -129,6 +129,8 @@ func Setup(ctx context.Context,
 }
 
 func writeErrorResponse(ctx context.Context, w http.ResponseWriter, errorResponse *models.ErrorResponse) {
+	var jsonResponse []byte
+	var err error
 	w.Header().Set("Content-Type", "application/json")
 	// process custom headers
 	if errorResponse.Headers != nil {
@@ -137,8 +139,11 @@ func writeErrorResponse(ctx context.Context, w http.ResponseWriter, errorRespons
 		}
 	}
 	w.WriteHeader(errorResponse.Status)
-
-	jsonResponse, err := json.Marshal(errorResponse)
+	if errorResponse.Status == http.StatusInternalServerError {
+		jsonResponse, err = json.Marshal(models.Error{Code: models.InternalError, Description: "Internal Server Error"})
+	} else {
+		jsonResponse, err = json.Marshal(errorResponse)
+	}
 	if err != nil {
 		responseErr := models.NewError(ctx, err, models.JSONMarshalError, models.ErrorMarshalFailedDescription)
 		http.Error(w, responseErr.Description, http.StatusInternalServerError)

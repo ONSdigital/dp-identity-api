@@ -195,6 +195,27 @@ func TestWriteErrorResponse(t *testing.T) {
 		So(resp.Body.String(), ShouldResemble, errorResponseBodyExample)
 		So(resp.Result().Header.Get(WWWAuthenticateName), ShouldEqual, headerMessage)
 	})
+
+	Convey("the status code and InternalServerError as desc to http response for internal server errors", t, func() {
+		ctx := context.Background()
+
+		headerMsg := "Test header message."
+		errorResponse := models.ErrorResponse{
+			Errors: []error{models.NewValidationError(ctx, "TestError", "a error generated for testing purposes")},
+			Status: http.StatusInternalServerError,
+			Headers: map[string]string{
+				WWWAuthenticateName: headerMsg,
+			},
+		}
+
+		resp := httptest.NewRecorder()
+
+		writeErrorResponse(ctx, resp, &errorResponse)
+
+		So(resp.Code, ShouldEqual, http.StatusInternalServerError)
+		So(resp.Result().Header.Get(WWWAuthenticateName), ShouldEqual, headerMsg)
+		So(resp.Body.String(), ShouldEqual, `{"code":"InternalServerError","description":"Internal Server Error"}`)
+	})
 }
 
 func TestWriteSuccessResponse(t *testing.T) {

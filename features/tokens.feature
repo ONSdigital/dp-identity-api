@@ -84,14 +84,7 @@ Scenario: POST /v1/tokens Cognito internal error
     """
     Then I should receive the following JSON response with status "500":
     """
-    {
-        "errors": [
-            {
-                "code": "InternalServerError",
-                "description": "Something went wrong"
-            }
-        ]
-    }
+     {"code":"InternalServerError", "description":"Internal Server Error"}
     """
 
 Scenario: POST /v1/tokens
@@ -249,14 +242,7 @@ Scenario: DELETE /v1/tokens/self Cognito internal error
     When I DELETE "/v1/tokens/self"
     Then I should receive the following JSON response with status "500":
     """
-    {
-        "errors": [
-            {
-                "code": "InternalServerError",
-                "description": "Something went wrong"
-            }
-        ]
-    }
+     {"code":"InternalServerError", "description":"Internal Server Error"}
     """
 
 Scenario: DELETE /v1/tokens/self access token not valid in Cognito
