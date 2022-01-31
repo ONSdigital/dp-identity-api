@@ -214,7 +214,7 @@ func TestWriteErrorResponse(t *testing.T) {
 
 		So(resp.Code, ShouldEqual, http.StatusInternalServerError)
 		So(resp.Result().Header.Get(WWWAuthenticateName), ShouldEqual, headerMsg)
-		So(resp.Body.String(), ShouldEqual, `{"code":"InternalServerError","description":"Internal Server Error"}`)
+		So(resp.Body.String(), ShouldEqual, `{"code":"`+models.InternalError+`","description":"`+models.InternalErrorDescription+`"}`)
 	})
 }
 

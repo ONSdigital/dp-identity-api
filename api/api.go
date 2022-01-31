@@ -140,7 +140,7 @@ func writeErrorResponse(ctx context.Context, w http.ResponseWriter, errorRespons
 	}
 	w.WriteHeader(errorResponse.Status)
 	if errorResponse.Status == http.StatusInternalServerError {
-		jsonResponse, err = json.Marshal(models.Error{Code: models.InternalError, Description: "Internal Server Error"})
+		jsonResponse, err = json.Marshal(models.Error{Code: models.InternalError, Description: models.InternalErrorDescription})
 	} else {
 		jsonResponse, err = json.Marshal(errorResponse)
 	}

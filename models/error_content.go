@@ -83,6 +83,7 @@ const (
 	IncorrectPatternInGroupName            = "a group name cannot start with 'role-' or 'ROLE-'"
 	GroupAlreadyExistsDescription          = "a group with the name already exists"
 	InvalidFilterQueryDescription          = "the submitted query could not be validated"
+	InternalErrorDescription               = "Internal Server Error"
 )
 
 // Mapping Cognito error codes to API error codes
