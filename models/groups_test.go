@@ -524,7 +524,7 @@ func TestGroup_BuildCreateUpdateGroupSuccessfulJsonResponse(t *testing.T) {
 	})
 }
 
-func TestGroup_CreateUpdateGroupCleanGroupDescription(t *testing.T) {
+func TestGroup_CreateUpdateGroupCleanGroupName(t *testing.T) {
 	Convey("return a cleaned group name from description", t, func() {
 
 		var(

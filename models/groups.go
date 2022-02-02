@@ -25,7 +25,7 @@ var (
 	groupPrecedenceMax    = int64(100)
 )
 
-//Group is a type to map for the Cognito GroupType object
+//Group is a type for the identity API representation of a group's details
 type Group struct {
 	ID         string       `json:"id"`
 	Name       string       `json:"name"`
@@ -204,7 +204,7 @@ func (c *CreateUpdateGroup) BuildCreateGroupInput(userPoolId *string) *cognitoid
 // BuildUpdateGroupInput builds a correctly populated UpdateGroupInput object using Groups values
 func (g *CreateUpdateGroup) BuildUpdateGroupInput(userPoolId string) *cognitoidentityprovider.UpdateGroupInput {
 	return &cognitoidentityprovider.UpdateGroupInput{
-		GroupName:   g.Name,
+		GroupName:   g.ID,
 		Description: g.Name,
 		Precedence:  g.Precedence,
 		UserPoolId:  &userPoolId,

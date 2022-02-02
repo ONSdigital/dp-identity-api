@@ -61,7 +61,7 @@ const (
 	BodyReadFailedDescription              = "endpoint returned an error reading the request body"
 	InvalidPasswordDescription             = "the submitted password could not be validated"
 	PasswordGenerationErrorDescription     = "failed to generate a valid password"
-	MissingGroupIDErrorDescription       = "the group ID was missing"
+	MissingGroupIDErrorDescription         = "the group ID was missing"
 	MissingUserIdErrorDescription          = "the user id was missing"
 	InvalidForenameErrorDescription        = "the submitted user's forename could not be validated"
 	InvalidSurnameErrorDescription         = "the submitted user's lastname could not be validated"

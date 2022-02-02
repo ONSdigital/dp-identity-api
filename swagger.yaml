@@ -488,7 +488,7 @@ paths:
           name: id
           type: string
           required: true
-          description: the group's name
+          description: the group's ID
         - in: body
           name: "Group"
           description: "The updated details for the group"
@@ -534,12 +534,12 @@ paths:
           name: id
           type: string
           required: true
-          description: the group's name
+          description: the group's ID
       responses:
         204:
           description: "Deleted group "
         404:
-          description: "Invalid group name provided"
+          description: "Invalid group ID provided"
         500:
           description: "Internal error occurred"
   /groups/{id}/members:
@@ -573,7 +573,7 @@ paths:
           schema:
             $ref: '#/definitions/Group'
         400:
-          description: "Invalid group name or user id provided"
+          description: "Invalid group ID or user ID provided"
           schema:
             $ref: '#/definitions/ErrorResponse'
         500:
@@ -592,14 +592,14 @@ paths:
           name: id
           type: string
           required: true
-          description: the group's name
+          description: the group's ID
       responses:
         200:
           description: "List of users in the group"
           schema:
             $ref: '#/definitions/Group'
         404:
-          description: "Invalid group name provided"
+          description: "Invalid group ID provided"
           schema:
             $ref: '#/definitions/ErrorResponse'
         500:
@@ -621,7 +621,7 @@ paths:
           name: id
           type: string
           required: true
-          description: the groups ID
+          description: the group's ID
         - in: path
           name: user_id
           type: string
@@ -633,7 +633,7 @@ paths:
           schema:
             $ref: '#/definitions/Group'
         400:
-          description: "Invalid group name or user id provided"
+          description: "Invalid group ID or user ID provided"
           schema:
             $ref: '#/definitions/ErrorResponse'
         500:
@@ -733,14 +733,34 @@ definitions:
           $ref: '#/definitions/User'
       count:
         type: integer
+  UserGroup:
+    description: "TODO"
+    type: object
+    properties:
+      creation_date:
+        type: string
+      description:
+        type: string
+      group_name:
+        type: string
+      last_modified_date:
+        type: string
+      precedence:
+        type: integer
+      role_arn:
+        type: string
+      user_pool_id:
+        type: string
   UserGroups:
     description: "A list of groups that the user is a member for the response body"
     type: object
     properties:
-      users:
+      groups:
         type: array
         items:
-          $ref: '#/definitions/UserGroups'
+          $ref: '#/definitions/UserGroup'
+      next_token:
+        type: string
       count:
         type: integer
 
@@ -835,25 +855,3 @@ definitions:
       description:
         type: string
         description: "Description of the error"
-
-  AttributeType:
-    description: "Specifies the attribute type standard or custom."
-    type: object
-    properties:
-      Name:
-        description: "The name of the attribute."
-        type: string
-      Value:
-        description: "value of the attribute"
-        type: string
-
-  MFAOptionType:
-    description: "SMS MFA configuration type"
-    type: object
-    properties:
-      AttributeName:
-        description: "The attribute name of the MFA option type. The only valid value is phone_number."
-        type: string
-      DeliveryMedium:
-        description: "Parameter for SMS delivery medium value."
-        type: string
