@@ -734,7 +734,7 @@ definitions:
       count:
         type: integer
   UserGroup:
-    description: "TODO"
+    description: "Model representing the details of a group that a user belongs too."
     type: object
     properties:
       creation_date:
