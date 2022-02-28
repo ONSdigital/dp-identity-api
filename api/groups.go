@@ -34,9 +34,9 @@ func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 	}
 
 	// no groupname in body, set UUID
-	if createGroup.GroupName == nil {
+	if createGroup.ID == nil {
 		uuid := uuid.NewString()
-		createGroup.GroupName = &uuid
+		createGroup.ID = &uuid
 	}
 
 	createGroup.GroupsList, err = api.GetListGroups()
@@ -76,9 +76,9 @@ func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 func (api *API) UpdateGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 
-	gn := vars["id"]
+	id := vars["id"]
 	updateGroup := models.CreateUpdateGroup{
-		GroupName: &gn,
+		ID: &id,
 	}
 
 	body, err := ioutil.ReadAll(req.Body)
@@ -117,7 +117,7 @@ func (api *API) UpdateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 //AddUserToGroupHandler adds a user to the specified group
 func (api *API) AddUserToGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
-	group := models.Group{Name: vars["id"]}
+	group := models.Group{ID: vars["id"]}
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -176,7 +176,7 @@ func (api *API) AddUserToGroupHandler(ctx context.Context, w http.ResponseWriter
 func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 
 	vars := mux.Vars(req)
-	group := models.Group{Name: vars["id"]}
+	group := models.Group{ID: vars["id"]}
 
 	listOfUsersInput := []*cognitoidentityprovider.UserType{}
 
@@ -227,7 +227,7 @@ func (api *API) getUsersInAGroup(listOfUsers []*cognitoidentityprovider.UserType
 //RemoveUserFromGroupHandler adds a user to the specified group
 func (api *API) RemoveUserFromGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
-	group := models.Group{Name: vars["id"]}
+	group := models.Group{ID: vars["id"]}
 
 	userId := vars["user_id"]
 
@@ -325,7 +325,7 @@ func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, re
 func (api *API) GetGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 
 	vars := mux.Vars(req)
-	group := models.Group{Name: vars["id"]}
+	group := models.Group{ID: vars["id"]}
 	groupGetRequest := group.BuildGetGroupRequest(api.UserPoolId)
 	groupGetResponse, err := api.CognitoClient.GetGroup(groupGetRequest)
 	if err != nil {
@@ -351,7 +351,7 @@ func (api *API) GetGroupHandler(ctx context.Context, w http.ResponseWriter, req 
 func (api *API) DeleteGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 
 	vars := mux.Vars(req)
-	group := models.Group{Name: vars["id"]}
+	group := models.Group{ID: vars["id"]}
 	groupDeleteRequest := group.BuildDeleteGroupRequest(api.UserPoolId)
 	_, err := api.CognitoClient.DeleteGroup(groupDeleteRequest)
 	if err != nil {
