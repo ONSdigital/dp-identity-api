@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-identity-api/api"
 	cognitoClient "github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/ONSdigital/dp-identity-api/config"
+	"github.com/ONSdigital/dp-identity-api/jwks"
 	health "github.com/ONSdigital/dp-identity-api/service/healthcheck"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
@@ -24,7 +26,7 @@ type Service struct {
 }
 
 // Run the service
-func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceList, buildTime, gitCommit, version string, svcErrors chan error) (*Service, error) {
+func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceList, jwksHandler jwks.JWKSInt, buildTime, gitCommit, version string, svcErrors chan error) (*Service, error) {
 
 	log.Info(ctx, "running service")
 
@@ -42,7 +44,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	a, err := api.Setup(ctx, r, cognitoclient, cfg.AWSCognitoUserPoolID, cfg.AWSCognitoClientId, cfg.AWSCognitoClientSecret, cfg.AWSAuthFlow, cfg.AllowedEmailDomains, authorisationMiddleware)
+	a, err := api.Setup(ctx, r, cognitoclient, cfg.AWSCognitoUserPoolID, cfg.AWSCognitoClientId, cfg.AWSCognitoClientSecret, cfg.AWSRegion, cfg.AWSAuthFlow, cfg.AllowedEmailDomains, authorisationMiddleware, jwksHandler)
 	if err != nil {
 		log.Fatal(ctx, "error returned from api setup", err)
 		return nil, err

@@ -44,6 +44,7 @@ const (
 	InvalidGroupName             = "InvalidGroupName"
 	InvalidGroupPrecedence       = "InvalidGroupPrecedence"
 	InvalidFilterQuery           = "InvalidFilterQuery"
+	JWKSParseError               = "JWKSParseError"
 )
 
 // API error descriptions
@@ -84,6 +85,11 @@ const (
 	GroupAlreadyExistsDescription          = "a group with the name already exists"
 	InvalidFilterQueryDescription          = "the submitted query could not be validated"
 	InternalErrorDescription               = "Internal Server Error"
+	JWKSParseErrorDescription              = "error encountered when parsing the json web key set (jwks)"
+	JWKSUnsupportedKeyTypeDescription      = "unsupported key type. Must be rsa key"
+	JWKSErrorDecodingDescription           = "error decoding json web key"
+	JWKSExponentErrorDescription           = "unexpected exponent: unable to decode JWK"
+	JWKSEmptyWebKeySetDescription          = "empty json web key set"
 )
 
 // CognitoErrorMapping mapping Cognito error codes to API error codes

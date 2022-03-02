@@ -2,13 +2,15 @@ package steps
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
-	"net/http"
 
 	"github.com/ONSdigital/dp-identity-api/cognito"
 	cognitoMock "github.com/ONSdigital/dp-identity-api/cognito/mock"
+	jwksMock "github.com/ONSdigital/dp-identity-api/jwks/mock"
 
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/service"
@@ -29,6 +31,7 @@ type IdentityComponent struct {
 	apiFeature              *componenttest.APIFeature
 	CognitoClient           *cognitoMock.CognitoIdentityProviderClientStub
 	AuthorisationMiddleware authorisation.Middleware
+	JWKSHandler				*jwksMock.JWKSIntMock
 }
 
 func NewIdentityComponent() (*IdentityComponent, error) {
@@ -65,7 +68,8 @@ func NewIdentityComponent() (*IdentityComponent, error) {
 
 	c.svcList = service.NewServiceList(initMock)
 
-	c.svc, err = service.Run(context.Background(), c.Config, c.svcList, "1", "", "", c.errorChan)
+	c.JWKSHandler = jwksMock.JWKSStubbed
+	c.svc, err = service.Run(context.Background(), c.Config, c.svcList, c.JWKSHandler, "1", "", "", c.errorChan)
 	if err != nil {
 		return nil, err
 	}
