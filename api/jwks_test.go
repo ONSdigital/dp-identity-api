@@ -78,8 +78,6 @@ func TestCognitoPoolJWKSHandlerErrors500(t *testing.T) {
 	resp, err := api.CognitoPoolJWKSHandler(context.Background(), w, r)
 
 	Convey("Request json web key set - 500 response", t, func() {
-		e := err.Errors[0].Error()
-		println(e)
 		So(resp, ShouldBeNil)
 		So(err, ShouldNotBeNil)
 		So(err.Status, ShouldEqual, http.StatusInternalServerError)
