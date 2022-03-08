@@ -3,9 +3,10 @@ package steps
 import (
 	"encoding/json"
 	"errors"
-	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
 	"io/ioutil"
 	"strconv"
+
+	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
 
 	"github.com/stretchr/testify/assert"
 
@@ -39,7 +40,12 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^there "([^"]*)" groups exists in the database$`, c.thereGroupsExistsInTheDatabase)
 	ctx.Step(`^the response code should be (\d+)$`, c.theResponseCodeShouldBe)
 	ctx.Step(`^the response should match the following json for listgroups$`, c.theResponseShouldMatchTheFollowingJsonForListgroups)
+	ctx.Step(`^I GET the JSON web key set for cognito user pool$`, c.aResponseToAJWKSSetRequest)
+}
 
+func (c *IdentityComponent) aResponseToAJWKSSetRequest() error {
+	_, err := c.JWKSHandler.JWKSGetKeysetFunc("eu-west-1234XYZ", "eu-west-1234")
+	return err
 }
 
 func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(email, password string) error {

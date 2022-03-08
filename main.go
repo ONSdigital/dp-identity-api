@@ -6,6 +6,7 @@ import (
 	"os/signal"
 
 	"github.com/ONSdigital/dp-identity-api/config"
+	"github.com/ONSdigital/dp-identity-api/jwks"
 	"github.com/ONSdigital/dp-identity-api/service"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/pkg/errors"
@@ -48,6 +49,9 @@ func run(ctx context.Context) error {
 
 	log.Info(ctx, "dp-identity-api version", log.Data{"version": Version})
 
+	// jks handler
+	jwksHandler := &jwks.JWKS{}
+
 	// Read config
 	cfg, err := config.Get()
 	if err != nil {
@@ -60,7 +64,7 @@ func run(ctx context.Context) error {
 	})
 
 	// Start service
-	svc, err := service.Run(ctx, cfg, svcList, BuildTime, GitCommit, Version, svcErrors)
+	svc, err := service.Run(ctx, cfg, svcList, jwksHandler.DoGetJWKS(ctx), BuildTime, GitCommit, Version, svcErrors)
 	if err != nil {
 		return errors.Wrap(err, "running service failed")
 	}
