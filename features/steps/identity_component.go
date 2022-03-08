@@ -31,7 +31,7 @@ type IdentityComponent struct {
 	apiFeature              *componenttest.APIFeature
 	CognitoClient           *cognitoMock.CognitoIdentityProviderClientStub
 	AuthorisationMiddleware authorisation.Middleware
-	JWKSHandler				*jwksMock.JWKSIntMock
+	JWKSHandler             *jwksMock.JWKSIntMock
 }
 
 func NewIdentityComponent() (*IdentityComponent, error) {

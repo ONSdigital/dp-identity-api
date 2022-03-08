@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math/big"
 	"net/http"
 
@@ -50,7 +49,8 @@ func (j JWKS) JWKSGetKeyset(awsRegion, poolId string) (*JWKS, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+	defer resp.Body.Close()
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,6 @@ func (j JWKS) JWKToRSAPublicKey(jwk JsonKey) (string, error) {
 	// decode the base64 bytes for n
 	nb, err := base64.RawURLEncoding.DecodeString(jwk.N)
 	if err != nil {
-		log.Println(err)
 		return "", errors.New(models.JWKSErrorDecodingDescription)
 	}
 
@@ -105,13 +104,12 @@ func (j JWKS) JWKToRSAPublicKey(jwk JsonKey) (string, error) {
 			},
 		)
 		if err != nil {
-			return "", errors.New(err.Error())
+			return "", err
 		}
 	
 		return base64.StdEncoding.EncodeToString(der), nil
-	} else {
-		return "", errors.New(models.JWKSExponentErrorDescription)
 	}
+	return "", errors.New(models.JWKSExponentErrorDescription)
 }
 
 // DoGetJWKS return package interface
