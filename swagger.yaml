@@ -447,7 +447,7 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /groups/{name}:
+  /groups/{id}:
     get:
       tags:
         - Groups
@@ -457,10 +457,10 @@ paths:
         - "application/json"
       parameters:
         - in: path
-          name: name
+          name: id
           type: string
           required: true
-          description: the group's name
+          description: the group's ID
       responses:
         200:
           description: "The list group details"
@@ -488,7 +488,7 @@ paths:
           name: id
           type: string
           required: true
-          description: the group's name
+          description: the group's ID
         - in: body
           name: "Group"
           description: "The updated details for the group"
@@ -496,6 +496,9 @@ paths:
             required: ["name", "precedence"]
             type: object
             properties:
+              id:
+                type: string
+                example: "123-abc-456-def-789-ghi-0"
               name:
                 type: string
                 example: "Th&is is a $£test group!~"
@@ -528,18 +531,18 @@ paths:
         - "application/json"
       parameters:
         - in: path
-          name: name
+          name: id
           type: string
           required: true
-          description: the group's name
+          description: the group's ID
       responses:
         204:
           description: "Deleted group "
         404:
-          description: "Invalid group name provided"
+          description: "Invalid group ID provided"
         500:
           description: "Internal error occurred"
-  /groups/{name}/members:
+  /groups/{id}/members:
     post:
       tags:
         - Groups
@@ -551,10 +554,10 @@ paths:
         - "application/json"
       parameters:
         - in: path
-          name: name
+          name: id
           type: string
           required: true
-          description: the group's name
+          description: the group's ID
         - in: body
           name: "User id"
           description: "The id of the user being added to the group"
@@ -570,7 +573,7 @@ paths:
           schema:
             $ref: '#/definitions/Group'
         400:
-          description: "Invalid group name or user id provided"
+          description: "Invalid group ID or user ID provided"
           schema:
             $ref: '#/definitions/ErrorResponse'
         500:
@@ -586,24 +589,24 @@ paths:
         - "application/json"
       parameters:
         - in: path
-          name: name
+          name: id
           type: string
           required: true
-          description: the group's name
+          description: the group's ID
       responses:
         200:
           description: "List of users in the group"
           schema:
             $ref: '#/definitions/Group'
         404:
-          description: "Invalid group name provided"
+          description: "Invalid group ID provided"
           schema:
             $ref: '#/definitions/ErrorResponse'
         500:
           description: "Unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /groups/{name}/members/{user_id}:
+  /groups/{id}/members/{user_id}:
     delete:
       tags:
         - Groups
@@ -615,10 +618,10 @@ paths:
         - "application/json"
       parameters:
         - in: path
-          name: name
+          name: id
           type: string
           required: true
-          description: the groups name
+          description: the group's ID
         - in: path
           name: user_id
           type: string
@@ -630,14 +633,32 @@ paths:
           schema:
             $ref: '#/definitions/Group'
         400:
-          description: "Invalid group name or user id provided"
+          description: "Invalid group ID or user ID provided"
           schema:
             $ref: '#/definitions/ErrorResponse'
         500:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
-
+  /jwt-keys:
+    get:
+      tags:
+        - JWKS
+      summary: "JSON Web Key Set"
+      description: "Returns AWS Cognito User Pool's JWT Key IDs and RSA Public Signing Keys"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "Key set retrieved, processed and returned in response body"
+          schema:
+            $ref: '#/definitions/JWKSResponse'
+        404:
+          description: "Key set not found or error processing it"
+        500:
+          description: "Internal error occurred"
+          schema:
+            $ref: '#/definitions/JWKSResponseError'
 
 responses:
   InternalError:
@@ -677,6 +698,10 @@ definitions:
     description: "The new group details for the response body"
     type: object
     properties:
+      id:
+        description: "The unique ID of the group"
+        type: string
+        example: "123-abc-456-def-789-ghi-0"
       name:
         description: "The human readable name of the group"
         type: string
@@ -689,11 +714,11 @@ definitions:
     description: "The group model for the response body"
     type: object
     properties:
+      id:
+        description: "The group id"
+        type: string
       name:
         description: "The group name"
-        type: string
-      description:
-        description: "A description of the group"
         type: string
       precedence:
         description: "The priority of the group"
@@ -710,7 +735,7 @@ definitions:
     description: "A list of groups for the response body"
     type: object
     properties:
-      users:
+      groups:
         type: array
         items:
           $ref: '#/definitions/Group'
@@ -726,17 +751,36 @@ definitions:
           $ref: '#/definitions/User'
       count:
         type: integer
+  UserGroup:
+    description: "Model representing the details of a group that a user belongs too."
+    type: object
+    properties:
+      creation_date:
+        type: string
+      description:
+        type: string
+      group_name:
+        type: string
+      last_modified_date:
+        type: string
+      precedence:
+        type: integer
+      role_arn:
+        type: string
+      user_pool_id:
+        type: string
   UserGroups:
     description: "A list of groups that the user is a member for the response body"
     type: object
     properties:
-      users:
+      groups:
         type: array
         items:
-          $ref: '#/definitions/UserGroups'
+          $ref: '#/definitions/UserGroup'
+      next_token:
+        type: string
       count:
         type: integer
-
 
   User:
     description: "The user model for the response body"
@@ -772,7 +816,27 @@ definitions:
         type: string
         enum: [UNCONFIRMED, CONFIRMED, ARCHIVED, COMPROMISED, UNKNOWN, RESET_REQUIRED, FORCE_CHANGE_PASSWORD]
         example: "CONFIRMED"
-
+  JWKSResponse:
+    properties:
+      2a8vXmIK67ZZ3hFZ=:
+        type: string
+        example: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApU1DqxJalEmlznkrM+U4aSBMw9u5axcIqNeUq8+ZHo98uKy8Xy5zCOXfWx6KafOPJhbOZInFaSh9UMaluSSw11l/PR4KrGBFzJODQ+RMq6bHW6FlwwHSkMTSfQ0hwzO7y91BiZFmJnaUECf52H3QBApGT4TT060ri5zt1ygpliRwjLLlHW1XX0epzZH3ogrikn4i65e8w6uUcsGBhQvQQqiHvEpcgCQAB"
+      GRBevIroJzPBvaGa=:
+        type: string
+        example: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtvDfudfY9n+8sFJmHGFfgbKqKf8iiEcbvRXNMEi9qd2NGAekhdNJKdeW3sMSwR+sb4Ly6IypowCE2eueYk/GatzYyyolWny/Krdp0EWPT/PnK8Iq1FTIuHxFb08B8iLnH/2nKqgOjVvwEU4eSBh0YHKti2v77a+a4bnx6aOC2YkF2AyIRmbXAHaq4Js9u33X8gGMXZcVsxcSpG8Py/NJ3s+PLKebQFQAB"
+  JWKSResponseError:
+    description: "A list of any errors"
+    type: object
+    properties:
+      errors:
+        type: array
+        items:
+          type: object
+          properties:
+            code: 
+              example: "JWKSParseError"
+            description:
+              example: "error encountered when parsing the json web key set (jwks)"
   ErrorResponse:
     description: "A list of any errors"
     type: object
@@ -781,7 +845,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/ErrorObject'
-
   ErrorObject:
     description: "An individual error details"
     type: object
@@ -790,11 +853,11 @@ definitions:
         type: string
         description: "Code representing the type of error that occurred"
         enum:
-          - "JSONMarshalError"
-          - "JSONUnmarshalError"
-          - "WriteResponseError"
+          - "InvalidUserId"
+          - "InvalidGroupID"
           - "InvalidForename"
           - "InvalidSurname"
+          - "InvalidStatusNotes"
           - "InvalidEmail"
           - "InvalidToken"
           - "InternalServerError"
@@ -814,39 +877,13 @@ definitions:
           - "TooManyRequests"
           - "UserNotConfirmed"
           - "UsernameExists"
-          - "RequestBodyReadError"
           - "MissingConfig"
           - "UnknownRequestType"
-          - "NotImplemented"
-          - "InvalidChallengeSession"
-          - "InvalidStatusNotes"
-          - "InvalidUserId"
-          - "InvalidFilterQuery"
+          - "BodyCloseError"
           - "InvalidGroupName"
-          - "InvalidGroupDescription"
           - "InvalidGroupPrecedence"
+          - "InvalidFilterQuery"
+          - "JWKSParseError"
       description:
         type: string
         description: "Description of the error"
-
-  AttributeType:
-    description: "Specifies the attribute type standard or custom."
-    type: object
-    properties:
-      Name:
-        description: "The name of the attribute."
-        type: string
-      Value:
-        description: "value of the attribute"
-        type: string
-
-  MFAOptionType:
-    description: "SMS MFA configuration type"
-    type: object
-    properties:
-      AttributeName:
-        description: "The attribute name of the MFA option type. The only valid value is phone_number."
-        type: string
-      DeliveryMedium:
-        description: "Parameter for SMS delivery medium value."
-        type: string

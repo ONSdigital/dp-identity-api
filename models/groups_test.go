@@ -19,8 +19,8 @@ func TestNewAdminRoleGroup(t *testing.T) {
 	Convey("builds a Group instance with admin group details", t, func() {
 		adminGroup := models.NewAdminRoleGroup()
 
-		So(adminGroup.Name, ShouldEqual, models.AdminRoleGroup)
-		So(adminGroup.Description, ShouldEqual, models.AdminRoleGroupHumanReadable)
+		So(adminGroup.ID, ShouldEqual, models.AdminRoleGroup)
+		So(adminGroup.Name, ShouldEqual, models.AdminRoleGroupHumanReadable)
 		So(adminGroup.Precedence, ShouldEqual, models.AdminRoleGroupPrecedence)
 	})
 }
@@ -29,8 +29,8 @@ func TestNewPublisherRoleGroup(t *testing.T) {
 	Convey("builds a Group instance with publisher group details", t, func() {
 		publisherGroup := models.NewPublisherRoleGroup()
 
-		So(publisherGroup.Name, ShouldEqual, models.PublisherRoleGroup)
-		So(publisherGroup.Description, ShouldEqual, models.PublisherRoleGroupHumanReadable)
+		So(publisherGroup.ID, ShouldEqual, models.PublisherRoleGroup)
+		So(publisherGroup.Name, ShouldEqual, models.PublisherRoleGroupHumanReadable)
 		So(publisherGroup.Precedence, ShouldEqual, models.PublisherRoleGroupPrecedence)
 	})
 }
@@ -40,7 +40,7 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 
 	Convey("returns InvalidUserId error if no user id is submitted", t, func() {
 		group := models.Group{
-			Name: "test-group",
+			ID: "test-group",
 		}
 		userId := ""
 
@@ -53,7 +53,7 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		So(castErr.Description, ShouldEqual, models.MissingUserIdErrorDescription)
 	})
 
-	Convey("returns InvalidGroupName error if no group name is set", t, func() {
+	Convey("returns InvalidGroupID error if no group ID is set", t, func() {
 		group := models.Group{}
 		userId := "zzzz-9999"
 
@@ -62,11 +62,11 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 1)
 		castErr := errs[0].(*models.Error)
-		So(castErr.Code, ShouldEqual, models.InvalidGroupNameError)
-		So(castErr.Description, ShouldEqual, models.MissingGroupNameErrorDescription)
+		So(castErr.Code, ShouldEqual, models.InvalidGroupIDError)
+		So(castErr.Description, ShouldEqual, models.MissingGroupIDErrorDescription)
 	})
 
-	Convey("returns InvalidUserId and InvalidGroupName errors if no user id submitted and group name set", t, func() {
+	Convey("returns InvalidUserId and InvalidGroupID errors if no user id submitted and group ID are set", t, func() {
 		group := models.Group{}
 		userId := ""
 
@@ -75,8 +75,8 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 2)
 		castErr := errs[0].(*models.Error)
-		So(castErr.Code, ShouldEqual, models.InvalidGroupNameError)
-		So(castErr.Description, ShouldEqual, models.MissingGroupNameErrorDescription)
+		So(castErr.Code, ShouldEqual, models.InvalidGroupIDError)
+		So(castErr.Description, ShouldEqual, models.MissingGroupIDErrorDescription)
 		castErr = errs[1].(*models.Error)
 		So(castErr.Code, ShouldEqual, models.InvalidUserIdError)
 		So(castErr.Description, ShouldEqual, models.MissingUserIdErrorDescription)
@@ -84,7 +84,7 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 
 	Convey("returns nil if user id is present", t, func() {
 		group := models.Group{
-			Name: "test-group",
+			ID: "test-group",
 		}
 		userId := "zzzz-9999"
 
@@ -98,7 +98,7 @@ func TestGroup_BuildGetGroupRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito GetGroup request body", t, func() {
 
 		group := models.Group{
-			Name: "role-admin",
+			ID: "role-admin",
 		}
 
 		userPoolId := "euwest-99-aabbcc"
@@ -107,14 +107,14 @@ func TestGroup_BuildGetGroupRequest(t *testing.T) {
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.GetGroupInput{}))
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
-		So(*response.GroupName, ShouldEqual, group.Name)
+		So(*response.GroupName, ShouldEqual, group.ID)
 	})
 }
 
 func TestGroup_BuildAddUserToGroupRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminAddUserToGroup request body", t, func() {
 		group := models.Group{
-			Name: "role-test",
+			ID: "role-test",
 		}
 		userPoolId := "euwest-99-aabbcc"
 		userId := "zzzz-9999"
@@ -123,7 +123,7 @@ func TestGroup_BuildAddUserToGroupRequest(t *testing.T) {
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminAddUserToGroupInput{}))
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
-		So(*response.GroupName, ShouldEqual, group.Name)
+		So(*response.GroupName, ShouldEqual, group.ID)
 		So(*response.Username, ShouldEqual, userId)
 	})
 }
@@ -131,7 +131,7 @@ func TestGroup_BuildAddUserToGroupRequest(t *testing.T) {
 func TestGroup_BuildRemoveUserFromGroupRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminRemoveUserFromGroup request body", t, func() {
 		group := models.Group{
-			Name: "role-test",
+			ID: "role-test",
 		}
 		userPoolId := "euwest-99-aabbcc"
 		userId := "zzzz-9999"
@@ -140,7 +140,7 @@ func TestGroup_BuildRemoveUserFromGroupRequest(t *testing.T) {
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminRemoveUserFromGroupInput{}))
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
-		So(*response.GroupName, ShouldEqual, group.Name)
+		So(*response.GroupName, ShouldEqual, group.ID)
 		So(*response.Username, ShouldEqual, userId)
 	})
 }
@@ -148,7 +148,7 @@ func TestGroup_BuildRemoveUserFromGroupRequest(t *testing.T) {
 func TestGroup_BuildListUsersInGroupRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito ListUsersInGroup request body", t, func() {
 		group := models.Group{
-			Name: "role-test",
+			ID: "role-test",
 		}
 		userPoolId := "euwest-99-aabbcc"
 
@@ -156,7 +156,7 @@ func TestGroup_BuildListUsersInGroupRequest(t *testing.T) {
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInGroupInput{}))
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
-		So(*response.GroupName, ShouldEqual, group.Name)
+		So(*response.GroupName, ShouldEqual, group.ID)
 	})
 }
 
@@ -197,8 +197,8 @@ func TestGroup_MapCognitoDetails(t *testing.T) {
 
 		group.MapCognitoDetails(response)
 
-		So(group.Description, ShouldEqual, *response.Description)
-		So(group.Name, ShouldEqual, *response.GroupName)
+		So(group.Name, ShouldEqual, *response.Description)
+		So(group.ID, ShouldEqual, *response.GroupName)
 		So(group.Precedence, ShouldEqual, *response.Precedence)
 	})
 }
@@ -206,12 +206,12 @@ func TestGroup_MapCognitoDetails(t *testing.T) {
 func TestGroup_BuildSuccessfulJsonResponse(t *testing.T) {
 	Convey("returns a byte array of the response JSON", t, func() {
 		ctx := context.Background()
-		name, description := "test-group", "a test group"
+		id, name := "test-group", "a test group"
 		precedence := int64(100)
 		group := models.Group{
-			Name:        name,
-			Description: description,
-			Precedence:  precedence,
+			ID:         id,
+			Name:       name,
+			Precedence: precedence,
 		}
 
 		response, err := group.BuildSuccessfulJsonResponse(ctx)
@@ -221,8 +221,8 @@ func TestGroup_BuildSuccessfulJsonResponse(t *testing.T) {
 		var userJson map[string]interface{}
 		err = json.Unmarshal(response, &userJson)
 		So(err, ShouldBeNil)
+		So(userJson["id"], ShouldEqual, id)
 		So(userJson["name"], ShouldEqual, name)
-		So(userJson["description"], ShouldEqual, description)
 		So(userJson["precedence"], ShouldEqual, precedence)
 	})
 }
@@ -230,7 +230,7 @@ func TestGroup_BuildSuccessfulJsonResponse(t *testing.T) {
 func TestGroup_BuildListUsersInGroupRequestWithNextToken(t *testing.T) {
 	Convey("builds a correctly populated Cognito ListUsersInGroup request body without a nextToken", t, func() {
 		group := models.Group{
-			Name: "role-test",
+			ID: "role-test",
 		}
 		userPoolId := "euwest-99-aabbcc"
 		nextToken := ""
@@ -239,13 +239,13 @@ func TestGroup_BuildListUsersInGroupRequestWithNextToken(t *testing.T) {
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInGroupInput{}))
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
-		So(*response.GroupName, ShouldEqual, group.Name)
+		So(*response.GroupName, ShouldEqual, group.ID)
 		So(response.NextToken, ShouldBeNil)
 	})
 
 	Convey("builds a correctly populated Cognito ListUsersInGroup request body with a nextToken", t, func() {
 		group := models.Group{
-			Name: "role-test",
+			ID: "role-test",
 		}
 		userPoolId := "euwest-99-aabbcc"
 		nextToken := "abcd"
@@ -254,7 +254,7 @@ func TestGroup_BuildListUsersInGroupRequestWithNextToken(t *testing.T) {
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInGroupInput{}))
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
-		So(*response.GroupName, ShouldEqual, group.Name)
+		So(*response.GroupName, ShouldEqual, group.ID)
 		So(*response.NextToken, ShouldEqual, nextToken)
 	})
 }
@@ -371,7 +371,7 @@ func TestGroup_ValidateCreateUpdateGroupRequest(t *testing.T) {
 			{
 				"No errors generated",
 				models.CreateUpdateGroup{
-					Description: &name,
+					Name: &name,
 					Precedence:  &precedence,
 				},
 				map[string]interface{}{
@@ -393,7 +393,7 @@ func TestGroup_ValidateCreateUpdateGroupRequest(t *testing.T) {
 			{
 				"Invalid group pattern error generated",
 				models.CreateUpdateGroup{
-					Description: &nameWithRole,
+					Name: &nameWithRole,
 					Precedence:  &precedence,
 				},
 				nil,
@@ -404,7 +404,7 @@ func TestGroup_ValidateCreateUpdateGroupRequest(t *testing.T) {
 			{
 				"Invalid group precedence error generated",
 				models.CreateUpdateGroup{
-					Description: &name,
+					Name: &name,
 				},
 				nil,
 				[]string{
@@ -414,7 +414,7 @@ func TestGroup_ValidateCreateUpdateGroupRequest(t *testing.T) {
 			{
 				"Group precedence incorrect error generated",
 				models.CreateUpdateGroup{
-					Description: &name,
+					Name: &name,
 					Precedence: &lowPrecedence,
 				},
 				nil,
@@ -434,7 +434,7 @@ func TestGroup_ValidateCreateUpdateGroupRequest(t *testing.T) {
 			{
 				"Group name already exists error generated",
 				models.CreateUpdateGroup{
-					Description: &name,
+					Name: &name,
 					Precedence:  &precedence,
 					GroupsList:  &cognitoidentityprovider.ListGroupsOutput{
 						NextToken: nil,
@@ -479,9 +479,9 @@ func TestGroup_BuildCreateUpdateGroupRequest(t *testing.T) {
 		)
 
 		group := models.CreateUpdateGroup{
-			Description: &name,
+			Name: &name,
 			Precedence:  &precedence,
-			GroupName:   &groupName,
+			ID:   &groupName,
 		}
 
 		userPoolId := "euwest-99-aabbcc"
@@ -490,8 +490,8 @@ func TestGroup_BuildCreateUpdateGroupRequest(t *testing.T) {
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.CreateGroupInput{}))
 		So(*response.UserPoolId, ShouldEqual, userPoolId)
-		So(*response.GroupName, ShouldEqual, *group.GroupName)
-		So(*response.Description, ShouldEqual, *group.Description)
+		So(*response.GroupName, ShouldEqual, *group.ID)
+		So(*response.Description, ShouldEqual, *group.Name)
 		So(*response.Precedence, ShouldEqual, *group.Precedence)
 	})
 }
@@ -507,8 +507,8 @@ func TestGroup_BuildCreateUpdateGroupSuccessfulJsonResponse(t *testing.T) {
 		)
 
 		group := models.CreateUpdateGroup{
-			GroupName:   &groupName,
-			Description: &name,
+			ID:   &groupName,
+			Name: &name,
 			Precedence:  &precedence,
 		}
 
@@ -524,7 +524,7 @@ func TestGroup_BuildCreateUpdateGroupSuccessfulJsonResponse(t *testing.T) {
 	})
 }
 
-func TestGroup_CreateUpdateGroupCleanGroupDescription(t *testing.T) {
+func TestGroup_CreateUpdateGroupCleanGroupName(t *testing.T) {
 	Convey("return a cleaned group name from description", t, func() {
 
 		var(
@@ -534,12 +534,12 @@ func TestGroup_CreateUpdateGroupCleanGroupDescription(t *testing.T) {
 		)
 
 		group := models.CreateUpdateGroup{
-			GroupName:   &groupName,
-			Description: &name,
+			ID:   &groupName,
+			Name: &name,
 			Precedence:  &precedence,
 		}
 
-		So(*group.Description, ShouldEqual, name)
+		So(*group.Name, ShouldEqual, name)
 	})
 }
 
@@ -553,8 +553,8 @@ func TestGroup_CreateUpdateGroupNewSuccessResponse(t *testing.T) {
 		)
 
 		group := models.CreateUpdateGroup{
-			GroupName:   &groupName,
-			Description: &name,
+			ID:   &groupName,
+			Name: &name,
 			Precedence:  &precedence,
 		}
 

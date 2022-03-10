@@ -8,7 +8,7 @@ Feature: Groups
             {
                 "name": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
                 "precedence": 49,
-                "groupname": "123e4567-e89b-12d3-a456-426614174000"
+                "id": "123e4567-e89b-12d3-a456-426614174000"
             }
         """
     Then I should receive the following JSON response with status "201":
@@ -16,7 +16,7 @@ Feature: Groups
             {
                 "name": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $",
                 "precedence": 49,
-                "groupname": "123e4567-e89b-12d3-a456-426614174000"
+                "id": "123e4567-e89b-12d3-a456-426614174000"
             }
         """
 
@@ -145,14 +145,7 @@ Feature: Groups
         """
     Then I should receive the following JSON response with status "500":
         """
-            {
-                "errors": [
-                    {
-                        "code":"InternalServerError",
-                        "description":"Something went wrong"
-                    }
-                ]
-            }
+           {"code":"InternalServerError", "description":"Internal Server Error"}
         """
 #   Update group scenarios
     Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group, group updated returns 200
@@ -169,7 +162,7 @@ Feature: Groups
             {
                 "name": "Thi$s is a te||st des$%£@^c ription for  existing group  $",
                 "precedence": 49,
-                "groupname": "123e4567-e89b-12d3-a456-426614174000"
+                "id": "123e4567-e89b-12d3-a456-426614174000"
 
             }
         """
@@ -299,14 +292,7 @@ Feature: Groups
         """
     Then I should receive the following JSON response with status "500":
         """
-            {
-                "errors": [
-                    {
-                        "code":"InternalServerError",
-                        "description":"Something went wrong"
-                    }
-                ]
-            }
+           {"code":"InternalServerError", "description":"Internal Server Error"}
         """
 
     Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group a resource not found 404 error is returned
@@ -344,8 +330,8 @@ Feature: Groups
         Then I should receive the following JSON response with status "200":
             """
                 {
-                    "name": "test-group",
-                    "description": "A test group",
+                    "id": "test-group",
+                    "name": "A test group",
                     "precedence": 100,
                     "created": "2010-01-01T00:00:00Z",
                     "members": [
@@ -452,14 +438,7 @@ Feature: Groups
             """
         Then I should receive the following JSON response with status "500":
             """
-                {
-                    "errors": [
-                        {
-                            "code": "InternalServerError",
-                            "description": "Something went wrong"
-                        }
-                    ]
-                }
+               {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: POST /v1/groups/{id}/members get group, internal server error returns 500
@@ -474,14 +453,7 @@ Feature: Groups
             """
         Then I should receive the following JSON response with status "500":
             """
-                {
-                    "errors": [
-                        {
-                            "code": "InternalServerError",
-                            "description": "Something went wrong"
-                        }
-                    ]
-                }
+              {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: POST /v1/groups/{id}/members get group, group not found returns 500
@@ -496,14 +468,7 @@ Feature: Groups
             """
         Then I should receive the following JSON response with status "500":
             """
-                {
-                    "errors": [
-                        {
-                            "code": "NotFound",
-                            "description": "get group - group not found"
-                        }
-                    ]
-                }
+                 {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: POST /v1/groups/{id}/members get group, internal server error returns 500
@@ -518,14 +483,7 @@ Feature: Groups
             """
         Then I should receive the following JSON response with status "500":
             """
-                {
-                    "errors": [
-                        {
-                            "code": "InternalServerError",
-                            "description": "Something went wrong"
-                        }
-                    ]
-                }
+                 {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: POST /v1/groups/{id}/members get group, group not found returns 500
@@ -540,14 +498,7 @@ Feature: Groups
             """
         Then I should receive the following JSON response with status "500":
             """
-                {
-                    "errors": [
-                        {
-                            "code": "NotFound",
-                            "description": "list members - group not found"
-                        }
-                    ]
-                }
+                {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
 #   Remove user from group scenarios
@@ -561,8 +512,8 @@ Feature: Groups
         Then I should receive the following JSON response with status "200":
             """
                 {
-                    "name": "test-group",
-                    "description": "A test group",
+                    "id": "test-group",
+                    "name": "A test group",
                     "precedence": 100,
                     "created": "2010-01-01T00:00:00Z",
                     "members": []
@@ -590,8 +541,8 @@ Feature: Groups
         Then I should receive the following JSON response with status "200":
             """
                 {
-                    "name": "test-group",
-                    "description": "A test group",
+                    "id": "test-group",
+                    "name": "A test group",
                     "precedence": 100,
                     "created": "2010-01-01T00:00:00Z",
                     "members": [
@@ -649,14 +600,7 @@ Feature: Groups
         When I DELETE "/v1/groups/internal-error/members/abcd1234"
         Then I should receive the following JSON response with status "500":
             """
-                {
-                    "errors": [
-                        {
-                            "code": "InternalServerError",
-                            "description": "Something went wrong"
-                        }
-                    ]
-                }
+                 {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, internal server error returns 500
@@ -666,14 +610,7 @@ Feature: Groups
         When I DELETE "/v1/groups/get-group-internal-error/members/abcd1234"
         Then I should receive the following JSON response with status "500":
             """
-                {
-                    "errors": [
-                        {
-                            "code": "InternalServerError",
-                            "description": "Something went wrong"
-                        }
-                    ]
-                }
+              {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, group not found returns 500
@@ -683,14 +620,7 @@ Feature: Groups
         When I DELETE "/v1/groups/get-group-not-found/members/abcd1234"
         Then I should receive the following JSON response with status "500":
             """
-                {
-                    "errors": [
-                        {
-                            "code": "NotFound",
-                            "description": "get group - group not found"
-                        }
-                    ]
-                }
+               {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, internal server error returns internal server error
@@ -700,14 +630,7 @@ Feature: Groups
         When I DELETE "/v1/groups/list-group-users-internal-error/members/abcd1234"
         Then I should receive the following JSON response with status "500":
             """
-                {
-                    "errors": [
-                        {
-                            "code": "InternalServerError",
-                            "description": "Something went wrong"
-                        }
-                    ]
-                }
+                {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, group not found returns 500
@@ -717,16 +640,9 @@ Feature: Groups
         When I DELETE "/v1/groups/list-group-users-not-found/members/abcd1234"
         Then I should receive the following JSON response with status "500":
             """
-                {
-                    "errors": [
-                        {
-                            "code": "NotFound",
-                            "description": "list members - group not found"
-                        }
-                    ]
-                }
+                 {"code":"InternalServerError", "description":"Internal Server Error"}
             """
-#   Get users from group scenarios        
+#   Get users from group scenarios
     Scenario: GET /v1/groups/{id}/members and checking the response status 200
         Given group "test-group" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
@@ -777,9 +693,9 @@ Feature: Groups
                         }
                     ]
                 }
-            """   
+            """
 
-        
+
  Scenario: GET /v1/groups/{id}/members, internal server error returns 500
         Given group "internal-error" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
@@ -787,18 +703,11 @@ Feature: Groups
         When I GET "/v1/groups/internal-error/members"
         Then I should receive the following JSON response with status "500":
             """
-                {
-                    "errors": [
-                        {
-                            "code": "InternalServerError",
-                            "description": "Something went wrong"
-                        }
-                    ]
-                }
+                {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
 #   Get listgroups scenarios     
-#   list for no groups found   
+#   list for no groups found
     Scenario: GET /v1/groups and checking the response status 200
         Given there "0" groups exists in the database
         And I am an admin user
@@ -812,7 +721,7 @@ Feature: Groups
                     "next_token":null
                 }
             """  
-#   list for one groups found  
+#   list for one groups found
     Scenario: GET /v1/groups and checking the response status 200
         Given there "2" groups exists in the database
         And I am an admin user
@@ -854,7 +763,7 @@ Feature: Groups
             """  
 
 #   Get getGroup scenarios     
-#   successful return   
+#   successful return
     Scenario: GET /v1/groups and checking the response status 200
         Given group "test-group" exists in the database
         And I am an admin user
@@ -862,14 +771,14 @@ Feature: Groups
         Then I should receive the following JSON response with status "200":
             """
                 {
-                    "name":"test-group",
-                    "description":"A test group",
+                    "id":"test-group",
+                    "name":"A test group",
                     "precedence": 100,
                     "created": "2010-01-01T00:00:00Z",
                     "members": null
                 }
             """  
-#   404 return   
+#   404 return
     Scenario: GET /v1/groups and checking the response status 404
         Given group "get-group-not-found" exists in the database
         And I am an admin user
@@ -891,14 +800,7 @@ Feature: Groups
         When I GET "/v1/groups/internal-error"
         Then I should receive the following JSON response with status "500":
             """
-                {
-                    "errors": [
-                        {
-                            "code": "InternalServerError",
-                            "description": "Something went wrong"
-                        }
-                    ]
-                }
+               {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
    Scenario: GET /v1/groups/{id} without a JWT token and checking the response status 403

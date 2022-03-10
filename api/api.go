@@ -3,14 +3,17 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"net/http"
 	"time"
+
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 
 	"github.com/ONSdigital/dp-identity-api/models"
 
 	"github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/gorilla/mux"
+
+	"github.com/ONSdigital/dp-identity-api/jwks"
 )
 
 var (
@@ -36,8 +39,10 @@ type API struct {
 	ClientId         string
 	ClientSecret     string
 	ClientAuthFlow   string
+	AWSRegion        string
 	AllowedDomains   []string
 	APIRequestFilter map[string]map[string]string
+	JWKSHandler      jwks.JWKSInt
 }
 
 type baseHandler func(ctx context.Context, w http.ResponseWriter, r *http.Request) (*models.SuccessResponse, *models.ErrorResponse)
@@ -58,12 +63,13 @@ func contextAndErrors(h baseHandler) http.HandlerFunc {
 func Setup(ctx context.Context,
 	r *mux.Router,
 	cognitoClient cognito.Client,
-	userPoolId, clientId, clientSecret, clientAuthFlow string,
+	userPoolId, clientId, clientSecret, awsRegion, clientAuthFlow string,
 	allowedDomains []string,
-	auth authorisation.Middleware) (*API, error) {
+	auth authorisation.Middleware,
+	jwksHandler jwks.JWKSInt) (*API, error) {
 
 	// Return an error if empty required parameter was passed.
-	if userPoolId == "" || clientId == "" || clientSecret == "" || clientAuthFlow == "" || allowedDomains == nil || len(allowedDomains) == 0 {
+	if userPoolId == "" || clientId == "" || clientSecret == "" || awsRegion == "" || clientAuthFlow == "" || allowedDomains == nil || len(allowedDomains) == 0 || jwksHandler == nil {
 		return nil, models.NewError(ctx, nil, models.MissingConfigError, models.MissingConfigDescription)
 	}
 
@@ -78,6 +84,7 @@ func Setup(ctx context.Context,
 		ClientId:       clientId,
 		ClientSecret:   clientSecret,
 		ClientAuthFlow: clientAuthFlow,
+		AWSRegion:      awsRegion,
 		AllowedDomains: allowedDomains,
 		APIRequestFilter: map[string]map[string]string{
 			"/v1/users": {
@@ -85,6 +92,7 @@ func Setup(ctx context.Context,
 				"active=false": "status=\"Disabled\"",
 			},
 		},
+		JWKSHandler: jwksHandler,
 	}
 
 	r.HandleFunc("/v1/tokens", contextAndErrors(api.TokensHandler)).Methods(http.MethodPost)
@@ -125,10 +133,14 @@ func Setup(ctx context.Context,
 		Methods(http.MethodGet)
 	r.HandleFunc("/v1/groups/{id}/members/{user_id}", auth.Require(GroupsEditPermission, contextAndErrors(api.RemoveUserFromGroupHandler))).
 		Methods(http.MethodDelete)
+	r.HandleFunc("/v1/jwt-keys", contextAndErrors(api.CognitoPoolJWKSHandler)).
+		Methods(http.MethodGet)		
 	return api, nil
 }
 
 func writeErrorResponse(ctx context.Context, w http.ResponseWriter, errorResponse *models.ErrorResponse) {
+	var jsonResponse []byte
+	var err error
 	w.Header().Set("Content-Type", "application/json")
 	// process custom headers
 	if errorResponse.Headers != nil {
@@ -137,8 +149,11 @@ func writeErrorResponse(ctx context.Context, w http.ResponseWriter, errorRespons
 		}
 	}
 	w.WriteHeader(errorResponse.Status)
-
-	jsonResponse, err := json.Marshal(errorResponse)
+	if errorResponse.Status == http.StatusInternalServerError {
+		jsonResponse, err = json.Marshal(models.Error{Code: models.InternalError, Description: models.InternalErrorDescription})
+	} else {
+		jsonResponse, err = json.Marshal(errorResponse)
+	}
 	if err != nil {
 		responseErr := models.NewError(ctx, err, models.JSONMarshalError, models.ErrorMarshalFailedDescription)
 		http.Error(w, responseErr.Description, http.StatusInternalServerError)

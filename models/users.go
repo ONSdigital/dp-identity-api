@@ -24,7 +24,7 @@ type UsersList struct {
 	PaginationToken string
 }
 
-// ListGroupsForUser output structure from cognitoidentityprovider.AdminListGroupsForUserOutput but changing the
+// ListUserGroupType output structure from cognitoidentityprovider.AdminListGroupsForUserOutput but changing the
 // json output
 type ListUserGroupType struct {
 	CreationDate     *time.Time `type:"timestamp" json:"creation_date"`
@@ -36,7 +36,7 @@ type ListUserGroupType struct {
 	UserPoolId       *string    `min:"1" type:"string" json:"user_pool_id"`
 }
 
-// List groups for user output structure from cognitoidentityprovider.AdminListGroupsForUserOutput
+// ListUserGroups list of groups for user output structure from cognitoidentityprovider.AdminListGroupsForUserOutput
 // with count of total groups returned
 type ListUserGroups struct {
 	Groups    []*ListUserGroupType `json:"groups"`

@@ -12,7 +12,7 @@ const (
 	JSONUnmarshalError           = "JSONUnmarshalError"
 	WriteResponseError           = "WriteResponseError"
 	InvalidUserIdError           = "InvalidUserId"
-	InvalidGroupNameError        = "InvalidGroupName"
+	InvalidGroupIDError          = "InvalidGroupID"
 	InvalidForenameError         = "InvalidForename"
 	InvalidSurnameError          = "InvalidSurname"
 	InvalidStatusNotesError      = "InvalidStatusNotes"
@@ -44,6 +44,7 @@ const (
 	InvalidGroupName             = "InvalidGroupName"
 	InvalidGroupPrecedence       = "InvalidGroupPrecedence"
 	InvalidFilterQuery           = "InvalidFilterQuery"
+	JWKSParseError               = "JWKSParseError"
 )
 
 // API error descriptions
@@ -61,7 +62,7 @@ const (
 	BodyReadFailedDescription              = "endpoint returned an error reading the request body"
 	InvalidPasswordDescription             = "the submitted password could not be validated"
 	PasswordGenerationErrorDescription     = "failed to generate a valid password"
-	MissingGroupNameErrorDescription       = "the group name was missing"
+	MissingGroupIDErrorDescription         = "the group ID was missing"
 	MissingUserIdErrorDescription          = "the user id was missing"
 	InvalidForenameErrorDescription        = "the submitted user's forename could not be validated"
 	InvalidSurnameErrorDescription         = "the submitted user's lastname could not be validated"
@@ -83,9 +84,15 @@ const (
 	IncorrectPatternInGroupName            = "a group name cannot start with 'role-' or 'ROLE-'"
 	GroupAlreadyExistsDescription          = "a group with the name already exists"
 	InvalidFilterQueryDescription          = "the submitted query could not be validated"
+	InternalErrorDescription               = "Internal Server Error"
+	JWKSParseErrorDescription              = "error encountered when parsing the json web key set (jwks)"
+	JWKSUnsupportedKeyTypeDescription      = "unsupported key type. Must be rsa key"
+	JWKSErrorDecodingDescription           = "error decoding json web key"
+	JWKSExponentErrorDescription           = "unexpected exponent: unable to decode JWK"
+	JWKSEmptyWebKeySetDescription          = "empty json web key set"
 )
 
-// Mapping Cognito error codes to API error codes
+// CognitoErrorMapping mapping Cognito error codes to API error codes
 var CognitoErrorMapping = map[string]string{
 	cognitoidentityprovider.ErrCodeInternalErrorException:          InternalError,
 	cognitoidentityprovider.ErrCodeCodeDeliveryFailureException:    DeliveryFailureError,
