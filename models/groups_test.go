@@ -330,9 +330,9 @@ func TestGroup_BuildListGroupsSuccessfulJsonResponse(t *testing.T) {
 		So(len(jsonGroups), ShouldEqual, 2)
 		for _, testgroup := range jsonGroups {
 			jsonGroup := testgroup.(map[string]interface{})
-			So(jsonGroup["description"], ShouldEqual, description)
+			So(jsonGroup["name"], ShouldEqual, description)
 			So(jsonGroup["precedence"], ShouldEqual, precedence)
-			So(jsonGroup["group_name"], ShouldEqual, name)
+			So(jsonGroup["id"], ShouldEqual, name)
 		}
 
 	})

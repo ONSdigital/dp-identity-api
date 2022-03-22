@@ -230,8 +230,8 @@ func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroups(
 	// if actual.Count > 0 && expected.Count > 0 {
 	if actual.Count > 0 {
 
-		assert.Equal(c.apiFeature, *expected.Groups[0].Description, *actual.Groups[0].Description)
-		assert.Equal(c.apiFeature, *expected.Groups[0].GroupName, *actual.Groups[0].GroupName)
+		assert.Equal(c.apiFeature, *expected.Groups[0].Name, *actual.Groups[0].Name)
+		assert.Equal(c.apiFeature, *expected.Groups[0].ID, *actual.Groups[0].ID)
 		tmpPrecedence := int(*expected.Groups[0].Precedence)
 		assert.GreaterOrEqual(c.apiFeature, 13, tmpPrecedence)
 		assert.LessOrEqual(c.apiFeature, 100, tmpPrecedence)

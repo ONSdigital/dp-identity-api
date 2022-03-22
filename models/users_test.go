@@ -1084,10 +1084,10 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 		So(userGroupsJson.Count, ShouldEqual, len(result.Groups))
 		So(userGroupsJson.NextToken, ShouldBeNil)
 
-		So(*userGroupsJson.Groups[0].GroupName, ShouldEqual, *result.Groups[0].GroupName)
-		So(*userGroupsJson.Groups[1].GroupName, ShouldEqual, *result.Groups[1].GroupName)
-		So(*userGroupsJson.Groups[0].Description, ShouldEqual, *result.Groups[0].Description)
-		So(*userGroupsJson.Groups[1].Description, ShouldEqual, *result.Groups[1].Description)
+		So(*userGroupsJson.Groups[0].ID, ShouldEqual, *result.Groups[0].GroupName)
+		So(*userGroupsJson.Groups[1].ID, ShouldEqual, *result.Groups[1].GroupName)
+		So(*userGroupsJson.Groups[0].Name, ShouldEqual, *result.Groups[0].Description)
+		So(*userGroupsJson.Groups[1].Name, ShouldEqual, *result.Groups[1].Description)
 	})
 
 	Convey("Check empty response from cognito i.e valid user with no groups", t, func() {

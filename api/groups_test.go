@@ -1210,7 +1210,7 @@ func TestListGroupsHandler(t *testing.T) {
 					So(responseBody.Count, ShouldEqual, 2)
 					So(responseBody.Groups, ShouldNotBeNil)
 					So(responseBody.Groups, ShouldHaveLength, responseBody.Count)
-					So(*responseBody.Groups[0].Description, ShouldEqual, *groups[0].Description)
+					So(*responseBody.Groups[0].Name, ShouldEqual, *groups[0].Description)
 				},
 			},
 			{
@@ -1262,7 +1262,7 @@ func TestListGroupsHandler(t *testing.T) {
 					So(responseBody.Count, ShouldEqual, 2)
 					So(responseBody.Groups, ShouldNotBeNil)
 					So(responseBody.Groups, ShouldHaveLength, responseBody.Count)
-					So(*responseBody.Groups[0].Description, ShouldEqual, *groups[0].Description)
+					So(*responseBody.Groups[0].Name, ShouldEqual, *groups[0].Description)
 				},
 			},
 
