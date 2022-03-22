@@ -28,8 +28,8 @@ type UsersList struct {
 // json output
 type ListUserGroupType struct {
 	CreationDate     *time.Time `type:"timestamp" json:"creation_date"`
-	Description      *string    `type:"string" json:"description"`
-	GroupName        *string    `min:"1" type:"string" json:"group_name"`
+	Name             *string    `type:"string" json:"name"`
+	ID               *string    `min:"1" type:"string" json:"id"`
 	LastModifiedDate *time.Time `type:"timestamp" json:"last_modified_date"`
 	Precedence       *int64     `type:"integer" json:"precedence"`
 	RoleArn          *string    `min:"20" type:"string" json:"role_arn"`
@@ -515,8 +515,8 @@ func (p *ListUserGroups) BuildListUserGroupsSuccessfulJsonResponse(ctx context.C
 
 		newGroup := ListUserGroupType{
 			CreationDate:     tmpGroup.CreationDate,
-			Description:      tmpGroup.Description,
-			GroupName:        tmpGroup.GroupName,
+			Name:             tmpGroup.Description,
+			ID:               tmpGroup.GroupName,
 			LastModifiedDate: tmpGroup.LastModifiedDate,
 			Precedence:       tmpGroup.Precedence,
 			RoleArn:          tmpGroup.RoleArn,

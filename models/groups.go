@@ -253,8 +253,8 @@ func (g *ListUserGroups) BuildListGroupsSuccessfulJsonResponse(ctx context.Conte
 
 		newGroup := ListUserGroupType{
 			CreationDate:     tmpGroup.CreationDate,
-			Description:      tmpGroup.Description,
-			GroupName:        tmpGroup.GroupName,
+			Name:             tmpGroup.Description,
+			ID:               tmpGroup.GroupName,
 			LastModifiedDate: tmpGroup.LastModifiedDate,
 			Precedence:       tmpGroup.Precedence,
 			RoleArn:          tmpGroup.RoleArn,
