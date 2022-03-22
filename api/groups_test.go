@@ -173,31 +173,6 @@ func TestAddUserToGroupHandler(t *testing.T) {
 					So(castErr.Description, ShouldEqual, groupNotFoundDescription)
 				},
 			},
-			// Cognito ListUsersInGroup 404 response - internal error
-			{
-				func(userInput *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
-					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
-				},
-				func(inputData *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
-					group := &cognitoidentityprovider.GetGroupOutput{
-						Group: getGroupData,
-					}
-					return group, nil
-				},
-				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-					var groupNotFoundException cognitoidentityprovider.ResourceNotFoundException
-					groupNotFoundException.Message_ = &groupNotFoundDescription
-					return nil, &groupNotFoundException
-				},
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					So(successResponse, ShouldBeNil)
-					So(errorResponse.Status, ShouldNotBeNil)
-					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
-					castErr := errorResponse.Errors[0].(*models.Error)
-					So(castErr.Code, ShouldEqual, models.NotFoundError)
-					So(castErr.Description, ShouldEqual, groupNotFoundDescription)
-				},
-			},
 		}
 
 		for _, tt := range adminCreateUsersTests {
@@ -402,31 +377,6 @@ func TestRemoveUserFromGroupHandler(t *testing.T) {
 					return &cognitoidentityprovider.ListUsersInGroupOutput{
 						Users: []*cognitoidentityprovider.UserType{},
 					}, nil
-				},
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					So(successResponse, ShouldBeNil)
-					So(errorResponse.Status, ShouldNotBeNil)
-					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
-					castErr := errorResponse.Errors[0].(*models.Error)
-					So(castErr.Code, ShouldEqual, models.NotFoundError)
-					So(castErr.Description, ShouldEqual, groupNotFoundDescription)
-				},
-			},
-			// Cognito ListUsersInGroup 404 response - internal error
-			{
-				func(userInput *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error) {
-					return &cognitoidentityprovider.AdminRemoveUserFromGroupOutput{}, nil
-				},
-				func(inputData *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
-					group := &cognitoidentityprovider.GetGroupOutput{
-						Group: getGroupData,
-					}
-					return group, nil
-				},
-				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-					var groupNotFoundException cognitoidentityprovider.ResourceNotFoundException
-					groupNotFoundException.Message_ = &groupNotFoundDescription
-					return nil, &groupNotFoundException
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(successResponse, ShouldBeNil)

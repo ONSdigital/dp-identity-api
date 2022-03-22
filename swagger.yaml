@@ -726,11 +726,6 @@ definitions:
       created:
         description: "The date the group was created"
         type: string
-      members:
-        description: "A list of members of a group for the response body"
-        type: array
-        items:
-          $ref: '#/definitions/User'
   GroupsList:
     description: "A list of groups for the response body"
     type: object

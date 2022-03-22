@@ -155,15 +155,6 @@ func (api *API) AddUserToGroupHandler(ctx context.Context, w http.ResponseWriter
 
 	group.MapCognitoDetails(groupGetResponse.Group)
 
-	groupMembersRequest := group.BuildListUsersInGroupRequest(api.UserPoolId)
-	groupMembersResponse, err := api.CognitoClient.ListUsersInGroup(groupMembersRequest)
-	if err != nil {
-		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from add user to group endpoint")
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
-	}
-
-	group.MapMembers(&groupMembersResponse.Users)
-
 	jsonResponse, responseErr := group.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
@@ -254,15 +245,6 @@ func (api *API) RemoveUserFromGroupHandler(ctx context.Context, w http.ResponseW
 	}
 
 	group.MapCognitoDetails(groupGetResponse.Group)
-
-	groupMembersRequest := group.BuildListUsersInGroupRequest(api.UserPoolId)
-	groupMembersResponse, err := api.CognitoClient.ListUsersInGroup(groupMembersRequest)
-	if err != nil {
-		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from remove user from group endpoint")
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
-	}
-
-	group.MapMembers(&groupMembersResponse.Users)
 
 	jsonResponse, responseErr := group.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {
