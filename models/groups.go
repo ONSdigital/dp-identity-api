@@ -27,11 +27,10 @@ var (
 
 //Group is a type for the identity API representation of a group's details
 type Group struct {
-	ID         string       `json:"id"`
-	Name       string       `json:"name"`
-	Precedence int64        `json:"precedence"`
-	Created    time.Time    `json:"created"`
-	Members    []UserParams `json:"members"`
+	ID         string    `json:"id"`
+	Name       string    `json:"name"`
+	Precedence int64     `json:"precedence"`
+	Created    time.Time `json:"created"`
 }
 
 // NewAdminRoleGroup is a constructor for a new instance of the admin role group
@@ -138,14 +137,6 @@ func (g *Group) MapCognitoDetails(groupDetails *cognitoidentityprovider.GroupTyp
 	g.Precedence = *groupDetails.Precedence
 	g.Name = *groupDetails.Description
 	g.Created = *groupDetails.CreationDate
-}
-
-// MapMembers maps Cognito user details to the internal UserParams model from ListUserInGroup requests
-func (g *Group) MapMembers(membersList *[]*cognitoidentityprovider.UserType) {
-	g.Members = []UserParams{}
-	for _, member := range *membersList {
-		g.Members = append(g.Members, UserParams{}.MapCognitoDetails(member))
-	}
 }
 
 //BuildSuccessfulJsonResponse builds the Group response json for client responses

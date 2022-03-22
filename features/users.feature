@@ -1495,8 +1495,8 @@ Feature: Users
                 "groups": [
                         {
                             "creation_date": null,
-                            "description": "group name description 0",
-                            "group_name": "group_name_0",
+                            "name": "group name description 0",
+                            "id": "group_name_0",
                             "last_modified_date": null,
                             "precedence": 13,
                             "role_arn": null,

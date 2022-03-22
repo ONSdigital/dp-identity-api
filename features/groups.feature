@@ -333,19 +333,7 @@ Feature: Groups
                     "id": "test-group",
                     "name": "A test group",
                     "precedence": 100,
-                    "created": "2010-01-01T00:00:00Z",
-                    "members": [
-                        {
-                            "id": "abcd1234",
-                            "forename": "Bob",
-                            "lastname": "Smith",
-                            "email": "email@ons.gov.uk",
-                            "groups": [],
-                            "status": "CONFIRMED",
-                            "active": true,
-                            "status_notes": ""
-                        }
-                    ]
+                    "created": "2010-01-01T00:00:00Z"
                 }
             """
 
@@ -471,36 +459,6 @@ Feature: Groups
                  {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
-    Scenario: POST /v1/groups/{id}/members get group, internal server error returns 500
-        Given group "list-group-users-internal-error" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-        When I POST "/v1/groups/list-group-users-internal-error/members"
-            """
-                {
-                    "user_id": "abcd1234"
-                }
-            """
-        Then I should receive the following JSON response with status "500":
-            """
-                 {"code":"InternalServerError", "description":"Internal Server Error"}
-            """
-
-    Scenario: POST /v1/groups/{id}/members get group, group not found returns 500
-        Given group "list-group-users-not-found" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-        When I POST "/v1/groups/list-group-users-not-found/members"
-            """
-                {
-                    "user_id": "abcd1234"
-                }
-            """
-        Then I should receive the following JSON response with status "500":
-            """
-                {"code":"InternalServerError", "description":"Internal Server Error"}
-            """
-
 #   Remove user from group scenarios
     Scenario: DELETE /v1/groups/{id}/members/{user_id} and checking the response status 200
         Given group "test-group" exists in the database
@@ -515,8 +473,7 @@ Feature: Groups
                     "id": "test-group",
                     "name": "A test group",
                     "precedence": 100,
-                    "created": "2010-01-01T00:00:00Z",
-                    "members": []
+                    "created": "2010-01-01T00:00:00Z"
                 }
             """
 
@@ -544,19 +501,7 @@ Feature: Groups
                     "id": "test-group",
                     "name": "A test group",
                     "precedence": 100,
-                    "created": "2010-01-01T00:00:00Z",
-                    "members": [
-                        {
-                            "id": "efgh5678",
-                            "forename": "Bob",
-                            "lastname": "Smith",
-                            "email": "other-email@ons.gov.uk",
-                            "groups": [],
-                            "status": "CONFIRMED",
-                            "active": true,
-                            "status_notes": ""
-                        }
-                    ]
+                    "created": "2010-01-01T00:00:00Z"
                 }
             """
 
@@ -623,25 +568,6 @@ Feature: Groups
                {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
-    Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, internal server error returns internal server error
-        Given group "list-group-users-internal-error" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-        When I DELETE "/v1/groups/list-group-users-internal-error/members/abcd1234"
-        Then I should receive the following JSON response with status "500":
-            """
-                {"code":"InternalServerError", "description":"Internal Server Error"}
-            """
-
-    Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, group not found returns 500
-        Given group "list-group-users-not-found" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-        When I DELETE "/v1/groups/list-group-users-not-found/members/abcd1234"
-        Then I should receive the following JSON response with status "500":
-            """
-                 {"code":"InternalServerError", "description":"Internal Server Error"}
-            """
 #   Get users from group scenarios
     Scenario: GET /v1/groups/{id}/members and checking the response status 200
         Given group "test-group" exists in the database
@@ -733,8 +659,8 @@ Feature: Groups
                 "count": 2,
                 "groups": [
                     {
-                    "description": "group name description 1",
-                    "group_name": "group_name_1",
+                    "name": "group name description 1",
+                    "id": "group_name_1",
                     "precedence": 55
                     }
                 ],
@@ -753,8 +679,8 @@ Feature: Groups
                 "count": 100,
                 "groups": [
                     {
-                    "description": "group name description 1",
-                    "group_name": "group_name_1",
+                    "name": "group name description 1",
+                    "id": "group_name_1",
                     "precedence": 55
                     }
                 ],
@@ -774,8 +700,7 @@ Feature: Groups
                     "id":"test-group",
                     "name":"A test group",
                     "precedence": 100,
-                    "created": "2010-01-01T00:00:00Z",
-                    "members": null
+                    "created": "2010-01-01T00:00:00Z"
                 }
             """  
 #   404 return

@@ -160,29 +160,6 @@ func TestGroup_BuildListUsersInGroupRequest(t *testing.T) {
 	})
 }
 
-func TestGroup_MapMembers(t *testing.T) {
-	Convey("adds the returned users to the members attribute", t, func() {
-		cognitoResponse := cognitoidentityprovider.ListUsersOutput{
-			Users: []*cognitoidentityprovider.UserType{
-				{
-					UserStatus: aws.String("CONFIRMED"),
-					Username:   aws.String("user-1"),
-					Enabled:    aws.Bool(true),
-				},
-				{
-					UserStatus: aws.String("CONFIRMED"),
-					Username:   aws.String("user-2"),
-					Enabled:    aws.Bool(true),
-				},
-			},
-		}
-		group := models.Group{}
-		group.MapMembers(&cognitoResponse.Users)
-
-		So(len(group.Members), ShouldEqual, len(cognitoResponse.Users))
-	})
-}
-
 func TestGroup_MapCognitoDetails(t *testing.T) {
 	Convey("correctly maps values from Cognito GroupType", t, func() {
 		group := models.Group{}
