@@ -5,9 +5,8 @@ package mock
 
 import (
 	"context"
-	"sync"
-
 	"github.com/ONSdigital/dp-identity-api/service"
+	"sync"
 )
 
 // Ensure, that HTTPServerMock does implement service.HTTPServer.
@@ -16,22 +15,22 @@ var _ service.HTTPServer = &HTTPServerMock{}
 
 // HTTPServerMock is a mock implementation of service.HTTPServer.
 //
-//     func TestSomethingThatUsesHTTPServer(t *testing.T) {
+// 	func TestSomethingThatUsesHTTPServer(t *testing.T) {
 //
-//         // make and configure a mocked service.HTTPServer
-//         mockedHTTPServer := &HTTPServerMock{
-//             ListenAndServeFunc: func() error {
-// 	               panic("mock out the ListenAndServe method")
-//             },
-//             ShutdownFunc: func(ctx context.Context) error {
-// 	               panic("mock out the Shutdown method")
-//             },
-//         }
+// 		// make and configure a mocked service.HTTPServer
+// 		mockedHTTPServer := &HTTPServerMock{
+// 			ListenAndServeFunc: func() error {
+// 				panic("mock out the ListenAndServe method")
+// 			},
+// 			ShutdownFunc: func(ctx context.Context) error {
+// 				panic("mock out the Shutdown method")
+// 			},
+// 		}
 //
-//         // use mockedHTTPServer in code that requires service.HTTPServer
-//         // and then make assertions.
+// 		// use mockedHTTPServer in code that requires service.HTTPServer
+// 		// and then make assertions.
 //
-//     }
+// 	}
 type HTTPServerMock struct {
 	// ListenAndServeFunc mocks the ListenAndServe method.
 	ListenAndServeFunc func() error

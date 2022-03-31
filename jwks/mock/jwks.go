@@ -21,6 +21,9 @@ var _ jwks.JWKSInt = &JWKSIntMock{}
 // 			JWKSGetKeysetFunc: func(awsRegion string, poolId string) (*jwks.JWKS, error) {
 // 				panic("mock out the JWKSGetKeyset method")
 // 			},
+// 			JWKSToRSAFunc: func(jwksMoqParam *jwks.JWKS) (map[string]string, error) {
+// 				panic("mock out the JWKSToRSA method")
+// 			},
 // 			JWKSToRSAJSONResponseFunc: func(jwksMoqParam *jwks.JWKS) ([]byte, error) {
 // 				panic("mock out the JWKSToRSAJSONResponse method")
 // 			},
@@ -34,6 +37,9 @@ type JWKSIntMock struct {
 	// JWKSGetKeysetFunc mocks the JWKSGetKeyset method.
 	JWKSGetKeysetFunc func(awsRegion string, poolId string) (*jwks.JWKS, error)
 
+	// JWKSToRSAFunc mocks the JWKSToRSA method.
+	JWKSToRSAFunc func(jwksMoqParam *jwks.JWKS) (map[string]string, error)
+
 	// JWKSToRSAJSONResponseFunc mocks the JWKSToRSAJSONResponse method.
 	JWKSToRSAJSONResponseFunc func(jwksMoqParam *jwks.JWKS) ([]byte, error)
 
@@ -46,6 +52,11 @@ type JWKSIntMock struct {
 			// PoolId is the poolId argument value.
 			PoolId string
 		}
+		// JWKSToRSA holds details about calls to the JWKSToRSA method.
+		JWKSToRSA []struct {
+			// JwksMoqParam is the jwksMoqParam argument value.
+			JwksMoqParam *jwks.JWKS
+		}
 		// JWKSToRSAJSONResponse holds details about calls to the JWKSToRSAJSONResponse method.
 		JWKSToRSAJSONResponse []struct {
 			// JwksMoqParam is the jwksMoqParam argument value.
@@ -53,6 +64,7 @@ type JWKSIntMock struct {
 		}
 	}
 	lockJWKSGetKeyset         sync.RWMutex
+	lockJWKSToRSA             sync.RWMutex
 	lockJWKSToRSAJSONResponse sync.RWMutex
 }
 
@@ -88,6 +100,37 @@ func (mock *JWKSIntMock) JWKSGetKeysetCalls() []struct {
 	mock.lockJWKSGetKeyset.RLock()
 	calls = mock.calls.JWKSGetKeyset
 	mock.lockJWKSGetKeyset.RUnlock()
+	return calls
+}
+
+// JWKSToRSA calls JWKSToRSAFunc.
+func (mock *JWKSIntMock) JWKSToRSA(jwksMoqParam *jwks.JWKS) (map[string]string, error) {
+	if mock.JWKSToRSAFunc == nil {
+		panic("JWKSIntMock.JWKSToRSAFunc: method is nil but JWKSInt.JWKSToRSA was just called")
+	}
+	callInfo := struct {
+		JwksMoqParam *jwks.JWKS
+	}{
+		JwksMoqParam: jwksMoqParam,
+	}
+	mock.lockJWKSToRSA.Lock()
+	mock.calls.JWKSToRSA = append(mock.calls.JWKSToRSA, callInfo)
+	mock.lockJWKSToRSA.Unlock()
+	return mock.JWKSToRSAFunc(jwksMoqParam)
+}
+
+// JWKSToRSACalls gets all the calls that were made to JWKSToRSA.
+// Check the length with:
+//     len(mockedJWKSInt.JWKSToRSACalls())
+func (mock *JWKSIntMock) JWKSToRSACalls() []struct {
+	JwksMoqParam *jwks.JWKS
+} {
+	var calls []struct {
+		JwksMoqParam *jwks.JWKS
+	}
+	mock.lockJWKSToRSA.RLock()
+	calls = mock.calls.JWKSToRSA
+	mock.lockJWKSToRSA.RUnlock()
 	return calls
 }
 

@@ -5,11 +5,10 @@ package mock
 
 import (
 	"context"
-	"net/http"
-	"sync"
-
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-identity-api/service"
+	"net/http"
+	"sync"
 )
 
 // Ensure, that HealthCheckerMock does implement service.HealthChecker.
@@ -18,28 +17,28 @@ var _ service.HealthChecker = &HealthCheckerMock{}
 
 // HealthCheckerMock is a mock implementation of service.HealthChecker.
 //
-//     func TestSomethingThatUsesHealthChecker(t *testing.T) {
+// 	func TestSomethingThatUsesHealthChecker(t *testing.T) {
 //
-//         // make and configure a mocked service.HealthChecker
-//         mockedHealthChecker := &HealthCheckerMock{
-//             AddCheckFunc: func(name string, checker healthcheck.Checker) error {
-// 	               panic("mock out the AddCheck method")
-//             },
-//             HandlerFunc: func(w http.ResponseWriter, req *http.Request)  {
-// 	               panic("mock out the Handler method")
-//             },
-//             StartFunc: func(ctx context.Context)  {
-// 	               panic("mock out the Start method")
-//             },
-//             StopFunc: func()  {
-// 	               panic("mock out the Stop method")
-//             },
-//         }
+// 		// make and configure a mocked service.HealthChecker
+// 		mockedHealthChecker := &HealthCheckerMock{
+// 			AddCheckFunc: func(name string, checker healthcheck.Checker) error {
+// 				panic("mock out the AddCheck method")
+// 			},
+// 			HandlerFunc: func(w http.ResponseWriter, req *http.Request)  {
+// 				panic("mock out the Handler method")
+// 			},
+// 			StartFunc: func(ctx context.Context)  {
+// 				panic("mock out the Start method")
+// 			},
+// 			StopFunc: func()  {
+// 				panic("mock out the Stop method")
+// 			},
+// 		}
 //
-//         // use mockedHealthChecker in code that requires service.HealthChecker
-//         // and then make assertions.
+// 		// use mockedHealthChecker in code that requires service.HealthChecker
+// 		// and then make assertions.
 //
-//     }
+// 	}
 type HealthCheckerMock struct {
 	// AddCheckFunc mocks the AddCheck method.
 	AddCheckFunc func(name string, checker healthcheck.Checker) error
