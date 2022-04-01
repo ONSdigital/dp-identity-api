@@ -179,7 +179,7 @@ func (c *IdentityComponent) DoGetCognitoClient(AWSRegion string) cognito.Client 
 }
 
 func (c *IdentityComponent) DoGetAuthorisationMiddleware(ctx context.Context, cfg *authorisation.Config) (authorisation.Middleware, error) {
-	middleware, err := authorisation.NewMiddlewareFromConfig(ctx, cfg)
+	middleware, err := authorisation.NewMiddlewareFromConfig(ctx, cfg, nil)
 	if err != nil {
 		return nil, err
 	}
