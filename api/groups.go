@@ -16,7 +16,7 @@ import (
 const (
 	GroupsCreatePermission string = "users:create"
 	GroupsReadPermission          = "users:read"
-	GroupsEditPermission        = "users:update"
+	GroupsEditPermission          = "users:update"
 	GroupsDeletePermission        = "users:update"
 )
 
@@ -346,4 +346,13 @@ func (api *API) DeleteGroupHandler(ctx context.Context, w http.ResponseWriter, r
 	}
 
 	return models.NewSuccessResponse(nil, http.StatusNoContent, nil), nil
+}
+
+//SetGroupUsersHandler adds a user to the specified group
+func (api *API) SetGroupUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	// groupUsers, groupUsersErrors := api.ListUserGroupsHandler(ctx, w, req)
+	// fmt.Println(groupUsers)
+	// fmt.Println(groupUsersErrors)
+
+	return nil, nil
 }

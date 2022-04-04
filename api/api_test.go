@@ -57,6 +57,7 @@ func TestSetup(t *testing.T) {
 			So(hasRoute(api.Router, "/v1/groups/{id}", http.MethodPut), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/groups/{id}/members", http.MethodPost), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/groups/{id}/members", http.MethodGet), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/groups/{id}/members", http.MethodPut), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/groups/{id}/members/{user_id}", http.MethodDelete), ShouldBeTrue)
 			So(hasRoute(api.Router, "/v1/jwt-keys", http.MethodGet), ShouldBeTrue)
 		})
@@ -156,10 +157,10 @@ func hasRoute(r *mux.Router, path, method string) bool {
 
 func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProviderClient) {
 	var (
-		ctx                                               = context.Background()
-		r                                                 = mux.NewRouter()
+		ctx                                                          = context.Background()
+		r                                                            = mux.NewRouter()
 		poolId, clientId, clientSecret, awsRegion, authFlow string   = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "eu-west-1234", "USER_PASSWORD_AUTH"
-		allowedDomains                           []string = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
+		allowedDomains                                      []string = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}

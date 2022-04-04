@@ -584,7 +584,7 @@ paths:
       tags:
         - Groups
       summary: "make list of user ids as group membership"
-      description: "Overwrites group membership with list of user ids"
+      description: "Set group users with list of user ids"
       consumes:
         - application/json
       produces:

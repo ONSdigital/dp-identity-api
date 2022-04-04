@@ -129,12 +129,14 @@ func Setup(ctx context.Context,
 		Methods(http.MethodDelete)
 	r.HandleFunc("/v1/groups/{id}/members", auth.Require(GroupsEditPermission, contextAndErrors(api.AddUserToGroupHandler))).
 		Methods(http.MethodPost)
+	r.HandleFunc("/v1/groups/{id}/members", auth.Require(GroupsEditPermission, contextAndErrors(api.SetGroupUsersHandler))).
+		Methods(http.MethodPut)
 	r.HandleFunc("/v1/groups/{id}/members", auth.Require(GroupsReadPermission, contextAndErrors(api.ListUsersInGroupHandler))).
 		Methods(http.MethodGet)
 	r.HandleFunc("/v1/groups/{id}/members/{user_id}", auth.Require(GroupsEditPermission, contextAndErrors(api.RemoveUserFromGroupHandler))).
 		Methods(http.MethodDelete)
 	r.HandleFunc("/v1/jwt-keys", contextAndErrors(api.CognitoPoolJWKSHandler)).
-		Methods(http.MethodGet)		
+		Methods(http.MethodGet)
 	return api, nil
 }
 
