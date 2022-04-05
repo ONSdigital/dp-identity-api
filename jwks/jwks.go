@@ -21,7 +21,6 @@ import (
 type JWKSInt interface {
 	JWKSGetKeyset(awsRegion, poolId string) (*JWKS, error)
 	JWKSToRSAJSONResponse(jwks *JWKS) ([]byte, error)
-	JWKSToRSA(jwks *JWKS) (map[string]string, error)
 }
 
 const (
@@ -78,7 +77,6 @@ func (j JWKS) JWKSToRSAJSONResponse(jwks *JWKS) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(string(jsonResponse))
 	return jsonResponse, nil
 }
 
@@ -132,7 +130,7 @@ func (j JWKS) DoGetJWKS(ctx context.Context) JWKSInt {
 }
 
 // GetJWKSRSAKeys retrieves the JWKS RSA keys which are consumed by the authorisation middleware on startup.
-func GetJWKSRSAKeys(awsRegion string, poolID string) (map[string]string, error) {
+func (j JWKS) GetJWKSRSAKeys(awsRegion string, poolID string) (map[string]string, error) {
 	jwksURL := "https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json"
 	rcClient := &dphttp.Client{
 		MaxRetries: 5,

@@ -59,7 +59,7 @@ func run(ctx context.Context) error {
 	}
 
 	// Retrieve the JWKS RSA Public Keys from Cognito on startup
-	jwksRSAKeys, err := jwks.GetJWKSRSAKeys(cfg.AWSRegion, cfg.AWSCognitoUserPoolID)
+	jwksRSAKeys, err := jwksHandler.GetJWKSRSAKeys(cfg.AWSRegion, cfg.AWSCognitoUserPoolID)
 	if err != nil {
 		log.Fatal(ctx, "could not retrieve the JWKS RSA public keys", err)
 		return err
