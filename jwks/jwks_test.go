@@ -26,6 +26,14 @@ func TestJWKSToRSAJSONResponse(t *testing.T) {
 	})
 }
 
+func TestJWKSToRSA(t *testing.T) {
+	Convey("Enter a valid JWKS - check expected response", t, func() {
+		response, err := j.JWKSToRSA(validJWKS)
+		So(response, ShouldResemble, mock.JWKSData)
+		So(err, ShouldEqual, nil)
+	})
+}
+
 func TestConvertJwkToRsa(t *testing.T) {
 	Convey("Enter a valid JWK - check expected response", t, func() {
 		response, err := j.JWKToRSAPublicKey(validJWKS.Keys[0])
