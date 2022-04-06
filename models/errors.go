@@ -6,6 +6,7 @@ import (
 
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
 type Error struct {
@@ -40,6 +41,15 @@ func NewValidationError(ctx context.Context, code string, description string) *E
 
 	log.Error(ctx, description, err, log.Data{"code": code})
 	return err
+}
+//IsGroupExistsError validates if the err occurred because group already exists
+func IsGroupExistsError(err error) bool {
+	var cognitoErr awserr.Error
+	if errors.As(err, &cognitoErr) && cognitoErr.Code() == cognitoidentityprovider.ErrCodeGroupExistsException {
+		return true
+	} else {
+		return false
+	}
 }
 
 func NewCognitoError(ctx context.Context, err error, errContext string) *Error {

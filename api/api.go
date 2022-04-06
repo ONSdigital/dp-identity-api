@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-
 	"github.com/ONSdigital/dp-identity-api/models"
 
 	"github.com/ONSdigital/dp-identity-api/cognito"
@@ -134,7 +133,7 @@ func Setup(ctx context.Context,
 	r.HandleFunc("/v1/groups/{id}/members/{user_id}", auth.Require(GroupsEditPermission, contextAndErrors(api.RemoveUserFromGroupHandler))).
 		Methods(http.MethodDelete)
 	r.HandleFunc("/v1/jwt-keys", contextAndErrors(api.CognitoPoolJWKSHandler)).
-		Methods(http.MethodGet)		
+		Methods(http.MethodGet)
 	return api, nil
 }
 
@@ -204,7 +203,7 @@ func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, use
 	adminGroup := models.NewAdminRoleGroup()
 	adminGroupCreateInput := adminGroup.BuildCreateGroupRequest(userPoolId)
 	_, err := cognitoClient.CreateGroup(adminGroupCreateInput)
-	if err != nil {
+	if err != nil && !models.IsGroupExistsError(err) {
 		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for admin group from API start up")
 		if cognitoErr.Code != models.GroupExistsError {
 			return cognitoErr
@@ -214,7 +213,7 @@ func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, use
 	publisherGroup := models.NewPublisherRoleGroup()
 	publisherGroupCreateInput := publisherGroup.BuildCreateGroupRequest(userPoolId)
 	_, err = cognitoClient.CreateGroup(publisherGroupCreateInput)
-	if err != nil {
+	if err != nil && !models.IsGroupExistsError(err) {
 		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for publisher group from API start up")
 		if cognitoErr.Code != models.GroupExistsError {
 			return cognitoErr
