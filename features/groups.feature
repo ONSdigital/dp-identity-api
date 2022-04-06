@@ -770,18 +770,18 @@ Feature: Groups
 
 #   Put SetGroupUsers scenarios     
 #   successful return
-#    Scenario: PUT /v1/groups/{id}/members and checking the response status 200
- #       Given group "test-group" exists in the database
-  #      And I am an admin user
-   #     When I GET "/v1/groups/test-group/"
-#        Then I should receive the following JSON response with status "200":
- #           """
-  #              {
-   #                 "id":"test-group",
-#                    "name":"A test group",
- #                   "precedence": 100,
-  #                  "created": "2010-01-01T00:00:00Z"
-   #             }
-    #        """  
+    Scenario: PUT /v1/groups/{id}/members and checking the response status 200
+        Given group "test-group" exists in the database
+        And I am an admin user
+        When I GET "/v1/groups/test-group/"
+        Then I should receive the following JSON response with status "204":
+        """
+        {
+            "id":"test-group",
+            "name":"A test group",
+            "precedence": 100,
+            "created": "2010-01-01T00:00:00Z"
+        }
+        """  
 
 

@@ -1442,49 +1442,63 @@ func TestDeleteGroupHandler(t *testing.T) {
 
 }
 
-// func TestSetGroupUsersHandler(t *testing.T) {
+func TestSetGroupUsersHandler(t *testing.T) {
 
-// 	var (
-// 		ctx = context.Background()
-// 	)
+	var (
+		ctx = context.Background()
+	)
 
-// 	api, w, m := apiSetup()
+	api, w, m := apiSetup()
 
-// 	Convey("Get group -check expected responses", t, func() {
-// 		GetGroupTest := []struct {
-// 			description          string
-// 			listUsersInGroupfunc func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
-// 			assertions           func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
-// 		}{
-// 			{
-// 				"200 response from Cognito ",
-// 				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-// 					return &cognitoidentityprovider.ListUsersInGroupOutput{}, nil
-// 				},
-// 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-// 					So(successResponse, ShouldNotBeNil)
-// 					So(successResponse.Status, ShouldEqual, http.StatusOK)
-// 					So(errorResponse, ShouldBeNil)
-// 				},
-// 			},
-// 		}
+	Convey("Get group -check expected responses", t, func() {
 
-// 		for _, tt := range GetGroupTest {
-// 			Convey(tt.description, func() {
+		GetGroupTest := []struct {
+			description          string
+			listUsersInGroupfunc func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
+			assertions           func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+		}{
+			{
+				"200 response from Cognito ",
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					return &cognitoidentityprovider.ListUsersInGroupOutput{
+						Users: []*cognitoidentityprovider.UserType{
+							{
+								Enabled:    aws.Bool(true),
+								UserStatus: aws.String("CONFIRMED"),
+								Username:   aws.String("user-1"),
+							},
+							{
+								Enabled:    aws.Bool(true),
+								UserStatus: aws.String("CONFIRMED"),
+								Username:   aws.String("user-2"),
+							},
+						},
+					}, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(errorResponse, ShouldBeNil)
+				},
+			},
+		}
 
-// 				m.ListUsersInGroupFunc = tt.listUsersInGroupfunc
-// 				r := httptest.NewRequest(http.MethodGet, getUsersInGroupEndPoint, nil)
+		for _, tt := range GetGroupTest {
+			Convey(tt.description, func() {
 
-// 				urlVars := map[string]string{
-// 					"id": "efgh5678",
-// 				}
-// 				r = mux.SetURLVars(r, urlVars)
+				m.ListUsersInGroupFunc = tt.listUsersInGroupfunc
+				r := httptest.NewRequest(http.MethodGet, getUsersInGroupEndPoint, nil)
 
-// 				successResponse, errorResponse := api.SetGroupUsersHandler(ctx, w, r)
+				urlVars := map[string]string{
+					"id": "efgh5678",
+				}
+				r = mux.SetURLVars(r, urlVars)
 
-// 				tt.assertions(successResponse, errorResponse)
-// 			})
-// 		}
-// 	})
+				successResponse, errorResponse := api.SetGroupUsersHandler(ctx, w, r)
 
-// }
+				tt.assertions(successResponse, errorResponse)
+			})
+		}
+	})
+
+}

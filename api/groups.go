@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -348,11 +349,41 @@ func (api *API) DeleteGroupHandler(ctx context.Context, w http.ResponseWriter, r
 	return models.NewSuccessResponse(nil, http.StatusNoContent, nil), nil
 }
 
-//SetGroupUsersHandler adds a user to the specified group
+///SetGroupUsersHandler adds a user to the specified group
 func (api *API) SetGroupUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	// groupUsers, groupUsersErrors := api.ListUserGroupsHandler(ctx, w, req)
-	// fmt.Println(groupUsers)
-	// fmt.Println(groupUsersErrors)
+	vars := mux.Vars(req)
+	group := models.Group{ID: vars["id"]}
 
-	return nil, nil
+	listGroupMembersInput := []*cognitoidentityprovider.UserType{}
+	listGroupMembers, err := api.getUsersInAGroup(listGroupMembersInput, group)
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from list users in group endpoint")
+		if cognitoErr.Code == models.NotFoundError {
+			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, cognitoErr)
+		}
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+	}
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, handleBodyReadError(ctx, err)
+	}
+	newGroupMembership := models.GroupMembership{}
+	err = json.Unmarshal(body, &newGroupMembership)
+	if err != nil {
+		return nil, handleBodyUnmarshalError(ctx, err)
+	}
+
+	for i, s := range listGroupMembers {
+		fmt.Println(i, s)
+	}
+	listOfUsers := models.UsersList{}
+	listOfUsers.MapCognitoUsers(&listGroupMembers)
+
+	jsonResponse, responseErr := listOfUsers.BuildSuccessfulJsonResponse(ctx)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
