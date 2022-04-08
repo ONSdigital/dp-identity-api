@@ -58,6 +58,16 @@ func run(ctx context.Context) error {
 		return errors.Wrap(err, "error getting configuration")
 	}
 
+	// Retrieve the JWKS RSA Public Keys from Cognito on startup
+	jwksRSAKeys, err := jwksHandler.GetJWKSRSAKeys(cfg.AWSRegion, cfg.AWSCognitoUserPoolID)
+	if err != nil {
+		log.Fatal(ctx, "could not retrieve the JWKS RSA public keys", err)
+		return err
+	}
+
+	// Set the JWKS RSA public keys authorisation config
+	cfg.AuthorisationConfig.JWTVerificationPublicKeys = jwksRSAKeys
+
 	// sensitive fields are omitted from config.String().
 	log.Info(ctx, "loaded config", log.Data{
 		"config": cfg,

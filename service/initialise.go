@@ -2,12 +2,13 @@ package service
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	cognitoclient "github.com/ONSdigital/dp-identity-api/cognito"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"net/http"
 
 	"github.com/ONSdigital/dp-identity-api/config"
 
@@ -86,5 +87,5 @@ func (e *Init) DoGetCognitoClient(AWSRegion string) cognitoclient.Client {
 
 // DoGetAuthorisationMiddleware creates authorisation middleware for the given config
 func (e *Init) DoGetAuthorisationMiddleware(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
-	return authorisation.NewFeatureFlaggedMiddleware(ctx, authorisationConfig)
+	return authorisation.NewFeatureFlaggedMiddleware(ctx, authorisationConfig, authorisationConfig.JWTVerificationPublicKeys)
 }

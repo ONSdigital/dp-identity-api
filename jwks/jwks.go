@@ -11,20 +11,22 @@ import (
 	"io/ioutil"
 	"math/big"
 	"net/http"
+	"time"
 
 	"github.com/ONSdigital/dp-identity-api/models"
+	dphttp "github.com/ONSdigital/dp-net/v2/http"
 )
 
-//go:generate moq -out mock/jwks.go -pkg mock . JWKSFuncs
+//go:generate moq -out mock/jwks.go -pkg mock . JWKSInt
 type JWKSInt interface {
 	JWKSGetKeyset(awsRegion, poolId string) (*JWKS, error)
 	JWKSToRSAJSONResponse(jwks *JWKS) ([]byte, error)
 }
 
 const (
-	RSAAlgorithm = "RSA"
-	RSAExponentAQAB = "AQAB"
-	RSAExponentAAEAAQ = "AAEAAQ"
+	RSAAlgorithm       = "RSA"
+	RSAExponentAQAB    = "AQAB"
+	RSAExponentAAEAAQ  = "AAEAAQ"
 	RSADefaultExponent = 65537
 )
 
@@ -66,9 +68,23 @@ func (j JWKS) JWKSGetKeyset(awsRegion, poolId string) (*JWKS, error) {
 
 // JWKSToRSAJSONResponse method returns byte[] array for request response
 func (j JWKS) JWKSToRSAJSONResponse(jwks *JWKS) ([]byte, error) {
+	response, err := j.JWKSToRSA(jwks)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		return nil, err
+	}
+	return jsonResponse, nil
+}
+
+// JWKSToRSA method returns a map of the JWKS RSA Public keys
+func (j JWKS) JWKSToRSA(jwks *JWKS) (map[string]string, error) {
 	var (
 		response = make(map[string]string)
-		err error	
+		err      error
 	)
 	for _, jwk := range jwks.Keys {
 		response[jwk.Kid], err = j.JWKToRSAPublicKey(jwk)
@@ -76,11 +92,7 @@ func (j JWKS) JWKSToRSAJSONResponse(jwks *JWKS) ([]byte, error) {
 			return nil, err
 		}
 	}
-	jsonResponse, err := json.Marshal(response)
-	if err != nil {
-		return nil, err
-	}
-	return jsonResponse, nil
+	return response, nil
 }
 
 // JWKToRSAPublicKey transforms key data to PKIX, ASN.1 DER form
@@ -106,7 +118,7 @@ func (j JWKS) JWKToRSAPublicKey(jwk JsonKey) (string, error) {
 		if err != nil {
 			return "", err
 		}
-	
+
 		return base64.StdEncoding.EncodeToString(der), nil
 	}
 	return "", errors.New(models.JWKSExponentErrorDescription)
@@ -115,4 +127,38 @@ func (j JWKS) JWKToRSAPublicKey(jwk JsonKey) (string, error) {
 // DoGetJWKS return package interface
 func (j JWKS) DoGetJWKS(ctx context.Context) JWKSInt {
 	return &j
+}
+
+// GetJWKSRSAKeys retrieves the JWKS RSA keys which are consumed by the authorisation middleware on startup.
+func (j JWKS) GetJWKSRSAKeys(awsRegion string, poolID string) (map[string]string, error) {
+	jwksURL := "https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json"
+	rcClient := &dphttp.Client{
+		MaxRetries: 5,
+		RetryTime:  1 * time.Second,
+	}
+
+	resp, err := rcClient.Get(context.Background(), fmt.Sprintf(jwksURL, awsRegion, poolID))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var jwks JWKS
+	err = json.Unmarshal(body, &jwks)
+	if err != nil {
+		return nil, err
+	}
+	keyData := &jwks
+
+	response, err := jwks.JWKSToRSA(keyData)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }
