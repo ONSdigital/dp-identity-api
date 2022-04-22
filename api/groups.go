@@ -14,10 +14,10 @@ import (
 )
 
 const (
-	GroupsCreatePermission string = "users:create"
-	GroupsReadPermission          = "users:read"
-	GroupsEditPermission        = "users:update"
-	GroupsDeletePermission        = "users:update"
+	GroupsCreatePermission = "groups:create"
+	GroupsReadPermission   = "groups:read"
+	GroupsEditPermission   = "groups:update"
+	GroupsDeletePermission = "groups:delete"
 )
 
 //CreateGroupHandler creates a new group

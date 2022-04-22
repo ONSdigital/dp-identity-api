@@ -125,7 +125,7 @@ func getPermissionsBundle() *permissions.Bundle {
 				},
 			},
 		},
-		"groups:edit": { // role
+		"groups:update": { // role
 			"groups/role-admin": { // group
 				{
 					ID: "2", // policy
