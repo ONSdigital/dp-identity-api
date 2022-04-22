@@ -112,7 +112,7 @@ func Setup(ctx context.Context,
 		Methods(http.MethodGet)
 	// self used in paths rather than identifier as the identifier is a Cognito Session string in change password requests
 	// the user id is not yet available from the previous responses
-	r.HandleFunc("/v1/users/self/password", auth.Require(UsersUpdatePermission, contextAndErrors(api.ChangePasswordHandler))).
+	r.HandleFunc("/v1/users/self/password", contextAndErrors(api.ChangePasswordHandler)).
 		Methods(http.MethodPut)
 	r.HandleFunc("/v1/password-reset", contextAndErrors(api.PasswordResetHandler)).
 		Methods(http.MethodPost)

@@ -760,17 +760,6 @@ Feature: Users
         And the response header "ID" should be "idToken"
         And the response header "Refresh" should be "refreshToken"
 
-    Scenario: PUT /v1/users/self/password without a JWT token and checking the response status 403
-        When I PUT "/v1/users/self/password"
-        """"""
-        Then the HTTP status code should be "403"
-
-    Scenario: PUT /v1/users/self/password as a publisher user and checking the response status 403
-        Given I am a publisher user
-        When I PUT "/v1/users/self/password"
-        """"""
-        Then the HTTP status code should be "403"
-
     Scenario: PUT /v1/users/self/password missing type and checking the response status 400
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
         And I am an admin user
