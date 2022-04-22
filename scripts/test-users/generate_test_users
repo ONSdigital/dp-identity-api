@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+
+IFS= read -r -d '' usage << EOF
+
+Usage:
+  generate_test_users -p USER_POOL_ID -f FORENAME -s SURNAME
+  generate_test_users -h
+
+Options:
+  -p, --user-pool  The Cognito user pool id
+  -f, --forename   The user's forename
+  -s, --surname    The user's surname
+  -h, --help       Display this help message
+EOF
+
+DEFAULT_PASSWORD=1Bought11cupsoftea
+
+panic() {
+    local res=$1; shift
+    [[ $res -gt 0 ]] && echo -n "ERROR: " >&2
+    echo "$@" >&2
+    exit "${res}"
+}
+
+info() {
+    echo "info: $*" >&2
+}
+
+create_user() {
+    local user_pool_id=$1
+    local forename=$2
+    local surname=$3
+    local descriptor=$4
+
+    local user_id=$(uuidgen)
+    local email="${forename}.${surname}.${descriptor}@ons.gov.uk"
+
+    info "creating user '${email}' ('${user_id}')..."
+    aws cognito-idp admin-create-user --user-pool-id="${user_pool_id}" \
+                                      --username="${user_id}" \
+                                      --temporary-password="Abf47928b-5361-453d-b2f3-777cb80450e7" \
+                                      --user-attributes="[{\"Name\":\"email\",\"Value\":\"${email}\"},{\"Name\":\"given_name\",\"Value\":\"${forename}\"},{\"Name\":\"family_name\",\"Value\":\"${surname} (${descriptor})\"},{\"Name\":\"email_verified\",\"Value\":\"true\"}]" > /dev/null
+
+    aws cognito-idp admin-set-user-password --user-pool-id="${user_pool_id}" --username="${user_id}" --password="${DEFAULT_PASSWORD}" --permanent
+    info "user successfully created: '${email}' ('${user_id}')"
+
+    echo "${user_id}"
+}
+
+create_group() {
+    local user_pool_id=$1
+    local group_name=$2
+
+    local group_id=$(uuidgen)
+
+    info "creating group '${group_name}' ('${group_id}')..."
+    aws cognito-idp create-group --user-pool-id="${user_pool_id}" --group-name="${group_id}" --description="${group_name}" > /dev/null
+    info "group successfully created: '${group_name}' ('${group_id}')"
+
+    echo "${group_id}"
+}
+
+add_group_member() {
+    local user_pool_id=$1
+    local group_id=$2
+    local user_id=$3
+
+    info "adding user '${user_id}' to group '${group_id}'..."
+    aws cognito-idp admin-add-user-to-group --user-pool-id="${user_pool_id}" --username="${user_id}" --group-name="${group_id}"
+    info "user '${user_id}' successfully added to group '${group_id}'"
+}
+
+# ===| MAIN |===================================================================
+
+if [[ "$#" -eq 0 ]]; then
+    panic 2 "missing required arguments"
+fi
+
+while [[ "$#" -gt 0 ]]; do
+    arg="$1"
+    case "${arg}" in
+        -p|--user-pool)
+            user_pool_id="$2"
+            shift
+            ;;
+        -f|--forename)
+            forename="$2"
+            shift
+            ;;
+        -s|--surname)
+            surname="$2"
+            shift
+            ;;
+        -h|--help)
+            echo "${usage}"
+            exit 0
+            ;;
+        *)
+            panic 2 "invalid argument: ${arg}${usage}"
+            ;;
+    esac
+    shift
+done
+
+if [[ -z "${user_pool_id}" ]]; then
+    panic 2 "missing required argument: -p|--user-pool"
+fi
+
+if [[ -z "${forename}" ]]; then
+    panic 2 "missing required argument: -f|--forename"
+fi
+
+if [[ -z "${surname}" ]]; then
+    panic 2 "missing required argument: -s|--surname"
+fi
+
+# Create the admin user
+admin_id=$(create_user "${user_pool_id}" "${forename}" "${surname}" "admin")
+add_group_member "${user_pool_id}" "role-admin" "${admin_id}"
+
+# Create the publisher user
+publisher_id=$(create_user "${user_pool_id}" "${forename}" "${surname}" "publisher")
+add_group_member "${user_pool_id}" "role-publisher" "${publisher_id}"
+
+# Create the viewer user
+viewer_id=$(create_user "${user_pool_id}" "${forename}" "${surname}" "viewer")
+viewer_group_id=$(create_group "${user_pool_id}" "${forename} ${surname}'s viewer team")
+add_group_member "${user_pool_id}" "${viewer_group_id}" "${viewer_id}"
