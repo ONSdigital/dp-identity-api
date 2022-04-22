@@ -114,7 +114,7 @@ func Setup(ctx context.Context,
 	// the user id is not yet available from the previous responses
 	r.HandleFunc("/v1/users/self/password", auth.Require(UsersUpdatePermission, contextAndErrors(api.ChangePasswordHandler))).
 		Methods(http.MethodPut)
-	r.HandleFunc("/v1/password-reset", auth.Require(UsersUpdatePermission, contextAndErrors(api.PasswordResetHandler))).
+	r.HandleFunc("/v1/password-reset", contextAndErrors(api.PasswordResetHandler)).
 		Methods(http.MethodPost)
 	r.HandleFunc("/v1/groups", auth.Require(GroupsReadPermission, contextAndErrors(api.ListGroupsHandler))).
 		Methods(http.MethodGet)

@@ -1383,9 +1383,8 @@ Feature: Users
         Then the HTTP status code should be "202"
 
 #   Request password reset
-    Scenario: POST /v1/password-reset and checking the response status 202
+    Scenario: POST /v1/password-reset for an existing user and checking the response status 202
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
-        And I am an admin user
         When I POST "/v1/password-reset"
             """
                 {
@@ -1394,20 +1393,7 @@ Feature: Users
             """
         Then the HTTP status code should be "202"
 
-    Scenario: POST /v1/password-reset without a JWT token and checking the response status 403
-        When I POST "/v1/password-reset"
-        """"""
-        Then the HTTP status code should be "403"
-
-    Scenario: POST /v1/password-reset as a publisher user and checking the response status 403
-        Given I am a publisher user
-        When I POST "/v1/password-reset"
-        """"""
-        Then the HTTP status code should be "403"
-
     Scenario: POST /v1/password-reset missing email and checking the response status 400
-        Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
-        And I am an admin user
         When I POST "/v1/password-reset"
             """
                 {
@@ -1427,7 +1413,6 @@ Feature: Users
             """
 
     Scenario: POST /v1/password-reset non ONS email address and checking the response status 202
-        Given I am an admin user
         When I POST "/v1/password-reset"
         """
             {
@@ -1438,7 +1423,6 @@ Feature: Users
 
     Scenario: POST /v1/password-reset Cognito internal error
         Given an internal server error is returned from Cognito
-        And I am an admin user
         When I POST "/v1/password-reset"
         """
             {
@@ -1452,7 +1436,6 @@ Feature: Users
 
     Scenario: POST /v1/password-reset Cognito too many requests error
         Given an internal server error is returned from Cognito
-        And I am an admin user
         When I POST "/v1/password-reset"
         """
             {
@@ -1472,7 +1455,6 @@ Feature: Users
         """
 
     Scenario: POST /v1/password-reset Cognito user not found
-        Given I am an admin user
         When I POST "/v1/password-reset"
         """
             {
@@ -1481,7 +1463,7 @@ Feature: Users
         """
         Then the HTTP status code should be "202"
 
- #   List get users for user        
+#   List get users for user
     Scenario: GET /v1/users/{id}/groups and checking the response status 200
         Given a user with username "listgrouptestuser" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
@@ -1516,10 +1498,10 @@ Feature: Users
             """
                 {
                     "count":0,
-                    "groups":null, 
+                    "groups":null,
                     "next_token":null
                 }
-            """   
+            """
 
     Scenario: GET /v1/users/{id}/groups  user not found returns 500
         Given a user with username "get-user-not-found" and email "email@ons.gov.uk" exists in the database
