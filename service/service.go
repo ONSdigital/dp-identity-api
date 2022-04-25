@@ -144,6 +144,11 @@ func registerCheckers(ctx context.Context, hc HealthChecker, client cognitoClien
 		log.Error(ctx, "error adding check for permissions cache", err)
 	}
 
+	if err := hc.AddCheck("jwt keys state health check", authorisationMiddleware.IdentityHealthCheck); err != nil {
+		hasErrors = true
+		log.Error(ctx, "error getting jwt keys from identity service", err)
+	}
+
 	if hasErrors {
 		return errors.New("Error(s) registering checkers for healthcheck")
 	}

@@ -125,7 +125,7 @@ func getPermissionsBundle() *permissions.Bundle {
 				},
 			},
 		},
-		"groups:edit": { // role
+		"groups:update": { // role
 			"groups/role-admin": { // group
 				{
 					ID: "2", // policy
@@ -179,7 +179,7 @@ func (c *IdentityComponent) DoGetCognitoClient(AWSRegion string) cognito.Client 
 }
 
 func (c *IdentityComponent) DoGetAuthorisationMiddleware(ctx context.Context, cfg *authorisation.Config) (authorisation.Middleware, error) {
-	middleware, err := authorisation.NewMiddlewareFromConfig(ctx, cfg)
+	middleware, err := authorisation.NewMiddlewareFromConfig(ctx, cfg, cfg.JWTVerificationPublicKeys)
 	if err != nil {
 		return nil, err
 	}

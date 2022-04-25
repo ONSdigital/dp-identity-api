@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-
 	"github.com/ONSdigital/dp-identity-api/models"
 
 	"github.com/ONSdigital/dp-identity-api/cognito"
@@ -113,9 +112,9 @@ func Setup(ctx context.Context,
 		Methods(http.MethodGet)
 	// self used in paths rather than identifier as the identifier is a Cognito Session string in change password requests
 	// the user id is not yet available from the previous responses
-	r.HandleFunc("/v1/users/self/password", auth.Require(UsersUpdatePermission, contextAndErrors(api.ChangePasswordHandler))).
+	r.HandleFunc("/v1/users/self/password", contextAndErrors(api.ChangePasswordHandler)).
 		Methods(http.MethodPut)
-	r.HandleFunc("/v1/password-reset", auth.Require(UsersUpdatePermission, contextAndErrors(api.PasswordResetHandler))).
+	r.HandleFunc("/v1/password-reset", contextAndErrors(api.PasswordResetHandler)).
 		Methods(http.MethodPost)
 	r.HandleFunc("/v1/groups", auth.Require(GroupsReadPermission, contextAndErrors(api.ListGroupsHandler))).
 		Methods(http.MethodGet)
@@ -206,7 +205,7 @@ func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, use
 	adminGroup := models.NewAdminRoleGroup()
 	adminGroupCreateInput := adminGroup.BuildCreateGroupRequest(userPoolId)
 	_, err := cognitoClient.CreateGroup(adminGroupCreateInput)
-	if err != nil {
+	if err != nil && !models.IsGroupExistsError(err) {
 		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for admin group from API start up")
 		if cognitoErr.Code != models.GroupExistsError {
 			return cognitoErr
@@ -216,7 +215,7 @@ func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, use
 	publisherGroup := models.NewPublisherRoleGroup()
 	publisherGroupCreateInput := publisherGroup.BuildCreateGroupRequest(userPoolId)
 	_, err = cognitoClient.CreateGroup(publisherGroupCreateInput)
-	if err != nil {
+	if err != nil && !models.IsGroupExistsError(err) {
 		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for publisher group from API start up")
 		if cognitoErr.Code != models.GroupExistsError {
 			return cognitoErr

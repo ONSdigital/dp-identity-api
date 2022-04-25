@@ -8,6 +8,9 @@
 #VSCode
 .vscode
 
+# Go
+vendor/
+
 # Intellij
 .idea/
 *.iml
