@@ -136,30 +136,19 @@ func (api *API) AddUserToGroupHandler(ctx context.Context, w http.ResponseWriter
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}
 
-	userAddToGroupInput := group.BuildAddUserToGroupRequest(api.UserPoolId, userId)
-	_, err = api.CognitoClient.AdminAddUserToGroup(userAddToGroupInput)
-	if err != nil {
-		cognitoErr := models.NewCognitoError(ctx, err, "Cognito AddUserToGroup request from add user to group endpoint")
+	response, responseErr := api.AddUserToGroup(ctx, group, userId)
+
+	if responseErr != nil {
+		cognitoErr := models.NewCognitoError(ctx, responseErr, "Cognito AddUserToGroup request from add user to group endpoint")
 		if cognitoErr.Code == models.UserNotFoundError || cognitoErr.Code == models.NotFoundError {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, cognitoErr)
 		}
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
-
-	groupGetRequest := group.BuildGetGroupRequest(api.UserPoolId)
-	groupGetResponse, err := api.CognitoClient.GetGroup(groupGetRequest)
-	if err != nil {
-		cognitoErr := models.NewCognitoError(ctx, err, "Cognito GetGroup request from add user to group endpoint")
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
-	}
-
-	group.MapCognitoDetails(groupGetResponse.Group)
-
-	jsonResponse, responseErr := group.BuildSuccessfulJsonResponse(ctx)
+	jsonResponse, responseErr := response.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
-
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -226,31 +215,18 @@ func (api *API) RemoveUserFromGroupHandler(ctx context.Context, w http.ResponseW
 	if len(validationErrs) != 0 {
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}
-
-	userRemoveFromGroupInput := group.BuildRemoveUserFromGroupRequest(api.UserPoolId, userId)
-	_, err := api.CognitoClient.AdminRemoveUserFromGroup(userRemoveFromGroupInput)
-	if err != nil {
-		cognitoErr := models.NewCognitoError(ctx, err, "Cognito RemoveUserFromGroup request from remove user from group endpoint")
+	response, responseErr := api.RemoveUserFromGroup(ctx, group, userId)
+	if responseErr != nil {
+		cognitoErr := models.NewCognitoError(ctx, responseErr, "Cognito AddUserToGroup request from add user to group endpoint")
 		if cognitoErr.Code == models.UserNotFoundError || cognitoErr.Code == models.NotFoundError {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, cognitoErr)
 		}
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
-
-	groupGetRequest := group.BuildGetGroupRequest(api.UserPoolId)
-	groupGetResponse, err := api.CognitoClient.GetGroup(groupGetRequest)
-	if err != nil {
-		cognitoErr := models.NewCognitoError(ctx, err, "Cognito GetGroup request from remove user from group endpoint")
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
-	}
-
-	group.MapCognitoDetails(groupGetResponse.Group)
-
-	jsonResponse, responseErr := group.BuildSuccessfulJsonResponse(ctx)
+	jsonResponse, responseErr := response.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
-
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -351,7 +327,6 @@ func (api *API) DeleteGroupHandler(ctx context.Context, w http.ResponseWriter, r
 ///SetGroupUsersHandler adds a user to the specified group
 func (api *API) SetGroupUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
-	var keep bool = false
 
 	group := models.Group{ID: vars["id"]}
 
@@ -359,17 +334,43 @@ func (api *API) SetGroupUsersHandler(ctx context.Context, w http.ResponseWriter,
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
 	}
-	newGroupMembership := []*cognitoidentityprovider.UserType{}
+
+	var newGroupMembership []*cognitoidentityprovider.UserType
+
 	err = json.Unmarshal(body, &newGroupMembership)
+
 	if err != nil {
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
+	listOfUsers := models.UsersList{}
+	listOfUsers.MapCognitoUsers(&newGroupMembership)
+
+	setResponse, setErr := api.SetGroupUsers(ctx, group, listOfUsers)
+	if setErr != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from list users in group endpoint")
+		if cognitoErr.Code == models.NotFoundError {
+			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, cognitoErr)
+		}
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+	}
+
+	jsonResponse, responseErr := setResponse.BuildSuccessfulJsonResponse(ctx)
+	if responseErr != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
+
+//
+func (api *API) SetGroupUsers(ctx context.Context, group models.Group, users models.UsersList) (*models.UsersList, *models.ErrorResponse) {
+	var keep bool = false
+	successResponse := &models.UsersList{}
 
 	listOfUsersInput := []*cognitoidentityprovider.UserType{}
-
 	listUsers, err := api.getUsersInAGroup(listOfUsersInput, group)
 	if err != nil {
-		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from list users in group endpoint")
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from set group membership endpoint")
 		if cognitoErr.Code == models.NotFoundError {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, cognitoErr)
 		}
@@ -378,84 +379,69 @@ func (api *API) SetGroupUsersHandler(ctx context.Context, w http.ResponseWriter,
 
 	for _, s1 := range listUsers {
 		keep = false
-		for _, s2 := range newGroupMembership {
-			if *s2.Username == *s1.Username {
+		for _, s2 := range users.Users {
+			if s2.ID == *s1.Username {
 				keep = true
 
 			}
 		}
 		if !keep {
-			api.RemoveUserFromGroup(ctx, group, *s1.Username)
+			successResponse, _ = api.RemoveUserFromGroup(ctx, group, *s1.Username)
 
 		}
 	}
 
-	for _, s1 := range newGroupMembership {
+	for _, s1 := range users.Users {
 		keep = false
 		for _, s2 := range listUsers {
-			if *s2.Username == *s1.Username {
+			if *s2.Username == s1.ID {
 				keep = true
 			}
 		}
 		if !keep {
-			api.AddUserToGroup(ctx, group, *s1.Username)
+			successResponse, _ = api.AddUserToGroup(ctx, group, s1.ID)
 		}
 	}
 
-	listOfUsersInput = []*cognitoidentityprovider.UserType{}
-	listUsers, err = api.getUsersInAGroup(listOfUsersInput, group)
+	return successResponse, nil
+}
+
+//AddUserToGroup adds a user to the specified group
+func (api *API) AddUserToGroup(ctx context.Context, group models.Group, userId string) (*models.UsersList, error) {
+
+	userAddToGroupInput := group.BuildAddUserToGroupRequest(api.UserPoolId, userId)
+	_, err := api.CognitoClient.AdminAddUserToGroup(userAddToGroupInput)
 	if err != nil {
-		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from list users in group endpoint")
-		if cognitoErr.Code == models.NotFoundError {
-			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, cognitoErr)
-		}
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+		return nil, err
+	}
+	listOfUsersInput := []*cognitoidentityprovider.UserType{}
+
+	listUsers, err := api.getUsersInAGroup(listOfUsersInput, group)
+	if err != nil {
+		return nil, err
+	}
+	listOfUsers := models.UsersList{}
+	listOfUsers.MapCognitoUsers(&listUsers)
+
+	return &listOfUsers, nil
+}
+
+//RemoveUserFromGroup adds a user to the specified group
+func (api *API) RemoveUserFromGroup(ctx context.Context, group models.Group, userId string) (*models.UsersList, error) {
+	userRemoveFromGroupInput := group.BuildRemoveUserFromGroupRequest(api.UserPoolId, userId)
+	_, err := api.CognitoClient.AdminRemoveUserFromGroup(userRemoveFromGroupInput)
+	if err != nil {
+		return nil, err
+	}
+	listOfUsersInput := []*cognitoidentityprovider.UserType{}
+
+	listUsers, err := api.getUsersInAGroup(listOfUsersInput, group)
+	if err != nil {
+		return nil, err
 	}
 
 	listOfUsers := models.UsersList{}
 	listOfUsers.MapCognitoUsers(&listUsers)
 
-	jsonResponse, responseErr := listOfUsers.BuildSuccessfulJsonResponse(ctx)
-	if responseErr != nil {
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
-	}
-
-	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
-}
-
-//AddUserToGroup adds a user to the specified group
-func (api *API) AddUserToGroup(ctx context.Context, group models.Group, userId string) (*models.SuccessResponse, *models.ErrorResponse) {
-
-	userAddToGroupInput := group.BuildAddUserToGroupRequest(api.UserPoolId, userId)
-	_, err := api.CognitoClient.AdminAddUserToGroup(userAddToGroupInput)
-	if err != nil {
-		cognitoErr := models.NewCognitoError(ctx, err, "Cognito AddeUserToGroup request from add user to group endpoint")
-		if cognitoErr.Code == models.UserNotFoundError {
-			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, cognitoErr)
-		}
-		if cognitoErr.Code == models.NotFoundError {
-			return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
-		}
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
-	}
-
-	return models.NewSuccessResponse(nil, http.StatusOK, nil), nil
-}
-
-//RemoveUserFromGroup adds a user to the specified group
-func (api *API) RemoveUserFromGroup(ctx context.Context, group models.Group, userId string) (*models.SuccessResponse, *models.ErrorResponse) {
-	userRemoveFromGroupInput := group.BuildRemoveUserFromGroupRequest(api.UserPoolId, userId)
-	_, err := api.CognitoClient.AdminRemoveUserFromGroup(userRemoveFromGroupInput)
-	if err != nil {
-		cognitoErr := models.NewCognitoError(ctx, err, "Cognito RemoveUserFromGroup request from remove user from group endpoint")
-		if cognitoErr.Code == models.UserNotFoundError {
-			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, cognitoErr)
-		}
-		if cognitoErr.Code == models.NotFoundError {
-			return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
-		}
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
-	}
-
-	return models.NewSuccessResponse(nil, http.StatusOK, nil), nil
+	return &listOfUsers, nil
 }

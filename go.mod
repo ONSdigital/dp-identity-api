@@ -15,7 +15,7 @@ require (
 	github.com/ONSdigital/dp-net v1.4.1
 	github.com/ONSdigital/log.go/v2 v2.2.0
 	github.com/aws/aws-sdk-go v1.43.31
-	github.com/cucumber/godog v0.12.4
+	github.com/cucumber/godog v0.12.5
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0

@@ -770,18 +770,42 @@ Feature: Groups
 
 #   Put SetGroupUsers scenarios     
 #   successful return
-    Scenario: PUT /v1/groups/{id}/members and checking the response status 200
+
+   Scenario: PUT /v1/groups/{id}/members and checking the response status 200
         Given group "test-group" exists in the database
+        And a user with username "abcdef1" and email "email@ons.gov.uk" exists in the database
+        And a user with username "abcdef2" and email "email@ons.gov.uk" exists in the database
+        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And user "abcdef1" is a member of group "test-group"
+        And user "abcdef2" is a member of group "test-group"
+        And there are "2" users in group "test-group"
         And I am an admin user
-        When I GET "/v1/groups/test-group/"
-        Then I should receive the following JSON response with status "204":
-        """
-        {
-            "id":"test-group",
-            "name":"A test group",
-            "precedence": 100,
-            "created": "2010-01-01T00:00:00Z"
-        }
-        """  
+        When I PUT "/v1/groups/test-group/members"
+            """
+            {"users": 
+                        [{
+                            "id": "abcd1234"
+                        }]
+                    }
+            """ 
+        Then I should receive the following JSON response with status "200":
+            """
+                {
+                    "users": [
+                        {
+                            "id": "abcd1234",
+                            "forename": "Bob",
+                            "lastname": "Smith",
+                            "email": "email@ons.gov.uk",
+                            "groups": [],
+                            "status": "CONFIRMED",
+                            "active": true,
+                            "status_notes": ""
+                        }
+                    ],
+                    "count": 1,
+                    "PaginationToken":""
+                }
+            """
 
-
+    
