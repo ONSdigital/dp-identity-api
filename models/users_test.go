@@ -1102,7 +1102,6 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 		var userGroupsJson models.ListUserGroups
 		err := json.Unmarshal(response, &userGroupsJson)
 		So(err, ShouldBeNil)
-		println(len(result.Groups))
 		So(len(userGroupsJson.Groups), ShouldEqual, len(result.Groups))
 		So(userGroupsJson.Count, ShouldEqual, 0)
 		So(userGroupsJson.NextToken, ShouldBeNil)
