@@ -196,24 +196,19 @@ func TestAddUserToGroupHandler(t *testing.T) {
 				},
 			},
 		}
-
 		for _, tt := range addUserToGroupTests {
 			Convey(tt.description, func() {
 				m.AdminAddUserToGroupFunc = tt.addUserToGroupFunction
 				m.GetGroupFunc = tt.getGroupFunction
 				m.ListUsersInGroupFunc = tt.listUsersForGroupFunction
-
 				postBody := map[string]interface{}{"user_id": userId}
 				body, _ := json.Marshal(postBody)
 				r := httptest.NewRequest(http.MethodPost, addUserToGroupEndPoint, bytes.NewReader(body))
-
 				urlVars := map[string]string{
 					"id": "efgh5678",
 				}
 				r = mux.SetURLVars(r, urlVars)
-
 				successResponse, errorResponse := api.AddUserToGroupHandler(ctx, w, r)
-
 				tt.assertions(successResponse, errorResponse)
 			})
 		}
@@ -279,24 +274,19 @@ func TestAddUserToGroupHandler(t *testing.T) {
 				},
 			},
 		}
-
 		for _, tt := range addUserToGroupTests {
 			Convey(tt.description, func() {
 				m.AdminAddUserToGroupFunc = tt.addUserToGroupFunction
 				m.GetGroupFunc = tt.getGroupFunction
 				m.ListUsersInGroupFunc = tt.listUsersForGroupFunction
-
 				postBody := map[string]interface{}{"user_id": tt.userID}
 				body, _ := json.Marshal(postBody)
 				r := httptest.NewRequest(http.MethodPost, addUserToGroupEndPoint, bytes.NewReader(body))
-
 				urlVars := map[string]string{
 					"id": tt.groupID,
 				}
 				r = mux.SetURLVars(r, urlVars)
-
 				successResponse, errorResponse := api.AddUserToGroupHandler(ctx, w, r)
-
 				tt.assertions(successResponse, errorResponse)
 
 			})
@@ -1259,16 +1249,12 @@ func TestListGroupsHandler(t *testing.T) {
 					}, nil
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-
 					So(errorResponse, ShouldBeNil)
-
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
 					So(successResponse, ShouldNotBeNil)
 					So(successResponse.Body, ShouldNotBeNil)
-
 					var responseBody = models.ListUserGroups{}
 					json.Unmarshal(successResponse.Body, &responseBody)
-
 					So(responseBody.NextToken, ShouldBeNil)
 					So(responseBody.Count, ShouldEqual, 2)
 					So(responseBody.Groups, ShouldNotBeNil)
@@ -1286,13 +1272,10 @@ func TestListGroupsHandler(t *testing.T) {
 					}, nil
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-
 					So(errorResponse, ShouldBeNil)
-
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
 					So(successResponse, ShouldNotBeNil)
 					So(successResponse.Body, ShouldNotBeNil)
-
 					var responseBody = models.ListUserGroups{}
 					json.Unmarshal(successResponse.Body, &responseBody)
 					So(responseBody.NextToken, ShouldBeNil)
@@ -1328,7 +1311,6 @@ func TestListGroupsHandler(t *testing.T) {
 					So(*responseBody.Groups[0].Name, ShouldEqual, *groups[0].Description)
 				},
 			},
-
 			{
 				"500 response from Cognito",
 				"",
@@ -1342,33 +1324,25 @@ func TestListGroupsHandler(t *testing.T) {
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(errorResponse.Status, ShouldNotBeNil)
 					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
-
 					castErr := errorResponse.Errors[0].(*models.Error)
 					So(castErr.Code, ShouldEqual, models.InternalError)
 					So(castErr.Description, ShouldEqual, internalErrorDescription)
-
 					So(successResponse, ShouldBeNil)
 				},
 			},
 		}
-
 		for _, tt := range listGroupsTest {
 			Convey(tt.description, func() {
 				m.ListGroupsFunc = tt.getListGroupsFunction
-
 				postBody := map[string]interface{}{"NextToken": tt.next_token}
 				body, err := json.Marshal(postBody)
 				So(err, ShouldBeNil)
-
 				r := httptest.NewRequest(http.MethodGet, getListGroupsEndPoint, bytes.NewReader(body))
-
 				urlVars := map[string]string{
 					"id": "efgh5678",
 				}
 				r = mux.SetURLVars(r, urlVars)
-
 				successResponse, errorResponse := api.ListGroupsHandler(ctx, w, r)
-
 				tt.assertions(successResponse, errorResponse)
 			})
 		}
@@ -1770,7 +1744,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 				},
 			},
 			{
-				"500 response from Cognito  getgroup error",
+				"400 response from Cognito  getgroup error",
 				nil,
 				func(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
 					var groupNotFoundException cognitoidentityprovider.ResourceNotFoundException
@@ -1801,6 +1775,41 @@ func TestSetGroupUsersHandler(t *testing.T) {
 					So(successResponse, ShouldBeNil)
 					So(errorResponse, ShouldNotBeNil)
 					So(errorResponse.Status, ShouldEqual, http.StatusNotFound)
+
+				},
+			},
+			{
+				"500 response from Cognito  getgroup error",
+				nil,
+				func(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+					var InternalException cognitoidentityprovider.InternalErrorException
+					InternalException.Message_ = &internalErrorDescription
+					return nil, &InternalException
+				},
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					return &cognitoidentityprovider.ListUsersInGroupOutput{
+						Users: []*cognitoidentityprovider.UserType{},
+					}, nil
+				},
+				func(ctx context.Context, group models.Group, users models.UsersList) (*models.UsersList, *models.ErrorResponse) {
+					return &models.UsersList{}, &models.ErrorResponse{}
+				},
+				func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse) {
+					return &models.UsersList{}, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
+				},
+				func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse) {
+					return &models.UsersList{}, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error) {
+					return &cognitoidentityprovider.AdminRemoveUserFromGroupOutput{}, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
 
 				},
 			},
@@ -1841,17 +1850,15 @@ func TestSetGroupUsers(t *testing.T) {
 	Convey("Get group -check expected responses", t, func() {
 
 		GetGroupTest := []struct {
-			description                string
-			mockAddUserToGroupFunction func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse)
-			mock_addUserToGroupfunc    func(userInput *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error)
-
+			description                    string
+			mockAddUserToGroupFunction     func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse)
+			mock_addUserToGroupfunc        func(userInput *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error)
 			mockRemoveUserToGroupFunction  func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse)
 			mock_removeUserToGroupFunction func(userInput *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error)
-
-			mock_listUsersInGroupfunc func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
-			group                     models.Group
-			users                     models.UsersList
-			assertions                func(successResponse *models.UsersList, errorResponse *models.ErrorResponse)
+			mock_listUsersInGroupfunc      func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
+			group                          models.Group
+			users                          models.UsersList
+			assertions                     func(successResponse *models.UsersList, errorResponse *models.ErrorResponse)
 		}{
 			{
 				"200 response from Cognito  with input and output",
@@ -1898,16 +1905,94 @@ func TestSetGroupUsers(t *testing.T) {
 					So(successResponse, ShouldNotBeNil)
 				},
 			},
+			{
+				"404 response from Cognito ListUsers",
+				func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse) {
+					return &models.UsersList{
+							Users: []models.UserParams{{ID: "user_1"}},
+							Count: 1,
+						},
+						nil
+				},
+				func(userInput *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
+				},
+				func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse) {
+					return &models.UsersList{}, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error) {
+					return &cognitoidentityprovider.AdminRemoveUserFromGroupOutput{}, nil
+				},
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					var groupNotFoundException cognitoidentityprovider.ResourceNotFoundException
+					groupNotFoundException.Message_ = &groupNotFoundDescription
+					return nil, &groupNotFoundException
+				},
+				models.Group{
+					ID: "test-group",
+				},
+				models.UsersList{
+					Users: []models.UserParams{{ID: "user_1"}},
+					Count: 1,
+				},
+				func(successResponse *models.UsersList, errorResponse *models.ErrorResponse) {
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.NotFoundError)
+					So(castErr.Description, ShouldEqual, groupNotFoundDescription)
+					So(successResponse, ShouldBeNil)
+				},
+			},
+			{
+				"500 response from Cognito listUsers ",
+				func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse) {
+					return &models.UsersList{
+							Users: []models.UserParams{{ID: "user_1"}},
+							Count: 1,
+						},
+						nil
+				},
+				func(userInput *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
+				},
+				func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse) {
+					return &models.UsersList{}, nil
+				},
+				func(userInput *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error) {
+					return &cognitoidentityprovider.AdminRemoveUserFromGroupOutput{}, nil
+				},
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := internalErrorDescription
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				models.Group{
+					ID: "test-group",
+				},
+				models.UsersList{
+					Users: []models.UserParams{{ID: "user_1"}},
+					Count: 1,
+				},
+				func(successResponse *models.UsersList, errorResponse *models.ErrorResponse) {
+					So(errorResponse.Status, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+					castErr := errorResponse.Errors[0].(*models.Error)
+					So(castErr.Code, ShouldEqual, models.InternalError)
+					So(castErr.Description, ShouldEqual, internalErrorDescription)
+					So(successResponse, ShouldBeNil)
+				},
+			},
 		}
 
 		for _, tt := range GetGroupTest {
 			Convey(tt.description, func() {
 				m.AddUserToGroupfunc = tt.mockAddUserToGroupFunction
 				m.AdminAddUserToGroupFunc = tt.mock_addUserToGroupfunc
-
 				m.RemoveUserFromGroupfunc = tt.mockRemoveUserToGroupFunction
 				m.AdminRemoveUserFromGroupFunc = tt.mock_removeUserToGroupFunction
-
 				m.ListUsersInGroupFunc = tt.mock_listUsersInGroupfunc
 				successResponse, errorResponse := api.SetGroupUsers(ctx, tt.group, tt.users)
 				tt.assertions(successResponse, errorResponse)
@@ -2047,14 +2132,44 @@ func TestRemoveUserFromGroup(t *testing.T) {
 					So(*castErr.Message_, ShouldResemble, "internal error")
 				},
 			},
+			{
+				"Cognito 404 response - listUsers group not found",
+				func(userInput *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error) {
+					return &cognitoidentityprovider.AdminRemoveUserFromGroupOutput{}, nil
+				},
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					var groupNotFoundException cognitoidentityprovider.ResourceNotFoundException
+					groupNotFoundException.Message_ = &groupNotFoundDescription
+					return nil, &groupNotFoundException
+				},
+				func(successResponse *models.UsersList, errorResponse error) {
+					So(successResponse, ShouldBeNil)
+					castErr := errorResponse.(*cognitoidentityprovider.ResourceNotFoundException)
+					So(*castErr.Message_, ShouldResemble, "group not found")
+				},
+			},
+			{
+				"Cognito 500 response - listUsers internal error",
+				func(userInput *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error) {
+					return &cognitoidentityprovider.AdminRemoveUserFromGroupOutput{}, nil
+				},
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					var internalErrorException cognitoidentityprovider.InternalErrorException
+					internalErrorException.Message_ = &internalErrorDescription
+					return nil, &internalErrorException
+				},
+				func(successResponse *models.UsersList, errorResponse error) {
+					So(successResponse, ShouldBeNil)
+					castErr := errorResponse.(*cognitoidentityprovider.InternalErrorException)
+					So(*castErr.Message_, ShouldResemble, "internal error")
+				},
+			},
 		}
-
 		for _, tt := range RemoveUsersTests {
 			Convey(tt.description, func() {
 				m.AdminRemoveUserFromGroupFunc = tt.mockRemoveUserToGroupFunction
 				m.ListUsersInGroupFunc = tt.mock_listUsersInGroupfunc
 				successResponse, errorResponse := api.RemoveUserFromGroup(ctx, getGroupData, userId)
-
 				tt.assertions(successResponse, errorResponse)
 			})
 		}
@@ -2185,6 +2300,38 @@ func TestAddUserToGroup(t *testing.T) {
 							},
 						},
 					}, nil
+				},
+				func(successResponse *models.UsersList, errorResponse error) {
+					So(successResponse, ShouldBeNil)
+					castErr := errorResponse.(*cognitoidentityprovider.InternalErrorException)
+					So(*castErr.Message_, ShouldResemble, "internal error")
+				},
+			},
+			{
+				"Cognito 404 response - listUsers group not found",
+				func(userInput *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
+				},
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					var groupNotFoundException cognitoidentityprovider.ResourceNotFoundException
+					groupNotFoundException.Message_ = &groupNotFoundDescription
+					return nil, &groupNotFoundException
+				},
+				func(successResponse *models.UsersList, errorResponse error) {
+					So(successResponse, ShouldBeNil)
+					castErr := errorResponse.(*cognitoidentityprovider.ResourceNotFoundException)
+					So(*castErr.Message_, ShouldResemble, "group not found")
+				},
+			},
+			{
+				"Cognito 500 response - listUsers internal error",
+				func(userInput *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
+				},
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					var internalErrorException cognitoidentityprovider.InternalErrorException
+					internalErrorException.Message_ = &internalErrorDescription
+					return nil, &internalErrorException
 				},
 				func(successResponse *models.UsersList, errorResponse error) {
 					So(successResponse, ShouldBeNil)

@@ -750,8 +750,8 @@ func TestUpdateUserHandler(t *testing.T) {
 					return user, nil
 				},
 				func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
-					awsErrCode := "UserNotFoundException"
-					awsErrMessage := "user could not be found"
+					awsErrCode := "GroupNotFoundException"
+					awsErrMessage := "group could not be found"
 					awsOrigErr := errors.New(awsErrCode)
 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					return nil, awsErr
