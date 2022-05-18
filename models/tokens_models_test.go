@@ -3,12 +3,13 @@ package models_test
 import (
 	"context"
 	"encoding/json"
+	"reflect"
+	"testing"
+
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/utilities"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"reflect"
-	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -211,6 +212,7 @@ func TestRefreshToken_BuildSuccessfulJsonResponse(t *testing.T) {
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
 		var body map[string]interface{}
 		err = json.Unmarshal(response, &body)
+		So(err, ShouldBeNil)
 		So(body["expirationTime"], ShouldNotBeNil)
 	})
 }

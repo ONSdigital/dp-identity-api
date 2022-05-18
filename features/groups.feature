@@ -330,11 +330,22 @@ Feature: Groups
         Then I should receive the following JSON response with status "200":
             """
                 {
-                    "id": "test-group",
-                    "name": "A test group",
-                    "precedence": 100,
-                    "created": "2010-01-01T00:00:00Z"
+                    "users": [
+                        {
+                "active": true,
+                "email":  "email@ons.gov.uk",
+                "forename":  "Bob",
+                "groups": [],
+                "id":"abcd1234",
+                "lastname": "Smith",
+                "status":"CONFIRMED",
+                "status_notes": ""
                 }
+                    ],
+                    "count": 1,
+                    "PaginationToken":""
+                }
+
             """
 
     Scenario: POST /v1/groups/{id}/members without a JWT token and checking the response status 403
@@ -380,7 +391,7 @@ Feature: Groups
                     "user_id": "abcd1234"
                 }
             """
-        Then I should receive the following JSON response with status "400":
+        Then I should receive the following JSON response with status "404":
             """
                 {
                     "errors": [
@@ -414,50 +425,50 @@ Feature: Groups
                 }
             """
 
-    Scenario: POST /v1/groups/{id}/members add user to group, internal server error returns 500
-        Given group "internal-error" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-        When I POST "/v1/groups/internal-error/members"
-            """
-                {
-                    "user_id": "abcd1234"
-                }
-            """
-        Then I should receive the following JSON response with status "500":
-            """
-               {"code":"InternalServerError", "description":"Internal Server Error"}
-            """
+#    Scenario: POST /v1/groups/{id}/members add user to group, internal server error returns 500
+#       Given group "internal-error" exists in the database
+#       And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+#       And I am an admin user
+#       When I POST "/v1/groups/internal-error/members"
+#           """
+#               {
+#                   "user_id": "abcd1234"
+#               }
+#           """
+#       Then I should receive the following JSON response with status "500":
+#           """
+#              {"code":"InternalServerError", "description":"Internal Server Error"}
+#           """
 
-    Scenario: POST /v1/groups/{id}/members get group, internal server error returns 500
-        Given group "get-group-internal-error" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-        When I POST "/v1/groups/get-group-internal-error/members"
-            """
-                {
-                    "user_id": "abcd1234"
-                }
-            """
-        Then I should receive the following JSON response with status "500":
-            """
-              {"code":"InternalServerError", "description":"Internal Server Error"}
-            """
+#   Scenario: POST /v1/groups/{id}/members get group, internal server error returns 500
+#       Given group "get-group-internal-error" exists in the database
+#       And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+#       And I am an admin user
+#       When I POST "/v1/groups/get-group-internal-error/members"
+#           """
+#               {
+#                   "user_id": "abcd1234"
+#               }
+#           """
+#       Then I should receive the following JSON response with status "500":
+#           """
+#             {"code":"InternalServerError", "description":"Internal Server Error"}
+#           """
 
-    Scenario: POST /v1/groups/{id}/members get group, group not found returns 500
-        Given group "get-group-not-found" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-        When I POST "/v1/groups/get-group-not-found/members"
-            """
-                {
-                    "user_id": "abcd1234"
-                }
-            """
-        Then I should receive the following JSON response with status "500":
-            """
-                 {"code":"InternalServerError", "description":"Internal Server Error"}
-            """
+#   Scenario: POST /v1/groups/{id}/members get group, group not found returns 500
+#       Given group "get-group-not-found" exists in the database
+#       And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+#       And I am an admin user
+#       When I POST "/v1/groups/get-group-not-found/members"
+#           """
+#               {
+#                   "user_id": "abcd1234"
+#               }
+#           """
+#       Then I should receive the following JSON response with status "500":
+#           """
+#                {"code":"InternalServerError", "description":"Internal Server Error"}
+#           """
 
 #   Remove user from group scenarios
     Scenario: DELETE /v1/groups/{id}/members/{user_id} and checking the response status 200
@@ -470,10 +481,11 @@ Feature: Groups
         Then I should receive the following JSON response with status "200":
             """
                 {
-                    "id": "test-group",
-                    "name": "A test group",
-                    "precedence": 100,
-                    "created": "2010-01-01T00:00:00Z"
+                    "users": [
+                        
+                    ],
+                    "count": 0,
+                    "PaginationToken":""
                 }
             """
 
@@ -498,10 +510,20 @@ Feature: Groups
         Then I should receive the following JSON response with status "200":
             """
                 {
-                    "id": "test-group",
-                    "name": "A test group",
-                    "precedence": 100,
-                    "created": "2010-01-01T00:00:00Z"
+                    "users": [
+                        {
+                            "id": "efgh5678",
+                            "forename": "Bob",
+                            "lastname": "Smith",
+                            "email": "other-email@ons.gov.uk",
+                            "groups": [],
+                            "status": "CONFIRMED",
+                            "active": true,
+                            "status_notes": ""
+                        }
+                    ],
+                    "count": 1,
+                    "PaginationToken":""
                 }
             """
 
@@ -509,7 +531,7 @@ Feature: Groups
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
         When I DELETE "/v1/groups/test-group/members/abcd1234"
-        Then I should receive the following JSON response with status "400":
+        Then I should receive the following JSON response with status "404":
             """
                 {
                     "errors": [
@@ -521,12 +543,12 @@ Feature: Groups
                 }
             """
 
-    Scenario: DELETE /v1/groups/{id}/members/{user_id} remove user from group, user not found returns 400
+    Scenario: DELETE /v1/groups/{id}/members/{user_id} remove user from group, user not found returns 404
         Given group "test-group" exists in the database
         And there are "0" users in group "test-group"
         And I am an admin user
         When I DELETE "/v1/groups/test-group/members/abcd1234"
-        Then I should receive the following JSON response with status "400":
+        Then I should receive the following JSON response with status "404":
             """
                 {
                     "errors": [
@@ -538,35 +560,35 @@ Feature: Groups
                 }
             """
 
-    Scenario: DELETE /v1/groups/{id}/members/{user_id} remove user from group, internal server error returns 500
-        Given group "internal-error" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-        When I DELETE "/v1/groups/internal-error/members/abcd1234"
-        Then I should receive the following JSON response with status "500":
+     Scenario: DELETE /v1/groups/{id}/members/{user_id} remove user from group, internal server error returns 500
+         Given group "internal-error" exists in the database
+         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+         And I am an admin user
+         When I DELETE "/v1/groups/internal-error/members/abcd1234"
+         Then I should receive the following JSON response with status "500":
             """
-                 {"code":"InternalServerError", "description":"Internal Server Error"}
-            """
+                  {"code":"InternalServerError", "description":"Internal Server Error"}
+             """
 
-    Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, internal server error returns 500
-        Given group "get-group-internal-error" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-        When I DELETE "/v1/groups/get-group-internal-error/members/abcd1234"
-        Then I should receive the following JSON response with status "500":
-            """
-              {"code":"InternalServerError", "description":"Internal Server Error"}
-            """
-
-    Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, group not found returns 500
-        Given group "get-group-not-found" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-        When I DELETE "/v1/groups/get-group-not-found/members/abcd1234"
-        Then I should receive the following JSON response with status "500":
-            """
+     Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, internal server error returns 500
+         Given group "get-group-internal-error" exists in the database
+         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+         And I am an admin user
+         When I DELETE "/v1/groups/get-group-internal-error/members/abcd1234"
+         Then I should receive the following JSON response with status "500":
+             """
                {"code":"InternalServerError", "description":"Internal Server Error"}
-            """
+             """
+
+     Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, group not found returns 404
+         Given group "get-group-not-found" exists in the database
+         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+         And I am an admin user
+         When I DELETE "/v1/groups/get-group-not-found/members/abcd1234"
+         Then I should receive the following JSON response with status "404":
+             """
+                {"errors":[{"code":"NotFound", "description":"get group - group not found"}]}
+             """
 
 #   Get users from group scenarios
     Scenario: GET /v1/groups/{id}/members and checking the response status 200
@@ -767,3 +789,146 @@ Feature: Groups
         Given I am an admin user
         When I DELETE "/v1/groups/internal-error"
         Then the HTTP status code should be "500"
+
+#   Put SetGroupUsers scenarios     
+   Scenario: PUT /v1/groups/{id}/members and checking the response status 200
+        Given group "test-group" exists in the database
+        And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
+        And user "user_1" is a member of group "test-group"
+        And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
+        And user "user_2" is a member of group "test-group"
+        And there are "2" users in group "test-group"
+        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
+        When I PUT "/v1/groups/test-group/members"
+            """
+                [
+                {
+                    "user_id": "abcd1234"
+                }
+                ]
+            """
+        Then I should receive the following JSON response with status "200":
+            """
+               {
+                    "users": [
+                        {
+                            "id": "abcd1234",
+                            "forename": "Bob",
+                            "lastname": "Smith",
+                            "email": "email@ons.gov.uk",
+                            "groups": [],
+                            "status": "CONFIRMED",
+                            "active": true,
+                            "status_notes": ""
+                        }
+                    ],
+                    "count": 1,
+                    "PaginationToken":""
+                }
+            """
+            
+ Scenario: PUT /v1/groups/{id}/members and checking the response status 200
+        Given group "test-group" exists in the database
+        And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
+        And user "user_1" is a member of group "test-group"
+        And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
+        And user "user_2" is a member of group "test-group"
+        And there are "2" users in group "test-group"
+        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
+        When I PUT "/v1/groups/test-group/members"
+            """
+                [
+                {
+                    "user_id": "abcd1234"
+                },
+                {
+                    "user_id": "user_1"
+                }
+                ]
+            """
+        Then I should receive the following JSON response with status "200":
+            """
+               {
+                    "users": [
+                        {
+                            "id": "user_1",
+                            "forename": "Bob",
+                            "lastname": "Smith",
+                            "email": "email@ons.gov.uk",
+                            "groups": [],
+                            "status": "CONFIRMED",
+                            "active": true,
+                            "status_notes": ""
+                        },
+                        {
+                            "active":true, 
+                            "email":"email@ons.gov.uk", 
+                            "forename":"Bob", 
+                            "groups":[], 
+                            "id":"abcd1234", 
+                            "lastname":"Smith", 
+                            "status":"CONFIRMED", 
+                            "status_notes":""
+                        }                  
+                    ],
+                    "count": 2,
+                    "PaginationToken":""
+                }
+            """
+
+Scenario: PUT /v1/groups/{id}/members and checking the response status 200
+        Given group "test-group" exists in the database
+        And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
+        And user "user_1" is a member of group "test-group"
+        And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
+        And user "user_2" is a member of group "test-group"
+        And there are "2" users in group "test-group"
+        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
+        When I PUT "/v1/groups/test-group/members"
+            """
+            []
+            """
+        Then I should receive the following JSON response with status "200":
+            """
+               {
+                    "users": [],
+                    "count": 0,
+                    "PaginationToken":""
+                }
+            """
+
+Scenario: PUT /v1/groups/{id}/members and non admin user 
+        Given group "test-group" exists in the database
+        And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
+        And user "user_1" is a member of group "test-group"
+        And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
+        And user "user_2" is a member of group "test-group"
+        And there are "2" users in group "test-group"
+        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        When I PUT "/v1/groups/test-group/members"
+            """
+            []
+            """
+        Then the HTTP status code should be "403"
+
+Scenario: PUT /v1/groups/{id}/members and checking the response status 200
+        And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
+        And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
+        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And I am an admin user
+        When I PUT "/v1/groups/test-group/members"
+            """
+                [
+                {
+                    "user_id": "abcd1234"
+                },
+                {
+                    "user_id": "user_1"
+                }
+                ]
+            """
+        Then the HTTP status code should be "404"
+            

@@ -580,6 +580,43 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
+    put:
+      tags:
+        - Groups
+      summary: "make list of user ids as group membership"
+      description: "Set group users with list of user ids"
+      consumes:
+        - application/json
+      produces:
+        - "application/json"
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+          description: the group's ID
+        - in: body
+          name: "List of User ids"
+          description: "The list of user ids being added to the group"
+          schema:
+            required: ["user_id"]
+            type: object
+            properties:
+              user_id:
+                type: string
+      responses:
+        200:
+          description: "Users added to group"
+          schema:
+            $ref: '#/definitions/Group'
+        400:
+          description: "Invalid group ID or user ID in providedlist"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: "Invalid request body or unexpected Cognito response"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
     get:
       tags:
         - Groups

@@ -1,6 +1,9 @@
 package mock
 
 import (
+	"context"
+
+	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
 )
@@ -24,6 +27,9 @@ type MockCognitoIdentityProviderClient struct {
 	AdminDisableUserFunc          func(input *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error)
 	AdminAddUserToGroupFunc       func(input *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error)
 	ListUsersInGroupFunc          func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
+	SetGroupUsersfunc             func(ctx context.Context, group models.Group, users models.UsersList) (*models.UsersList, *models.ErrorResponse)
+	AddUserToGroupfunc            func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse)
+	RemoveUserFromGroupfunc       func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse)
 	AdminRemoveUserFromGroupFunc  func(input *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error)
 	AdminConfirmSignUpFunc        func(input *cognitoidentityprovider.AdminConfirmSignUpInput) (*cognitoidentityprovider.AdminConfirmSignUpOutput, error)
 	AdminDeleteUserFunc           func(input *cognitoidentityprovider.AdminDeleteUserInput) (*cognitoidentityprovider.AdminDeleteUserOutput, error)
@@ -32,7 +38,8 @@ type MockCognitoIdentityProviderClient struct {
 	ListGroupsForUserFunc         func(input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error)
 	DescribeUserPoolClientFunc    func(input *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error)
 	ListGroupsFunc                func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
-	UpdateGroupFunc				  func(input *cognitoidentityprovider.UpdateGroupInput) (*cognitoidentityprovider.UpdateGroupOutput, error)
+	UpdateGroupFunc               func(input *cognitoidentityprovider.UpdateGroupInput) (*cognitoidentityprovider.UpdateGroupOutput, error)
+	ValidateAddRemoveUserFunc     func(ctx context.Context, userId string) error
 }
 
 func (m *MockCognitoIdentityProviderClient) DescribeUserPool(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
@@ -138,4 +145,17 @@ func (m *MockCognitoIdentityProviderClient) ListGroups(input *cognitoidentitypro
 
 func (m *MockCognitoIdentityProviderClient) UpdateGroup(input *cognitoidentityprovider.UpdateGroupInput) (*cognitoidentityprovider.UpdateGroupOutput, error) {
 	return m.UpdateGroupFunc(input)
+}
+
+func (m *MockCognitoIdentityProviderClient) SetGroupUsers(ctx context.Context, group models.Group, users models.UsersList) (*models.UsersList, *models.ErrorResponse) {
+	return m.SetGroupUsersfunc(ctx, group, users)
+}
+
+func (m *MockCognitoIdentityProviderClient) AddUserToGroup(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse) {
+	return m.AddUserToGroupfunc(ctx, group, userId)
+}
+
+func (m *MockCognitoIdentityProviderClient) RemoveUserFromGroup(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse) {
+	return m.RemoveUserFromGroupfunc(ctx, group, userId)
+
 }

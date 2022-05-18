@@ -33,6 +33,10 @@ type Group struct {
 	Created    time.Time `json:"created"`
 }
 
+type GroupMembership struct {
+	GroupMembership []*cognitoidentityprovider.UserType `json:"users"`
+}
+
 // NewAdminRoleGroup is a constructor for a new instance of the admin role group
 func NewAdminRoleGroup() Group {
 	return Group{
@@ -221,7 +225,7 @@ func (c *CreateUpdateGroup) NewSuccessResponse(jsonBody []byte, statusCode int, 
 		map[string]interface{}{
 			"name":       cg.Name,
 			"precedence": cg.Precedence,
-			"id":  cg.ID,
+			"id":         cg.ID,
 		},
 	)
 
