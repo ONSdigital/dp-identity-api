@@ -20,10 +20,10 @@ Feature: Groups
             }
         """
 
-    Scenario: POST /v1/groups without a JWT token and checking the response status 403
+    Scenario: POST /v1/groups without a JWT token and checking the response status 401
         When I POST "/v1/groups"
         """"""
-        Then the HTTP status code should be "403"
+        Then the HTTP status code should be "401"
 
     Scenario: POST /v1/groups as a publisher user and checking the response status 403
         Given I am a publisher user
@@ -167,10 +167,10 @@ Feature: Groups
             }
         """
 
-    Scenario: PUT /v1/groups/{id} without a JWT token and checking the response status 403
+    Scenario: PUT /v1/groups/{id} without a JWT token and checking the response status 401
         When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
         """"""
-        Then the HTTP status code should be "403"
+        Then the HTTP status code should be "401"
 
     Scenario: PUT /v1/groups/{id} as a publisher user and checking the response status 403
         Given I am a publisher user
@@ -348,10 +348,10 @@ Feature: Groups
 
             """
 
-    Scenario: POST /v1/groups/{id}/members without a JWT token and checking the response status 403
+    Scenario: POST /v1/groups/{id}/members without a JWT token and checking the response status 401
         When I POST "/v1/groups/test-group/members"
         """"""
-        Then the HTTP status code should be "403"
+        Then the HTTP status code should be "401"
 
     Scenario: POST /v1/groups/{id}/members as a publisher user and checking the response status 403
         Given I am a publisher user
@@ -489,9 +489,9 @@ Feature: Groups
                 }
             """
 
-    Scenario: DELETE /v1/groups/{id}/members/{user_id} without a JWT token and checking the response status 403
+    Scenario: DELETE /v1/groups/{id}/members/{user_id} without a JWT token and checking the response status 401
         When I DELETE "/v1/groups/test-group/members/abcd1234"
-        Then the HTTP status code should be "403"
+        Then the HTTP status code should be "401"
 
     Scenario: DELETE /v1/groups/{id}/members/{user_id} as a publisher user and checking the response status 403
         Given I am a publisher user
@@ -618,9 +618,9 @@ Feature: Groups
                 }
             """
 
-    Scenario: GET /v1/groups/{id}/members without a JWT token and checking the response status 403
+    Scenario: GET /v1/groups/{id}/members without a JWT token and checking the response status 401
         When I GET "/v1/groups/test-group/members"
-        Then the HTTP status code should be "403"
+        Then the HTTP status code should be "401"
 
     Scenario: GET /v1/groups/{id}/members as a publisher user and checking the response status 403
         Given I am a publisher user
@@ -750,9 +750,9 @@ Feature: Groups
                {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
-   Scenario: GET /v1/groups/{id} without a JWT token and checking the response status 403
+   Scenario: GET /v1/groups/{id} without a JWT token and checking the response status 401
         When I GET "/v1/groups/test-group"
-        Then the HTTP status code should be "403"
+        Then the HTTP status code should be "401"
 
     Scenario: GET /v1/groups/{id} as a publisher user and checking the response status 403
         Given I am a publisher user
@@ -768,10 +768,10 @@ Feature: Groups
         When I DELETE "/v1/groups/test-group"
         Then the HTTP status code should be "204"
 
-    Scenario: DELETE /v1/groups/{id} without a JWT token and checking the response status 403
+    Scenario: DELETE /v1/groups/{id} without a JWT token and checking the response status 401
         When I DELETE "/v1/groups/test-group"
         """"""
-        Then the HTTP status code should be "403"
+        Then the HTTP status code should be "401"
 
     Scenario: DELETE /v1/groups/{id} as a publisher user and checking the response status 403
         Given I am a publisher user

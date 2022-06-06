@@ -25,10 +25,10 @@ Feature: Users
             }
             """
 
-    Scenario: POST /v1/users without a JWT token and checking the response status 403
+    Scenario: POST /v1/users without a JWT token and checking the response status 401
         Given I POST "/v1/users"
         """"""
-        Then the HTTP status code should be "403"
+        Then the HTTP status code should be "401"
 
     Scenario: POST /v1/users as a publisher user and checking the response status 403
         Given I am a publisher user
@@ -216,9 +216,9 @@ Feature: Users
             }
             """
 
-    Scenario: GET /v1/users without a JWT token and checking the response status 403
+    Scenario: GET /v1/users without a JWT token and checking the response status 401
         When I GET "/v1/users"
-        Then the HTTP status code should be "403"
+        Then the HTTP status code should be "401"
 
     Scenario: GET /v1/users as a publisher user and checking the response status 403
         Given I am a publisher user
@@ -285,9 +285,9 @@ Feature: Users
                 "status_notes": ""
             }
             """
-    Scenario: GET /v1/users/{id} without a JWT token and checking the response status 403
+    Scenario: GET /v1/users/{id} without a JWT token and checking the response status 401
         When I GET "/v1/users/abcd1234"
-        Then the HTTP status code should be "403"
+        Then the HTTP status code should be "401"
 
     Scenario: GET /v1/users/{id} as a publisher user and checking the response status 403
         Given I am a publisher user
@@ -451,10 +451,10 @@ Feature: Users
             }
             """
 
-    Scenario: PUT /v1/users/{id} without a JWT token and checking the response status 403
+    Scenario: PUT /v1/users/{id} without a JWT token and checking the response status 401
         When I PUT "/v1/users/abcd1234"
         """"""
-        Then the HTTP status code should be "403"
+        Then the HTTP status code should be "401"
 
     Scenario: PUT /v1/users/{id} as a publisher user and checking the response status 403
         Given I am a publisher user
@@ -1502,9 +1502,9 @@ Feature: Users
                 {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
-    Scenario: GET /v1/users/{id}/groups without a JWT token and checking the response status 403
+    Scenario: GET /v1/users/{id}/groups without a JWT token and checking the response status 401
         When I GET "/v1/users/listgrouptestuser/groups"
-        Then the HTTP status code should be "403"
+        Then the HTTP status code should be "401"
 
     Scenario: GET /v1/users/{id}/groups as a publisher user and checking the response status 403
         Given I am a publisher user
