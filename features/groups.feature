@@ -488,7 +488,7 @@ Feature: Groups
             """
                 {
                     "users": [
-                        
+
                     ],
                     "count": 0,
                     "PaginationToken":""
@@ -660,7 +660,7 @@ Feature: Groups
                 {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
-#   Get listgroups scenarios     
+#   Get listgroups scenarios
 #   list for no groups found
     Scenario: GET /v1/groups and checking the response status 200
         Given there "0" groups exists in the database
@@ -674,7 +674,7 @@ Feature: Groups
                     "count":0,
                     "next_token":null
                 }
-            """  
+            """
 #   list for one groups found
     Scenario: GET /v1/groups and checking the response status 200
         Given there "2" groups exists in the database
@@ -694,7 +694,7 @@ Feature: Groups
                 ],
                 "next_token": null
                 }
-            """  
+            """
 #   list for many groups found   given blocks of 60 for one cognito call
     Scenario: GET /v1/groups and checking the response status 200
         Given there "100" groups exists in the database
@@ -714,9 +714,9 @@ Feature: Groups
                 ],
                 "next_token": null
                 }
-            """  
+            """
 
-#   Get getGroup scenarios     
+#   Get getGroup scenarios
 #   successful return
     Scenario: GET /v1/groups and checking the response status 200
         Given group "test-group" exists in the database
@@ -730,7 +730,7 @@ Feature: Groups
                     "precedence": 100,
                     "created": "2010-01-01T00:00:00Z"
                 }
-            """  
+            """
 #   404 return
     Scenario: GET /v1/groups and checking the response status 404
         Given group "get-group-not-found" exists in the database
@@ -798,7 +798,7 @@ Feature: Groups
         When I DELETE "/v1/groups/internal-error"
         Then the HTTP status code should be "500"
 
-#   Put SetGroupUsers scenarios     
+#   Put SetGroupUsers scenarios
    Scenario: PUT /v1/groups/{id}/members and checking the response status 200
         Given group "test-group" exists in the database
         And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
@@ -835,7 +835,7 @@ Feature: Groups
                     "PaginationToken":""
                 }
             """
-            
+
  Scenario: PUT /v1/groups/{id}/members and checking the response status 200
         Given group "test-group" exists in the database
         And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
@@ -871,15 +871,15 @@ Feature: Groups
                             "status_notes": ""
                         },
                         {
-                            "active":true, 
-                            "email":"email@ons.gov.uk", 
-                            "forename":"Bob", 
-                            "groups":[], 
-                            "id":"abcd1234", 
-                            "lastname":"Smith", 
-                            "status":"CONFIRMED", 
+                            "active":true,
+                            "email":"email@ons.gov.uk",
+                            "forename":"Bob",
+                            "groups":[],
+                            "id":"abcd1234",
+                            "lastname":"Smith",
+                            "status":"CONFIRMED",
                             "status_notes":""
-                        }                  
+                        }
                     ],
                     "count": 2,
                     "PaginationToken":""
@@ -939,4 +939,4 @@ Scenario: PUT /v1/groups/{id}/members and checking the response status 200
                 ]
             """
         Then the HTTP status code should be "404"
-            
+
