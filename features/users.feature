@@ -27,15 +27,15 @@ Feature: Users
 
     Scenario: POST /v1/users without a JWT token and checking the response status 401
         Given I POST "/v1/users"
-        """
-        """
+            """
+            """
         Then the HTTP status code should be "401"
 
     Scenario: POST /v1/users as a publisher user and checking the response status 403
         Given I am a publisher user
         When I POST "/v1/users"
-        """
-        """
+            """
+            """
         Then the HTTP status code should be "403"
 
     Scenario: POST /v1/users missing email and checking the response status 400
@@ -266,7 +266,7 @@ Feature: Users
         When I GET "/v1/users"
         Then I should receive the following JSON response with status "500":
             """
-           {"code":"InternalServerError", "description":"Internal Server Error"}
+                {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
 #   Get User
@@ -317,7 +317,7 @@ Feature: Users
         When I GET "/v1/users/abcd1234"
         Then I should receive the following JSON response with status "500":
             """
-             {"code":"InternalServerError", "description":"Internal Server Error"}
+            {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
 #   Update User
@@ -325,14 +325,14 @@ Feature: Users
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
         When I PUT "/v1/users/abcd1234"
-        """
+            """
             {
                 "forename": "Changed",
                 "lastname": "Names",
                 "active": true,
                 "status_notes": ""
             }
-        """
+            """
         Then I should receive the following JSON response with status "200":
             """
             {
@@ -351,14 +351,14 @@ Feature: Users
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
         When I PUT "/v1/users/abcd1234"
-        """
+            """
             {
                 "forename": "Bob",
                 "lastname": "Smith",
                 "active": false,
                 "status_notes": "user disabled"
             }
-        """
+            """
         Then I should receive the following JSON response with status "200":
             """
             {
@@ -378,14 +378,14 @@ Feature: Users
         And user "abcd1234" active is "false"
         And I am an admin user
         When I PUT "/v1/users/abcd1234"
-        """
+            """
             {
                 "forename": "Bob",
                 "lastname": "Smith",
                 "active": true,
                 "status_notes": "user reactivated"
             }
-        """
+            """
         Then I should receive the following JSON response with status "200":
             """
             {
@@ -404,14 +404,14 @@ Feature: Users
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
         When I PUT "/v1/users/abcd1234"
-        """
+            """
             {
                 "forename": "Changed",
                 "lastname": "Names",
                 "active": false,
                 "status_notes": "user suspended"
             }
-        """
+            """
         Then I should receive the following JSON response with status "200":
             """
             {
@@ -431,14 +431,14 @@ Feature: Users
         And user "abcd1234" active is "false"
         And I am an admin user
         When I PUT "/v1/users/abcd1234"
-        """
+            """
             {
                 "forename": "Changed",
                 "lastname": "Names",
                 "active": true,
                 "status_notes": "user reactivated"
             }
-        """
+            """
         Then I should receive the following JSON response with status "200":
             """
             {
@@ -462,22 +462,22 @@ Feature: Users
     Scenario: PUT /v1/users/{id} as a publisher user and checking the response status 403
         Given I am a publisher user
         When I PUT "/v1/users/abcd1234"
-        """
-        """
+            """
+            """
         Then the HTTP status code should be "403"
 
     Scenario: PUT /v1/users/{id} missing forename and checking the response status 400
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
         When I PUT "/v1/users/abcd1234"
-        """
+            """
             {
                 "forename": "",
                 "lastname": "Smith",
                 "active": true,
                 "status_notes": ""
             }
-        """
+            """
         Then I should receive the following JSON response with status "400":
             """
             {
@@ -494,14 +494,14 @@ Feature: Users
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
         When I PUT "/v1/users/abcd1234"
-        """
+            """
             {
                 "forename": "Bob",
                 "lastname": "",
                 "active": true,
                 "status_notes": ""
             }
-        """
+            """
         Then I should receive the following JSON response with status "400":
             """
             {
@@ -518,14 +518,14 @@ Feature: Users
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
         When I PUT "/v1/users/abcd1234"
-        """
+            """
             {
                 "forename": "Stan",
                 "lastname": "Smith",
                 "active": true,
                 "status_notes": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eu turpis libero. Sed convallis pharetra mollis. Mauris ex nisi, finibus in mi quis, tincidunt pulvinar risus. Ut iaculis lobortis nisl. Suspendisse venenatis ante congue erat posuere, eget mattis massa facilisis. Vivamus bibendum pharetra suscipit. Integer laoreet molestie velit, vitae euismod ligula dictum eu. Phasellus a fermentum metus, nec dignissim ex. Sed dolor lectus, sollicitudin sit amet imperdiet eget, fringilla nec felis. Morbi commodo diam massa, sed interdum tellus sit"
             }
-        """
+            """
         Then I should receive the following JSON response with status "400":
             """
             {
@@ -542,14 +542,14 @@ Feature: Users
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
         When I PUT "/v1/users/abcd1234"
-        """
+            """
             {
                 "forename": "",
                 "lastname": "",
                 "active": true,
                 "status_notes": ""
             }
-        """
+            """
         Then I should receive the following JSON response with status "400":
             """
             {
@@ -570,14 +570,14 @@ Feature: Users
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
         When I PUT "/v1/users/abcd1234"
-        """
+            """
             {
                 "forename": "",
                 "lastname": "Smith",
                 "active": true,
                 "status_notes": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eu turpis libero. Sed convallis pharetra mollis. Mauris ex nisi, finibus in mi quis, tincidunt pulvinar risus. Ut iaculis lobortis nisl. Suspendisse venenatis ante congue erat posuere, eget mattis massa facilisis. Vivamus bibendum pharetra suscipit. Integer laoreet molestie velit, vitae euismod ligula dictum eu. Phasellus a fermentum metus, nec dignissim ex. Sed dolor lectus, sollicitudin sit amet imperdiet eget, fringilla nec felis. Morbi commodo diam massa, sed interdum tellus sit"
             }
-        """
+            """
         Then I should receive the following JSON response with status "400":
             """
             {
@@ -598,14 +598,14 @@ Feature: Users
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
         When I PUT "/v1/users/abcd1234"
-        """
+            """
             {
                 "forename": "Stan",
                 "lastname": "",
                 "active": true,
                 "status_notes": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eu turpis libero. Sed convallis pharetra mollis. Mauris ex nisi, finibus in mi quis, tincidunt pulvinar risus. Ut iaculis lobortis nisl. Suspendisse venenatis ante congue erat posuere, eget mattis massa facilisis. Vivamus bibendum pharetra suscipit. Integer laoreet molestie velit, vitae euismod ligula dictum eu. Phasellus a fermentum metus, nec dignissim ex. Sed dolor lectus, sollicitudin sit amet imperdiet eget, fringilla nec felis. Morbi commodo diam massa, sed interdum tellus sit"
             }
-        """
+            """
         Then I should receive the following JSON response with status "400":
             """
             {
@@ -626,14 +626,14 @@ Feature: Users
         Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
         When I PUT "/v1/users/abcd1234"
-        """
+            """
             {
                 "forename": "",
                 "lastname": "",
                 "active": true,
                 "status_notes": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eu turpis libero. Sed convallis pharetra mollis. Mauris ex nisi, finibus in mi quis, tincidunt pulvinar risus. Ut iaculis lobortis nisl. Suspendisse venenatis ante congue erat posuere, eget mattis massa facilisis. Vivamus bibendum pharetra suscipit. Integer laoreet molestie velit, vitae euismod ligula dictum eu. Phasellus a fermentum metus, nec dignissim ex. Sed dolor lectus, sollicitudin sit amet imperdiet eget, fringilla nec felis. Morbi commodo diam massa, sed interdum tellus sit"
             }
-        """
+            """
         Then I should receive the following JSON response with status "400":
             """
             {
@@ -709,7 +709,7 @@ Feature: Users
             """
         Then I should receive the following JSON response with status "500":
             """
-             {"code":"InternalServerError", "description":"Internal Server Error"}
+            {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: PUT /v1/users/{id} unexpected server error updating user and checking the response status 500
@@ -743,7 +743,7 @@ Feature: Users
             """
         Then I should receive the following JSON response with status "500":
             """
-             {"code":"InternalServerError", "description":"Internal Server Error"}
+            {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
 #   Change password - auth challenge
@@ -1004,53 +1004,53 @@ Feature: Users
         Given an internal server error is returned from Cognito
         And I am an admin user
         When I PUT "/v1/users/self/password"
-        """
+            """
             {
                 "type": "NewPasswordRequired",
                 "email": "email@ons.gov.uk",
                 "password": "internalerrorException",
                 "session": "auth-challenge-session"
             }
-        """
+            """
         Then I should receive the following JSON response with status "500":
-        """
-        {"code":"InternalServerError", "description":"Internal Server Error"}
-        """
+            """
+            {"code":"InternalServerError", "description":"Internal Server Error"}
+            """
 
     Scenario: PUT /v1/users/self/password Cognito invalid password
         Given I am an admin user
         When I PUT "/v1/users/self/password"
-        """
+            """
             {
                 "type": "NewPasswordRequired",
                 "email": "email@ons.gov.uk",
                 "password": "invalidpassword",
                 "session": "auth-challenge-session"
             }
-        """
+            """
         Then I should receive the following JSON response with status "400":
-        """
-        {
-            "errors": [
-                {
-                    "code": "InvalidPassword",
-                    "description": "password does not meet requirements"
-                }
-            ]
-        }
-        """
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidPassword",
+                        "description": "password does not meet requirements"
+                    }
+                ]
+            }
+            """
 
     Scenario: PUT /v1/users/self/password Cognito user not found
         Given I am an admin user
         When I PUT "/v1/users/self/password"
-        """
+            """
             {
                 "type": "NewPasswordRequired",
                 "email": "email@ons.gov.uk",
                 "password": "Password",
                 "session": "auth-challenge-session"
             }
-        """
+            """
         Then the HTTP status code should be "202"
 
 #   Change password - forgotten password
@@ -1280,99 +1280,99 @@ Feature: Users
         Given an internal server error is returned from Cognito
         And I am an admin user
         When I PUT "/v1/users/self/password"
-        """
+            """
             {
                 "type": "ForgottenPassword",
                 "email": "email@ons.gov.uk",
                 "password": "internalerrorException",
                 "verification_token": "verification-token"
             }
-        """
+            """
         Then I should receive the following JSON response with status "500":
-        """
-        {"code":"InternalServerError", "description":"Internal Server Error"}
-        """
+            """
+            {"code":"InternalServerError", "description":"Internal Server Error"}
+            """
 
     Scenario: PUT /v1/users/self/password Cognito invalid password for forgottenPassword
         Given I am an admin user
         When I PUT "/v1/users/self/password"
-        """
+            """
             {
                 "type": "ForgottenPassword",
                 "email": "email@ons.gov.uk",
                 "password": "invalidpassword",
                 "verification_token": "verification-token"
             }
-        """
+            """
         Then I should receive the following JSON response with status "400":
-        """
-        {
-            "errors": [
-                {
-                    "code": "InvalidPassword",
-                    "description": "password does not meet requirements"
-                }
-            ]
-        }
-        """
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidPassword",
+                        "description": "password does not meet requirements"
+                    }
+                ]
+            }
+            """
 
     Scenario: PUT /v1/users/self/password Cognito invalid token
         Given I am an admin user
         When I PUT "/v1/users/self/password"
-        """
+            """
             {
                 "type": "ForgottenPassword",
                 "email": "email@ons.gov.uk",
                 "password": "Password2",
                 "verification_token": "invalid-token"
             }
-        """
+            """
         Then I should receive the following JSON response with status "400":
-        """
-        {
-            "errors": [
-                {
-                    "code": "InvalidCode",
-                    "description": "verification token does not meet requirements"
-                }
-            ]
-        }
-        """
+            """
+            {
+                "errors": [
+                    {
+                        "code": "InvalidCode",
+                        "description": "verification token does not meet requirements"
+                    }
+                ]
+            }
+            """
 
     Scenario: PUT /v1/users/self/password Cognito expired token
         Given I am an admin user
         When I PUT "/v1/users/self/password"
-        """
+            """
             {
                 "type": "ForgottenPassword",
                 "email": "email@ons.gov.uk",
                 "password": "Password2",
                 "verification_token": "expired-token"
             }
-        """
+            """
         Then I should receive the following JSON response with status "400":
-        """
-        {
-            "errors": [
-                {
-                    "code": "ExpiredCode",
-                    "description": "verification token has expired"
-                }
-            ]
-        }
-        """
+            """
+            {
+                "errors": [
+                    {
+                        "code": "ExpiredCode",
+                        "description": "verification token has expired"
+                    }
+                ]
+            }
+            """
 
     Scenario: PUT /v1/users/self/password Cognito user not found
         Given I am an admin user
         When I PUT "/v1/users/self/password"
-        """
+            """
             {
                 "type": "ForgottenPassword",
                 "email": "email@ons.gov.uk",
                 "password": "Password",
                 "verification_token": "verification-token"
             }
-        """
+            """
         Then the HTTP status code should be "202"
 
 #   Request password reset
@@ -1380,63 +1380,63 @@ Feature: Users
         Given a user with email "email@ons.gov.uk" and password "Passw0rd!" exists in the database
         When I POST "/v1/password-reset"
             """
-                {
-                    "email": "email@ons.gov.uk"
-                }
+            {
+                "email": "email@ons.gov.uk"
+            }
             """
         Then the HTTP status code should be "202"
 
     Scenario: POST /v1/password-reset missing email and checking the response status 400
         When I POST "/v1/password-reset"
             """
-                {
-                    "email": ""
-                }
+            {
+                "email": ""
+            }
             """
         Then I should receive the following JSON response with status "400":
             """
-                {
-                    "errors": [
-                        {
-                            "code": "InvalidEmail",
-                            "description": "the submitted email could not be validated"
-                        }
-                    ]
-                }
+            {
+                "errors": [
+                    {
+                        "code": "InvalidEmail",
+                        "description": "the submitted email could not be validated"
+                    }
+                ]
+            }
             """
 
     Scenario: POST /v1/password-reset non ONS email address and checking the response status 202
         When I POST "/v1/password-reset"
-        """
+            """
             {
                 "email": "email@gmail.com"
             }
-        """
+            """
         Then the HTTP status code should be "202"
 
     Scenario: POST /v1/password-reset Cognito internal error
         Given an internal server error is returned from Cognito
         When I POST "/v1/password-reset"
-        """
+            """
             {
                 "email": "internal.error@ons.gov.uk"
             }
-        """
+            """
         Then I should receive the following JSON response with status "500":
-        """
-             {"code":"InternalServerError", "description":"Internal Server Error"}
-        """
+            """
+            {"code":"InternalServerError", "description":"Internal Server Error"}
+            """
 
     Scenario: POST /v1/password-reset Cognito too many requests error
         Given an internal server error is returned from Cognito
         When I POST "/v1/password-reset"
-        """
+            """
             {
                 "email": "too.many@ons.gov.uk"
             }
-        """
+            """
         Then I should receive the following JSON response with status "400":
-        """
+            """
             {
                 "errors": [
                     {
@@ -1445,15 +1445,15 @@ Feature: Users
                     }
                 ]
             }
-        """
+            """
 
     Scenario: POST /v1/password-reset Cognito user not found
         When I POST "/v1/password-reset"
-        """
+            """
             {
                 "email": "email@ons.gov.uk"
             }
-        """
+            """
         Then the HTTP status code should be "202"
 
 #   List get users for user
@@ -1463,23 +1463,22 @@ Feature: Users
         And there 1 groups exists in the database that username "listgrouptestuser" is a member
         When I GET "/v1/users/listgrouptestuser/groups"
         Then I should receive the following JSON response with status "200":
-
             """
-                {
-                "count": 1,
-                "groups": [
-                        {
-                            "creation_date": null,
-                            "name": "group name description 0",
-                            "id": "group_name_0",
-                            "last_modified_date": null,
-                            "precedence": 13,
-                            "role_arn": null,
-                            "user_pool_id": null
-                        }
-                    ],
-                "next_token": null
-                }
+            {
+            "count": 1,
+            "groups": [
+                    {
+                        "creation_date": null,
+                        "name": "group name description 0",
+                        "id": "group_name_0",
+                        "last_modified_date": null,
+                        "precedence": 13,
+                        "role_arn": null,
+                        "user_pool_id": null
+                    }
+                ],
+            "next_token": null
+            }
             """
 
     Scenario: GET /v1/users/{id}/groups  for 0 groups and checking the response status 200
@@ -1489,11 +1488,11 @@ Feature: Users
         When I GET "/v1/users/listgrouptestuser2/groups"
         Then I should receive the following JSON response with status "200":
             """
-                {
-                    "count":0,
-                    "groups":null,
-                    "next_token":null
-                }
+            {
+                "count":0,
+                "groups":null,
+                "next_token":null
+            }
             """
 
     Scenario: GET /v1/users/{id}/groups  user not found returns 500
@@ -1503,7 +1502,7 @@ Feature: Users
         When I GET "/v1/users/get-user-not-found/groups"
         Then I should receive the following JSON response with status "500":
             """
-                {"code":"InternalServerError", "description":"Internal Server Error"}
+            {"code":"InternalServerError", "description":"Internal Server Error"}
             """
 
     Scenario: GET /v1/users/{id}/groups without a JWT token and checking the response status 401
