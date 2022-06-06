@@ -33,6 +33,17 @@ To remove create test data from Cognito user pool:
 | AWS_COGNITO_CLIENT_SECRET    | -         |
 | AWS_AUTH_FLOW                | -         | A parameter to define the request to the InitiateAuth endpoint in cognito
 
+### Configuration needed to import user and group from s3
+```
+export GroupsFilename=""
+export GroupUsersFilename=""
+export UserFileName=""
+export S3Bucket=""
+export S3BaseDir=""
+export S3Region=""
+export AWSCognitoUserPoolID=""
+```
+
 ### Contributing
 
 See [CONTRIBUTING](CONTRIBUTING.md) for details.
