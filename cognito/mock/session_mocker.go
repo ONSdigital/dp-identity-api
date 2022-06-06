@@ -2,7 +2,7 @@ package mock
 
 import (
 	"github.com/ONSdigital/dp-identity-api/models"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type Session struct {

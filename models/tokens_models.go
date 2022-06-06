@@ -8,7 +8,7 @@ import (
 
 	"github.com/ONSdigital/dp-identity-api/utilities"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type AccessToken struct {
