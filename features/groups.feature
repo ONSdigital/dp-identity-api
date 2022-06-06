@@ -22,13 +22,15 @@ Feature: Groups
 
     Scenario: POST /v1/groups without a JWT token and checking the response status 401
         When I POST "/v1/groups"
-        """"""
+        """
+        """
         Then the HTTP status code should be "401"
 
     Scenario: POST /v1/groups as a publisher user and checking the response status 403
         Given I am a publisher user
         When I POST "/v1/groups"
-        """"""
+        """
+        """
         Then the HTTP status code should be "403"
 
     Scenario: POST /v1/groups to create group with no description in request, group created returns 400
@@ -169,13 +171,15 @@ Feature: Groups
 
     Scenario: PUT /v1/groups/{id} without a JWT token and checking the response status 401
         When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
-        """"""
+        """
+        """
         Then the HTTP status code should be "401"
 
     Scenario: PUT /v1/groups/{id} as a publisher user and checking the response status 403
         Given I am a publisher user
         When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
-        """"""
+        """
+        """
         Then the HTTP status code should be "403"
 
     Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group with no description in request, group update returns 400
@@ -350,13 +354,15 @@ Feature: Groups
 
     Scenario: POST /v1/groups/{id}/members without a JWT token and checking the response status 401
         When I POST "/v1/groups/test-group/members"
-        """"""
+        """
+        """
         Then the HTTP status code should be "401"
 
     Scenario: POST /v1/groups/{id}/members as a publisher user and checking the response status 403
         Given I am a publisher user
         When I POST "/v1/groups/test-group/members"
-        """"""
+        """
+        """
         Then the HTTP status code should be "403"
 
     Scenario: POST /v1/groups/{id}/members with no user Id submitted and checking the response status 400
@@ -770,13 +776,15 @@ Feature: Groups
 
     Scenario: DELETE /v1/groups/{id} without a JWT token and checking the response status 401
         When I DELETE "/v1/groups/test-group"
-        """"""
+        """
+        """
         Then the HTTP status code should be "401"
 
     Scenario: DELETE /v1/groups/{id} as a publisher user and checking the response status 403
         Given I am a publisher user
         When I DELETE "/v1/groups/test-group"
-        """"""
+        """
+        """
         Then the HTTP status code should be "403"
 
 #   404 return
@@ -900,7 +908,7 @@ Scenario: PUT /v1/groups/{id}/members and checking the response status 200
                 }
             """
 
-Scenario: PUT /v1/groups/{id}/members and non admin user 
+Scenario: PUT /v1/groups/{id}/members and non-admin user
         Given group "test-group" exists in the database
         And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
         And user "user_1" is a member of group "test-group"
@@ -912,7 +920,7 @@ Scenario: PUT /v1/groups/{id}/members and non admin user
             """
             []
             """
-        Then the HTTP status code should be "403"
+        Then the HTTP status code should be "401"
 
 Scenario: PUT /v1/groups/{id}/members and checking the response status 200
         And a user with username "user_1" and email "email@ons.gov.uk" exists in the database

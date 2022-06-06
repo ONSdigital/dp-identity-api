@@ -48,8 +48,8 @@ github.com/ONSdigital/dp-api-clients-go/v2 v2.138.0 h1:gDQFNwOFr5SW3M2IxlwKDRFxk
 github.com/ONSdigital/dp-api-clients-go/v2 v2.138.0/go.mod h1:tHRq65gA340CYpkHIRMrrxiLS8IlAl7nTeFr07ukJgo=
 github.com/ONSdigital/dp-authorisation/v2 v2.18.0-rc.1 h1:uW0IdYgm3XZjPoBMtaCbXElsvC75wEz4XxFxjU12Wlo=
 github.com/ONSdigital/dp-authorisation/v2 v2.18.0-rc.1/go.mod h1:jy+22dVY5nwIynYcPm5RX23IpmgbvZ4NW7fh6P7k8uc=
-github.com/ONSdigital/dp-component-test v0.6.5 h1:y/WIkTSpFMxo/4YEeKwFyVXjbZ23b/V2jBv9EETF5Kg=
-github.com/ONSdigital/dp-component-test v0.6.5/go.mod h1:6nvnxyPDFxEhVVIciXdMJ5e2nG8wS8XGhciCtuan5xo=
+github.com/ONSdigital/dp-component-test v0.7.0 h1:VfAxUPDSSt106qxDVF9NQ/5S9GwJaiMDpwhQZ9lybOM=
+github.com/ONSdigital/dp-component-test v0.7.0/go.mod h1:6nvnxyPDFxEhVVIciXdMJ5e2nG8wS8XGhciCtuan5xo=
 github.com/ONSdigital/dp-frontend-models v1.1.0/go.mod h1:TT96P7Mi69N3Tc/jFNdbjiwG4GAaMjP26HLotFQ6BPw=
 github.com/ONSdigital/dp-healthcheck v0.0.0-20200131122546-9db6d3f0494e/go.mod h1:zighxZ/0m5u7zo0eAr8XFlA+Dz2ic7A1vna6YXvhCjQ=
 github.com/ONSdigital/dp-healthcheck v1.0.5/go.mod h1:2wbVAUHMl9+4tWhUlxYUuA1dnf2+NrwzC+So5f5BMLk=

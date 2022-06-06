@@ -27,13 +27,15 @@ Feature: Users
 
     Scenario: POST /v1/users without a JWT token and checking the response status 401
         Given I POST "/v1/users"
-        """"""
+        """
+        """
         Then the HTTP status code should be "401"
 
     Scenario: POST /v1/users as a publisher user and checking the response status 403
         Given I am a publisher user
         When I POST "/v1/users"
-        """"""
+        """
+        """
         Then the HTTP status code should be "403"
 
     Scenario: POST /v1/users missing email and checking the response status 400
@@ -453,13 +455,15 @@ Feature: Users
 
     Scenario: PUT /v1/users/{id} without a JWT token and checking the response status 401
         When I PUT "/v1/users/abcd1234"
-        """"""
+            """
+            """
         Then the HTTP status code should be "401"
 
     Scenario: PUT /v1/users/{id} as a publisher user and checking the response status 403
         Given I am a publisher user
         When I PUT "/v1/users/abcd1234"
-        """"""
+        """
+        """
         Then the HTTP status code should be "403"
 
     Scenario: PUT /v1/users/{id} missing forename and checking the response status 400
