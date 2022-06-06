@@ -6,7 +6,7 @@ go 1.18
 // note we can't use this version directly because the vendor mod is broken
 // see https://github.com/etcd-io/etcd/issues/11154
 
-replace github.com/coreos/etcd => go.etcd.io/etcd v0.0.0-20200716221548-4873f5516bd9
+replace github.com/spf13/cobra => github.com/spf13/cobra v1.4.0
 
 require (
 	github.com/ONSdigital/dp-authorisation/v2 v2.18.0-rc.1
