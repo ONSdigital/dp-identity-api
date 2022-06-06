@@ -1,6 +1,6 @@
 module github.com/ONSdigital/dp-identity-api
 
-go 1.17
+go 1.18
 
 // update to etcd 3.3.23 to fix security issues as reported by make audit
 // note we can't use this version directly because the vendor mod is broken
@@ -27,7 +27,10 @@ require (
 	github.com/stretchr/testify v1.7.0
 )
 
-require github.com/ONSdigital/dp-net/v2 v2.1.0
+require (
+	github.com/ONSdigital/dp-net/v2 v2.1.0
+	github.com/withmandala/go-log v0.1.0
+)
 
 require (
 	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
@@ -41,7 +44,6 @@ require (
 	github.com/cucumber/gherkin-go/v19 v19.0.3 // indirect
 	github.com/cucumber/messages-go/v16 v16.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
@@ -76,6 +78,7 @@ require (
 	golang.org/x/net v0.0.0-20220403103023-749bd193bc2b // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20220403205710-6acee93ad0eb // indirect
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
