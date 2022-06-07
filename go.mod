@@ -16,7 +16,6 @@ require (
 	github.com/ONSdigital/log.go/v2 v2.2.0
 	github.com/aws/aws-sdk-go v1.43.31
 	github.com/cucumber/godog v0.12.5
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -29,7 +28,7 @@ require (
 
 require (
 	github.com/ONSdigital/dp-net/v2 v2.1.0
-	github.com/withmandala/go-log v0.1.0
+	github.com/golang-jwt/jwt/v4 v4.4.1
 )
 
 require (
@@ -50,7 +49,6 @@ require (
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.1.0 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
-	github.com/golang-jwt/jwt/v4 v4.4.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20220104163920-15ed2e8cf2bd // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
@@ -78,7 +76,6 @@ require (
 	golang.org/x/net v0.0.0-20220403103023-749bd193bc2b // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20220403205710-6acee93ad0eb // indirect
-	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
