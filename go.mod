@@ -1,6 +1,6 @@
 module github.com/ONSdigital/dp-identity-api
 
-go 1.18
+go 1.17
 
 // update to etcd 3.3.23 to fix security issues as reported by make audit
 // note we can't use this version directly because the vendor mod is broken
@@ -19,7 +19,6 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/maxcnunes/httpfake v1.2.4 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/sethvargo/go-password v0.2.0
 	github.com/smartystreets/goconvey v1.7.2
@@ -63,6 +62,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/maxcnunes/httpfake v1.2.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/smartystreets/assertions v1.2.1 // indirect
 	github.com/spf13/afero v1.8.1 // indirect
