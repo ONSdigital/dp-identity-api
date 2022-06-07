@@ -1,6 +1,6 @@
 module github.com/ONSdigital/dp-identity-api
 
-go 1.17
+go 1.18
 
 // update to etcd 3.3.23 to fix security issues as reported by make audit
 // note we can't use this version directly because the vendor mod is broken
