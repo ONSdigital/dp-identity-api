@@ -1465,19 +1465,19 @@ Feature: Users
         Then I should receive the following JSON response with status "200":
             """
             {
-            "count": 1,
-            "groups": [
-                    {
-                        "creation_date": null,
-                        "name": "group name description 0",
-                        "id": "group_name_0",
-                        "last_modified_date": null,
-                        "precedence": 13,
-                        "role_arn": null,
-                        "user_pool_id": null
-                    }
-                ],
-            "next_token": null
+                "count": 1,
+                "groups": [
+                        {
+                            "creation_date": null,
+                            "name": "group name description 0",
+                            "id": "group_name_0",
+                            "last_modified_date": null,
+                            "precedence": 13,
+                            "role_arn": null,
+                            "user_pool_id": null
+                        }
+                    ],
+                "next_token": null
             }
             """
 

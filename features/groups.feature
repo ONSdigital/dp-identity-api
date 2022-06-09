@@ -435,52 +435,6 @@ Scenario: POST /v1/groups/{id}/members add user to group, user not found returns
             }
         """
 
-#Scenario: POST /v1/groups/{id}/members add user to group, internal server error returns 500
-#       Given group "internal-error" exists in the database
-#       And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-#       And I am an admin user
-#       When I POST "/v1/groups/internal-error/members"
-#           """
-#               {
-#                   "user_id": "abcd1234"
-#               }
-#           """
-#       Then I should receive the following JSON response with status "500":
-#           """
-#              {"code":"InternalServerError", "description":"Internal Server Error"}
-#           """
-
-#   Scenario: POST /v1/groups/{id}/members get group, internal server error returns 500
-#       Given group "get-group-internal-error" exists in the database
-#       And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-#       And I am an admin user
-#       When I POST "/v1/groups/get-group-internal-error/members"
-#           """
-#               {
-#                   "user_id": "abcd1234"
-#               }
-#           """
-#       Then I should receive the following JSON response with status "500":
-#           """
-#             {"code":"InternalServerError", "description":"Internal Server Error"}
-#           """
-
-#   Scenario: POST /v1/groups/{id}/members get group, group not found returns 500
-#       Given group "get-group-not-found" exists in the database
-#       And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-#       And I am an admin user
-#       When I POST "/v1/groups/get-group-not-found/members"
-#           """
-#               {
-#                   "user_id": "abcd1234"
-#               }
-#           """
-#       Then I should receive the following JSON response with status "500":
-#           """
-#                {"code":"InternalServerError", "description":"Internal Server Error"}
-#           """
-
-
 #   Remove user from group scenarios
 
 Scenario: DELETE /v1/groups/{id}/members/{user_id} and checking the response status 200
