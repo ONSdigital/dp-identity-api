@@ -184,7 +184,13 @@ func (api *API) SignOutAllUsersHandler(ctx context.Context, w http.ResponseWrite
 	}
 	// run api.SignOutUsersWorker concurrently
 	go api.SignOutUsersWorker(req.Context(), globalSignOut, usersList)
-	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
+
+	postBody, resErr := models.BuildSuccessfulSignOutAllUsersJsonResponse(ctx)
+	if resErr != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, resErr)
+	}
+
+	return models.NewSuccessResponse(postBody, http.StatusAccepted, nil), nil
 }
 
 // ListUsersWorker - generates a list of users based on `userFilterString` filter string
