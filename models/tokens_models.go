@@ -132,3 +132,14 @@ func (t *RefreshToken) BuildSuccessfulJsonResponse(ctx context.Context, result *
 		return nil, responseErr
 	}
 }
+
+func BuildSuccessfulSignOutAllUsersJsonResponse(ctx context.Context) ([]byte, error) {
+	postBody := map[string]interface{}{"message": "Request to invalidate all refresh tokens has been accepted and will be processed asynchronously. This can take several minutes to complete."}
+
+	jsonResponse, err := json.Marshal(postBody)
+	if err != nil {
+		responseErr := NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
+		return nil, responseErr
+	}
+	return jsonResponse, nil
+}
