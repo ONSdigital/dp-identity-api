@@ -2,35 +2,34 @@ module github.com/ONSdigital/dp-identity-api
 
 go 1.18
 
-replace github.com/spf13/cobra => github.com/spf13/cobra v1.4.0
+replace github.com/spf13/cobra => github.com/spf13/cobra v1.5.0
 
 require (
-	github.com/ONSdigital/dp-authorisation/v2 v2.19.0
-	github.com/ONSdigital/dp-component-test v0.7.0
-	github.com/ONSdigital/dp-healthcheck v1.3.0
-	github.com/ONSdigital/dp-net v1.4.1
-	github.com/ONSdigital/dp-net/v2 v2.4.0
-	github.com/ONSdigital/log.go/v2 v2.2.0
-	github.com/aws/aws-sdk-go v1.44.28
+	github.com/ONSdigital/dp-authorisation/v2 v2.22.0
+	github.com/ONSdigital/dp-component-test v0.8.0-beta
+	github.com/ONSdigital/dp-healthcheck v1.4.0-beta
+	github.com/ONSdigital/dp-net/v2 v2.5.0-beta
+	github.com/ONSdigital/log.go/v2 v2.3.0-beta
+	github.com/aws/aws-sdk-go v1.44.52
 	github.com/cucumber/godog v0.12.5
-	github.com/golang-jwt/jwt/v4 v4.4.1
+	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/maxcnunes/httpfake v1.2.4 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/sethvargo/go-password v0.2.0
 	github.com/smartystreets/goconvey v1.7.2
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.7.5
 )
 
 require (
 	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.139.1 // indirect
-	github.com/ONSdigital/dp-mongodb-in-memory v1.3.1 // indirect
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.153.0 // indirect
+	github.com/ONSdigital/dp-mongodb-in-memory v1.4.0-beta // indirect
+	github.com/ONSdigital/dp-net v1.4.1 // indirect
 	github.com/ONSdigital/dp-rchttp v1.0.0 // indirect
 	github.com/ONSdigital/go-ns v0.0.0-20210916104633-ac1c1c52327e // indirect
-	github.com/chromedp/cdproto v0.0.0-20220530001853-c0f376d894d1 // indirect
+	github.com/chromedp/cdproto v0.0.0-20220624030920-1958475a8671 // indirect
 	github.com/chromedp/chromedp v0.8.2 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/cucumber/gherkin-go/v19 v19.0.3 // indirect
@@ -56,6 +55,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/maxcnunes/httpfake v1.2.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/smartystreets/assertions v1.13.0 // indirect
 	github.com/spf13/afero v1.8.2 // indirect
@@ -65,10 +65,10 @@ require (
 	github.com/xdg-go/stringprep v1.0.3 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	go.mongodb.org/mongo-driver v1.9.1 // indirect
-	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
-	golang.org/x/net v0.0.0-20220607020251-c690dde0001d // indirect
+	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
+	golang.org/x/net v0.0.0-20220708220712-1185a9018129 // indirect
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	golang.org/x/sys v0.0.0-20220712014510-0a85c31ab51e // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
