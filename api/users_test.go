@@ -852,7 +852,24 @@ func TestChangePasswordHandler(t *testing.T) {
 		return userPoolClient, nil
 	}
 
+	m.InitiateAuthFunc = func(authInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+		var OriginalPassword = "<OriginalPassword>"
+
+		authParameters := map[string]*string{
+			"USER_ID_FOR_SRP": &OriginalPassword,
+		}
+
+		params := &cognitoidentityprovider.InitiateAuthOutput{
+			AuthenticationResult: nil,
+			ChallengeName:        nil,
+			ChallengeParameters:  authParameters,
+			Session:              nil,
+		}
+		return params, nil
+	}
+
 	Convey("RespondToAuthChallenge - check expected responses", t, func() {
+
 		respondToAuthChallengeTests := []struct {
 			respondToAuthChallengeFunction func(input *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error)
 			assertions                     func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
@@ -958,6 +975,15 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 	)
 
 	api, w, m := apiSetup()
+	m.InitiateAuthFunc = func(authInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+		params := &cognitoidentityprovider.InitiateAuthOutput{
+			AuthenticationResult: nil,
+			ChallengeName:        nil,
+			ChallengeParameters:  nil,
+			Session:              nil,
+		}
+		return params, nil
+	}
 	Convey("ConfirmForgotPassword - check expected responses", t, func() {
 		confirmForgotPasswordTests := []struct {
 			confirmForgotPasswordFunction func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error)

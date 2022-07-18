@@ -234,13 +234,20 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
 
+	params := changePasswordParams.BuildAuthChallengeUserResponse(api.ClientAuthFlow, api.ClientSecret, api.ClientId)
+	res, userResError := api.CognitoClient.InitiateAuth(params)
+	if userResError != nil {
+		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, userResError)
+	}
+	userIdForSrp := res.ChallengeParameters["USER_ID_FOR_SRP"]
+
 	if changePasswordParams.ChangeType == models.NewPasswordRequiredType {
 		validationErrs := changePasswordParams.ValidateNewPasswordRequiredRequest(ctx)
 		if len(validationErrs) != 0 {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 		}
 
-		changePasswordRequest := changePasswordParams.BuildAuthChallengeResponseRequest(api.ClientSecret, api.ClientId, NewPasswordChallenge)
+		changePasswordRequest := changePasswordParams.BuildAuthChallengeResponseRequest(api.ClientSecret, api.ClientId, NewPasswordChallenge, *userIdForSrp)
 
 		result, cognitoErr := api.CognitoClient.RespondToAuthChallenge(changePasswordRequest)
 

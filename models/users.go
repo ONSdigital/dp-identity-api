@@ -379,6 +379,7 @@ func (p *UserSignIn) BuildSuccessfulJsonResponse(ctx context.Context, result *co
 }
 
 type ChangePassword struct {
+	OriginalPassword  string `json:"original_password"`
 	ChangeType        string `json:"type"`
 	Session           string `json:"session"`
 	Email             string `json:"email"`
@@ -402,13 +403,15 @@ func (p ChangePassword) ValidateNewPasswordRequiredRequest(ctx context.Context) 
 }
 
 //BuildAuthChallengeResponseRequest generates a RespondToAuthChallengeInput for Cognito
-func (p ChangePassword) BuildAuthChallengeResponseRequest(clientSecret string, clientId string, challengeName string) *cognitoidentityprovider.RespondToAuthChallengeInput {
+func (p ChangePassword) BuildAuthChallengeResponseRequest(clientSecret string, clientId string, challengeName, userIdForSrp string) *cognitoidentityprovider.RespondToAuthChallengeInput {
 	secretHash := utilities.ComputeSecretHash(clientSecret, p.Email, clientId)
 
 	challengeResponses := map[string]*string{
-		"USERNAME":     &p.Email,
-		"NEW_PASSWORD": &p.NewPassword,
-		"SECRET_HASH":  &secretHash,
+		"userAttributes.given_name":  &userIdForSrp,
+		"userAttributes.family_name": &userIdForSrp,
+		"USERNAME":                   &p.Email,
+		"NEW_PASSWORD":               &p.NewPassword,
+		"SECRET_HASH":                &secretHash,
 	}
 
 	return &cognitoidentityprovider.RespondToAuthChallengeInput{
@@ -416,6 +419,25 @@ func (p ChangePassword) BuildAuthChallengeResponseRequest(clientSecret string, c
 		ChallengeName:      &challengeName,
 		Session:            &p.Session,
 		ChallengeResponses: challengeResponses,
+	}
+}
+
+func (p ChangePassword) BuildAuthChallengeUserResponse(clientAuthFlow, clientSecret, clientId string) *cognitoidentityprovider.InitiateAuthInput {
+	secretHash := utilities.ComputeSecretHash(clientSecret, p.Email, clientId)
+
+	authParameters := map[string]*string{
+		"USERNAME":    &p.Email,
+		"PASSWORD":    &p.OriginalPassword,
+		"SECRET_HASH": &secretHash,
+	}
+
+	return &cognitoidentityprovider.InitiateAuthInput{
+		AnalyticsMetadata: &cognitoidentityprovider.AnalyticsMetadataType{},
+		AuthFlow:          &clientAuthFlow,
+		AuthParameters:    authParameters,
+		ClientId:          &clientId,
+		ClientMetadata:    map[string]*string{},
+		UserContextData:   &cognitoidentityprovider.UserContextDataType{},
 	}
 }
 

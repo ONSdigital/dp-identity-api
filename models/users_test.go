@@ -800,7 +800,7 @@ func TestChangePassword_ValidateNewPasswordRequiredRequest(t *testing.T) {
 
 func TestChangePassword_BuildAuthChallengeResponseRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito RespondToAuthChallengeInput request body", t, func() {
-
+		userIdForSrp := "email"
 		passwordChangeParams := models.ChangePassword{
 			ChangeType:  models.NewPasswordRequiredType,
 			Session:     "auth-challenge-session",
@@ -811,7 +811,7 @@ func TestChangePassword_BuildAuthChallengeResponseRequest(t *testing.T) {
 		clientId := "awsclientid"
 		clientSecret := "awsSectret"
 
-		response := passwordChangeParams.BuildAuthChallengeResponseRequest(clientSecret, clientId, api.NewPasswordChallenge)
+		response := passwordChangeParams.BuildAuthChallengeResponseRequest(clientSecret, clientId, api.NewPasswordChallenge, userIdForSrp)
 
 		So(*response.ChallengeResponses["USERNAME"], ShouldEqual, passwordChangeParams.Email)
 		So(*response.ChallengeResponses["NEW_PASSWORD"], ShouldEqual, passwordChangeParams.NewPassword)
