@@ -64,3 +64,7 @@ populate-local:
 remove-test-data:
 	export AWS_COGNITO_USER_POOL_ID=$(LOCAL_USER_POOL_ID); \
 	HUMAN_LOG=1 go run -race ./dummy-data/delete-dummy-users/remove_dummy_data.go
+
+.PHONY: get-jwks-keys
+get-jwks-keys:
+	HUMAN_LOG=1 go run ./scripts/get-jwks-keys/main.go
