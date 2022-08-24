@@ -117,11 +117,8 @@ type UserParams struct {
 	Password            string   `json:"-"`
 	Groups              []string `json:"groups"`
 	StatusNotes         string   `json:"status_notes"`
-	//ID                  string   `json:"id"`
-	Active bool   `json:"active"`
-	Status string `json:"status"`
-	//Lastname            string   `json:"lastname"`
-	//Forename            string   `json:"forename"`
+	Active              bool     `json:"active"`
+	Status              string   `json:"status"`
 }
 
 //GeneratePassword creates a password for the user and assigns it to the struct
@@ -177,9 +174,6 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 			"email", "emailVerified", "gender", "birthdate", "zoneInfo", "locale", "phoneNumber",
 			"phoneNumberVerified", "address", "updatedAt"
 	)
-	//var (
-	//	deliveryMethod, nameAttrName, givenNameAttrName, emailAttrName, emailVerifiedAttrName, emailVerifiedValue, usernameAttrName string = "EMAIL", "name", "family_name", "email", "email_verified", "true", "username"
-	//)
 
 	return &cognitoidentityprovider.AdminCreateUserInput{
 		UserAttributes: []*cognitoidentityprovider.AttributeType{
