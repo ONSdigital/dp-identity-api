@@ -93,15 +93,35 @@ func (p *UsersList) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, er
 
 //Model for the User
 type UserParams struct {
-	Forename    string   `json:"forename"`
-	Lastname    string   `json:"lastname"`
-	Email       string   `json:"email"`
-	Password    string   `json:"-"`
-	Groups      []string `json:"groups"`
-	Status      string   `json:"status"`
-	Active      bool     `json:"active"`
-	ID          string   `json:"id"`
-	StatusNotes string   `json:"status_notes"`
+	Name                string   `json:"name"`
+	GivenName           string   `json:"given_name"`
+	FamilyName          string   `json:"family_name"`
+	MiddleName          string   `json:"middle_name"`
+	Nickname            string   `json:"nickname"`
+	PreferredUsername   string   `json:"preferred_username"`
+	Profile             string   `json:"profile"`
+	Picture             string   `json:"picture"`
+	Website             string   `json:"website"`
+	Email               string   `json:"email"`
+	EmailVerified       string   `json:"email_verified"`
+	Gender              string   `json:"gender"`
+	Birthdate           string   `json:"birthdate"`
+	ZoneInfo            string   `json:"zoneinfo"`
+	Locale              string   `json:"locale"`
+	PhoneNumber         string   `json:"phone_number"`
+	PhoneNumberVerified string   `json:"phone_number_verified"`
+	Address             string   `json:"address"`
+	UpdatedAt           string   `json:"updated_at"`
+	CognitoMFAEnabled   string   `json:"cognito:mfa_enabled"`
+	Username            string   `json:"cognito:username"`
+	Password            string   `json:"-"`
+	Groups              []string `json:"groups"`
+	StatusNotes         string   `json:"status_notes"`
+	//ID                  string   `json:"id"`
+	Active bool   `json:"active"`
+	Status string `json:"status"`
+	//Lastname            string   `json:"lastname"`
+	//Forename            string   `json:"forename"`
 }
 
 //GeneratePassword creates a password for the user and assigns it to the struct
@@ -117,12 +137,8 @@ func (p *UserParams) GeneratePassword(ctx context.Context) error {
 //ValidateRegistration validates the required fields for user creation, returning validation errors for any failures
 func (p UserParams) ValidateRegistration(ctx context.Context, allowedDomains []string) []error {
 	var validationErrs []error
-	if p.Forename == "" {
+	if p.Name == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidForenameError, InvalidForenameErrorDescription))
-	}
-
-	if p.Lastname == "" {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidSurnameError, InvalidSurnameErrorDescription))
 	}
 
 	if !validation.IsAllowedEmailDomain(p.Email, allowedDomains) {
@@ -134,16 +150,8 @@ func (p UserParams) ValidateRegistration(ctx context.Context, allowedDomains []s
 //ValidateUpdate validates the required fields for user update, returning validation errors for any failures
 func (p UserParams) ValidateUpdate(ctx context.Context) []error {
 	var validationErrs []error
-	if p.Forename == "" {
+	if p.Name == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidForenameError, InvalidForenameErrorDescription))
-	}
-
-	if p.Lastname == "" {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidSurnameError, InvalidSurnameErrorDescription))
-	}
-
-	if len(p.StatusNotes) > MaxStatusNotesLength {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidStatusNotesError, TooLongStatusNotesDescription))
 	}
 
 	return validationErrs
@@ -160,18 +168,56 @@ func (p UserParams) CheckForDuplicateEmail(ctx context.Context, listUserResp *co
 //BuildCreateUserRequest generates a AdminCreateUserInput for Cognito
 func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *cognitoidentityprovider.AdminCreateUserInput {
 	var (
-		deliveryMethod, forenameAttrName, surnameAttrName, emailAttrName, emailVerifiedAttrName, emailVerifiedValue string = "EMAIL", "given_name", "family_name", "email", "email_verified", "true"
+		deliveryMethod, nameAttrName, givenNameAttrName, familyNameAttrName, middleNameAttrName,
+		nicknameAttrName, preferredUsernameAttrName, profileAttrName, pictureAttrName,
+		websiteAttrName, emailAttrName, emailVerifiedAttrName, genderAttrName, birthdateAttrName,
+		zoneInfoAttrName, localeAttrName, phoneNumberAttrName, phoneNumberVerifiedAttrName,
+		addressAttrName, updatedAtAttrName string = "EMAIL", "name", "given_name", "family_name",
+			"middle_name", "nickname", "preferred_username", "profile", "picture", "website",
+			"email", "emailVerified", "gender", "birthdate", "zoneInfo", "locale", "phoneNumber",
+			"phoneNumberVerified", "address", "updatedAt"
 	)
+	//var (
+	//	deliveryMethod, nameAttrName, givenNameAttrName, emailAttrName, emailVerifiedAttrName, emailVerifiedValue, usernameAttrName string = "EMAIL", "name", "family_name", "email", "email_verified", "true", "username"
+	//)
 
 	return &cognitoidentityprovider.AdminCreateUserInput{
 		UserAttributes: []*cognitoidentityprovider.AttributeType{
 			{
-				Name:  &forenameAttrName,
-				Value: &p.Forename,
+				Name:  &nameAttrName,
+				Value: &p.Name,
 			},
 			{
-				Name:  &surnameAttrName,
-				Value: &p.Lastname,
+				Name:  &givenNameAttrName,
+				Value: &p.GivenName,
+			},
+			{
+				Name:  &familyNameAttrName,
+				Value: &p.FamilyName,
+			},
+			{
+				Name:  &middleNameAttrName,
+				Value: &p.MiddleName,
+			},
+			{
+				Name:  &nicknameAttrName,
+				Value: &p.Nickname,
+			},
+			{
+				Name:  &preferredUsernameAttrName,
+				Value: &p.PreferredUsername,
+			},
+			{
+				Name:  &profileAttrName,
+				Value: &p.Profile,
+			},
+			{
+				Name:  &pictureAttrName,
+				Value: &p.Picture,
+			},
+			{
+				Name:  &websiteAttrName,
+				Value: &p.Website,
 			},
 			{
 				Name:  &emailAttrName,
@@ -179,7 +225,39 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 			},
 			{
 				Name:  &emailVerifiedAttrName,
-				Value: &emailVerifiedValue,
+				Value: &p.EmailVerified,
+			},
+			{
+				Name:  &genderAttrName,
+				Value: &p.Gender,
+			},
+			{
+				Name:  &birthdateAttrName,
+				Value: &p.Birthdate,
+			},
+			{
+				Name:  &zoneInfoAttrName,
+				Value: &p.ZoneInfo,
+			},
+			{
+				Name:  &localeAttrName,
+				Value: &p.Locale,
+			},
+			{
+				Name:  &phoneNumberAttrName,
+				Value: &p.PhoneNumber,
+			},
+			{
+				Name:  &phoneNumberVerifiedAttrName,
+				Value: &p.PhoneNumberVerified,
+			},
+			{
+				Name:  &addressAttrName,
+				Value: &p.Address,
+			},
+			{
+				Name:  &updatedAtAttrName,
+				Value: &p.UpdatedAt,
 			},
 		},
 		DesiredDeliveryMediums: []*string{
@@ -194,26 +272,84 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 //BuildUpdateUserRequest generates a AdminUpdateUserAttributesInput for Cognito
 func (p UserParams) BuildUpdateUserRequest(userPoolId string) *cognitoidentityprovider.AdminUpdateUserAttributesInput {
 	var (
-		forenameAttrName, surnameAttrName, statusNotesAttrName string = "given_name", "family_name", "custom:status_notes"
+		nameAttrName, givenNameAttrName, familyNameAttrName, middleNameAttrName,
+		nicknameAttrName, preferredUsernameAttrName, profileAttrName, pictureAttrName,
+		websiteAttrName, genderAttrName, birthdateAttrName,
+		zoneInfoAttrName, localeAttrName, phoneNumberAttrName, phoneNumberVerifiedAttrName,
+		addressAttrName string = "name", "given_name", "family_name", "middle_name", "nickname",
+			"preferred_username", "profile", "picture", "website", "gender", "birthdate", "zoneInfo",
+			"locale", "phoneNumber", "phoneNumberVerified", "address"
 	)
 
 	return &cognitoidentityprovider.AdminUpdateUserAttributesInput{
 		UserAttributes: []*cognitoidentityprovider.AttributeType{
 			{
-				Name:  &forenameAttrName,
-				Value: &p.Forename,
+				Name:  &nameAttrName,
+				Value: &p.Name,
 			},
 			{
-				Name:  &surnameAttrName,
-				Value: &p.Lastname,
+				Name:  &givenNameAttrName,
+				Value: &p.GivenName,
 			},
 			{
-				Name:  &statusNotesAttrName,
-				Value: &p.StatusNotes,
+				Name:  &familyNameAttrName,
+				Value: &p.FamilyName,
+			},
+			{
+				Name:  &middleNameAttrName,
+				Value: &p.MiddleName,
+			},
+			{
+				Name:  &nicknameAttrName,
+				Value: &p.Nickname,
+			},
+			{
+				Name:  &preferredUsernameAttrName,
+				Value: &p.PreferredUsername,
+			},
+			{
+				Name:  &profileAttrName,
+				Value: &p.Profile,
+			},
+			{
+				Name:  &pictureAttrName,
+				Value: &p.Picture,
+			},
+			{
+				Name:  &websiteAttrName,
+				Value: &p.Website,
+			},
+			{
+				Name:  &genderAttrName,
+				Value: &p.Gender,
+			},
+			{
+				Name:  &birthdateAttrName,
+				Value: &p.Birthdate,
+			},
+			{
+				Name:  &zoneInfoAttrName,
+				Value: &p.ZoneInfo,
+			},
+			{
+				Name:  &localeAttrName,
+				Value: &p.Locale,
+			},
+			{
+				Name:  &phoneNumberAttrName,
+				Value: &p.PhoneNumber,
+			},
+			{
+				Name:  &phoneNumberVerifiedAttrName,
+				Value: &p.PhoneNumberVerified,
+			},
+			{
+				Name:  &addressAttrName,
+				Value: &p.Address,
 			},
 		},
 		UserPoolId: &userPoolId,
-		Username:   &p.ID,
+		Username:   &p.Username,
 	}
 }
 
@@ -221,7 +357,7 @@ func (p UserParams) BuildUpdateUserRequest(userPoolId string) *cognitoidentitypr
 func (p UserParams) BuildEnableUserRequest(userPoolId string) *cognitoidentityprovider.AdminEnableUserInput {
 	return &cognitoidentityprovider.AdminEnableUserInput{
 		UserPoolId: &userPoolId,
-		Username:   &p.ID,
+		Username:   &p.Username,
 	}
 }
 
@@ -229,7 +365,7 @@ func (p UserParams) BuildEnableUserRequest(userPoolId string) *cognitoidentitypr
 func (p UserParams) BuildDisableUserRequest(userPoolId string) *cognitoidentityprovider.AdminDisableUserInput {
 	return &cognitoidentityprovider.AdminDisableUserInput{
 		UserPoolId: &userPoolId,
-		Username:   &p.ID,
+		Username:   &p.Username,
 	}
 }
 
@@ -246,47 +382,90 @@ func (p UserParams) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, er
 func (p UserParams) BuildAdminGetUserRequest(userPoolId string) *cognitoidentityprovider.AdminGetUserInput {
 	return &cognitoidentityprovider.AdminGetUserInput{
 		UserPoolId: &userPoolId,
-		Username:   &p.ID,
+		Username:   &p.Username,
 	}
 }
 
 //MapCognitoDetails maps the details from the Cognito ListUser User model to the UserParams model
 func (p UserParams) MapCognitoDetails(userDetails *cognitoidentityprovider.UserType) UserParams {
-	var forename, surname, email, statusNotes string
+	var name, given_name, family_name, middle_name, nickname, preferred_username, profile,
+		picture, website, email, email_verified, gender, birthdate, zoneinfo, locale, phone_number,
+		phone_number_verified, address, updated_at string
 	for _, attr := range userDetails.Attributes {
-		if *attr.Name == "given_name" {
-			forename = *attr.Value
+		if *attr.Name == "name" {
+			name = *attr.Value
+		} else if *attr.Name == "given_name" {
+			given_name = *attr.Value
 		} else if *attr.Name == "family_name" {
-			surname = *attr.Value
+			family_name = *attr.Value
+		} else if *attr.Name == "middle_name" {
+			middle_name = *attr.Value
+		} else if *attr.Name == "nickname" {
+			nickname = *attr.Value
+		} else if *attr.Name == "preferred_username" {
+			preferred_username = *attr.Value
+		} else if *attr.Name == "profile" {
+			profile = *attr.Value
+		} else if *attr.Name == "picture" {
+			picture = *attr.Value
+		} else if *attr.Name == "website" {
+			website = *attr.Value
 		} else if *attr.Name == "email" {
 			email = *attr.Value
-		} else if *attr.Name == "custom:status_notes" {
-			statusNotes = *attr.Value
+		} else if *attr.Name == "email_verified" {
+			email_verified = *attr.Value
+		} else if *attr.Name == "gender" {
+			gender = *attr.Value
+		} else if *attr.Name == "birthdate" {
+			birthdate = *attr.Value
+		} else if *attr.Name == "zoneinfo" {
+			zoneinfo = *attr.Value
+		} else if *attr.Name == "locale" {
+			locale = *attr.Value
+		} else if *attr.Name == "phone_number" {
+			phone_number = *attr.Value
+		} else if *attr.Name == "phone_number_verified" {
+			phone_number_verified = *attr.Value
+		} else if *attr.Name == "address" {
+			address = *attr.Value
+		} else if *attr.Name == "updated_at" {
+			updated_at = *attr.Value
 		}
 	}
+
 	return UserParams{
-		Forename:    forename,
-		Lastname:    surname,
-		Email:       email,
-		Groups:      []string{},
-		Status:      *userDetails.UserStatus,
-		ID:          *userDetails.Username,
-		StatusNotes: statusNotes,
-		Active:      *userDetails.Enabled,
+		Name:                name,
+		GivenName:           given_name,
+		FamilyName:          family_name,
+		MiddleName:          middle_name,
+		Nickname:            nickname,
+		PreferredUsername:   preferred_username,
+		Profile:             profile,
+		Picture:             picture,
+		Website:             website,
+		Email:               email,
+		EmailVerified:       email_verified,
+		Gender:              gender,
+		Birthdate:           birthdate,
+		ZoneInfo:            zoneinfo,
+		Locale:              locale,
+		PhoneNumber:         phone_number,
+		PhoneNumberVerified: phone_number_verified,
+		Address:             address,
+		UpdatedAt:           updated_at,
+		Username:            *userDetails.Username,
+		Groups:              []string{},
+		Active:              *userDetails.Enabled,
 	}
 }
 
 //MapCognitoGetResponse maps the details from the Cognito GetUser User model to the UserParams model
 func (p *UserParams) MapCognitoGetResponse(userDetails *cognitoidentityprovider.AdminGetUserOutput) {
 	for _, attr := range userDetails.UserAttributes {
-		if *attr.Name == "given_name" {
-			p.Forename = *attr.Value
-		} else if *attr.Name == "family_name" {
-			p.Lastname = *attr.Value
+		if *attr.Name == "name" {
+			p.Name = *attr.Value
 		} else if *attr.Name == "email" {
 			p.Email = *attr.Value
-		} else if *attr.Name == "custom:status_notes" {
-			p.StatusNotes = *attr.Value
 		}
 	}
 	p.Status = *userDetails.UserStatus
@@ -492,14 +671,14 @@ func (p UserParams) BuildListUserGroupsRequest(userPoolId string, nextToken stri
 	if nextToken != "" {
 		return &cognitoidentityprovider.AdminListGroupsForUserInput{
 			UserPoolId: &userPoolId,
-			Username:   &p.ID,
+			Username:   &p.Username,
 			NextToken:  &nextToken,
 		}
 	}
 
 	return &cognitoidentityprovider.AdminListGroupsForUserInput{
 		UserPoolId: &userPoolId,
-		Username:   &p.ID}
+		Username:   &p.Username}
 
 }
 

@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"io"
-	"strconv"
 )
 
 func ImportUsersFromS3(ctx context.Context, config *config.Config) error {
@@ -42,12 +41,33 @@ func ImportUsersFromS3(ctx context.Context, config *config.Config) error {
 }
 
 func createUser(ctx context.Context, client *cognitoidentityprovider.CognitoIdentityProvider, line []string, lineNumber int, config *config.Config) {
-	if len(line) <= 13 {
+	if len(line) <= 21 {
 		log.Error(ctx, "", errors.New(fmt.Sprintf("line:%v - %+v is not in required format", lineNumber, line)))
 		return
 	}
-	isActive, _ := strconv.ParseBool(line[12])
-	userInfo := models.UserParams{Forename: line[2], Lastname: line[3], Email: line[10], Active: isActive}
+	userInfo := models.UserParams{
+		Name:                line[1],
+		GivenName:           line[2],
+		FamilyName:          line[3],
+		MiddleName:          line[4],
+		Nickname:            line[5],
+		PreferredUsername:   line[6],
+		Profile:             line[7],
+		Picture:             line[8],
+		Website:             line[9],
+		Email:               line[10],
+		EmailVerified:       line[11],
+		Gender:              line[12],
+		Birthdate:           line[13],
+		ZoneInfo:            line[14],
+		Locale:              line[15],
+		PhoneNumber:         line[16],
+		PhoneNumberVerified: line[17],
+		Address:             line[18],
+		UpdatedAt:           line[19],
+		CognitoMFAEnabled:   line[20],
+		Username:            line[22],
+	}
 	userInfo.GeneratePassword(ctx)
 
 	_, err := client.AdminCreateUser(userInfo.BuildCreateUserRequest(uuid.NewString(), config.AWSCognitoUserPoolID))
