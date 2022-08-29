@@ -21,7 +21,28 @@ Feature: Users
                 "groups": [],
                 "status": "FORCE_CHANGE_PASSWORD",
                 "active": true,
-                "status_notes": ""
+                "status_notes": "",
+
+                ":mfa_enabled": "",
+                "address": "",
+                "birthdate": "",
+                "cognito:username": "",
+                "email_verified": "",
+                "family_name": "",
+                "gender": "",
+                "given_name": "",
+                "locale": "",
+                "middle_name": "",
+                "name": "",
+                "nickname": "",
+                "phone_number": "",
+                "phone_number_verified": "",
+                "picture": "",
+                "preferred_username": "",
+                "profile": "",
+                "updated_at": "",
+                "website": "",
+                "zoneinfo": ""
             }
             """
 
@@ -200,7 +221,28 @@ Feature: Users
                         "groups": [],
                         "status": "CONFIRMED",
                         "active": true,
-                        "status_notes": ""
+                        "status_notes": "",
+
+                        ":mfa_enabled": "",
+                        "address": "",
+                        "birthdate": "",
+                        "cognito:username": "",
+                        "email_verified": "",
+                        "family_name": "",
+                        "gender": "",
+                        "given_name": "",
+                        "locale": "",
+                        "middle_name": "",
+                        "name": "",
+                        "nickname": "",
+                        "phone_number": "",
+                        "phone_number_verified": "",
+                        "picture": "",
+                        "preferred_username": "",
+                        "profile": "",
+                        "updated_at": "",
+                        "website": "",
+                        "zoneinfo": ""
                     },
                     {
                         "id": "aaaabbbbcccc",
@@ -210,7 +252,28 @@ Feature: Users
                         "groups": [],
                         "status": "FORCE_CHANGE_PASSWORD",
                         "active": true,
-                        "status_notes": ""
+                        "status_notes": "",
+
+                        ":mfa_enabled": "",
+                        "address": "",
+                        "birthdate": "",
+                        "cognito:username": "",
+                        "email_verified": "",
+                        "family_name": "",
+                        "gender": "",
+                        "given_name": "",
+                        "locale": "",
+                        "middle_name": "",
+                        "name": "",
+                        "nickname": "",
+                        "phone_number": "",
+                        "phone_number_verified": "",
+                        "picture": "",
+                        "preferred_username": "",
+                        "profile": "",
+                        "updated_at": "",
+                        "website": "",
+                        "zoneinfo": ""
                     }
                 ],
                 "count": 2,
@@ -284,7 +347,28 @@ Feature: Users
                 "groups": [],
                 "status": "CONFIRMED",
                 "active": true,
-                "status_notes": ""
+                "status_notes": "",
+
+                ":mfa_enabled": "",
+                "address": "",
+                "birthdate": "",
+                "cognito:username": "",
+                "email_verified": "",
+                "family_name": "",
+                "gender": "",
+                "given_name": "",
+                "locale": "",
+                "middle_name": "",
+                "name": "",
+                "nickname": "",
+                "phone_number": "",
+                "phone_number_verified": "",
+                "picture": "",
+                "preferred_username": "",
+                "profile": "",
+                "updated_at": "",
+                "website": "",
+                "zoneinfo": ""
             }
             """
     Scenario: GET /v1/users/{id} without a JWT token and checking the response status 401
@@ -343,7 +427,28 @@ Feature: Users
                 "groups": [],
                 "status": "CONFIRMED",
                 "active": true,
-                "status_notes": ""
+                "status_notes": "",
+
+                ":mfa_enabled": "",
+                "address": "",
+                "birthdate": "",
+                "cognito:username": "",
+                "email_verified": "",
+                "family_name": "",
+                "gender": "",
+                "given_name": "",
+                "locale": "",
+                "middle_name": "",
+                "name": "",
+                "nickname": "",
+                "phone_number": "",
+                "phone_number_verified": "",
+                "picture": "",
+                "preferred_username": "",
+                "profile": "",
+                "updated_at": "",
+                "website": "",
+                "zoneinfo": ""
             }
             """
 
@@ -369,7 +474,28 @@ Feature: Users
                 "groups": [],
                 "status": "CONFIRMED",
                 "active": false,
-                "status_notes": "user disabled"
+                "status_notes": "user disabled",
+
+                ":mfa_enabled": "",
+                "address": "",
+                "birthdate": "",
+                "cognito:username": "",
+                "email_verified": "",
+                "family_name": "",
+                "gender": "",
+                "given_name": "",
+                "locale": "",
+                "middle_name": "",
+                "name": "",
+                "nickname": "",
+                "phone_number": "",
+                "phone_number_verified": "",
+                "picture": "",
+                "preferred_username": "",
+                "profile": "",
+                "updated_at": "",
+                "website": "",
+                "zoneinfo": ""
             }
             """
 
@@ -396,7 +522,28 @@ Feature: Users
                 "groups": [],
                 "status": "CONFIRMED",
                 "active": true,
-                "status_notes": "user reactivated"
+                "status_notes": "user reactivated",
+
+                ":mfa_enabled": "",
+                "address": "",
+                "birthdate": "",
+                "cognito:username": "",
+                "email_verified": "",
+                "family_name": "",
+                "gender": "",
+                "given_name": "",
+                "locale": "",
+                "middle_name": "",
+                "name": "",
+                "nickname": "",
+                "phone_number": "",
+                "phone_number_verified": "",
+                "picture": "",
+                "preferred_username": "",
+                "profile": "",
+                "updated_at": "",
+                "website": "",
+                "zoneinfo": ""
             }
             """
 
@@ -422,7 +569,28 @@ Feature: Users
                 "groups": [],
                 "status": "CONFIRMED",
                 "active": false,
-                "status_notes": "user suspended"
+                "status_notes": "user suspended",
+
+                ":mfa_enabled": "",
+                "address": "",
+                "birthdate": "",
+                "cognito:username": "",
+                "email_verified": "",
+                "family_name": "",
+                "gender": "",
+                "given_name": "",
+                "locale": "",
+                "middle_name": "",
+                "name": "",
+                "nickname": "",
+                "phone_number": "",
+                "phone_number_verified": "",
+                "picture": "",
+                "preferred_username": "",
+                "profile": "",
+                "updated_at": "",
+                "website": "",
+                "zoneinfo": ""
             }
             """
 
@@ -449,7 +617,28 @@ Feature: Users
                 "groups": [],
                 "status": "CONFIRMED",
                 "active": true,
-                "status_notes": "user reactivated"
+                "status_notes": "user reactivated",
+
+                ":mfa_enabled": "",
+                "address": "",
+                "birthdate": "",
+                "cognito:username": "",
+                "email_verified": "",
+                "family_name": "",
+                "gender": "",
+                "given_name": "",
+                "locale": "",
+                "middle_name": "",
+                "name": "",
+                "nickname": "",
+                "phone_number": "",
+                "phone_number_verified": "",
+                "picture": "",
+                "preferred_username": "",
+                "profile": "",
+                "updated_at": "",
+                "website": "",
+                "zoneinfo": ""
             }
             """
 

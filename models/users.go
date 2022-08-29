@@ -121,7 +121,7 @@ type UserParams struct {
 	PhoneNumberVerified string `json:"phone_number_verified"`
 	Address             string `json:"address"`
 	UpdatedAt           string `json:"updated_at"`
-	CognitoMFAEnabled   string `json:"cognito:mfa_enabled"`
+	CognitoMFAEnabled   string `json:":mfa_enabled"`
 	Username            string `json:"cognito:username"`
 }
 
