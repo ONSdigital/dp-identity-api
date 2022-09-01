@@ -21,6 +21,7 @@ type Config struct {
 	AWSAuthFlow                string        `envconfig:"AWS_AUTH_FLOW" json:"-"`
 	AllowedEmailDomains        []string      `envconfig:"ALLOWED_EMAIL_DOMAINS" json:"-"`
 	AuthorisationConfig        *authorisation.Config
+	MessageAction              string `envconfig:"MESSAGE_ACTION" json:"-"`
 }
 
 var cfg *Config
@@ -41,6 +42,7 @@ func Get() (*Config, error) {
 		AWSAuthFlow:                "USER_PASSWORD_AUTH",
 		AllowedEmailDomains:        []string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 		AuthorisationConfig:        authorisation.NewDefaultConfig(),
+		MessageAction:              "RESEND",
 	}
 
 	return cfg, envconfig.Process("", cfg)
@@ -51,4 +53,9 @@ func Get() (*Config, error) {
 func (config Config) String() string {
 	configJson, _ := json.Marshal(config)
 	return string(configJson)
+}
+
+func GetMessageAction() string {
+	c, _ := Get()
+	return c.MessageAction
 }
