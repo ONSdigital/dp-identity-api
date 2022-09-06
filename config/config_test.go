@@ -33,6 +33,7 @@ func TestConfig(t *testing.T) {
 					AWSAuthFlow:                "USER_PASSWORD_AUTH",
 					AllowedEmailDomains:        []string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 					AuthorisationConfig:        authorisation.NewDefaultConfig(),
+					MessageAction:              "RESEND",
 				})
 			})
 

@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"encoding/json"
+	"github.com/ONSdigital/dp-identity-api/config"
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/utilities"
@@ -160,7 +161,7 @@ func (p UserParams) CheckForDuplicateEmail(ctx context.Context, listUserResp *co
 //BuildCreateUserRequest generates a AdminCreateUserInput for Cognito
 func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *cognitoidentityprovider.AdminCreateUserInput {
 	var (
-		deliveryMethod, forenameAttrName, surnameAttrName, emailAttrName, emailVerifiedAttrName, emailVerifiedValue string = "EMAIL", "given_name", "family_name", "email", "email_verified", "true"
+		deliveryMethod, messageAction, forenameAttrName, surnameAttrName, emailAttrName, emailVerifiedAttrName, emailVerifiedValue string = "EMAIL", config.GetMessageAction(), "given_name", "family_name", "email", "email_verified", "true"
 	)
 
 	return &cognitoidentityprovider.AdminCreateUserInput{
@@ -188,6 +189,7 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 		TemporaryPassword: &p.Password,
 		UserPoolId:        &userPoolId,
 		Username:          &userId,
+		MessageAction:     &messageAction,
 	}
 }
 
