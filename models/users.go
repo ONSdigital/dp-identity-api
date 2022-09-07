@@ -184,6 +184,9 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 		deliveryMethod, forenameAttrName, surnameAttrName, emailAttrName, emailVerifiedAttrName, emailVerifiedValue string = "EMAIL", "given_name", "family_name", "email", "email_verified", "true"
 	)
 
+	var (
+		nameAttrName, givenNameAttrName, familyNameAttrName, middleNameAttrName, nicknameAttrName, preferredUsernameAttrName, profileAttrName, pictureAttrName, websiteAttrName, genderAttrName, birthdateAttrName, zoneInfoAttrName, localeAttrName, phoneNumberAttrName, phoneNumberVerifiedAttrName, addressAttrName string = "name", "given_name", "family_name", "middle_name", "nickname", "preferred_username", "profile", "picture", "website", "gender", "birthdate", "zoneinfo", "locale", "phone_number", "phone_number_verified", "address"
+	)
 	return &cognitoidentityprovider.AdminCreateUserInput{
 		UserAttributes: []*cognitoidentityprovider.AttributeType{
 			{
@@ -201,6 +204,70 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 			{
 				Name:  &emailVerifiedAttrName,
 				Value: &emailVerifiedValue,
+			},
+			{
+				Name:  &nameAttrName,
+				Value: &p.Name,
+			},
+			{
+				Name:  &givenNameAttrName,
+				Value: &p.GivenName,
+			},
+			{
+				Name:  &familyNameAttrName,
+				Value: &p.FamilyName,
+			},
+			{
+				Name:  &middleNameAttrName,
+				Value: &p.MiddleName,
+			},
+			{
+				Name:  &nicknameAttrName,
+				Value: &p.Nickname,
+			},
+			{
+				Name:  &preferredUsernameAttrName,
+				Value: &p.PreferredUsername,
+			},
+			{
+				Name:  &profileAttrName,
+				Value: &p.Profile,
+			},
+			{
+				Name:  &pictureAttrName,
+				Value: &p.Picture,
+			},
+			{
+				Name:  &websiteAttrName,
+				Value: &p.Website,
+			},
+			{
+				Name:  &genderAttrName,
+				Value: &p.Gender,
+			},
+			{
+				Name:  &birthdateAttrName,
+				Value: &p.Birthdate,
+			},
+			{
+				Name:  &zoneInfoAttrName,
+				Value: &p.ZoneInfo,
+			},
+			{
+				Name:  &localeAttrName,
+				Value: &p.Locale,
+			},
+			{
+				Name:  &phoneNumberAttrName,
+				Value: &p.PhoneNumber,
+			},
+			{
+				Name:  &phoneNumberVerifiedAttrName,
+				Value: &p.PhoneNumberVerified,
+			},
+			{
+				Name:  &addressAttrName,
+				Value: &p.Address,
 			},
 		},
 		DesiredDeliveryMediums: []*string{

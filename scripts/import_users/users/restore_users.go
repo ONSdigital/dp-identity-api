@@ -45,7 +45,9 @@ func createUser(ctx context.Context, client *cognitoidentityprovider.CognitoIden
 		log.Error(ctx, "", errors.New(fmt.Sprintf("line:%v - %+v is not in required format", lineNumber, line)))
 		return
 	}
+
 	userInfo := models.UserParams{
+		Username:            line[0],
 		Name:                line[1],
 		GivenName:           line[2],
 		FamilyName:          line[3],
@@ -66,7 +68,6 @@ func createUser(ctx context.Context, client *cognitoidentityprovider.CognitoIden
 		Address:             line[18],
 		UpdatedAt:           line[19],
 		CognitoMFAEnabled:   line[20],
-		Username:            line[22],
 	}
 	userInfo.GeneratePassword(ctx)
 
