@@ -9,10 +9,8 @@ import (
 	"github.com/ONSdigital/dp-identity-api/scripts/utils"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"io"
-	"strconv"
 )
 
 func ImportUsersFromS3(ctx context.Context, config *config.Config) error {
@@ -23,8 +21,21 @@ func ImportUsersFromS3(ctx context.Context, config *config.Config) error {
 	defer responseBody.Close()
 	reader := csv.NewReader(responseBody)
 	client := utils.GetCognitoClient(config.S3Region)
-	//skip header
-	reader.Read()
+
+	// Extract column indexes from header line
+	cols, err := reader.Read()
+	if err != nil {
+		return errors.New("unable to read header from user backup file")
+	}
+	colsMap := make(map[string]int, len(cols))
+	for i, col := range cols {
+		colsMap[col] = i
+	}
+	for _, wanted := range []string{"given_name", "family_name", "email", "cognito:username"} {
+		if _, ok := colsMap[wanted]; !ok {
+			return errors.New(fmt.Sprintf("column '%s' not found in users backup file", wanted))
+		}
+	}
 
 	count := 1
 	for {
@@ -34,24 +45,35 @@ func ImportUsersFromS3(ctx context.Context, config *config.Config) error {
 				break
 			}
 		}
-		createUser(ctx, client, line, count, config)
+		createUser(ctx, client, line, count, config, colsMap)
 		count += 1
 	}
 	log.Info(ctx, "Successfully processed all the users in S3 file")
 	return nil
 }
 
-func createUser(ctx context.Context, client *cognitoidentityprovider.CognitoIdentityProvider, line []string, lineNumber int, config *config.Config) {
-	if len(line) <= 13 {
-		log.Error(ctx, "", errors.New(fmt.Sprintf("line:%v - %+v is not in required format", lineNumber, line)))
-		return
+func createUser(ctx context.Context, client *cognitoidentityprovider.CognitoIdentityProvider, line []string, lineNumber int, config *config.Config, colsMap map[string]int) {
+	userInfo := models.UserParams{
+		Forename: line[colsMap["given_name"]],
+		Lastname: line[colsMap["family_name"]],
+		Email:    line[colsMap["email"]],
+		ID:       line[colsMap["cognito:username"]],
 	}
-	isActive, _ := strconv.ParseBool(line[12])
-	userInfo := models.UserParams{Forename: line[2], Lastname: line[3], Email: line[10], Active: isActive}
 	userInfo.GeneratePassword(ctx)
 
-	_, err := client.AdminCreateUser(userInfo.BuildCreateUserRequest(uuid.NewString(), config.AWSCognitoUserPoolID))
+	createUserRequest := userInfo.BuildCreateUserRequest(userInfo.ID, config.AWSCognitoUserPoolID)
+	_, err := client.AdminCreateUser(createUserRequest)
 	if err != nil {
 		log.Error(ctx, fmt.Sprintf("failed to processline %v user: %+v", lineNumber, userInfo), err)
 	}
+
+	//Disable user if it's 'enabled' column is not TRUE
+	enabledCol, ok := colsMap["enabled"]
+	if ok && line[enabledCol] == "false" {
+		userDisableRequest := userInfo.BuildDisableUserRequest(config.AWSCognitoUserPoolID)
+		if _, err = client.AdminDisableUser(userDisableRequest); err != nil {
+			log.Error(ctx, fmt.Sprintf("failed to disable user: %+v", userInfo), err)
+		}
+	}
+
 }

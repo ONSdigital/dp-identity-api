@@ -24,8 +24,22 @@ func ImportGroupsFromS3(ctx context.Context, config *config.Config) error {
 	defer responseBody.Close()
 	reader := csv.NewReader(responseBody)
 	client := utils.GetCognitoClient(config.S3Region)
-	//skip header
-	reader.Read()
+
+	// Extract column indexes from header line
+	cols, err := reader.Read()
+	if err != nil {
+		return errors.New("unable to read header from user backup file")
+	}
+	colsMap := make(map[string]int, len(cols))
+	for i, col := range cols {
+		colsMap[col] = i
+	}
+	for _, wanted := range []string{"groupname", "precedence", "description"} {
+		if _, ok := colsMap[wanted]; !ok {
+			return errors.New(fmt.Sprintf("column '%s' not found in groups backup file", wanted))
+		}
+	}
+
 	count := 1
 	for {
 		line, err := reader.Read()
@@ -34,7 +48,7 @@ func ImportGroupsFromS3(ctx context.Context, config *config.Config) error {
 				break
 			}
 		}
-		createGroup(count, line, client, ctx)
+		createGroup(count, line, client, ctx, config.AWSCognitoUserPoolID, colsMap)
 		count += 1
 	}
 	log.Info(ctx, "Successfully processed all the groups in S3 file")
@@ -49,8 +63,22 @@ func ImportGroupsMembersFromS3(ctx context.Context, config *config.Config) error
 	defer responseBody.Close()
 	reader := csv.NewReader(responseBody)
 	client := utils.GetCognitoClient(config.S3Region)
-	//skip header
-	reader.Read()
+
+	// Extract column indexes from header line
+	cols, err := reader.Read()
+	if err != nil {
+		return errors.New("unable to read header from user backup file")
+	}
+	colsMap := make(map[string]int, len(cols))
+	for i, col := range cols {
+		colsMap[col] = i
+	}
+	for _, wanted := range []string{"user_name", "groups"} {
+		if _, ok := colsMap[wanted]; !ok {
+			return errors.New(fmt.Sprintf("column '%s' not found in users_groups backup file", wanted))
+		}
+	}
+
 	count := 1
 	for {
 		line, err := reader.Read()
@@ -59,25 +87,21 @@ func ImportGroupsMembersFromS3(ctx context.Context, config *config.Config) error
 				break
 			}
 		}
-		adduserToGroup(ctx, client, line, count, config.AWSCognitoUserPoolID)
+		adduserToGroup(ctx, client, line, count, config.AWSCognitoUserPoolID, colsMap)
 		count += 1
 	}
 	log.Info(ctx, "Successfully processed all the group members in S3 file")
 	return nil
 }
 
-func createGroup(lineNumber int, line []string, client *cognito.CognitoIdentityProvider, ctx context.Context) {
-	if len(line) <= 5 {
-		log.Error(ctx, "", errors.New(fmt.Sprintf("line:%v - %+v is not in required format", lineNumber, line)))
-		return
-	}
+func createGroup(lineNumber int, line []string, client *cognito.CognitoIdentityProvider, ctx context.Context, userPoolID string, colsMap map[string]int) {
 	createGroup := models.CreateUpdateGroup{}
-	createGroup.ID = &line[0]
-	precedence, _ := strconv.Atoi(line[4])
+	createGroup.ID = &line[colsMap["groupname"]]
+	precedence, _ := strconv.Atoi(line[colsMap["precedence"]])
 	precedence1 := int64(precedence)
 	createGroup.Precedence = &precedence1
-	createGroup.Name = &line[2]
-	input := createGroup.BuildCreateGroupInput(&line[1])
+	createGroup.Name = &line[colsMap["description"]]
+	input := createGroup.BuildCreateGroupInput(&userPoolID)
 
 	_, err := client.CreateGroup(input)
 	if err != nil {
@@ -85,14 +109,13 @@ func createGroup(lineNumber int, line []string, client *cognito.CognitoIdentityP
 	}
 }
 
-func adduserToGroup(ctx context.Context, client *cognito.CognitoIdentityProvider, line []string, lineNumber int, userPoolId string) {
-	if len(line) <= 2 {
-		log.Error(ctx, "", errors.New(fmt.Sprintf("line:%v - %+v is not in required format", lineNumber, line)))
-		return
-	}
-	userId := line[0]
-	groups := strings.Split(line[1], ", ")
+func adduserToGroup(ctx context.Context, client *cognito.CognitoIdentityProvider, line []string, lineNumber int, userPoolId string, colsMap map[string]int) {
+	userId := line[colsMap["user_name"]]
+	groups := strings.Split(line[colsMap["groups"]], ", ")
 	for _, group := range groups {
+		if group == "" {
+			continue
+		}
 		_, err := client.AdminAddUserToGroup(&cognito.AdminAddUserToGroupInput{GroupName: &group, UserPoolId: &userPoolId, Username: &userId})
 		if err != nil {
 			log.Error(ctx, fmt.Sprintf("failed to process line: %v -  user %v group: %v", lineNumber, userId, group), err)
