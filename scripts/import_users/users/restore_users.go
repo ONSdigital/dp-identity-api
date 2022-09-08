@@ -25,7 +25,7 @@ func ImportUsersFromS3(ctx context.Context, config *config.Config) error {
 	// Extract column indexes from header line
 	cols, err := reader.Read()
 	if err != nil {
-		return errors.New("unable to read header from user backup file")
+		return errors.New("unable to read header from users backup file")
 	}
 	colsMap := make(map[string]int, len(cols))
 	for i, col := range cols {
