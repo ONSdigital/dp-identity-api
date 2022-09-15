@@ -4,23 +4,24 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"io"
+
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/scripts/import_users/config"
 	"github.com/ONSdigital/dp-identity-api/scripts/utils"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/pkg/errors"
-	"io"
 )
 
 func ImportUsersFromS3(ctx context.Context, config *config.Config) error {
 	log.Info(ctx, fmt.Sprintf("started restoring users to cognito from s3 file: %v", config.GetS3UsersFilePath()))
 
 	s3FileReader := utils.S3Reader{}
-	responseBody := s3FileReader.GetS3Reader(ctx, config.S3Region, config.S3Bucket, config.GetS3UsersFilePath())
+	responseBody := s3FileReader.GetS3Reader(ctx, config.AWSProfile, config.S3Region, config.S3Bucket, config.GetS3UsersFilePath())
 	defer responseBody.Close()
 	reader := csv.NewReader(responseBody)
-	client := utils.GetCognitoClient(config.S3Region)
+	client := utils.GetCognitoClient(config.AWSProfile, config.S3Region)
 
 	// Extract column indexes from header line
 	cols, err := reader.Read()

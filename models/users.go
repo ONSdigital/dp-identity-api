@@ -164,7 +164,7 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 		deliveryMethod, messageAction, forenameAttrName, surnameAttrName, emailAttrName, emailVerifiedAttrName, emailVerifiedValue string = "EMAIL", config.GetMessageAction(), "given_name", "family_name", "email", "email_verified", "true"
 	)
 
-	return &cognitoidentityprovider.AdminCreateUserInput{
+	createUserRequest := &cognitoidentityprovider.AdminCreateUserInput{
 		UserAttributes: []*cognitoidentityprovider.AttributeType{
 			{
 				Name:  &forenameAttrName,
@@ -189,8 +189,11 @@ func (p UserParams) BuildCreateUserRequest(userId string, userPoolId string) *co
 		TemporaryPassword: &p.Password,
 		UserPoolId:        &userPoolId,
 		Username:          &userId,
-		MessageAction:     &messageAction,
 	}
+	if len(messageAction) > 0 {
+		createUserRequest.MessageAction = &messageAction
+	}
+	return createUserRequest
 }
 
 //BuildUpdateUserRequest generates a AdminUpdateUserAttributesInput for Cognito

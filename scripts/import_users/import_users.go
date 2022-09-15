@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+
 	"github.com/ONSdigital/dp-identity-api/scripts/import_users/config"
 	"github.com/ONSdigital/dp-identity-api/scripts/import_users/confirmation"
 	"github.com/ONSdigital/dp-identity-api/scripts/import_users/groups"
 	"github.com/ONSdigital/dp-identity-api/scripts/import_users/users"
 	"github.com/ONSdigital/log.go/v2/log"
-	"os"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 	ctx := context.Background()
 	config := config.GetConfig()
 
-	fmt.Printf("Config: %+v", config)
+	log.Info(ctx, "print out log", log.Data{"config": config})
 
 	var err error
 
