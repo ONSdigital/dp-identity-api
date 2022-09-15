@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -13,6 +14,7 @@ type Config struct {
 	S3BaseDir            string `envconfig:"S3_BASE_DIR" required:"true"`
 	S3Region             string `envconfig:"S3_REGION" required:"true"`
 	AWSCognitoUserPoolID string `envconfig:"USER_POOL_ID" required:"true"`
+	AWSProfile           string `envconfig:"AWS_PROFILE" required:"true"`
 }
 
 func (c Config) GetS3UsersFilePath() string {

@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	"github.com/ONSdigital/dp-identity-api/scripts/import_users/config"
 	"io"
 	"strconv"
 	"strings"
+
+	"github.com/ONSdigital/dp-identity-api/scripts/import_users/config"
 
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/scripts/utils"
@@ -20,10 +21,10 @@ func ImportGroupsFromS3(ctx context.Context, config *config.Config) error {
 	log.Info(ctx, fmt.Sprintf("started restoring groups to cognito from s3 file: %v", config.GetS3GroupsFilePath()))
 
 	s3FileReader := utils.S3Reader{}
-	responseBody := s3FileReader.GetS3Reader(ctx, config.S3Region, config.S3Bucket, config.GetS3GroupsFilePath())
+	responseBody := s3FileReader.GetS3Reader(ctx, config.AWSProfile, config.S3Region, config.S3Bucket, config.GetS3GroupsFilePath())
 	defer responseBody.Close()
 	reader := csv.NewReader(responseBody)
-	client := utils.GetCognitoClient(config.S3Region)
+	client := utils.GetCognitoClient(config.AWSProfile, config.S3Region)
 
 	// Extract column indexes from header line
 	cols, err := reader.Read()
@@ -59,10 +60,10 @@ func ImportGroupsMembersFromS3(ctx context.Context, config *config.Config) error
 	log.Info(ctx, fmt.Sprintf("started restoring group members to cognito from s3 file: %v", config.GetS3GroupsFilePath()))
 
 	s3FileReader := utils.S3Reader{}
-	responseBody := s3FileReader.GetS3Reader(ctx, config.S3Region, config.S3Bucket, config.GetS3GroupUsersFilePath())
+	responseBody := s3FileReader.GetS3Reader(ctx, config.AWSProfile, config.S3Region, config.S3Bucket, config.GetS3GroupUsersFilePath())
 	defer responseBody.Close()
 	reader := csv.NewReader(responseBody)
-	client := utils.GetCognitoClient(config.S3Region)
+	client := utils.GetCognitoClient(config.AWSProfile, config.S3Region)
 
 	// Extract column indexes from header line
 	cols, err := reader.Read()
