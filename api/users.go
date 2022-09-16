@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/google/uuid"
@@ -314,32 +315,42 @@ func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter,
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
+		log.Error(ctx, "failed to read request body", err)
 		return nil, handleBodyReadError(ctx, err)
 	}
 
 	passwordResetParams := models.PasswordReset{}
 	err = json.Unmarshal(body, &passwordResetParams)
 	if err != nil {
+		log.Error(ctx, "failed to unmarshal password reset passwords", err)
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
 
 	validationErr := passwordResetParams.Validate(ctx)
 
 	if validationErr != nil {
+		log.Error(ctx, "failed validation", validationErr, log.Data{"user_email": passwordResetParams.Email})
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErr)
 	}
+
+	log.Info(ctx, "request reset parameters validated", log.Data{"user_email": passwordResetParams.Email})
 
 	forgotPasswordRequest := passwordResetParams.BuildCognitoRequest(api.ClientSecret, api.ClientId)
 
 	_, err = api.CognitoClient.ForgotPassword(forgotPasswordRequest)
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "ForgotPassword request from password reset endpoint")
+
 		if responseErr.Code == models.LimitExceededError || responseErr.Code == models.TooManyRequestsError {
+			log.Error(ctx, "cognito request limit exceeded", responseErr, log.Data{"user_email": passwordResetParams.Email})
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, responseErr)
 		} else if responseErr.Code != models.UserNotFoundError && responseErr.Code != models.UserNotConfirmedError {
+			log.Error(ctx, "user not found or user not confirmed", responseErr, log.Data{"user_email": passwordResetParams.Email})
 			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 		}
 	}
+
+	log.Info(ctx, "password reset completed", log.Data{"user_email": passwordResetParams.Email})
 
 	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
 }
