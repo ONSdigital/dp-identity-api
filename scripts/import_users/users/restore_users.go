@@ -70,7 +70,7 @@ func createUser(ctx context.Context, client *cognitoidentityprovider.CognitoIden
 
 	//Disable user if it's 'enabled' column is not TRUE
 	enabledCol, ok := colsMap["enabled"]
-	if ok && line[enabledCol] == "false" {
+	if ok && len(line) > enabledCol && line[enabledCol] == "false" {
 		userDisableRequest := userInfo.BuildDisableUserRequest(config.AWSCognitoUserPoolID)
 		if _, err = client.AdminDisableUser(userDisableRequest); err != nil {
 			log.Error(ctx, fmt.Sprintf("failed to disable user: %+v", userInfo), err)
