@@ -386,14 +386,32 @@ func TestUserParams_BuildCreateUserRequest(t *testing.T) {
 		userId := uuid.NewString()
 		userPoolId := "euwest-99-aabbcc"
 
-		response := user.BuildCreateUserRequest(userId, userPoolId)
+		Convey("given message action is set to RESEND", func() {
+			messageAction := "RESEND"
 
-		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminCreateUserInput{}))
-		So(*response.Username, ShouldEqual, userId)
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
-		So(*response.UserAttributes[0].Value, ShouldEqual, user.Forename)
-		So(*response.UserAttributes[1].Value, ShouldEqual, user.Lastname)
-		So(*response.UserAttributes[2].Value, ShouldEqual, user.Email)
+			response := user.BuildCreateUserRequest(userId, userPoolId, messageAction)
+
+			So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminCreateUserInput{}))
+			So(*response.Username, ShouldEqual, userId)
+			So(*response.UserPoolId, ShouldEqual, userPoolId)
+			So(*response.UserAttributes[0].Value, ShouldEqual, user.Forename)
+			So(*response.UserAttributes[1].Value, ShouldEqual, user.Lastname)
+			So(*response.UserAttributes[2].Value, ShouldEqual, user.Email)
+			So(*response.MessageAction, ShouldEqual, messageAction)
+		})
+
+		Convey("given message action is not set (empty string)", func() {
+
+			response := user.BuildCreateUserRequest(userId, userPoolId, "")
+
+			So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminCreateUserInput{}))
+			So(*response.Username, ShouldEqual, userId)
+			So(*response.UserPoolId, ShouldEqual, userPoolId)
+			So(*response.UserAttributes[0].Value, ShouldEqual, user.Forename)
+			So(*response.UserAttributes[1].Value, ShouldEqual, user.Lastname)
+			So(*response.UserAttributes[2].Value, ShouldEqual, user.Email)
+			So(*response.MessageAction, ShouldBeNil)
+		})
 	})
 }
 

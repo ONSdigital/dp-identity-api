@@ -61,7 +61,7 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}
 
-	createUserRequest := user.BuildCreateUserRequest(uuid.NewString(), api.UserPoolId)
+	createUserRequest := user.BuildCreateUserRequest(uuid.NewString(), api.UserPoolId, "")
 
 	resultUser, err := api.CognitoClient.AdminCreateUser(createUserRequest)
 	if err != nil {

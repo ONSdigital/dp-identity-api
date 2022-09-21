@@ -1,10 +1,11 @@
 package config
 
 import (
-	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -33,7 +34,6 @@ func TestConfig(t *testing.T) {
 					AWSAuthFlow:                "USER_PASSWORD_AUTH",
 					AllowedEmailDomains:        []string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 					AuthorisationConfig:        authorisation.NewDefaultConfig(),
-					MessageAction:              "",
 				})
 			})
 
