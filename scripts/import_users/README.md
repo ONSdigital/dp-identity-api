@@ -22,3 +22,4 @@ No further dependencies other than following configuration.
 | S3_REGION                    | S3 region name
 | USER_POOL_ID                 | Cognito user pool id
 | MESSAGE_ACTION               | Set to RESEND for existing user, keep empty for new user or set to SUPPRESS if you do not want to send any emails out to users
+| PERMANENT_PASSWORD           | Set permanent password instead of temporary password - allows for password reset to take place

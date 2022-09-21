@@ -15,6 +15,8 @@ type Config struct {
 	S3Region             string `envconfig:"S3_REGION" required:"true"`
 	AWSCognitoUserPoolID string `envconfig:"USER_POOL_ID" required:"true"`
 	AWSProfile           string `envconfig:"AWS_PROFILE" required:"true"`
+	MessageAction        string `envconfig:"MESSAGE_ACTION"`
+	PermanentPassword    bool   `envconfig:"PERMANENT_PASSWORD"`
 }
 
 func (c Config) GetS3UsersFilePath() string {
