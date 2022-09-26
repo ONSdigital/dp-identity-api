@@ -5,7 +5,7 @@ go 1.18
 replace github.com/spf13/cobra => github.com/spf13/cobra v1.5.0
 
 require (
-	github.com/ONSdigital/dp-authorisation/v2 v2.25.0
+	github.com/ONSdigital/dp-authorisation/v2 v2.25.1-0.20220926085836-213bd7766035
 	github.com/ONSdigital/dp-component-test v0.8.0
 	github.com/ONSdigital/dp-healthcheck v1.3.0
 	github.com/ONSdigital/dp-net/v2 v2.4.0
