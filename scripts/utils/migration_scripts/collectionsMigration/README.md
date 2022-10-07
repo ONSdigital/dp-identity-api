@@ -11,19 +11,20 @@ if migration environment variable is not set then this will revert the actions.
 **migration** true for migration false for reversion
 
 
-### How to ###
+### How to run on remote environment ###
 1) dp remote allow \< environment \>
-
 2) go to .../dp-identity-api/scripts/utils/migration_scripts
-    set the environment in the Makefile
+    set the \< environment \> in the Makefile
     make all
     (this will copy the compiled code to the environment)
 3) dp ssh \< environment \> publishing_mount 1
 4)  `export teamsDir=/var/florence/zebedee/teams/`
     `export collectionDir=/var/florence/zebedee/collections/`
-    `export collectionCopyDir=/home/AnnWitcher/copycollections20221006/  `
+    `export collectionCopyDir=~/copycollections20221006/`
     `export migration=true/false`
-5) ./bin-collection-migration/collection-migration
+5) './bin-collection-migration/collection-migration'
 6) make clean (to clear up afterward)
 
-
+#### to run locally ####
+set the environment variables  appropriately.
+'run main.go'
