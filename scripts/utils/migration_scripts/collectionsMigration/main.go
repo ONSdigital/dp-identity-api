@@ -20,8 +20,8 @@ type config struct {
 }
 
 type teamFile struct {
-	id   string
-	name string
+	ID   interface{} `json:"id"`
+	Name string      `json:"name"`
 }
 
 func readConfig() *config {
@@ -93,9 +93,10 @@ func getTeamsList(dir string) (map[string]string, map[string]string) {
 		if err != nil {
 			continue
 		}
-		if result.name != "" && result.id != "" {
-			teamIDByName[result.name] = result.id
-			teamNameByID[result.id] = result.name
+		id := fmt.Sprintf("%v", result.ID)
+		if result.Name != "" && id != "" {
+			teamIDByName[result.Name] = id
+			teamNameByID[id] = result.Name
 		}
 	}
 	return teamIDByName, teamNameByID
@@ -115,7 +116,10 @@ func amendCollectionTeams(dir, copyDir string, teamsList map[string]string) {
 		if err := os.Mkdir(copyDir, 0777); err != nil && !os.IsExist(err) {
 			log.Fatal(err)
 		}
-		_ = ioutil.WriteFile(filepath.Join(copyDir, file.Name()), collectionFile, 0777)
+		err = ioutil.WriteFile(filepath.Join(copyDir, file.Name()), collectionFile, 0777)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		var result map[string]interface{}
 		_ = json.Unmarshal(collectionFile, &result)
@@ -131,7 +135,10 @@ func amendCollectionTeams(dir, copyDir string, teamsList map[string]string) {
 		if *saveFile {
 			fmt.Println("File Amended ", file.Name())
 			amendedFile, _ := json.Marshal(result)
-			_ = ioutil.WriteFile(filepath.Join(dir, file.Name()), amendedFile, 0644)
+			err = ioutil.WriteFile(filepath.Join(dir, file.Name()), amendedFile, 0644)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 
