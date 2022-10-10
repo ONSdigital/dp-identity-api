@@ -18,12 +18,12 @@ if migration environment variable is not set then this will revert the actions.
     make all
     (this will copy the compiled code to the environment)
 3) dp ssh \< environment \> publishing_mount 1
-4)  `sudo \
+4)  ```sudo \
 teamsDir=/var/florence/zebedee/teams/ \
 collectionDir=/var/florence/zebedee/collections/ \
 collectionCopyDir=~/copycollectionsYYYYMMDD/ \
 migration=true \
-./bin-collections-migration/collections-migration'
+./bin-collections-migration/collections-migration```
 5) make clean (to clear up afterward)
 
 #### to run locally ####
