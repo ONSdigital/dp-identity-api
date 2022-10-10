@@ -19,6 +19,11 @@ type config struct {
 	migration bool
 }
 
+type teamFile struct {
+	id   string
+	name string
+}
+
 func readConfig() *config {
 	conf := &config{}
 	for _, e := range os.Environ() {
@@ -73,60 +78,27 @@ func getDirList(dir string) ([]fs.FileInfo, string, error) {
 	return dirFilesList, path, nil
 }
 
-func getTeamsListID(dir string) map[string]string {
-	teamsList := make(map[string]string)
-	var result map[string]interface{}
+func getTeamsList(dir string) (map[string]string, map[string]string) {
+	teamNameByID := make(map[string]string)
+	teamIDByName := make(map[string]string)
 
+	var result teamFile
 	teamFiles, path, err := getDirList(dir)
 	if err != nil {
 		log.Fatal(err)
 	}
 	for _, file := range teamFiles {
-		var strID, strName string
 		teamFile, _ := ioutil.ReadFile(filepath.Join(path, file.Name()))
-		_ = json.Unmarshal(teamFile, &result)
-		if id, ok := result["id"].(float64); ok {
-			strID = fmt.Sprintf("%v", id)
+		err = json.Unmarshal(teamFile, &result)
+		if err != nil {
+			continue
 		}
-		if id, ok := result["id"].(string); ok {
-			strID = id
+		if result.name != "" && result.id != "" {
+			teamIDByName[result.name] = result.id
+			teamNameByID[result.id] = result.name
 		}
-		if name, ok := result["name"].(string); ok {
-			strName = name
-		}
-		teamsList[strID] = strName
-
 	}
-
-	return teamsList
-}
-
-func getTeamsListName(dir string) map[string]string {
-	teamsList := make(map[string]string)
-	var result map[string]interface{}
-
-	teamFiles, path, err := getDirList(dir)
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, file := range teamFiles {
-		var strID, strName string
-		teamFile, _ := ioutil.ReadFile(filepath.Join(path, file.Name()))
-		_ = json.Unmarshal(teamFile, &result)
-		if id, ok := result["id"].(float64); ok {
-			strID = fmt.Sprintf("%v", id)
-		}
-		if id, ok := result["id"].(string); ok {
-			strID = id
-		}
-		if name, ok := result["name"].(string); ok {
-			strName = name
-		}
-		teamsList[strName] = strID
-
-	}
-
-	return teamsList
+	return teamIDByName, teamNameByID
 }
 
 func amendCollectionTeams(dir, copyDir string, teamsList map[string]string) {
@@ -167,11 +139,10 @@ func amendCollectionTeams(dir, copyDir string, teamsList map[string]string) {
 
 func main() {
 	conf := readConfig()
+	teamIDByName, teamNameByID := getTeamsList(conf.teamsDir)
 	if conf.migration {
-		teamsList := getTeamsListName(conf.teamsDir)
-		amendCollectionTeams(conf.collectionDir, conf.collectionCopyDir, teamsList)
+		amendCollectionTeams(conf.collectionDir, conf.collectionCopyDir, teamIDByName)
 	} else {
-		teamsList := getTeamsListID(conf.teamsDir)
-		amendCollectionTeams(conf.collectionDir, conf.collectionCopyDir, teamsList)
+		amendCollectionTeams(conf.collectionDir, conf.collectionCopyDir, teamNameByID)
 	}
 }
