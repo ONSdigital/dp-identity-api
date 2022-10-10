@@ -19,7 +19,6 @@ BUILD_SCRIPT=$(BUILD_ARCH)/$(APP).sh
 .PHONY: all
 all: clean
 	make GOOS=linux build deploy
-	make GOOS=linux build deploy
 
 .PHONY: pre-build
 pre-build:

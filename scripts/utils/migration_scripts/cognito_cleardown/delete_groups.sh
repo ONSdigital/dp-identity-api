@@ -2,7 +2,7 @@
 user_pool_id=$1
 profile=${2:-default}
 
-# roles that will not be deleted!
+# groups that will not be deleted as these are "roles"!
 roles=("role-admin" "role-publisher")
 
 totalCount=0
