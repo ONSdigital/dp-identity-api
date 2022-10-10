@@ -3,7 +3,7 @@
 SHELL=bash
 APP=collections-migration
 
-ENV?=sandbox
+ENV?=develop
 TIMEOUT?=30s
 
 host_num?=publishing_mount 1
@@ -18,6 +18,7 @@ BUILD_SCRIPT=$(BUILD_ARCH)/$(APP).sh
 
 .PHONY: all
 all: clean
+	make GOOS=linux build deploy
 	make GOOS=linux build deploy
 
 .PHONY: pre-build

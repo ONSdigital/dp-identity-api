@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type config struct {
@@ -18,39 +17,6 @@ type config struct {
 	collectionDir,
 	collectionCopyDir string
 	migration bool
-}
-
-type teamCollection struct {
-	id   string
-	name string
-}
-
-type collection struct {
-	InProgressUris        []interface{} `json:"inProgressUris"`
-	CompleteUris          []interface{} `json:"completeUris"`
-	ReviewedUris          []interface{} `json:"reviewedUris"`
-	PendingDeletes        []interface{} `json:"pendingDeletes"`
-	PublishResults        []interface{} `json:"publishResults"`
-	TimeseriesImportFiles []interface{} `json:"timeseriesImportFiles"`
-	PublishTransactionIds struct {
-	} `json:"publishTransactionIds"`
-	EventsByUri struct {
-	} `json:"eventsByUri"`
-	Datasets        []interface{} `json:"datasets"`
-	Interactives    []interface{} `json:"interactives"`
-	DatasetVersions []interface{} `json:"datasetVersions"`
-	ApprovalStatus  string        `json:"approvalStatus"`
-	PublishComplete bool          `json:"publishComplete"`
-	IsEncrypted     bool          `json:"isEncrypted"`
-	Events          []struct {
-		Date  time.Time `json:"date"`
-		Type  string    `json:"type"`
-		Email string    `json:"email"`
-	} `json:"events"`
-	Id    string   `json:"id"`
-	Name  string   `json:"name"`
-	Type  string   `json:"type"`
-	Teams []string `json:"teams"`
 }
 
 func readConfig() *config {
@@ -107,36 +73,63 @@ func getDirList(dir string) ([]fs.FileInfo, string, error) {
 	return dirFilesList, path, nil
 }
 
-func getTeamsList(dir string) []teamCollection {
-	var teamsList []teamCollection
+func getTeamsListID(dir string) map[string]string {
+	teamsList := make(map[string]string)
+	var result map[string]interface{}
+
 	teamFiles, path, err := getDirList(dir)
 	if err != nil {
 		log.Fatal(err)
 	}
 	for _, file := range teamFiles {
+		var strID, strName string
 		teamFile, _ := ioutil.ReadFile(filepath.Join(path, file.Name()))
-		var result map[string]interface{}
 		_ = json.Unmarshal(teamFile, &result)
-		var team teamCollection
-		f, ok := result["id"].(string)
-		if ok {
-			team = teamCollection{
-				id:   f,
-				name: result["name"].(string),
-			}
-		} else {
-			team = teamCollection{
-				id:   fmt.Sprintf("%.0f", result["id"]),
-				name: result["name"].(string),
-			}
+		if id, ok := result["id"].(float64); ok {
+			strID = fmt.Sprintf("%v", id)
 		}
-		teamsList = append(teamsList, team)
+		if id, ok := result["id"].(string); ok {
+			strID = id
+		}
+		if name, ok := result["name"].(string); ok {
+			strName = name
+		}
+		teamsList[strID] = strName
 
 	}
+
 	return teamsList
 }
 
-func amendCollectionTeams(dir, copyDir string, teamsList []teamCollection) {
+func getTeamsListName(dir string) map[string]string {
+	teamsList := make(map[string]string)
+	var result map[string]interface{}
+
+	teamFiles, path, err := getDirList(dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, file := range teamFiles {
+		var strID, strName string
+		teamFile, _ := ioutil.ReadFile(filepath.Join(path, file.Name()))
+		_ = json.Unmarshal(teamFile, &result)
+		if id, ok := result["id"].(float64); ok {
+			strID = fmt.Sprintf("%v", id)
+		}
+		if id, ok := result["id"].(string); ok {
+			strID = id
+		}
+		if name, ok := result["name"].(string); ok {
+			strName = name
+		}
+		teamsList[strName] = strID
+
+	}
+
+	return teamsList
+}
+
+func amendCollectionTeams(dir, copyDir string, teamsList map[string]string) {
 	collectionFiles, path, err := getDirList(dir)
 	if err != nil {
 		log.Fatal(err)
@@ -152,68 +145,33 @@ func amendCollectionTeams(dir, copyDir string, teamsList []teamCollection) {
 		}
 		_ = ioutil.WriteFile(filepath.Join(copyDir, file.Name()), collectionFile, 0777)
 
-		var result collection
+		var result map[string]interface{}
 		_ = json.Unmarshal(collectionFile, &result)
-		for ind, collectionTeam := range result.Teams {
-			for _, team := range teamsList {
-				if team.name == collectionTeam {
-					result.Teams[ind] = team.id
+		if teams, ok := result["teams"].([]interface{}); ok {
+			for ind, team := range teams {
+				if val, ok := teamsList[team.(string)]; ok {
+					teams[ind] = val
 					*saveFile = true
 				}
 			}
 		}
+
 		if *saveFile {
-			fmt.Println("File Amended ", filepath.Join(dir, file.Name()))
+			fmt.Println("File Amended ", file.Name())
 			amendedFile, _ := json.Marshal(result)
 			_ = ioutil.WriteFile(filepath.Join(dir, file.Name()), amendedFile, 0644)
 		}
-
 	}
-}
 
-func revertCollectionTeams(dir, copyDir string, teamsList []teamCollection) {
-	collectionFiles, path, err := getDirList(dir)
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, file := range collectionFiles {
-		var saveFile = new(bool)
-		*saveFile = false
-		collectionFile, _ := ioutil.ReadFile(filepath.Join(path, file.Name()))
-
-		//copy collectionFile to copy dir
-		if err := os.Mkdir(copyDir, 0777); err != nil && !os.IsExist(err) {
-			log.Fatal(err)
-		}
-		_ = ioutil.WriteFile(filepath.Join(copyDir, file.Name()), collectionFile, 0644)
-
-		var result collection
-		_ = json.Unmarshal(collectionFile, &result)
-		for ind, collectionTeam := range result.Teams {
-			for _, tmpTeam := range teamsList {
-				if tmpTeam.id == collectionTeam {
-					result.Teams[ind] = tmpTeam.name
-					*saveFile = true
-				}
-			}
-		}
-		if *saveFile {
-			fmt.Println("File Reverted ", filepath.Join(dir, file.Name()))
-			revertFile, _ := json.Marshal(result)
-			_ = ioutil.WriteFile(filepath.Join(dir, file.Name()), revertFile, 0644)
-		}
-	}
 }
 
 func main() {
 	conf := readConfig()
-	teamsList := getTeamsList(conf.teamsDir)
-	for _, v := range teamsList {
-		fmt.Println(v)
-	}
 	if conf.migration {
+		teamsList := getTeamsListName(conf.teamsDir)
 		amendCollectionTeams(conf.collectionDir, conf.collectionCopyDir, teamsList)
 	} else {
-		revertCollectionTeams(conf.collectionDir, conf.collectionCopyDir, teamsList)
+		teamsList := getTeamsListID(conf.teamsDir)
+		amendCollectionTeams(conf.collectionDir, conf.collectionCopyDir, teamsList)
 	}
 }

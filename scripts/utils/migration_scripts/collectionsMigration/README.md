@@ -18,10 +18,11 @@ if migration environment variable is not set then this will revert the actions.
     make all
     (this will copy the compiled code to the environment)
 3) dp ssh \< environment \> publishing_mount 1
-4)  `export teamsDir=/var/florence/zebedee/teams/`
-    `export collectionDir=/var/florence/zebedee/collections/`
-    `export collectionCopyDir=~/copycollections20221006/`
-    `export migration=true/false`
+4)  `
+export teamsDir=/var/florence/zebedee/teams/; \
+export collectionDir=/var/florence/zebedee/collections/; \
+export collectionCopyDir=~/copycollections20221006/; \
+export migration=true/false;`
 5) './bin-collection-migration/collection-migration'
 6) make clean (to clear up afterward)
 
