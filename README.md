@@ -32,6 +32,7 @@ To remove create test data from Cognito user pool:
 | AWS_COGNITO_CLIENT_ID        | -         | 
 | AWS_COGNITO_CLIENT_SECRET    | -         |
 | AWS_AUTH_FLOW                | -         | A parameter to define the request to the InitiateAuth endpoint in cognito
+| MessageAction                |  RESEND   | A feature flag to SUPPRESS or RESEND message action on creating a new user
 
 ### Configuration needed to import user and group from s3
 ```
