@@ -6,7 +6,7 @@ import (
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
-	"github.com/ONSdigital/dp-authorisation/v2/permissions"
+	"github.com/ONSdigital/dp-permissions-api/sdk"
 
 	"github.com/ONSdigital/dp-identity-api/cognito"
 	cognitoMock "github.com/ONSdigital/dp-identity-api/cognito/mock"
@@ -88,8 +88,8 @@ func setupFakePermissionsAPI() *authorisationtest.FakePermissionsAPI {
 	return fakePermissionsAPI
 }
 
-func getPermissionsBundle() *permissions.Bundle {
-	return &permissions.Bundle{
+func getPermissionsBundle() *sdk.Bundle {
+	return &sdk.Bundle{
 		"users:create": { // role
 			"groups/role-admin": { // group
 				{
