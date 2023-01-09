@@ -1,17 +1,17 @@
 module github.com/ONSdigital/dp-identity-api
 
-go 1.18
+go 1.19
 
 replace github.com/spf13/cobra => github.com/spf13/cobra v1.5.0
 
 require (
 	github.com/ONSdigital/dp-authorisation/v2 v2.27.0
-	github.com/ONSdigital/dp-component-test v0.8.0
-	github.com/ONSdigital/dp-healthcheck v1.3.0
-	github.com/ONSdigital/dp-net/v2 v2.4.0
+	github.com/ONSdigital/dp-component-test v0.9.0
+	github.com/ONSdigital/dp-healthcheck v1.5.0
+	github.com/ONSdigital/dp-net/v2 v2.6.0
 	github.com/ONSdigital/dp-permissions-api v0.19.0
-	github.com/ONSdigital/log.go/v2 v2.2.0
-	github.com/aws/aws-sdk-go v1.44.75
+	github.com/ONSdigital/log.go/v2 v2.3.0
+	github.com/aws/aws-sdk-go v1.44.76
 	github.com/cucumber/godog v0.12.5
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/google/uuid v1.3.0
@@ -20,14 +20,14 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sethvargo/go-password v0.2.0
 	github.com/smartystreets/goconvey v1.7.2
-	github.com/stretchr/testify v1.7.5
+	github.com/stretchr/testify v1.8.0
 )
 
 require (
 	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.159.1 // indirect
-	github.com/ONSdigital/dp-mongodb-in-memory v1.3.1 // indirect
-	github.com/ONSdigital/dp-net v1.4.1 // indirect
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.187.0 // indirect
+	github.com/ONSdigital/dp-mongodb-in-memory v1.5.0 // indirect
+	github.com/ONSdigital/dp-net v1.5.0 // indirect
 	github.com/chromedp/cdproto v0.0.0-20220624030920-1958475a8671 // indirect
 	github.com/chromedp/chromedp v0.8.2 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
@@ -53,7 +53,7 @@ require (
 	github.com/klauspost/compress v1.15.6 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
-	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/maxcnunes/httpfake v1.2.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/smartystreets/assertions v1.13.0 // indirect
@@ -65,7 +65,7 @@ require (
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	go.mongodb.org/mongo-driver v1.9.1 // indirect
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
-	golang.org/x/net v0.0.0-20220811182439-13a9a731de15 // indirect
+	golang.org/x/net v0.0.0-20220812174116-3211cb980234 // indirect
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
 	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab // indirect
 	golang.org/x/text v0.4.0 // indirect
