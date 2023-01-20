@@ -3,10 +3,11 @@ package healthcheck_test
 import (
 	"context"
 	"errors"
-	"github.com/ONSdigital/dp-identity-api/models"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"net/http"
 	"testing"
+
+	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-identity-api/cognito/mock"
@@ -38,7 +39,7 @@ func TestGetHealthCheck(t *testing.T) {
 			}
 			return group, nil
 		}
-		checker := healthcheck.CognitoHealthCheck(m, &awsUserPoolID)
+		checker := healthcheck.CognitoHealthCheck(ctx, m, &awsUserPoolID)
 		err := checker(ctx, checkState)
 		Convey("When GetHealthCheck is called", func() {
 			Convey("Then the HealthCheck flag is set to true and HealthCheck is returned", func() {
@@ -62,7 +63,7 @@ func TestGetHealthCheck(t *testing.T) {
 
 			checkState := health.NewCheckState("dp-identity-api-test")
 
-			checker := healthcheck.CognitoHealthCheck(m, &awsUserPoolID)
+			checker := healthcheck.CognitoHealthCheck(ctx, m, &awsUserPoolID)
 			err := checker(ctx, checkState)
 			Convey("When GetHealthCheck is called", func() {
 				Convey("Then the HealthCheck flag is set to true and HealthCheck is returned", func() {
@@ -93,7 +94,7 @@ func TestGetHealthCheck(t *testing.T) {
 
 				checkState := health.NewCheckState("dp-identity-api-test")
 
-				checker := healthcheck.CognitoHealthCheck(m, &awsUserPoolID)
+				checker := healthcheck.CognitoHealthCheck(ctx, m, &awsUserPoolID)
 				err := checker(ctx, checkState)
 				Convey("When GetHealthCheck is called", func() {
 					Convey("Then the HealthCheck flag is set to true and HealthCheck is returned", func() {
@@ -121,7 +122,7 @@ func TestGetHealthCheck(t *testing.T) {
 
 				checkState := health.NewCheckState("dp-identity-api-test")
 
-				checker := healthcheck.CognitoHealthCheck(m, &awsUserPoolID)
+				checker := healthcheck.CognitoHealthCheck(ctx, m, &awsUserPoolID)
 				err := checker(ctx, checkState)
 				Convey("When GetHealthCheck is called", func() {
 					Convey("Then the HealthCheck flag is set to true and HealthCheck is returned", func() {

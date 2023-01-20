@@ -50,9 +50,7 @@ var funcDoGetHTTPServerNil = func(bindAddr string, router http.Handler) service.
 var jwksHandler = &jwksMock.JWKSIntMock{}
 
 func TestRun(t *testing.T) {
-
 	Convey("Having a set of mocked dependencies", t, func() {
-
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
@@ -95,7 +93,6 @@ func TestRun(t *testing.T) {
 		}
 
 		Convey("Given that initialising healthcheck returns an error", func() {
-			// setup (run before each `Convey` at this scope / indentation):
 			initMock := &serviceMock.InitialiserMock{
 				DoGetHTTPServerFunc:              funcDoGetHTTPServerNil,
 				DoGetHealthCheckFunc:             funcDoGetHealthcheckErr,
@@ -109,106 +106,6 @@ func TestRun(t *testing.T) {
 			Convey("Then service Run fails with the same error and the flag is not set", func() {
 				So(err, ShouldResemble, errHealthcheck)
 				So(svcList.HealthCheck, ShouldBeFalse)
-			})
-
-			Reset(func() {
-				// This reset is run after each `Convey` at the same scope (indentation)
-			})
-		})
-
-		Convey("Given that all dependencies are successfully initialised", func() {
-
-			// setup (run before each `Convey` at this scope / indentation):
-			initMock := &serviceMock.InitialiserMock{
-				DoGetHTTPServerFunc:              funcDoGetHTTPServer,
-				DoGetHealthCheckFunc:             funcDoGetHealthcheckOk,
-				DoGetCognitoClientFunc:           DoGetCognitoClient,
-				DoGetAuthorisationMiddlewareFunc: DoGetAuthorisationMiddleware,
-			}
-			svcErrors := make(chan error, 1)
-			svcList := service.NewServiceList(initMock)
-			serverWg.Add(1)
-			_, err := service.Run(ctx, cfg, svcList, jwksHandler, testBuildTime, testGitCommit, testVersion, svcErrors)
-
-			Convey("Then service Run succeeds and all the flags are set", func() {
-				So(err, ShouldBeNil)
-				So(svcList.HealthCheck, ShouldBeTrue)
-			})
-
-			Convey("The checkers are registered and the healthcheck and http server started", func() {
-				So(len(hcMock.AddCheckCalls()), ShouldEqual, 3)
-				So(len(initMock.DoGetHTTPServerCalls()), ShouldEqual, 1)
-				So(initMock.DoGetHealthCheckCalls(), ShouldHaveLength, 1)
-				So(initMock.DoGetHTTPServerCalls()[0].BindAddr, ShouldEqual, "localhost:25600")
-				So(initMock.DoGetCognitoClientCalls(), ShouldHaveLength, 1)
-				So(initMock.DoGetAuthorisationMiddlewareCalls(), ShouldHaveLength, 1)
-				So(len(hcMock.StartCalls()), ShouldEqual, 1)
-				//!!! a call needed to stop the server, maybe ?
-				serverWg.Wait() // Wait for HTTP server go-routine to finish
-				So(len(serverMock.ListenAndServeCalls()), ShouldEqual, 1)
-			})
-
-			Reset(func() {
-				// This reset is run after each `Convey` at the same scope (indentation)
-			})
-		})
-
-		// ADD CODE: put this code in, if you have Checkers to register
-		/*Convey("Given that Checkers cannot be registered", func() {
-
-			// setup (run before each `Convey` at this scope / indentation):
-			errAddheckFail := errors.New("Error(s) registering checkers for healthcheck")
-			hcMockAddFail := &serviceMock.HealthCheckerMock{
-				AddCheckFunc: func(name string, checker healthcheck.Checker) error { return errAddheckFail },
-				StartFunc:    func(ctx context.Context) {},
-			}
-
-			initMock := &serviceMock.InitialiserMock{
-				DoGetHTTPServerFunc: funcDoGetHTTPServerNil,
-				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
-					return hcMockAddFail, nil
-				},
-				// ADD CODE: add the checkers that you want to register here
-			}
-			svcErrors := make(chan error, 1)
-			svcList := service.NewServiceList(initMock)
-			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
-
-			Convey("Then service Run fails, but all checks try to register", func() {
-				So(err, ShouldBeNil)
-				So(err.Error(), ShouldResemble, fmt.Sprintf("unable to register checkers: %s", errAddheckFail.Error()))
-				So(svcList.HealthCheck, ShouldBeTrue)
-				// ADD CODE: add code to confirm checkers exist
-				So(len(hcMockAddFail.AddCheckCalls()), ShouldEqual, 0) // ADD CODE: change the '0' to the number of checkers you have registered
-			})
-			Reset(func() {
-				// This reset is run after each `Convey` at the same scope (indentation)
-			})
-		})*/
-
-		Convey("Given that all dependencies are successfully initialised but the http server fails", func() {
-
-			// setup (run before each `Convey` at this scope / indentation):
-			initMock := &serviceMock.InitialiserMock{
-				DoGetHealthCheckFunc:             funcDoGetHealthcheckOk,
-				DoGetHTTPServerFunc:              funcDoGetFailingHTTPSerer,
-				DoGetCognitoClientFunc:           DoGetCognitoClient,
-				DoGetAuthorisationMiddlewareFunc: DoGetAuthorisationMiddleware,
-			}
-			svcErrors := make(chan error, 1)
-			svcList := service.NewServiceList(initMock)
-			serverWg.Add(1)
-			_, err := service.Run(ctx, cfg, svcList, jwksHandler, testBuildTime, testGitCommit, testVersion, svcErrors)
-			So(err, ShouldBeNil)
-
-			Convey("Then the error is returned in the error channel", func() {
-				sErr := <-svcErrors
-				So(sErr.Error(), ShouldResemble, fmt.Sprintf("failure in http listen and serve: %s", errServer.Error()))
-				So(len(failingServerMock.ListenAndServeCalls()), ShouldEqual, 1)
-			})
-
-			Reset(func() {
-				// This reset is run after each `Convey` at the same scope (indentation)
 			})
 		})
 
@@ -228,15 +125,74 @@ func TestRun(t *testing.T) {
 
 			Convey("Then service Run fails with the expected error", func() {
 				So(err, ShouldEqual, expectedError)
+				So(svcList.AuthMiddleware, ShouldBeFalse)
+			})
+		})
+
+		Convey("Given that all dependencies are successfully initialised but the http server fails", func() {
+			initMock := &serviceMock.InitialiserMock{
+				DoGetHealthCheckFunc:             funcDoGetHealthcheckOk,
+				DoGetHTTPServerFunc:              funcDoGetFailingHTTPSerer,
+				DoGetCognitoClientFunc:           DoGetCognitoClient,
+				DoGetAuthorisationMiddlewareFunc: DoGetAuthorisationMiddleware,
+			}
+			svcErrors := make(chan error, 1)
+			svcList := service.NewServiceList(initMock)
+			serverWg.Add(1)
+			_, err := service.Run(ctx, cfg, svcList, jwksHandler, testBuildTime, testGitCommit, testVersion, svcErrors)
+
+			Convey("Then dependencies are initialised with all the flags being set", func() {
+				So(err, ShouldBeNil)
+				So(svcList.HealthCheck, ShouldBeTrue)
+				So(svcList.AuthMiddleware, ShouldBeTrue)
+			})
+
+			Convey("But an error is returned in the error channel", func() {
+				sErr := <-svcErrors
+				So(sErr.Error(), ShouldResemble, fmt.Sprintf("failure in http listen and serve: %s", errServer.Error()))
+				So(len(failingServerMock.ListenAndServeCalls()), ShouldEqual, 1)
+			})
+		})
+
+		Convey("Given that all dependencies are successfully initialised", func() {
+			initMock := &serviceMock.InitialiserMock{
+				DoGetHTTPServerFunc:              funcDoGetHTTPServer,
+				DoGetHealthCheckFunc:             funcDoGetHealthcheckOk,
+				DoGetCognitoClientFunc:           DoGetCognitoClient,
+				DoGetAuthorisationMiddlewareFunc: DoGetAuthorisationMiddleware,
+			}
+			svcErrors := make(chan error, 1)
+			svcList := service.NewServiceList(initMock)
+			serverWg.Add(1)
+			_, err := service.Run(ctx, cfg, svcList, jwksHandler, testBuildTime, testGitCommit, testVersion, svcErrors)
+
+			Convey("Then service Run succeeds and all the flags are set", func() {
+				So(err, ShouldBeNil)
+				So(svcList.HealthCheck, ShouldBeTrue)
+				So(svcList.AuthMiddleware, ShouldBeTrue)
+			})
+
+			Convey("And the checkers are registered and the healthcheck and http server have started", func() {
+				So(len(hcMock.AddCheckCalls()), ShouldEqual, 2)
+				So(hcMock.AddCheckCalls()[0].Name, ShouldResemble, "Cognito")
+				So(hcMock.AddCheckCalls()[1].Name, ShouldResemble, "Permissions API")
+
+				So(len(initMock.DoGetHTTPServerCalls()), ShouldEqual, 1)
+				So(initMock.DoGetHealthCheckCalls(), ShouldHaveLength, 1)
+				So(initMock.DoGetHTTPServerCalls()[0].BindAddr, ShouldEqual, "localhost:25600")
+				So(initMock.DoGetCognitoClientCalls(), ShouldHaveLength, 1)
+				So(initMock.DoGetAuthorisationMiddlewareCalls(), ShouldHaveLength, 1)
+				So(len(hcMock.StartCalls()), ShouldEqual, 1)
+				//!!! a call needed to stop the server, maybe ?
+				serverWg.Wait() // Wait for HTTP server go-routine to finish
+				So(len(serverMock.ListenAndServeCalls()), ShouldEqual, 1)
 			})
 		})
 	})
 }
 
 func TestClose(t *testing.T) {
-
 	Convey("Having a correctly initialised service", t, func() {
-
 		cfg, err := config.Get()
 
 		// set dummy config data
@@ -276,7 +232,6 @@ func TestClose(t *testing.T) {
 		}
 
 		Convey("Closing the service results in all the dependencies being closed in the expected order", func() {
-
 			initMock := &mock.InitialiserMock{
 				DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer { return serverMock },
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
@@ -301,7 +256,6 @@ func TestClose(t *testing.T) {
 		})
 
 		Convey("If services fail to stop, the Close operation tries to close all dependencies and returns an error", func() {
-
 			failingserverMock := &mock.HTTPServerMock{
 				ListenAndServeFunc: func() error { return nil },
 				ShutdownFunc: func(ctx context.Context) error {

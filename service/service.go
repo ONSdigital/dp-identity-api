@@ -51,7 +51,6 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
-
 	if err != nil {
 		log.Fatal(ctx, "could not instantiate healthcheck", err)
 		return nil, err
@@ -105,9 +104,11 @@ func (svc *Service) Close(ctx context.Context) error {
 			hasShutdownError = true
 		}
 
-		if err := svc.authorisationMiddleware.Close(ctx); err != nil {
-			log.Error(ctx, "failed to close authorisation middleware", err)
-			hasShutdownError = true
+		if svc.ServiceList.AuthMiddleware {
+			if err := svc.authorisationMiddleware.Close(ctx); err != nil {
+				log.Error(ctx, "failed to close authorisation middleware", err)
+				hasShutdownError = true
+			}
 		}
 	}()
 
@@ -134,19 +135,14 @@ func (svc *Service) Close(ctx context.Context) error {
 func registerCheckers(ctx context.Context, hc HealthChecker, client cognitoClient.Client, userPoolID *string, authorisationMiddleware authorisation.Middleware) (err error) {
 	hasErrors := false
 
-	if err := hc.AddCheck("cognito healthchecker", health.CognitoHealthCheck(client, userPoolID)); err != nil {
+	if err := hc.AddCheck("Cognito", health.CognitoHealthCheck(ctx, client, userPoolID)); err != nil {
 		hasErrors = true
-		log.Error(ctx, "error adding check for cognito client", err)
+		log.Error(ctx, "error adding health checker for Cognito", err)
 	}
 
-	if err := hc.AddCheck("permissions cache health check", authorisationMiddleware.HealthCheck); err != nil {
+	if err := hc.AddCheck("Permissions API", authorisationMiddleware.HealthCheck); err != nil {
 		hasErrors = true
-		log.Error(ctx, "error adding check for permissions cache", err)
-	}
-
-	if err := hc.AddCheck("jwt keys state health check", authorisationMiddleware.IdentityHealthCheck); err != nil {
-		hasErrors = true
-		log.Error(ctx, "error getting jwt keys from identity service", err)
+		log.Error(ctx, "error adding health checker for Permissions API", err)
 	}
 
 	if hasErrors {

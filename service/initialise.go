@@ -18,15 +18,17 @@ import (
 
 // ExternalServiceList holds the initialiser and initialisation state of external services.
 type ExternalServiceList struct {
-	HealthCheck bool
-	Init        Initialiser
+	AuthMiddleware bool
+	HealthCheck    bool
+	Init           Initialiser
 }
 
 // NewServiceList creates a new service list with the provided initialiser
 func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 	return &ExternalServiceList{
-		HealthCheck: false,
-		Init:        initialiser,
+		AuthMiddleware: false,
+		HealthCheck:    false,
+		Init:           initialiser,
 	}
 }
 
@@ -57,7 +59,12 @@ func (e *ExternalServiceList) GetCognitoClient(region string) cognitoclient.Clie
 
 // GetAuthorisationMiddleware creates a new instance of authorisation.Middlware
 func (e *ExternalServiceList) GetAuthorisationMiddleware(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
-	return e.Init.DoGetAuthorisationMiddleware(ctx, authorisationConfig)
+	am, err := e.Init.DoGetAuthorisationMiddleware(ctx, authorisationConfig)
+	if err != nil {
+		return nil, err
+	}
+	e.AuthMiddleware = true
+	return am, nil
 }
 
 // DoGetHTTPServer creates an HTTP Server with the provided bind address and router

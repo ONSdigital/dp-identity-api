@@ -2,8 +2,9 @@ package healthcheck
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-identity-api/models"
 	"net/http"
+
+	"github.com/ONSdigital/dp-identity-api/models"
 
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -14,17 +15,16 @@ import (
 
 const CognitoHealthy = "Cognito Healthy"
 
-func CognitoHealthCheck(cognitoClient cognitoclient.Client, userPoolID *string) health.Checker {
-
+func CognitoHealthCheck(ctx context.Context, cognitoClient cognitoclient.Client, userPoolID *string) health.Checker {
 	return func(ctx context.Context, state *health.CheckState) error {
 		_, err := cognitoClient.DescribeUserPool(&cognito.DescribeUserPoolInput{UserPoolId: userPoolID})
 
 		if err != nil {
 			if stateErr := state.Update(health.StatusCritical, err.Error(), http.StatusTooManyRequests); stateErr != nil {
-				log.Error(context.Background(), "Error updating state during identity service healthcheck", stateErr)
+				log.Error(ctx, "Error updating state during identity service healthcheck", stateErr)
 			}
 			// log the error
-			log.Error(context.Background(), "Error running identity service healthcheck", err)
+			log.Error(ctx, "Error running identity service healthcheck", err)
 			return err
 		}
 
@@ -34,10 +34,10 @@ func CognitoHealthCheck(cognitoClient cognitoclient.Client, userPoolID *string) 
 
 		if err != nil {
 			if stateErr := state.Update(health.StatusCritical, err.Error(), http.StatusTooManyRequests); stateErr != nil {
-				log.Error(context.Background(), "Error updating state during identity service healthcheck", stateErr)
+				log.Error(ctx, "Error updating state during identity service healthcheck", stateErr)
 			}
 			// log the error
-			log.Error(context.Background(), "Error running identity service healthcheck", err)
+			log.Error(ctx, "Error running identity service healthcheck", err)
 			return err
 		}
 
@@ -47,15 +47,15 @@ func CognitoHealthCheck(cognitoClient cognitoclient.Client, userPoolID *string) 
 
 		if err != nil {
 			if stateErr := state.Update(health.StatusCritical, err.Error(), http.StatusTooManyRequests); stateErr != nil {
-				log.Error(context.Background(), "Error updating state during identity service healthcheck", stateErr)
+				log.Error(ctx, "Error updating state during identity service healthcheck", stateErr)
 			}
 			// log the error
-			log.Error(context.Background(), "Error running identity service healthcheck", err)
+			log.Error(ctx, "Error running identity service healthcheck", err)
 			return err
 		}
 
 		if stateErr := state.Update(health.StatusOK, CognitoHealthy, http.StatusOK); stateErr != nil {
-			log.Error(context.Background(), "Error updating state during identity service healthcheck", stateErr)
+			log.Error(ctx, "Error updating state during identity service healthcheck", stateErr)
 		}
 
 		return nil
