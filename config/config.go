@@ -2,8 +2,9 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"time"
+
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 
 	"github.com/kelseyhightower/envconfig"
 )
@@ -37,7 +38,7 @@ func Get() (*Config, error) {
 		GracefulShutdownTimeout:    20 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
-		AWSRegion:                  "eu-west-1",
+		AWSRegion:                  "eu-west-2",
 		AWSAuthFlow:                "USER_PASSWORD_AUTH",
 		AllowedEmailDomains:        []string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 		AuthorisationConfig:        authorisation.NewDefaultConfig(),
