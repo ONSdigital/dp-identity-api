@@ -10,7 +10,7 @@ GIT_COMMIT=$(shell git rev-parse HEAD)
 VERSION ?= $(shell git tag --points-at HEAD | grep ^v | head -n 1)
 LDFLAGS=-ldflags "-w -s -X 'main.Version=${VERSION}' -X 'main.BuildTime=$(BUILD_TIME)' -X 'main.GitCommit=$(GIT_COMMIT)'"
 
-LOCAL_USER_POOL_ID=eu-west-1_Rnma9lp2q
+LOCAL_USER_POOL_ID=eu-west-2_WSD9EcAsw
 
 export GOOS?=$(shell go env GOOS)
 export GOARCH?=$(shell go env GOARCH)
@@ -64,3 +64,7 @@ populate-local:
 remove-test-data:
 	export AWS_COGNITO_USER_POOL_ID=$(LOCAL_USER_POOL_ID); \
 	HUMAN_LOG=1 go run -race ./dummy-data/delete-dummy-users/remove_dummy_data.go
+
+.PHONY: get-jwks-keys
+get-jwks-keys:
+	HUMAN_LOG=1 go run ./scripts/get-jwks-keys/main.go
