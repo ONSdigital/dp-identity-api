@@ -10,6 +10,7 @@
 
 # Go
 vendor/
+/.go
 
 # Intellij
 .idea/
