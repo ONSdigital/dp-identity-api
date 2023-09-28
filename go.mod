@@ -5,6 +5,7 @@ go 1.19
 replace github.com/spf13/cobra => github.com/spf13/cobra v1.5.0
 
 require (
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.187.0
 	github.com/ONSdigital/dp-authorisation/v2 v2.27.0
 	github.com/ONSdigital/dp-component-test v0.9.0
 	github.com/ONSdigital/dp-healthcheck v1.5.0
@@ -25,7 +26,6 @@ require (
 
 require (
 	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.187.0 // indirect
 	github.com/ONSdigital/dp-mongodb-in-memory v1.5.0 // indirect
 	github.com/ONSdigital/dp-net v1.5.0 // indirect
 	github.com/chromedp/cdproto v0.0.0-20220624030920-1958475a8671 // indirect
