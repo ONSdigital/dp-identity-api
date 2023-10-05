@@ -82,7 +82,7 @@ func (cli *Client) GetToken(ctx context.Context, credentials models.UserSignIn) 
 
 	var headers = respInfo.Headers
 
-	tokenResponse.Token = headers.Get("Id")
+	tokenResponse.Token = headers.Get("Authorization")
 	tokenResponse.RefreshToken = headers.Get("Refresh")
 
 	return &tokenResponse, nil
