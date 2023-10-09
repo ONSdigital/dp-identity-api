@@ -8,36 +8,34 @@ replace github.com/spf13/cobra => github.com/spf13/cobra v1.5.0
 replace google.golang.org/grpc => google.golang.org/grpc v1.55.0
 
 require (
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.187.0
-	github.com/ONSdigital/dp-authorisation/v2 v2.27.0
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.252.1
+	github.com/ONSdigital/dp-authorisation/v2 v2.30.0
 	github.com/ONSdigital/dp-component-test v0.9.0
-	github.com/ONSdigital/dp-healthcheck v1.5.0
-	github.com/ONSdigital/dp-net/v2 v2.6.0
-	github.com/ONSdigital/dp-permissions-api v0.19.0
-	github.com/ONSdigital/log.go/v2 v2.3.0
-	github.com/aws/aws-sdk-go v1.44.76
+	github.com/ONSdigital/dp-healthcheck v1.6.1
+	github.com/ONSdigital/dp-net/v2 v2.9.1
+	github.com/ONSdigital/dp-permissions-api v0.22.0
+	github.com/ONSdigital/log.go/v2 v2.4.1
+	github.com/aws/aws-sdk-go v1.44.195
 	github.com/cucumber/godog v0.12.5
-	github.com/golang-jwt/jwt/v4 v4.4.2
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/pkg/errors v0.9.1
 	github.com/sethvargo/go-password v0.2.0
-	github.com/smartystreets/goconvey v1.7.2
+	github.com/smartystreets/goconvey v1.8.0
 	github.com/stretchr/testify v1.8.1
 )
 
 require (
-	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
 	github.com/ONSdigital/dp-mongodb-in-memory v1.5.0 // indirect
-	github.com/ONSdigital/dp-net v1.5.0 // indirect
 	github.com/chromedp/cdproto v0.0.0-20220624030920-1958475a8671 // indirect
 	github.com/chromedp/chromedp v0.8.2 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/cucumber/gherkin-go/v19 v19.0.3 // indirect
 	github.com/cucumber/messages-go/v16 v16.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/fatih/color v1.13.0 // indirect
+	github.com/fatih/color v1.15.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
@@ -55,11 +53,11 @@ require (
 	github.com/justinas/alice v1.2.0 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mattn/go-colorable v0.1.12 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.18 // indirect
 	github.com/maxcnunes/httpfake v1.2.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/smartystreets/assertions v1.13.0 // indirect
+	github.com/smartystreets/assertions v1.13.1 // indirect
 	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
