@@ -30,9 +30,9 @@ var (
 
 	defaultExpirationTime        = "2023-09-27 17:30:00.000000000 +0000 UTC"
 	defaultRefreshExpirationTime = "2023-09-28 16:30:00.000000000 +0000 UTC"
-	defaultToken                 = "testtoken1234"
+	defaultId                    = "testId1234"
 	defaultRefreshToken          = "refreshtoken1234"
-	defaultAuthorization         = "Bearer " + defaultToken
+	defaultAuthorization         = "Bearer testToken1234"
 )
 
 func newMockHTTPClient(r *http.Response, err error) *dphttp.ClienterMock {
@@ -131,7 +131,7 @@ func TestGetToken(t *testing.T) {
 
 		headers := http.Header{
 			"Authorization": {defaultAuthorization},
-			"Id":            {defaultToken},
+			"Id":            {defaultId},
 			"Refresh":       {defaultRefreshToken},
 		}
 
@@ -155,7 +155,7 @@ func TestGetToken(t *testing.T) {
 			Convey("Then the expected identity token is returned", func() {
 
 				expectedTokenResponse := TokenResponse{
-					Token:                      defaultToken,
+					Token:                      defaultAuthorization,
 					RefreshToken:               defaultRefreshToken,
 					ExpirationTime:             defaultExpirationTime,
 					RefreshTokenExpirationTime: defaultRefreshExpirationTime,
