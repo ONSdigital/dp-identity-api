@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
-//TokensHandler uses submitted email address and password to sign a user in against Cognito and returns a http handler interface
+// TokensHandler uses submitted email address and password to sign a user in against Cognito and returns a http handler interface
 func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer func() {
 		if err := req.Body.Close(); err != nil {
@@ -100,7 +100,7 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 	return models.NewSuccessResponse(jsonResponse, httpStatus, headers), nil
 }
 
-//SignOutHandler invalidates a users access token signing them out and returns a http handler interface
+// SignOutHandler invalidates a users access token signing them out and returns a http handler interface
 func (api *API) SignOutHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	accessToken := models.AccessToken{
 		AuthHeader: req.Header.Get(AccessTokenHeaderName),
@@ -124,7 +124,7 @@ func (api *API) SignOutHandler(ctx context.Context, w http.ResponseWriter, req *
 	return models.NewSuccessResponse(nil, http.StatusNoContent, nil), nil
 }
 
-//RefreshHandler refreshes a users access token and returns new access and ID tokens, expiration time and the refresh token
+// RefreshHandler refreshes a users access token and returns new access and ID tokens, expiration time and the refresh token
 func (api *API) RefreshHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	var validationErrs []error
 	refreshToken := models.RefreshToken{TokenString: req.Header.Get(RefreshTokenHeaderName)}
@@ -168,7 +168,7 @@ func (api *API) RefreshHandler(ctx context.Context, w http.ResponseWriter, req *
 	return models.NewSuccessResponse(jsonResponse, http.StatusCreated, headers), nil
 }
 
-//SignOutAllUsersHandler bulk refresh token invalidation for panic sign out handling
+// SignOutAllUsersHandler bulk refresh token invalidation for panic sign out handling
 func (api *API) SignOutAllUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	var (
 		userFilterString string = "status=\"Enabled\""

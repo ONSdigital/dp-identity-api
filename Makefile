@@ -29,12 +29,10 @@ build:
 
 .PHONY: debug
 debug:
-	export AWS_COGNITO_USER_POOL_ID=$(LOCAL_USER_POOL_ID); \
-	export AWS_COGNITO_CLIENT_ID=`aws cognito-idp list-user-pool-clients --user-pool-id $$AWS_COGNITO_USER_POOL_ID --query 'UserPoolClients[0].ClientId' --output text`; \
-	export AWS_COGNITO_CLIENT_SECRET=`aws cognito-idp describe-user-pool-client --user-pool-id $$AWS_COGNITO_USER_POOL_ID --client-id $$AWS_COGNITO_CLIENT_ID --query 'UserPoolClient.ClientSecret' --output text`; \
+	export AWS_COGNITO_USER_POOL_ID=$(LOCAL_USER_POOL_ID);
+	export AWS_COGNITO_CLIENT_ID=${AWS_COGNITO_CLIENT_ID:?please define a valid AWS_COGNITO_CLIENT_ID in your local system, get from within pool}
+	export AWS_COGNITO_CLIENT_SECRET=${AWS_COGNITO_CLIENT_SECRET:?please define a valid AWS_COGNITO_CLIENT_SECRET in your local system, get from within pool}
 	echo AWS_COGNITO_USER_POOL_ID= $$AWS_COGNITO_USER_POOL_ID;\
-	echo AWS_COGNITO_CLIENT_ID= $$AWS_COGNITO_CLIENT_ID;\
-	echo AWS_COGNITO_CLIENT_SECRET= $$AWS_COGNITO_CLIENT_SECRET;\
 	HUMAN_LOG=1 go run $(LDFLAGS) -race main.go
 	
 .PHONY: acceptance

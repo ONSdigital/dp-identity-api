@@ -27,12 +27,18 @@ To remove create test data from Cognito user pool:
 | GRACEFUL_SHUTDOWN_TIMEOUT    | 20s       | The graceful shutdown timeout in seconds (`time.Duration` format)
 | HEALTHCHECK_INTERVAL         | 30s       | Time between self-healthchecks (`time.Duration` format)
 | HEALTHCHECK_CRITICAL_TIMEOUT | 90s       | Time to wait until an unhealthy dependent propagates its state to make this app unhealthy (`time.Duration` format)
-| AWS_REGION                   | eu-west-1 | The default AWS region for the identity api service
+| AWS_REGION                   | eu-west-2 | The default AWS region for the identity api service
 | AWS_COGNTIO_USER_POOL_ID     | -         | The ID of the user pool to be used
-| AWS_COGNITO_CLIENT_ID        | -         | 
+| AWS_COGNITO_CLIENT_ID        | -         |
 | AWS_COGNITO_CLIENT_SECRET    | -         |
 | AWS_AUTH_FLOW                | -         | A parameter to define the request to the InitiateAuth endpoint in cognito
 | MessageAction                |  RESEND   | A feature flag to SUPPRESS or RESEND message action on creating a new user
+
+To get the values for the other AWS Cognito secrets:
+
+* AWS_COGNITO_USER_POOL_ID get from AWS > Cognito > User Pools > user pool ID
+* AWS_COGNITO_CLIENT_ID get from AWS > Cognito > User Pools > App Integration > App clients > dp-identity-api > client id
+* AWS_COGNITO_CLIENT_SECRET get from AWS > Cognito > User Pools > App Integration > App clients > dp-identity-api > client secret
 
 ### Configuration needed to import user and group from s3
 ```
