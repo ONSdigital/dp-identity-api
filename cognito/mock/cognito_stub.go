@@ -573,17 +573,17 @@ func (m *CognitoIdentityProviderClientStub) AdminRemoveUserFromGroup(input *cogn
 	return &cognitoidentityprovider.AdminRemoveUserFromGroupOutput{}, nil
 }
 
-//Added to fully implement interface but only used in the local dummy data builder
+// Added to fully implement interface but only used in the local dummy data builder
 func (m *CognitoIdentityProviderClientStub) AdminConfirmSignUp(input *cognitoidentityprovider.AdminConfirmSignUpInput) (*cognitoidentityprovider.AdminConfirmSignUpOutput, error) {
 	return nil, nil
 }
 
-//Added to fully implement interface but only used in the local dummy data builder
+// Added to fully implement interface but only used in the local dummy data builder
 func (m *CognitoIdentityProviderClientStub) AdminDeleteUser(input *cognitoidentityprovider.AdminDeleteUserInput) (*cognitoidentityprovider.AdminDeleteUserOutput, error) {
 	return nil, nil
 }
 
-//Added to fully implement interface but only used in the local dummy data builder
+// Added to fully implement interface but only used in the local dummy data builder
 func (m *CognitoIdentityProviderClientStub) DeleteGroup(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error) {
 	if *input.GroupName == "internal-error" || *input.GroupName == "get-group-internal-error" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
@@ -594,7 +594,7 @@ func (m *CognitoIdentityProviderClientStub) DeleteGroup(input *cognitoidentitypr
 	return nil, nil
 }
 
-//Added to fully implement interface but only used in the local dummy data builder
+// Added to fully implement interface but only used in the local dummy data builder
 func (m *CognitoIdentityProviderClientStub) AdminSetUserPassword(input *cognitoidentityprovider.AdminSetUserPasswordInput) (*cognitoidentityprovider.AdminSetUserPasswordOutput, error) {
 	return nil, nil
 }
@@ -682,9 +682,10 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPoolClient(input *cognit
 func (m *CognitoIdentityProviderClientStub) UpdateGroup(input *cognitoidentityprovider.UpdateGroupInput) (*cognitoidentityprovider.UpdateGroupOutput, error) {
 	var (
 		updateGroupOutput *cognitoidentityprovider.UpdateGroupOutput
-		response_200 = `Thi$s is a te||st des$%£@^c ription for  existing group  $`
-		response_500 = `Internal Server Error`
-		userPoolId   = `aaaa-bbbb-ccc-dddd`
+		response_200      = `Thi$s is a te||st des$%£@^c ription for  existing group  $`
+		response_200_up   = `Thi$s is a te||st des$%£@^c ription for  updated group  $`
+		response_500      = `Internal Server Error`
+		userPoolId        = `aaaa-bbbb-ccc-dddd`
 	)
 	if *input.Description == response_200 {
 		// 200 response - group updated
@@ -694,10 +695,27 @@ func (m *CognitoIdentityProviderClientStub) UpdateGroup(input *cognitoidentitypr
 			Group: &cognitoidentityprovider.GroupType{
 				Description:  &response_200,
 				GroupName:    &groupName,
-				Precedence:   input.Precedence,
 				CreationDate: &createdTime,
 				UserPoolId:   &userPoolId,
 			},
+		}
+		if input.Precedence != nil {
+			updateGroupOutput.Group.Precedence = input.Precedence
+		}
+	} else if *input.Description == response_200_up {
+		// 200 response - group updated
+		createdTime, _ := time.Parse("2006-Jan-1", "2010-Jan-1")
+		groupName := "123e4567-e89b-12d3-a456-426614174000"
+		updateGroupOutput = &cognitoidentityprovider.UpdateGroupOutput{
+			Group: &cognitoidentityprovider.GroupType{
+				Description:  &response_200_up,
+				GroupName:    &groupName,
+				CreationDate: &createdTime,
+				UserPoolId:   &userPoolId,
+			},
+		}
+		if input.Precedence != nil {
+			updateGroupOutput.Group.Precedence = input.Precedence
 		}
 	} else if *input.Description == response_500 {
 		// 500 response - internal server error
