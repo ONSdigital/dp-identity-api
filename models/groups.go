@@ -25,7 +25,7 @@ var (
 	groupPrecedenceMax    = int64(100)
 )
 
-//Group is a type for the identity API representation of a group's details
+// Group is a type for the identity API representation of a group's details
 type Group struct {
 	ID         string    `json:"id"`
 	Name       string    `json:"name"`
@@ -139,7 +139,7 @@ func (g *Group) MapCognitoDetails(groupDetails *cognitoidentityprovider.GroupTyp
 	g.Created = *groupDetails.CreationDate
 }
 
-//BuildSuccessfulJsonResponse builds the Group response json for client responses
+// BuildSuccessfulJsonResponse builds the Group response json for client responses
 func (g *Group) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
 	jsonResponse, err := json.Marshal(g)
 	if err != nil {
@@ -232,7 +232,7 @@ func (c *CreateUpdateGroup) NewSuccessResponse(jsonBody []byte, statusCode int, 
 	}
 }
 
-//BuildListGroupsSuccessfulJsonResponse
+// BuildListGroupsSuccessfulJsonResponse
 // formats the output to comply with current standards and to json , adds the count of groups returned and
 func (g *ListUserGroups) BuildListGroupsSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.ListGroupsOutput) ([]byte, error) {
 

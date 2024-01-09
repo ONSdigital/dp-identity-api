@@ -3,17 +3,16 @@ package steps
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"strconv"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
-
-	"github.com/stretchr/testify/assert"
 
 	"github.com/ONSdigital/dp-identity-api/api"
 	"github.com/ONSdigital/dp-identity-api/models"
 
 	"github.com/cucumber/godog"
+	"github.com/stretchr/testify/assert"
 )
 
 func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
@@ -145,8 +144,8 @@ func (c *IdentityComponent) thereGroupsExistsInTheDatabaseThatUsernameIsAMember(
 
 // listResponseShouldContainCorrectNumberOfEntries asserts that the list response 'count' matches the expected value
 func (c *IdentityComponent) listResponseShouldContainCorrectNumberOfEntries(expectedListLength string) error {
-	responseBody := c.apiFeature.HttpResponse.Body
-	body, _ := ioutil.ReadAll(responseBody)
+	responseBody := c.apiFeature.HTTPResponse.Body
+	body, _ := io.ReadAll(responseBody)
 	var bodyObject map[string]interface{}
 	err := json.Unmarshal(body, &bodyObject)
 	if err != nil {
@@ -201,8 +200,8 @@ func (c *IdentityComponent) thereGroupsExistsInTheDatabase(groupCount string) er
 
 func (c *IdentityComponent) theResponseCodeShouldBe(code int) error {
 	expectedStatusString := strconv.Itoa(code)
-	actualStatusString := strconv.Itoa(c.apiFeature.HttpResponse.StatusCode)
-	if code != c.apiFeature.HttpResponse.StatusCode {
+	actualStatusString := strconv.Itoa(c.apiFeature.HTTPResponse.StatusCode)
+	if code != c.apiFeature.HTTPResponse.StatusCode {
 		return errors.New("expected response status code to be: " + expectedStatusString + ", but actual is: " + actualStatusString)
 	}
 	return nil
@@ -216,8 +215,8 @@ func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroups(
 		return
 	}
 
-	responseBody := c.apiFeature.HttpResponse.Body
-	resBody, _ := ioutil.ReadAll(responseBody)
+	responseBody := c.apiFeature.HTTPResponse.Body
+	resBody, _ := io.ReadAll(responseBody)
 	if err = json.Unmarshal(resBody, &actual); err != nil {
 		return
 	}

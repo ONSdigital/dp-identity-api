@@ -37,7 +37,7 @@ func ImportGroupsFromS3(ctx context.Context, config *config.Config) error {
 	}
 	for _, wanted := range []string{"groupname", "precedence", "description"} {
 		if _, ok := colsMap[wanted]; !ok {
-			return errors.New(fmt.Sprintf("column '%s' not found in groups backup file", wanted))
+			return fmt.Errorf("column '%s' not found in groups backup file", wanted)
 		}
 	}
 
@@ -76,7 +76,7 @@ func ImportGroupsMembersFromS3(ctx context.Context, config *config.Config) error
 	}
 	for _, wanted := range []string{"user_name", "groups"} {
 		if _, ok := colsMap[wanted]; !ok {
-			return errors.New(fmt.Sprintf("column '%s' not found in users_groups backup file", wanted))
+			return fmt.Errorf("column '%s' not found in users_groups backup file", wanted)
 		}
 	}
 
