@@ -683,6 +683,7 @@ func (m *CognitoIdentityProviderClientStub) UpdateGroup(input *cognitoidentitypr
 	var (
 		updateGroupOutput *cognitoidentityprovider.UpdateGroupOutput
 		response_200      = `Thi$s is a te||st des$%£@^c ription for  existing group  $`
+		response_200_up   = `Thi$s is a te||st des$%£@^c ription for  updated group  $`
 		response_500      = `Internal Server Error`
 		userPoolId        = `aaaa-bbbb-ccc-dddd`
 	)
@@ -693,6 +694,21 @@ func (m *CognitoIdentityProviderClientStub) UpdateGroup(input *cognitoidentitypr
 		updateGroupOutput = &cognitoidentityprovider.UpdateGroupOutput{
 			Group: &cognitoidentityprovider.GroupType{
 				Description:  &response_200,
+				GroupName:    &groupName,
+				CreationDate: &createdTime,
+				UserPoolId:   &userPoolId,
+			},
+		}
+		if input.Precedence != nil {
+			updateGroupOutput.Group.Precedence = input.Precedence
+		}
+	} else if *input.Description == response_200_up {
+		// 200 response - group updated
+		createdTime, _ := time.Parse("2006-Jan-1", "2010-Jan-1")
+		groupName := "123e4567-e89b-12d3-a456-426614174000"
+		updateGroupOutput = &cognitoidentityprovider.UpdateGroupOutput{
+			Group: &cognitoidentityprovider.GroupType{
+				Description:  &response_200_up,
 				GroupName:    &groupName,
 				CreationDate: &createdTime,
 				UserPoolId:   &userPoolId,
