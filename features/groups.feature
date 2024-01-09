@@ -205,23 +205,20 @@ Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group wi
             }
         """
 
-Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group with no precedence in request, group update returns 400
+Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group with no precedence in request, group update returns 200
     Given I am an admin user
     When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
         """
             {
-                "name": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $"
+                "name": "Thi$s is a te||st des$%£@^c ription for  updated group  $"
             }
         """
-    Then I should receive the following JSON response with status "400":
+    Then I should receive the following JSON response with status "200":
         """
             {
-                "errors": [
-                    {
-                        "code":"InvalidGroupPrecedence",
-                        "description":"the group precedence was not found"
-                    }
-                ]
+                "name": "Thi$s is a te||st des$%£@^c ription for  updated group  $",
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "precedence": null
             }
         """
 

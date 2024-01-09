@@ -1006,6 +1006,23 @@ func TestUpdateGroup(t *testing.T) {
 					So(errorResponse, ShouldBeNil)
 				},
 			},
+			// 200 response - group updated, no precedence
+			{
+				func(input *cognitoidentityprovider.UpdateGroupInput) (*cognitoidentityprovider.UpdateGroupOutput, error) {
+					return &cognitoidentityprovider.UpdateGroupOutput{}, nil
+				},
+				map[string]interface{}{
+					"name": "This is a test name",
+				},
+				map[string]interface{}{
+					"name": "This is a test name",
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(errorResponse, ShouldBeNil)
+				},
+			},
 			// 400 response - no description field in request body
 			{
 				nil,
@@ -1020,22 +1037,6 @@ func TestUpdateGroup(t *testing.T) {
 					castErr := errorResponse.Errors[0].(*models.Error)
 					So(castErr.Code, ShouldEqual, models.InvalidGroupName)
 					So(castErr.Description, ShouldEqual, models.MissingGroupName)
-				},
-			},
-			// 400 response - no precedence field in request body
-			{
-				nil,
-				map[string]interface{}{
-					"name": "This is a test name",
-				},
-				nil,
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					So(successResponse, ShouldBeNil)
-					So(errorResponse.Status, ShouldNotBeNil)
-					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
-					castErr := errorResponse.Errors[0].(*models.Error)
-					So(castErr.Code, ShouldEqual, models.InvalidGroupPrecedence)
-					So(castErr.Description, ShouldEqual, models.MissingGroupPrecedence)
 				},
 			},
 			// 400 response - group description begins with reserved string `role-`

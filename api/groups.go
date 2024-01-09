@@ -49,7 +49,7 @@ func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
 
-	validationErrs := createGroup.ValidateCreateUpdateGroupRequest(ctx)
+	validationErrs := createGroup.ValidateCreateUpdateGroupRequest(ctx, true)
 	if len(validationErrs) != 0 {
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}
@@ -92,7 +92,7 @@ func (api *API) UpdateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
 
-	validationErrs := updateGroup.ValidateCreateUpdateGroupRequest(ctx)
+	validationErrs := updateGroup.ValidateCreateUpdateGroupRequest(ctx, false)
 	if len(validationErrs) != 0 {
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}

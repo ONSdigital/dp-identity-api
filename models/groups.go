@@ -156,7 +156,7 @@ type CreateUpdateGroup struct {
 }
 
 // ValidateCreateUpdateGroupRequest validate the create group request
-func (g *CreateUpdateGroup) ValidateCreateUpdateGroupRequest(ctx context.Context) []error {
+func (g *CreateUpdateGroup) ValidateCreateUpdateGroupRequest(ctx context.Context, isCreate bool) []error {
 	var validationErrs []error
 
 	if g.Name == nil {
@@ -175,7 +175,9 @@ func (g *CreateUpdateGroup) ValidateCreateUpdateGroupRequest(ctx context.Context
 		}
 	}
 	if g.Precedence == nil {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, MissingGroupPrecedence))
+		if isCreate {
+			validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, MissingGroupPrecedence))
+		}
 	} else if *g.Precedence < groupPrecedenceMin || *g.Precedence > groupPrecedenceMax {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, GroupPrecedenceIncorrect))
 	}
@@ -197,7 +199,6 @@ func (g *CreateUpdateGroup) BuildUpdateGroupInput(userPoolId string) *cognitoide
 	return &cognitoidentityprovider.UpdateGroupInput{
 		GroupName:   g.ID,
 		Description: g.Name,
-		Precedence:  g.Precedence,
 		UserPoolId:  &userPoolId,
 	}
 }

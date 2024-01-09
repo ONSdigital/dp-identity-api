@@ -694,10 +694,12 @@ func (m *CognitoIdentityProviderClientStub) UpdateGroup(input *cognitoidentitypr
 			Group: &cognitoidentityprovider.GroupType{
 				Description:  &response_200,
 				GroupName:    &groupName,
-				Precedence:   input.Precedence,
 				CreationDate: &createdTime,
 				UserPoolId:   &userPoolId,
 			},
+		}
+		if input.Precedence != nil {
+			updateGroupOutput.Group.Precedence = input.Precedence
 		}
 	} else if *input.Description == response_500 {
 		// 500 response - internal server error
