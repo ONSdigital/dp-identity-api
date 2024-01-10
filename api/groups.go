@@ -21,7 +21,7 @@ const (
 	GroupsDeletePermission = "groups:delete"
 )
 
-//CreateGroupHandler creates a new group
+// CreateGroupHandler creates a new group
 func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -49,7 +49,7 @@ func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
 
-	validationErrs := createGroup.ValidateCreateUpdateGroupRequest(ctx)
+	validationErrs := createGroup.ValidateCreateUpdateGroupRequest(ctx, true)
 	if len(validationErrs) != 0 {
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}
@@ -73,7 +73,7 @@ func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 	return createGroup.NewSuccessResponse(jsonResponse, http.StatusCreated, nil), nil
 }
 
-//UpdateGroupHandler update group details for a given group by id (GroupName)
+// UpdateGroupHandler update group details for a given group by id (GroupName)
 func (api *API) UpdateGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 
@@ -92,7 +92,7 @@ func (api *API) UpdateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
 
-	validationErrs := updateGroup.ValidateCreateUpdateGroupRequest(ctx)
+	validationErrs := updateGroup.ValidateCreateUpdateGroupRequest(ctx, false)
 	if len(validationErrs) != 0 {
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}
@@ -115,7 +115,7 @@ func (api *API) UpdateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 	return updateGroup.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
-//AddUserToGroupHandler adds a user to the specified group
+// AddUserToGroupHandler adds a user to the specified group
 func (api *API) AddUserToGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	group := models.Group{ID: vars["id"]}
@@ -164,7 +164,7 @@ func (api *API) AddUserToGroupHandler(ctx context.Context, w http.ResponseWriter
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
-//ListUsersInGroupHandler list the users in the specified group
+// ListUsersInGroupHandler list the users in the specified group
 func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 
 	vars := mux.Vars(req)
@@ -216,7 +216,7 @@ func (api *API) getUsersInAGroup(listOfUsers []*cognitoidentityprovider.UserType
 	return listOfUsers, nil
 }
 
-//RemoveUserFromGroupHandler adds a user to the specified group
+// RemoveUserFromGroupHandler adds a user to the specified group
 func (api *API) RemoveUserFromGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	group := models.Group{ID: vars["id"]}
@@ -254,7 +254,7 @@ func (api *API) RemoveUserFromGroupHandler(ctx context.Context, w http.ResponseW
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
-//List Groups pagination allows first call and then any other call if nextToken is not ""
+// List Groups pagination allows first call and then any other call if nextToken is not ""
 func (api *API) GetListGroups() (*cognitoidentityprovider.ListGroupsOutput, error) {
 	firstTimeCheck := false
 	var nextToken string
@@ -282,7 +282,7 @@ func (api *API) GetListGroups() (*cognitoidentityprovider.ListGroupsOutput, erro
 	return &listOfGroups, nil
 }
 
-//ListGroupsHandler lists the users in the user pool
+// ListGroupsHandler lists the users in the user pool
 func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	finalGroupsResponse := models.ListUserGroups{}
 
@@ -303,7 +303,7 @@ func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, re
 
 }
 
-//GetGroupHandler gets group details for given groups
+// GetGroupHandler gets group details for given groups
 func (api *API) GetGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 
 	vars := mux.Vars(req)
@@ -329,7 +329,7 @@ func (api *API) GetGroupHandler(ctx context.Context, w http.ResponseWriter, req 
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
-//DeleteGroupHandler deletes the group for the given group id
+// DeleteGroupHandler deletes the group for the given group id
 func (api *API) DeleteGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 
 	vars := mux.Vars(req)
@@ -348,7 +348,7 @@ func (api *API) DeleteGroupHandler(ctx context.Context, w http.ResponseWriter, r
 	return models.NewSuccessResponse(nil, http.StatusNoContent, nil), nil
 }
 
-///SetGroupUsersHandler adds a user to the specified group
+// /SetGroupUsersHandler adds a user to the specified group
 func (api *API) SetGroupUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 
@@ -402,7 +402,6 @@ func (api *API) SetGroupUsersHandler(ctx context.Context, w http.ResponseWriter,
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
-//
 func (api *API) SetGroupUsers(ctx context.Context, group models.Group, users models.UsersList) (*models.UsersList, *models.ErrorResponse) {
 	var keep bool = false
 	successResponse := &models.UsersList{}
@@ -446,7 +445,7 @@ func (api *API) SetGroupUsers(ctx context.Context, group models.Group, users mod
 	return successResponse, nil
 }
 
-//AddUserToGroup adds a user to the specified group
+// AddUserToGroup adds a user to the specified group
 func (api *API) AddUserToGroup(ctx context.Context, group models.Group, userId string) (*models.UsersList, error) {
 
 	userAddToGroupInput := group.BuildAddUserToGroupRequest(api.UserPoolId, userId)
@@ -466,7 +465,7 @@ func (api *API) AddUserToGroup(ctx context.Context, group models.Group, userId s
 	return &listOfUsers, nil
 }
 
-//RemoveUserFromGroup adds a user to the specified group
+// RemoveUserFromGroup adds a user to the specified group
 func (api *API) RemoveUserFromGroup(ctx context.Context, group models.Group, userId string) (*models.UsersList, error) {
 	userRemoveFromGroupInput := group.BuildRemoveUserFromGroupRequest(api.UserPoolId, userId)
 	_, err := api.CognitoClient.AdminRemoveUserFromGroup(userRemoveFromGroupInput)

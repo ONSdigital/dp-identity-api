@@ -3,17 +3,16 @@ package steps
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"strconv"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
-
-	"github.com/stretchr/testify/assert"
 
 	"github.com/ONSdigital/dp-identity-api/api"
 	"github.com/ONSdigital/dp-identity-api/models"
 
 	"github.com/cucumber/godog"
+	"github.com/stretchr/testify/assert"
 )
 
 func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
@@ -31,13 +30,13 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^a user with non-verified email "([^"]*)" and password "([^"]*)"$`, c.aUserWithNonverifiedEmailAndPassword)
 	ctx.Step(`^user "([^"]*)" active is "([^"]*)"$`, c.userSetState)
 	ctx.Step(`^group "([^"]*)" exists in the database$`, c.groupExistsInTheDatabase)
-	ctx.Step(`^there are "([^"]*)" users in group "([^"]*)"$`, c.thereAreUsersInGroup)
+	ctx.Step(`^there are (\d+) users in group "([^"]*)"$`, c.thereAreUsersInGroup)
 	ctx.Step(`^user "([^"]*)" is a member of group "([^"]*)"$`, c.userIsAMemberOfGroup)
 	ctx.Step(`^there are "([^"]*)" users in the database$`, c.thereAreRequiredNumberOfUsers)
 	ctx.Step(`^there are "([^"]*)" active users and "([^"]*)" inactive users in the database$`, c.thereAreRequiredNumberOfActiveUsers)
 	ctx.Step(`^the list response should contain "([^"]*)" entries$`, c.listResponseShouldContainCorrectNumberOfEntries)
-	ctx.Step(`^there (\d+) groups exists in the database that username "([^"]*)" is a member$`, c.thereGroupsExistsInTheDatabaseThatUsernameIsAMember)
-	ctx.Step(`^there "([^"]*)" groups exists in the database$`, c.thereGroupsExistsInTheDatabase)
+	ctx.Step(`^(\d+) groups exist in the database that username "([^"]*)" is a member$`, c.groupsExistInTheDatabaseThatUsernameIsAMember)
+	ctx.Step(`^there are (\d+) groups in the database$`, c.thereAreGroupsInTheDatabase)
 	ctx.Step(`^the response code should be (\d+)$`, c.theResponseCodeShouldBe)
 	ctx.Step(`^the response should match the following json for listgroups$`, c.theResponseShouldMatchTheFollowingJsonForListgroups)
 	ctx.Step(`^I GET the JSON web key set for cognito user pool$`, c.aResponseToAJWKSSetRequest)
@@ -127,7 +126,7 @@ func (c *IdentityComponent) thereAreUsersInGroup(userCount, groupName string) er
 	return nil
 }
 
-func (c *IdentityComponent) thereGroupsExistsInTheDatabaseThatUsernameIsAMember(groupCount, userName string) error {
+func (c *IdentityComponent) groupsExistInTheDatabaseThatUsernameIsAMember(groupCount, userName string) error {
 	user := c.CognitoClient.ReadUser(userName)
 	if user == nil {
 		return errors.New("user not found")
@@ -145,8 +144,8 @@ func (c *IdentityComponent) thereGroupsExistsInTheDatabaseThatUsernameIsAMember(
 
 // listResponseShouldContainCorrectNumberOfEntries asserts that the list response 'count' matches the expected value
 func (c *IdentityComponent) listResponseShouldContainCorrectNumberOfEntries(expectedListLength string) error {
-	responseBody := c.apiFeature.HttpResponse.Body
-	body, _ := ioutil.ReadAll(responseBody)
+	responseBody := c.apiFeature.HTTPResponse.Body
+	body, _ := io.ReadAll(responseBody)
 	var bodyObject map[string]interface{}
 	err := json.Unmarshal(body, &bodyObject)
 	if err != nil {
@@ -182,7 +181,7 @@ func (c *IdentityComponent) thereAreRequiredNumberOfActiveUsers(requiredNumberOf
 	return nil
 }
 
-func (c *IdentityComponent) thereGroupsExistsInTheDatabase(groupCount string) error {
+func (c *IdentityComponent) thereAreGroupsInTheDatabase(groupCount string) error {
 
 	groupCountInt, err := strconv.Atoi(groupCount)
 	if err != nil {
@@ -201,8 +200,8 @@ func (c *IdentityComponent) thereGroupsExistsInTheDatabase(groupCount string) er
 
 func (c *IdentityComponent) theResponseCodeShouldBe(code int) error {
 	expectedStatusString := strconv.Itoa(code)
-	actualStatusString := strconv.Itoa(c.apiFeature.HttpResponse.StatusCode)
-	if code != c.apiFeature.HttpResponse.StatusCode {
+	actualStatusString := strconv.Itoa(c.apiFeature.HTTPResponse.StatusCode)
+	if code != c.apiFeature.HTTPResponse.StatusCode {
 		return errors.New("expected response status code to be: " + expectedStatusString + ", but actual is: " + actualStatusString)
 	}
 	return nil
@@ -216,8 +215,8 @@ func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroups(
 		return
 	}
 
-	responseBody := c.apiFeature.HttpResponse.Body
-	resBody, _ := ioutil.ReadAll(responseBody)
+	responseBody := c.apiFeature.HTTPResponse.Body
+	resBody, _ := io.ReadAll(responseBody)
 	if err = json.Unmarshal(resBody, &actual); err != nil {
 		return
 	}
