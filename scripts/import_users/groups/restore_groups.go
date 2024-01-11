@@ -106,7 +106,7 @@ func createGroup(lineNumber int, line []string, client *cognito.CognitoIdentityP
 
 	_, err := client.CreateGroup(input)
 	if err != nil {
-		log.Error(ctx, fmt.Sprintf("failed to process line:%v group: %+v", lineNumber, createGroup), err)
+		log.Error(ctx, fmt.Sprintf("failed to process line: %d (incl. header) with name:%q group: %+v", lineNumber+1, *createGroup.Name, createGroup), err)
 	}
 }
 
@@ -119,7 +119,7 @@ func adduserToGroup(ctx context.Context, client *cognito.CognitoIdentityProvider
 		}
 		_, err := client.AdminAddUserToGroup(&cognito.AdminAddUserToGroupInput{GroupName: &group, UserPoolId: &userPoolId, Username: &userId})
 		if err != nil {
-			log.Error(ctx, fmt.Sprintf("failed to process line: %v -  user %v group: %v", lineNumber, userId, group), err)
+			log.Error(ctx, fmt.Sprintf("failed to process line: %d (incl. header) - user %v group: %v", lineNumber+1, userId, group), err)
 		}
 	}
 }
