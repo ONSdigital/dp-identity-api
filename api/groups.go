@@ -3,7 +3,8 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -23,7 +24,7 @@ const (
 
 // CreateGroupHandler creates a new group
 func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
 	}
@@ -82,7 +83,7 @@ func (api *API) UpdateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 		ID: &id,
 	}
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
 	}
@@ -131,7 +132,7 @@ func (api *API) AddUserToGroupHandler(ctx context.Context, w http.ResponseWriter
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
 	}
@@ -364,7 +365,7 @@ func (api *API) SetGroupUsersHandler(ctx context.Context, w http.ResponseWriter,
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
 	}
@@ -483,4 +484,43 @@ func (api *API) RemoveUserFromGroup(ctx context.Context, group models.Group, use
 	listOfUsers.MapCognitoUsers(&listUsers)
 
 	return &listOfUsers, nil
+}
+
+func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	GroupsUsersList := []models.ListGroupUsersType{}
+	EMAIL := "email"
+
+	listOfGroups, err := api.GetListGroups()
+	if err != nil {
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListofUserGroups request from list user groups endpoint")
+		if cognitoErr.Code == models.NotFoundError {
+			return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
+		}
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+	}
+	for _, group := range listOfGroups.Groups {
+		fmt.Println(group.Description)
+		inputGroup := models.Group{ID: *group.GroupName}
+		listOfUsersInput := []*cognitoidentityprovider.UserType{}
+		listUsers, err := api.getUsersInAGroup(listOfUsersInput, inputGroup)
+		for _, user := range listUsers {
+			fmt.Println(user.Attributes)
+			for _, attribute := range user.Attributes {
+				if attribute.Name == &EMAIL {
+					GroupsUsersList = append(GroupsUsersList, models.ListGroupUsersType{
+						GroupName: group.Description,
+						UserEmail: attribute.Value,
+					})
+				}
+			}
+		}
+
+		jsonResponse, err := json.Marshal(GroupsUsersList)
+		if err != nil {
+			return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
+		}
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+
 }

@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -19,7 +18,7 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 		}
 	}()
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
 	}

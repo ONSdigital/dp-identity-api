@@ -447,6 +447,24 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /groups/report:
+    get:
+      tags:
+        - Groups
+      summary: "List groups and the membership of the groups
+      as return as csv file "
+      produces:
+        - "application/csv"
+      parameters:
+      responses:
+        200:
+          description: "The list of groups and members
+          schema:
+            $ref: '#/definitions/GroupsList'
+        500:
+          description: "Internal error occurred"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
   /groups/{id}:
     get:
       tags:
