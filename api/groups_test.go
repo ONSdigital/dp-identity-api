@@ -2353,3 +2353,80 @@ func TestAddUserToGroup(t *testing.T) {
 	})
 
 }
+
+func TestListGroupsUsersHandler(t *testing.T) {
+
+	var (
+		//ctx              = context.Background()
+		name1     string = "user-1"
+		name2     string = "user-2"
+		name3     string = "user-3"
+		timestamp        = time.Now()
+		getgroup         = cognitoidentityprovider.GroupType{
+			CreationDate:     &timestamp,
+			Description:      aws.String("A test group1"),
+			GroupName:        aws.String("test-group1"),
+			LastModifiedDate: &timestamp,
+			Precedence:       aws.Int64(4),
+			RoleArn:          aws.String(""),
+			UserPoolId:       aws.String("")}
+	)
+
+	//api, w, m := apiSetup()
+	_, _, m := apiSetup()
+
+	Convey("Get group -check expected responses", t, func() {
+
+		GetGroupTest := []struct {
+			description               string
+			mock_getGroupsfunc        func() (*cognitoidentityprovider.ListGroupsOutput, error)
+			mock_listUsersInGroupfunc func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
+			assertions                func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+		}{
+			{
+				"200 response from Cognito  with input and output",
+				func() (*cognitoidentityprovider.ListGroupsOutput, error) {
+					return &cognitoidentityprovider.ListGroupsOutput{}, nil
+				},
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					return &cognitoidentityprovider.ListUsersInGroupOutput{
+						Users: []*cognitoidentityprovider.UserType{
+							{
+								Enabled:    aws.Bool(true),
+								UserStatus: aws.String("CONFIRMED"),
+								Username:   aws.String(name2),
+							},
+							{
+								Enabled:    aws.Bool(true),
+								UserStatus: aws.String("CONFIRMED"),
+								Username:   aws.String(name3),
+							},
+						},
+					}, nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(errorResponse, ShouldBeNil)
+					var responseBody = models.UsersList{}
+					json.Unmarshal(successResponse.Body, &responseBody)
+					So(responseBody, ShouldNotBeNil)
+					So(responseBody.Count, ShouldEqual, 2)
+				},
+			},
+		}
+
+		for _, tt := range GetGroupTest {
+			Convey(tt.description, func() {
+				m.GetGroupFunc = tt.mock_getGroupfunc
+				m.ListUsersInGroupFunc = tt.mock_listUsersInGroupfunc
+				m.SetGroupUsersfunc = tt.mock_setGroupUsersfunc
+				m.AddUserToGroupfunc = tt.mockAddUserToGroupFunction
+				m.AdminAddUserToGroupFunc = tt.mock_addUserToGroupfunc
+				m.RemoveUserFromGroupfunc = tt.mockRemoveUserToGroupFunction
+				m.AdminRemoveUserFromGroupFunc = tt.mock_removeUserToGroupFunction
+
+			})
+		}
+	})
+}
