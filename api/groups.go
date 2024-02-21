@@ -503,6 +503,9 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWrite
 		inputGroup := models.Group{ID: *group.GroupName}
 		listOfUsersInput := []*cognitoidentityprovider.UserType{}
 		listUsers, err := api.getUsersInAGroup(listOfUsersInput, inputGroup)
+		if err != nil {
+			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+		}
 		for _, user := range listUsers {
 			fmt.Println(user.Attributes)
 			for _, attribute := range user.Attributes {
@@ -514,11 +517,11 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWrite
 				}
 			}
 		}
+	}
 
-		jsonResponse, err := json.Marshal(GroupsUsersList)
-		if err != nil {
-			return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
-		}
+	jsonResponse, err := json.Marshal(GroupsUsersList)
+	if err != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
 	}
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
