@@ -20,6 +20,7 @@ import (
 )
 
 const (
+	getGroupsReport             = "http://localhost:25600/v1/groups/report"
 	addUserToGroupEndPoint      = "http://localhost:25600/v1/groups/efgh5678/members"
 	removeUserFromGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/members/abcd1234"
 	getUsersInGroupEndPoint     = "http://localhost:25600/v1/groups/efgh5678/members"
@@ -2357,36 +2358,29 @@ func TestAddUserToGroup(t *testing.T) {
 func TestListGroupsUsersHandler(t *testing.T) {
 
 	var (
-		//ctx              = context.Background()
-		name1     string = "user-1"
-		name2     string = "user-2"
-		name3     string = "user-3"
-		timestamp        = time.Now()
-		getgroup         = cognitoidentityprovider.GroupType{
-			CreationDate:     &timestamp,
-			Description:      aws.String("A test group1"),
-			GroupName:        aws.String("test-group1"),
-			LastModifiedDate: &timestamp,
-			Precedence:       aws.Int64(4),
-			RoleArn:          aws.String(""),
-			UserPoolId:       aws.String("")}
+		ctx = context.Background()
+		//name1     string = "user-1"
+		name2 string = "user-2"
+		name3 string = "user-3"
 	)
 
-	//api, w, m := apiSetup()
-	_, _, m := apiSetup()
+	api, w, m := apiSetup()
 
 	Convey("Get group -check expected responses", t, func() {
 
 		GetGroupTest := []struct {
 			description               string
-			mock_getGroupsfunc        func() (*cognitoidentityprovider.ListGroupsOutput, error)
+			mock_listGroupsFunc       func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
 			mock_listUsersInGroupfunc func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
 			assertions                func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{
 			{
 				"200 response from Cognito  with input and output",
-				func() (*cognitoidentityprovider.ListGroupsOutput, error) {
-					return &cognitoidentityprovider.ListGroupsOutput{}, nil
+				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					return &cognitoidentityprovider.ListGroupsOutput{
+						Groups:    getMockGroups([]string{"g1", "g2", "g3"}),
+						NextToken: nil,
+					}, nil
 				},
 				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					return &cognitoidentityprovider.ListUsersInGroupOutput{
@@ -2418,15 +2412,33 @@ func TestListGroupsUsersHandler(t *testing.T) {
 
 		for _, tt := range GetGroupTest {
 			Convey(tt.description, func() {
-				m.GetGroupFunc = tt.mock_getGroupfunc
+				m.ListGroupsFunc = tt.mock_listGroupsFunc
 				m.ListUsersInGroupFunc = tt.mock_listUsersInGroupfunc
-				m.SetGroupUsersfunc = tt.mock_setGroupUsersfunc
-				m.AddUserToGroupfunc = tt.mockAddUserToGroupFunction
-				m.AdminAddUserToGroupFunc = tt.mock_addUserToGroupfunc
-				m.RemoveUserFromGroupfunc = tt.mockRemoveUserToGroupFunction
-				m.AdminRemoveUserFromGroupFunc = tt.mock_removeUserToGroupFunction
+				r := httptest.NewRequest(http.MethodGet, getGroupsReport, nil)
 
+				urlVars := map[string]string{
+					"id": "efgh5678",
+				}
+				r = mux.SetURLVars(r, urlVars)
+				successResponse, errorResponse := api.ListGroupsUsersHandler(ctx, w, r)
+				tt.assertions(successResponse, errorResponse)
 			})
 		}
 	})
+}
+func getMockGroups(groupsList []string) []*cognitoidentityprovider.GroupType {
+	var output []*cognitoidentityprovider.GroupType
+	for _, group := range groupsList {
+		groupType := cognitoidentityprovider.GroupType{
+			CreationDate:     nil,
+			Description:      &group,
+			GroupName:        nil,
+			LastModifiedDate: nil,
+			Precedence:       nil,
+			RoleArn:          nil,
+			UserPoolId:       nil,
+		}
+		output = append(output, &groupType)
+	}
+	return output
 }

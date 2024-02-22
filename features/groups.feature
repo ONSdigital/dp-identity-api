@@ -895,3 +895,30 @@ Scenario: PUT /v1/groups/{id}/members and checking the response status 200
         """
     Then the HTTP status code should be "404"
 
+#   Get getgroupsreport scenarios
+#   successful return
+Scenario: GET /v1/groups/report and checking the response status 200
+    Given group "test-group1"  and description "test group 1 description" exists in the database
+    And a user with username "user_1" and email "email1@ons.gov.uk" exists in the database
+    And user "user_1" is a member of group "test-group1"
+    And a user with username "user_2" and email "email2@ons.gov.uk" exists in the database
+    And user "user_2" is a member of group "test-group1"
+    And group "test-group2"  and description "test group 2 description" exists in the database
+    And a user with username "user_3" and email "email3@ons.gov.uk" exists in the database
+    And user "user_3" is a member of group "test-group2"
+    And a user with username "user_4" and email "email4@ons.gov.uk" exists in the database
+    And user "user_4" is a member of group "test-group2"
+    And group "test-group3" and description "test group 2 description" exists in the database
+    And a user with username "user_5" and email "email5@ons.gov.uk" exists in the database
+    And user "user_5" is a member of group "test-group3"
+    And a user with username "user_6" and email "email6@ons.gov.uk" exists in the database
+    And user "user_6" is a member of group "test-group3"
+    And I am an admin user
+    When I GET "/v1/groups/report"
+    Then I should receive the following JSON response with status "200":
+        """
+            {
+                "Team name":"test group 1 description",
+                "User":"email1@ons.gov.uk",
+            }
+        """

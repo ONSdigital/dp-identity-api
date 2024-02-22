@@ -30,6 +30,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^a user with non-verified email "([^"]*)" and password "([^"]*)"$`, c.aUserWithNonverifiedEmailAndPassword)
 	ctx.Step(`^user "([^"]*)" active is "([^"]*)"$`, c.userSetState)
 	ctx.Step(`^group "([^"]*)" exists in the database$`, c.groupExistsInTheDatabase)
+	ctx.Step(`^group "([^"]*)"  and description "([^"]*)" exists in the database$`, c.groupAndDescriptionExistsInTheDatabase)
 	ctx.Step(`^there are (\d+) users in group "([^"]*)"$`, c.thereAreUsersInGroup)
 	ctx.Step(`^user "([^"]*)" is a member of group "([^"]*)"$`, c.userIsAMemberOfGroup)
 	ctx.Step(`^there are "([^"]*)" users in the database$`, c.thereAreRequiredNumberOfUsers)
@@ -40,6 +41,8 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the response code should be (\d+)$`, c.theResponseCodeShouldBe)
 	ctx.Step(`^the response should match the following json for listgroups$`, c.theResponseShouldMatchTheFollowingJsonForListgroups)
 	ctx.Step(`^I GET the JSON web key set for cognito user pool$`, c.aResponseToAJWKSSetRequest)
+	ctx.Step(`^group "([^"]*)" and description "([^"]*)" exists in the database$`, c.groupAndDescriptionExistsInTheDatabase)
+	ctx.Step(`^user "user_(\d+) is a member of group "([^"]*)"$`, c.userIsAMemberOfGroup)
 }
 
 func (c *IdentityComponent) aResponseToAJWKSSetRequest() error {
@@ -105,6 +108,11 @@ func (c *IdentityComponent) userSetState(username, active string) error {
 
 func (c *IdentityComponent) groupExistsInTheDatabase(groupName string) error {
 	err := c.CognitoClient.AddGroupWithName(groupName)
+	return err
+}
+
+func (c *IdentityComponent) groupAndDescriptionExistsInTheDatabase(groupName, description string) error {
+	err := c.CognitoClient.AddGroupWithNameAndDescription(groupName, description)
 	return err
 }
 
