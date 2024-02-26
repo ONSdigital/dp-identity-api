@@ -487,6 +487,16 @@ func (api *API) RemoveUserFromGroup(ctx context.Context, group models.Group, use
 }
 
 func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	GroupsUsersList, err := api.ListGroupsUsersBuild(ctx)
+	jsonResponse, err := json.Marshal(GroupsUsersList)
+	if err != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+	}
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+
+}
+
+func (api *API) ListGroupsUsersBuild(ctx context.Context) ([]models.ListGroupUsersType, error) {
 	GroupsUsersList := []models.ListGroupUsersType{}
 	EMAIL := "email"
 
@@ -494,9 +504,9 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWrite
 	if err != nil {
 		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListofUserGroups request from list user groups endpoint")
 		if cognitoErr.Code == models.NotFoundError {
-			return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
+			return nil, cognitoErr
 		}
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+		return nil, err
 	}
 	for _, group := range listOfGroups.Groups {
 		fmt.Println(group.Description)
@@ -504,7 +514,7 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWrite
 		listOfUsersInput := []*cognitoidentityprovider.UserType{}
 		listUsers, err := api.getUsersInAGroup(listOfUsersInput, inputGroup)
 		if err != nil {
-			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+			return nil, err
 		}
 		for _, user := range listUsers {
 			fmt.Println(user.Attributes)
@@ -518,12 +528,5 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWrite
 			}
 		}
 	}
-
-	jsonResponse, err := json.Marshal(GroupsUsersList)
-	if err != nil {
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
-	}
-
-	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
-
+	return GroupsUsersList, nil
 }

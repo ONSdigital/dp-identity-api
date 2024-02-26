@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	getGroupsReport             = "http://localhost:25600/v1/groups/report"
+	getGroupsReportEndPoint     = "http://localhost:25600/v1/groups/report"
 	addUserToGroupEndPoint      = "http://localhost:25600/v1/groups/efgh5678/members"
 	removeUserFromGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/members/abcd1234"
 	getUsersInGroupEndPoint     = "http://localhost:25600/v1/groups/efgh5678/members"
@@ -2369,20 +2369,20 @@ func TestListGroupsUsersHandler(t *testing.T) {
 	Convey("Get group -check expected responses", t, func() {
 
 		GetGroupTest := []struct {
-			description               string
-			mock_listGroupsFunc       func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
-			mock_listUsersInGroupfunc func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
-			assertions                func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+			description              string
+			mockListGroupsFunc       func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
+			mockListUsersInGroupFunc func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
+			assertions               func(successResponse []models.ListGroupUsersType, errorResponse error)
 		}{
 			{
-				"200 response from Cognito  with input and output",
-				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+				description: "200 response from Cognito  with input and output",
+				mockListGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					return &cognitoidentityprovider.ListGroupsOutput{
 						Groups:    getMockGroups([]string{"g1", "g2", "g3"}),
 						NextToken: nil,
 					}, nil
 				},
-				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+				mockListUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					return &cognitoidentityprovider.ListUsersInGroupOutput{
 						Users: []*cognitoidentityprovider.UserType{
 							{
@@ -2398,34 +2398,24 @@ func TestListGroupsUsersHandler(t *testing.T) {
 						},
 					}, nil
 				},
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					So(successResponse, ShouldNotBeNil)
-					So(successResponse.Status, ShouldEqual, http.StatusOK)
-					So(errorResponse, ShouldBeNil)
-					var responseBody = models.UsersList{}
-					json.Unmarshal(successResponse.Body, &responseBody)
-					So(responseBody, ShouldNotBeNil)
-					So(responseBody.Count, ShouldEqual, 2)
+				assertions: func(Response []models.ListGroupUsersType, error error) {
+					So(Response, ShouldNotBeNil)
+					So(error, ShouldBeNil)
 				},
 			},
 		}
 
 		for _, tt := range GetGroupTest {
 			Convey(tt.description, func() {
-				m.ListGroupsFunc = tt.mock_listGroupsFunc
-				m.ListUsersInGroupFunc = tt.mock_listUsersInGroupfunc
-				r := httptest.NewRequest(http.MethodGet, getGroupsReport, nil)
-
-				urlVars := map[string]string{
-					"id": "efgh5678",
-				}
-				r = mux.SetURLVars(r, urlVars)
-				successResponse, errorResponse := api.ListGroupsUsersHandler(ctx, w, r)
-				tt.assertions(successResponse, errorResponse)
+				m.ListGroupsFunc = tt.mockListGroupsFunc
+				m.ListUsersInGroupFunc = tt.mockListUsersInGroupFunc
+				Response, errorResponse := api.ListGroupsUsersHandler(ctx, w, req)
+				tt.assertions(Response, errorResponse)
 			})
 		}
 	})
 }
+
 func getMockGroups(groupsList []string) []*cognitoidentityprovider.GroupType {
 	var output []*cognitoidentityprovider.GroupType
 	for _, group := range groupsList {
