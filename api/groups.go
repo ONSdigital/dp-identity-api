@@ -487,46 +487,52 @@ func (api *API) RemoveUserFromGroup(ctx context.Context, group models.Group, use
 }
 
 func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	GroupsUsersList, err := api.ListGroupsUsersBuild(ctx)
-	jsonResponse, err := json.Marshal(GroupsUsersList)
-	if err != nil {
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
-	}
-	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
-
-}
-
-func (api *API) ListGroupsUsersBuild(ctx context.Context) ([]models.ListGroupUsersType, error) {
 	GroupsUsersList := []models.ListGroupUsersType{}
-	EMAIL := "email"
+	EMAIL := "Email"
 
 	listOfGroups, err := api.GetListGroups()
 	if err != nil {
-		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListofUserGroups request from list user groups endpoint")
+		cognitoErr := models.NewCognitoError(ctx, err, "Cognito GetGroup request from Get group endpoint")
 		if cognitoErr.Code == models.NotFoundError {
-			return nil, cognitoErr
+			return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
 		}
-		return nil, err
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
-	for _, group := range listOfGroups.Groups {
-		fmt.Println(group.Description)
-		inputGroup := models.Group{ID: *group.GroupName}
-		listOfUsersInput := []*cognitoidentityprovider.UserType{}
+
+	//fmt.Println("\n\t--- full group list ----", *listOfGroups)
+	for _, ListGroup := range listOfGroups.Groups {
+		//fmt.Println("\n\t--- group description ----", *ListGroup.Description)
+		//fmt.Println("\n\t--- group name ----", *ListGroup.GroupName)
+		inputGroup := models.Group{ID: *ListGroup.GroupName}
+		var listOfUsersInput []*cognitoidentityprovider.UserType
 		listUsers, err := api.getUsersInAGroup(listOfUsersInput, inputGroup)
 		if err != nil {
-			return nil, err
+			cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from list users in group endpoint")
+			if cognitoErr.Code == models.NotFoundError {
+				return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
+			}
+			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 		}
+		//fmt.Println("\n\t--- group membership ----", listUsers)
 		for _, user := range listUsers {
-			fmt.Println(user.Attributes)
+			//fmt.Println("\n\t--- user Attributes ----", user.Attributes)
 			for _, attribute := range user.Attributes {
+				fmt.Println("\n\t---attributes ----", attribute)
 				if attribute.Name == &EMAIL {
+					fmt.Println("\n\t--- output ----", ListGroup.Description, attribute.Value)
 					GroupsUsersList = append(GroupsUsersList, models.ListGroupUsersType{
-						GroupName: group.Description,
+						GroupName: ListGroup.Description,
 						UserEmail: attribute.Value,
 					})
 				}
 			}
 		}
 	}
-	return GroupsUsersList, nil
+
+	fmt.Println(GroupsUsersList)
+	jsonResponse, err := json.Marshal(GroupsUsersList)
+	if err != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+	}
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }

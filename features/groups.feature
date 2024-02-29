@@ -897,7 +897,7 @@ Scenario: PUT /v1/groups/{id}/members and checking the response status 200
 
 #   Get getgroupsreport scenarios
 #   successful return
-Scenario: GET /v1/groups/report and checking the response status 200
+Scenario: GET /v1/groups-report and checking the response status 200
     Given group "test-group1"  and description "test group 1 description" exists in the database
     And a user with username "user_1" and email "email1@ons.gov.uk" exists in the database
     And user "user_1" is a member of group "test-group1"
@@ -914,7 +914,7 @@ Scenario: GET /v1/groups/report and checking the response status 200
     And a user with username "user_6" and email "email6@ons.gov.uk" exists in the database
     And user "user_6" is a member of group "test-group3"
     And I am an admin user
-    When I GET "/v1/groups/report"
+    When I GET "/v1/groups-report"
     Then I should receive the following JSON response with status "200":
         """
             {

@@ -447,20 +447,21 @@ paths:
           description: "Invalid request body or unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /groups/report:
+  /groups-report:
     get:
       tags:
         - Groups
       summary: "List groups and the membership of the groups
-      as return as csv file "
+      as return as csv string.  
+      If a preview team ( cognito group ) is empty of users then this is not on the report.  
+      If the preview team ( cognito group ) acts as a role (i.e. publishers, admin) then this is included on the report"
       produces:
         - "application/csv"
-      parameters:
       responses:
         200:
-          description: "The list of groups and members
+          description: "The list of groups and members"
           schema:
-            $ref: '#/definitions/GroupsList'
+            $ref: '#/definitions/GroupsUsersList'
         500:
           description: "Internal error occurred"
           schema:
@@ -791,6 +792,22 @@ definitions:
           $ref: '#/definitions/Group'
       count:
         type: integer
+  GroupsUsersList:
+    description: "A list of group descriptions and the membership users email"
+    type: object
+    properties:
+      groups:
+        type: array
+        items:
+          $ref: '#/definitions/GroupMember'
+  GroupMember:
+    description: "An entry of group description and the membership user email"
+    type: object
+    properties:
+      group:
+        type: string
+      user:
+        type: string
   UserList:
     description: "A list of users for the response body"
     type: object
