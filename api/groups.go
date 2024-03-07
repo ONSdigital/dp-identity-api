@@ -1,18 +1,17 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"encoding/csv"
 	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-
-	"github.com/google/uuid"
-
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"io"
+	"net/http"
 )
 
 const (
@@ -487,8 +486,11 @@ func (api *API) RemoveUserFromGroup(ctx context.Context, group models.Group, use
 }
 
 func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	GroupsUsersList := []models.ListGroupUsersType{}
-	EMAIL := "Email"
+	var (
+		GroupsUsersList []models.ListGroupUsersType
+		header1         = "GroupName"
+		header2         = "UserEmail"
+	)
 
 	listOfGroups, err := api.GetListGroups()
 	if err != nil {
@@ -499,10 +501,8 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWrite
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
 
-	//fmt.Println("\n\t--- full group list ----", *listOfGroups)
 	for _, ListGroup := range listOfGroups.Groups {
-		//fmt.Println("\n\t--- group description ----", *ListGroup.Description)
-		//fmt.Println("\n\t--- group name ----", *ListGroup.GroupName)
+
 		inputGroup := models.Group{ID: *ListGroup.GroupName}
 		var listOfUsersInput []*cognitoidentityprovider.UserType
 		listUsers, err := api.getUsersInAGroup(listOfUsersInput, inputGroup)
@@ -513,13 +513,9 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWrite
 			}
 			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 		}
-		//fmt.Println("\n\t--- group membership ----", listUsers)
 		for _, user := range listUsers {
-			//fmt.Println("\n\t--- user Attributes ----", user.Attributes)
 			for _, attribute := range user.Attributes {
-				fmt.Println("\n\t---attributes ----", attribute)
-				if attribute.Name == &EMAIL {
-					fmt.Println("\n\t--- output ----", ListGroup.Description, attribute.Value)
+				if *attribute.Name == "Email" {
 					GroupsUsersList = append(GroupsUsersList, models.ListGroupUsersType{
 						GroupName: ListGroup.Description,
 						UserEmail: attribute.Value,
@@ -529,7 +525,20 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWrite
 		}
 	}
 
-	fmt.Println(GroupsUsersList)
+	if req.Header.Get("Accept") == "text/csv" {
+		buf := new(bytes.Buffer)
+		w := csv.NewWriter(buf)
+		rows := [][]string{}
+		rows = append(rows, []string{header1, header2})
+
+		for _, record := range GroupsUsersList {
+			rows = append(rows, []string{*record.GroupName, *record.UserEmail})
+		}
+
+		w.WriteAll(rows)
+		return models.NewSuccessResponse(buf.Bytes(), http.StatusOK, nil), nil
+	}
+
 	jsonResponse, err := json.Marshal(GroupsUsersList)
 	if err != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
