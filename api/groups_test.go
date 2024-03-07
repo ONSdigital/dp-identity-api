@@ -2554,6 +2554,67 @@ func TestListGroupsUsersHandler(t *testing.T) {
 			})
 		}
 	})
+	Convey("check error response", t, func() {
+		listGroupsUsers := []struct {
+			description           string
+			getGroupsFunc         func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
+			listUsersForGroupFunc func(usersInput *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
+			assertions            func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+		}{
+			{
+				"500 response ",
+				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := internalErrorDescription
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
+					return ListGroupsUsers(l), nil
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse, ShouldNotBeNil)
+				},
+			},
+			{
+				"500 response users for group ",
+				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					output := listGroups(1)
+					return &output, nil
+
+				},
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					awsErrCode := "InternalErrorException"
+					awsErrMessage := internalErrorDescription
+					awsOrigErr := errors.New(awsErrCode)
+					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					return nil, awsErr
+				},
+				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse, ShouldNotBeNil)
+				},
+			},
+		}
+
+		for _, tt := range listGroupsUsers {
+			Convey(tt.description, func() {
+				m.ListGroupsFunc = tt.getGroupsFunc
+				m.ListUsersInGroupFunc = tt.listUsersForGroupFunc
+				r := httptest.NewRequest(http.MethodGet, getGroupsReportEndPoint, nil)
+				r.Header.Set("Accept", "text/csv")
+				urlVars := map[string]string{
+					"id": "efgh5678",
+				}
+				r = mux.SetURLVars(r, urlVars)
+				successResponse, errorResponse := api.ListGroupsUsersHandler(ctx, w, r)
+				tt.assertions(successResponse, errorResponse)
+			})
+		}
+	})
 
 }
 

@@ -46,15 +46,6 @@ type ListUserGroups struct {
 	Count     int                  `json:"count"`
 }
 
-type ListGroupUsersType struct {
-	GroupName *string `type:"string" json:"group"`
-	UserEmail *string `type:"string" json:"user"`
-}
-
-type ListGroupsUsers struct {
-	Groups []*ListGroupUsersType `json:"groups"`
-}
-
 // BuildListUserRequest generates a ListUsersInput object for Cognito
 func (p UsersList) BuildListUserRequest(filterString string, requiredAttribute string, limit int64, paginationToken *string, userPoolId *string) *cognitoidentityprovider.ListUsersInput {
 	requestInput := &cognitoidentityprovider.ListUsersInput{
