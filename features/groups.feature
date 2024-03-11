@@ -900,19 +900,27 @@ Scenario: PUT /v1/groups/{id}/members and checking the response status 200
 
 #   Get getgroupsreport scenarios
 
-    # no groups
-    Scenario: GET /v1/groups-report and checking the response status 200
+Scenario: GET /v1/groups-report and checking the response status 200 1 Group with 1 users
+    Given group "test-group" and description "test-group description" exists in the database
+        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        And user "abcd1234" is a member of group "test-group"
+        And group "test-group2" and description "test-group2 description" exists in the database
+        And a user with username "abcd1235" and email "otheremail@ons.gov.uk" exists in the database
+        And user "abcd1235" is a member of group "test-group2"
         And I am an admin user
-        When I GET "/v1/groups-report"
-        Then the response code should be 200
-        And the response should match the following json for listgroups
-
-#Scenario: GET /v1/groups-report and checking the response status 200
-#    Given group "test-group" and description "test-group description" exists in the database
-#        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-#        And user "abcd1234" is a member of group "test-group"
-#        And I am an admin user
-#        When I GET "/v1/groups-report"
-#    Then I should receive the following JSON response with status "200":
-#        """ """
+    When I GET "/v1/groups-report"
+    Then the response code should be 200
+        And the response should match the following json for listgroupsusers
+            """
+                [
+                    {
+                      "group": "test-group description",
+                      "user": "email@ons.gov.uk"
+                    },
+                    {
+                      "group": "test-group2 description",
+                      "user": "otheremail@ons.gov.uk"
+                    }
+                  ]
+            """
 

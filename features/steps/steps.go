@@ -3,6 +3,7 @@ package steps
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -35,6 +36,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the list response should contain "([^"]*)" entries$`, c.listResponseShouldContainCorrectNumberOfEntries)
 	ctx.Step(`^the response code should be (\d+)$`, c.theResponseCodeShouldBe)
 	ctx.Step(`^the response should match the following json for listgroups$`, c.theResponseShouldMatchTheFollowingJsonForListgroups)
+	ctx.Step(`^the response should match the following json for listgroupsusers$`, c.theResponseShouldMatchTheFollowingJsonForListgroupsusers)
 	ctx.Step(`^there are "([^"]*)" active users and "([^"]*)" inactive users in the database$`, c.thereAreRequiredNumberOfActiveUsers)
 	ctx.Step(`^there are "([^"]*)" users in the database$`, c.thereAreRequiredNumberOfUsers)
 	ctx.Step(`^there are (\d+) groups in the database$`, c.thereAreGroupsInTheDatabase)
@@ -245,6 +247,30 @@ func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroups(
 		assert.GreaterOrEqual(c.apiFeature, 13, tmpPrecedence)
 		assert.LessOrEqual(c.apiFeature, 100, tmpPrecedence)
 
+	}
+	return nil
+}
+
+func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroupsusers(body *godog.DocString) (err error) {
+	var expected, actual []models.ListGroupUsersType
+
+	// re-encode expected response
+	if err = json.Unmarshal([]byte(body.Content), &expected); err != nil {
+		return
+	}
+
+	responseBody := c.apiFeature.HTTPResponse.Body
+	resBody, _ := io.ReadAll(responseBody)
+
+	if err = json.Unmarshal(resBody, &actual); err != nil {
+		return
+	}
+	// the matching may be adapted per different requirements.
+
+	for ind, act := range actual {
+		fmt.Println("\n\t---expected act ---", expected[ind].GroupName, act.GroupName)
+		assert.Equal(c.apiFeature, expected[ind].GroupName, act.GroupName)
+		assert.Equal(c.apiFeature, expected[ind].UserEmail, act.UserEmail)
 	}
 	return nil
 }
