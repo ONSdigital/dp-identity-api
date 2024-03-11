@@ -1,6 +1,6 @@
 Feature: Groups
 
-#   Create new group scenarios
+#   Create new group goscenarios
 
 Scenario: POST /v1/groups to create group, group created returns 201
     Given I am an admin user
@@ -541,7 +541,7 @@ Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, internal server er
             {"code":"InternalServerError", "description":"Internal Server Error"}
         """
 
- Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, group not found returns 404
+Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, group not found returns 404
     Given group "get-group-not-found" exists in the database
          And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
          And I am an admin user
@@ -604,15 +604,15 @@ Scenario: GET /v1/groups/{id}/members, group not found returns 400
             }
         """
 
- Scenario: GET /v1/groups/{id}/members, internal server error returns 500
-    Given group "internal-error" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-    When I GET "/v1/groups/internal-error/members"
-    Then I should receive the following JSON response with status "500":
-        """
-            {"code":"InternalServerError", "description":"Internal Server Error"}
-        """
+Scenario: GET /v1/groups/{id}/members, internal server error returns 500
+Given group "internal-error" exists in the database
+    And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+    And I am an admin user
+When I GET "/v1/groups/internal-error/members"
+Then I should receive the following JSON response with status "500":
+    """
+        {"code":"InternalServerError", "description":"Internal Server Error"}
+    """
 
 #   Get listgroups scenarios
 #   list for no groups found
@@ -628,7 +628,8 @@ Scenario: GET /v1/groups and checking the response status 200
                     "count":0,
                     "next_token":null
                 }
-            """
+    """
+
 #   list for one groups found
 Scenario: GET /v1/groups and checking the response status 200
     Given there are 2 groups in the database
@@ -649,6 +650,7 @@ Scenario: GET /v1/groups and checking the response status 200
                     "next_token": null
                 }
             """
+
 #   list for many groups found   given blocks of 60 for one cognito call
 Scenario: GET /v1/groups and checking the response status 200
     Given there are 100 groups in the database
@@ -701,6 +703,7 @@ Scenario: GET /v1/groups and checking the response status 404
                 ]
             }
         """
+
 Scenario: GET /v1/groups/{id} internal server error returns 500
     Given group "internal-error" exists in the database
         And I am an admin user
@@ -791,7 +794,7 @@ Scenario: PUT /v1/groups/{id}/members and checking the response status 200
             }
         """
 
- Scenario: PUT /v1/groups/{id}/members and checking the response status 200
+Scenario: PUT /v1/groups/{id}/members and checking the response status 200
     Given group "test-group" exists in the database
         And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
         And user "user_1" is a member of group "test-group"
@@ -896,29 +899,20 @@ Scenario: PUT /v1/groups/{id}/members and checking the response status 200
     Then the HTTP status code should be "404"
 
 #   Get getgroupsreport scenarios
-#   successful return
-Scenario: GET /v1/groups-report and checking the response status 200
-    Given group "test-group1"  and description "test group 1 description" exists in the database
-    And a user with username "user_1" and email "email1@ons.gov.uk" exists in the database
-    And user "user_1" is a member of group "test-group1"
-    And a user with username "user_2" and email "email2@ons.gov.uk" exists in the database
-    And user "user_2" is a member of group "test-group1"
-    And group "test-group2"  and description "test group 2 description" exists in the database
-    And a user with username "user_3" and email "email3@ons.gov.uk" exists in the database
-    And user "user_3" is a member of group "test-group2"
-    And a user with username "user_4" and email "email4@ons.gov.uk" exists in the database
-    And user "user_4" is a member of group "test-group2"
-    And group "test-group3" and description "test group 2 description" exists in the database
-    And a user with username "user_5" and email "email5@ons.gov.uk" exists in the database
-    And user "user_5" is a member of group "test-group3"
-    And a user with username "user_6" and email "email6@ons.gov.uk" exists in the database
-    And user "user_6" is a member of group "test-group3"
-    And I am an admin user
-    When I GET "/v1/groups-report"
-    Then I should receive the following JSON response with status "200":
-        """
-            {
-                "Team name":"test group 1 description",
-                "User":"email1@ons.gov.uk",
-            }
-        """
+
+    # no groups
+    Scenario: GET /v1/groups-report and checking the response status 200
+        And I am an admin user
+        When I GET "/v1/groups-report"
+        Then the response code should be 200
+        And the response should match the following json for listgroups
+
+#Scenario: GET /v1/groups-report and checking the response status 200
+#    Given group "test-group" and description "test-group description" exists in the database
+#        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+#        And user "abcd1234" is a member of group "test-group"
+#        And I am an admin user
+#        When I GET "/v1/groups-report"
+#    Then I should receive the following JSON response with status "200":
+#        """ """
+

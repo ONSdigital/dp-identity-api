@@ -1304,10 +1304,8 @@ func TestListGroupsHandler(t *testing.T) {
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
 					So(successResponse, ShouldNotBeNil)
 					So(successResponse.Body, ShouldNotBeNil)
-
 					var responseBody = models.ListUserGroups{}
 					json.Unmarshal(successResponse.Body, &responseBody)
-
 					So(responseBody.NextToken, ShouldBeNil)
 					So(responseBody.Count, ShouldEqual, 2)
 					So(responseBody.Groups, ShouldNotBeNil)
@@ -2380,10 +2378,16 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					return ListGroupsUsers(l), nil
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					testout := []models.ListGroupUsersType{}
-					jsonErr := json.Unmarshal(successResponse.Body, &testout)
+					var testOutJSON []models.ListGroupUsersType
+					jsonErr := json.Unmarshal(successResponse.Body, &testOutJSON)
 					So(jsonErr, ShouldBeNil)
-					So(testout, ShouldBeEmpty)
+					So(testOutJSON, ShouldBeEmpty)
+
+					testOutCSV := string(successResponse.Body[:])
+					stringSlice := strings.Split(testOutCSV, "\n")
+					So(stringSlice, ShouldHaveLength, 1)
+					So(stringSlice[0], ShouldNotBeEmpty)
+
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
 					So(errorResponse, ShouldBeNil)
 				},
@@ -2399,11 +2403,19 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					return ListGroupsUsers(l + 1), nil
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					testout := []models.ListGroupUsersType{}
-					jsonErr := json.Unmarshal(successResponse.Body, &testout)
+					var testOutJSON []models.ListGroupUsersType
+					jsonErr := json.Unmarshal(successResponse.Body, &testOutJSON)
 					So(jsonErr, ShouldBeNil)
-					So(testout, ShouldNotBeEmpty)
-					So(testout, ShouldHaveLength, 1)
+					So(testOutJSON, ShouldNotBeEmpty)
+					So(testOutJSON, ShouldHaveLength, 1)
+					for _, t := range testOutJSON {
+						So(t.GroupName, ShouldResemble, "group 0 description")
+						So(t.UserEmail, ShouldResemble, "user0.email@domain.test")
+					}
+					testOutCSV := string(successResponse.Body[:])
+					stringSlice := strings.Split(testOutCSV, "\n")
+					So(stringSlice, ShouldHaveLength, 1)
+					So(stringSlice[0], ShouldNotBeEmpty)
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
 					So(errorResponse, ShouldBeNil)
 				},
@@ -2419,17 +2431,20 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					return ListGroupsUsers(l + 1), nil
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					testout := []models.ListGroupUsersType{}
-					jsonErr := json.Unmarshal(successResponse.Body, &testout)
+					var testOutJSON []models.ListGroupUsersType
+					jsonErr := json.Unmarshal(successResponse.Body, &testOutJSON)
 					So(jsonErr, ShouldBeNil)
-					So(testout, ShouldNotBeEmpty)
-					So(testout, ShouldHaveLength, 6)
+					So(testOutJSON, ShouldNotBeEmpty)
+					So(testOutJSON, ShouldHaveLength, 6)
+					testOutCSV := string(successResponse.Body[:])
+					stringSlice := strings.Split(testOutCSV, "\n")
+					So(stringSlice, ShouldHaveLength, 1)
+					So(stringSlice[0], ShouldNotBeEmpty)
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
 					So(errorResponse, ShouldBeNil)
 				},
 			},
 		}
-
 		for _, tt := range listGroupsUsers {
 			Convey(tt.description, func() {
 				m.ListGroupsFunc = tt.getGroupsFunc
@@ -2462,12 +2477,12 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					return ListGroupsUsers(l), nil
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					testoutjson := []models.ListGroupUsersType{}
+					var testoutjson []models.ListGroupUsersType
 					jsonErr := json.Unmarshal(successResponse.Body, &testoutjson)
 					So(jsonErr, ShouldNotBeNil)
 					So(testoutjson, ShouldBeEmpty)
-					testoutcsv := string(successResponse.Body[:])
-					stringSlice := strings.Split(testoutcsv, "\n")
+					testOutCSV := string(successResponse.Body[:])
+					stringSlice := strings.Split(testOutCSV, "\n")
 					So(stringSlice, ShouldHaveLength, 2)
 					So(stringSlice[0], ShouldResemble, "GroupName,UserEmail")
 					So(stringSlice[1], ShouldBeEmpty)
@@ -2490,8 +2505,8 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					jsonErr := json.Unmarshal(successResponse.Body, &testoutjson)
 					So(jsonErr, ShouldNotBeNil)
 					So(testoutjson, ShouldBeEmpty)
-					testoutcsv := string(successResponse.Body[:])
-					tmpRows := strings.Split(testoutcsv, "\n")
+					testOutCSV := string(successResponse.Body[:])
+					tmpRows := strings.Split(testOutCSV, "\n")
 					So(tmpRows, ShouldHaveLength, 3)
 					So(tmpRows[0], ShouldResemble, "GroupName,UserEmail")
 					So(tmpRows[len(tmpRows)-1], ShouldBeEmpty)
@@ -2521,8 +2536,8 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					jsonErr := json.Unmarshal(successResponse.Body, &testoutjson)
 					So(jsonErr, ShouldNotBeNil)
 					So(testoutjson, ShouldBeEmpty)
-					testoutcsv := string(successResponse.Body[:])
-					tmpRows := strings.Split(testoutcsv, "\n")
+					testOutCSV := string(successResponse.Body[:])
+					tmpRows := strings.Split(testOutCSV, "\n")
 					So(tmpRows, ShouldHaveLength, 8)
 					So(tmpRows[0], ShouldResemble, "GroupName,UserEmail")
 					So(tmpRows[len(tmpRows)-1], ShouldBeEmpty)
@@ -2538,7 +2553,6 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				},
 			},
 		}
-
 		for _, tt := range listGroupsUsers {
 			Convey(tt.description, func() {
 				m.ListGroupsFunc = tt.getGroupsFunc
@@ -2599,7 +2613,6 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				},
 			},
 		}
-
 		for _, tt := range listGroupsUsers {
 			Convey(tt.description, func() {
 				m.ListGroupsFunc = tt.getGroupsFunc
@@ -2615,7 +2628,6 @@ func TestListGroupsUsersHandler(t *testing.T) {
 			})
 		}
 	})
-
 }
 
 func listGroups(noOfGroups int) cognitoidentityprovider.ListGroupsOutput {

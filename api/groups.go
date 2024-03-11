@@ -517,8 +517,8 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWrite
 			for _, attribute := range user.Attributes {
 				if *attribute.Name == "Email" {
 					GroupsUsersList = append(GroupsUsersList, models.ListGroupUsersType{
-						GroupName: ListGroup.Description,
-						UserEmail: attribute.Value,
+						GroupName: *ListGroup.Description,
+						UserEmail: *attribute.Value,
 					})
 				}
 			}
@@ -532,7 +532,7 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWrite
 		rows = append(rows, []string{header1, header2})
 
 		for _, record := range GroupsUsersList {
-			rows = append(rows, []string{*record.GroupName, *record.UserEmail})
+			rows = append(rows, []string{record.GroupName, record.UserEmail})
 		}
 
 		w.WriteAll(rows)

@@ -30,8 +30,8 @@ type ListGroupsUsers struct {
 	Groups []*ListGroupUsersType `json:"groups"`
 }
 type ListGroupUsersType struct {
-	GroupName *string `type:"string" json:"group"`
-	UserEmail *string `type:"string" json:"user"`
+	GroupName string `type:"string" json:"group"`
+	UserEmail string `type:"string" json:"user"`
 }
 
 // Group is a type for the identity API representation of a group's details

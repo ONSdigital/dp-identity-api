@@ -476,7 +476,6 @@ paths:
           description: "Internal error occurred"
           schema:
             $ref: '#/definitions/ErrorResponse'
-
   /groups/{id}:
     get:
       tags:
@@ -810,7 +809,7 @@ definitions:
       groups:
         type: array
         items:
-          $ref: '#/definitions/GroupsUsersList'
+          $ref: '#/definitions/Group'
   GroupMember:
     description: "An entry of group description and the membership user email"
     type: object

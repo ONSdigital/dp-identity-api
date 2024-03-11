@@ -2,6 +2,8 @@ module github.com/ONSdigital/dp-identity-api
 
 go 1.21
 
+replace google.golang.org/protobuf => google.golang.org/protobuf v1.33.0
+
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.254.1
 	github.com/ONSdigital/dp-authorisation/v2 v2.31.1
@@ -36,7 +38,6 @@ require (
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.3.2 // indirect
-	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
@@ -63,9 +64,9 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	go.mongodb.org/mongo-driver v1.13.1 // indirect
-	go.opentelemetry.io/otel v1.21.0 // indirect
-	go.opentelemetry.io/otel/metric v1.21.0 // indirect
-	go.opentelemetry.io/otel/trace v1.21.0 // indirect
+	go.opentelemetry.io/otel v1.24.0 // indirect
+	go.opentelemetry.io/otel/metric v1.24.0 // indirect
+	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
