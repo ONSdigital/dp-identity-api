@@ -2766,6 +2766,7 @@ func TestGetTeamsReportLines(t *testing.T) {
 	})
 }
 
+// listGroups func to mock cognitoidentityprovider.ListGroupsOutput for use in TestGetTeamsReportLines
 func listGroups(noOfGroups int) cognitoidentityprovider.ListGroupsOutput {
 	groupList := []*cognitoidentityprovider.GroupType{}
 	for i := 0; i < noOfGroups; i++ {
@@ -2784,6 +2785,7 @@ func listGroups(noOfGroups int) cognitoidentityprovider.ListGroupsOutput {
 	return output
 }
 
+// ListGroupsUsers func to mock cognitoidentityprovider.ListUsersInGroupOutput for use in TestGetTeamsReportLines
 func ListGroupsUsers(noOfUsers int) *cognitoidentityprovider.ListUsersInGroupOutput {
 	userList := []*cognitoidentityprovider.UserType{}
 	var (
@@ -2810,6 +2812,7 @@ func ListGroupsUsers(noOfUsers int) *cognitoidentityprovider.ListUsersInGroupOut
 	}
 }
 
+// listGroupsUsers func to mock []models.ListGroupUsersType for use in TestListGroupsUsersHandler
 func listGroupsUsers(noOfGroups, noOfUsers int) ([]models.ListGroupUsersType, error) {
 	var output []models.ListGroupUsersType
 
