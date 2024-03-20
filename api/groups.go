@@ -485,33 +485,62 @@ func (api *API) RemoveUserFromGroup(ctx context.Context, group models.Group, use
 	return &listOfUsers, nil
 }
 
+// ListGroupsUsersHandler produces a user requested report of all groups with members including groups that act as roles
+// output by default is json but if request header accept == text/csv then the output is csv format
+// each line consists of the group description and user email
 func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	var (
-		GroupsUsersList []models.ListGroupUsersType
-		header1         = "GroupName"
-		header2         = "UserEmail"
+		GroupsUsersList *[]models.ListGroupUsersType
 	)
-
 	listOfGroups, err := api.GetListGroups()
 	if err != nil {
-		cognitoErr := models.NewCognitoError(ctx, err, "Cognito GetGroup request from Get group endpoint")
-		if cognitoErr.Code == models.NotFoundError {
-			return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
-		}
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+	}
+	GroupsUsersList, err = api.GetTeamsReportLines(listOfGroups)
+	if err != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+	}
+	if req.Header.Get("Accept") == "text/csv" {
+		return models.NewSuccessResponse(api.ListGroupsUsersCSV(GroupsUsersList).Bytes(), http.StatusOK, nil), nil
 	}
 
-	for _, ListGroup := range listOfGroups.Groups {
+	jsonResponse, err := json.Marshal(GroupsUsersList)
+	if err != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+	}
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
 
+// ListGroupsUsersCSV converts the GroupsUsersList output to csv
+func (api *API) ListGroupsUsersCSV(GroupsUsersList *[]models.ListGroupUsersType) *bytes.Buffer {
+	var csvHeader = models.ListGroupUsersType{
+		GroupName: "Group",
+		UserEmail: "User",
+	}
+	buf := new(bytes.Buffer)
+	w := csv.NewWriter(buf)
+	rows := [][]string{}
+	rows = append(rows, []string{csvHeader.GroupName, csvHeader.UserEmail})
+
+	for _, record := range *GroupsUsersList {
+		rows = append(rows, []string{record.GroupName, record.UserEmail})
+	}
+
+	w.WriteAll(rows)
+	return buf
+}
+
+// GetTeamsReportLines  from the listOfGroups for each group gets the list of members and produces output
+// group description user email for each group member
+func (api *API) GetTeamsReportLines(listOfGroups *cognitoidentityprovider.ListGroupsOutput) (*[]models.ListGroupUsersType, error) {
+	var GroupsUsersList []models.ListGroupUsersType
+	for _, ListGroup := range listOfGroups.Groups {
 		inputGroup := models.Group{ID: *ListGroup.GroupName}
+
 		var listOfUsersInput []*cognitoidentityprovider.UserType
 		listUsers, err := api.getUsersInAGroup(listOfUsersInput, inputGroup)
 		if err != nil {
-			cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from list users in group endpoint")
-			if cognitoErr.Code == models.NotFoundError {
-				return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
-			}
-			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
+			return nil, err
 		}
 		for _, user := range listUsers {
 			for _, attribute := range user.Attributes {
@@ -524,24 +553,5 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWrite
 			}
 		}
 	}
-
-	if req.Header.Get("Accept") == "text/csv" {
-		buf := new(bytes.Buffer)
-		w := csv.NewWriter(buf)
-		rows := [][]string{}
-		rows = append(rows, []string{header1, header2})
-
-		for _, record := range GroupsUsersList {
-			rows = append(rows, []string{record.GroupName, record.UserEmail})
-		}
-
-		w.WriteAll(rows)
-		return models.NewSuccessResponse(buf.Bytes(), http.StatusOK, nil), nil
-	}
-
-	jsonResponse, err := json.Marshal(GroupsUsersList)
-	if err != nil {
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
-	}
-	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+	return &GroupsUsersList, nil
 }

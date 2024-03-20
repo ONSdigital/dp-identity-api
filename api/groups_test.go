@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	getGroupsReportEndPoint     = "http://localhost:25600/v1/groups-report"
+	getGroupsReportEndPoint     = "http://localhost:25600/v1/groups/groups-report"
 	addUserToGroupEndPoint      = "http://localhost:25600/v1/groups/efgh5678/members"
 	removeUserFromGroupEndPoint = "http://localhost:25600/v1/groups/efgh5678/members/abcd1234"
 	getUsersInGroupEndPoint     = "http://localhost:25600/v1/groups/efgh5678/members"
@@ -2358,97 +2358,122 @@ func TestListGroupsUsersHandler(t *testing.T) {
 	var (
 		ctx = context.Background()
 	)
-
 	api, w, m := apiSetup()
-	Convey("check expected responses json", t, func() {
+	Convey("Check results for json", t, func() {
 		listGroupsUsers := []struct {
-			description           string
-			getGroupsFunc         func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
-			listUsersForGroupFunc func(usersInput *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
-			assertions            func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+			description          string
+			listUsersInGroupFunc func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
+			listGroupsFunc       func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
+			assertions           func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{
 			{
-				"200 response - no groups",
-				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
-					output := listGroups(0)
-					return &output, nil
-				},
-				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+				description: "empty group",
+				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
 					return ListGroupsUsers(l), nil
 				},
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					var testOutJSON []models.ListGroupUsersType
-					jsonErr := json.Unmarshal(successResponse.Body, &testOutJSON)
-					So(jsonErr, ShouldBeNil)
-					So(testOutJSON, ShouldBeEmpty)
-
-					testOutCSV := string(successResponse.Body[:])
-					stringSlice := strings.Split(testOutCSV, "\n")
-					So(stringSlice, ShouldHaveLength, 1)
-					So(stringSlice[0], ShouldNotBeEmpty)
-
-					So(successResponse.Status, ShouldEqual, http.StatusOK)
+				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					output := listGroups(0)
+					return &output, nil
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(isJson(successResponse, 0), ShouldBeTrue)
+					So(isCSV(successResponse, 1), ShouldBeFalse)
 				},
 			},
 			{
-				"200 response - 1 group",
-				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+				description: "empty group no users",
+				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
+					return ListGroupsUsers(l), nil
+				},
+				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(1)
 					return &output, nil
 				},
-				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
-					return ListGroupsUsers(l + 1), nil
-				},
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					var testOutJSON []models.ListGroupUsersType
-					jsonErr := json.Unmarshal(successResponse.Body, &testOutJSON)
-					So(jsonErr, ShouldBeNil)
-					So(testOutJSON, ShouldNotBeEmpty)
-					So(testOutJSON, ShouldHaveLength, 1)
-					for _, t := range testOutJSON {
-						So(t.GroupName, ShouldResemble, "group 0 description")
-						So(t.UserEmail, ShouldResemble, "user0.email@domain.test")
-					}
-					testOutCSV := string(successResponse.Body[:])
-					stringSlice := strings.Split(testOutCSV, "\n")
-					So(stringSlice, ShouldHaveLength, 1)
-					So(stringSlice[0], ShouldNotBeEmpty)
-					So(successResponse.Status, ShouldEqual, http.StatusOK)
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(isJson(successResponse, 0), ShouldBeTrue)
+					So(isCSV(successResponse, 1), ShouldBeFalse)
 				},
 			},
 			{
-				"200 response - 3 groups",
-				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+				description: "json 1 group",
+				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					return ListGroupsUsers(1), nil
+				},
+				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					output := listGroups(1)
+					return &output, nil
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
+					So(errorResponse, ShouldBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(isJson(successResponse, 1), ShouldBeTrue)
+					So(isCSV(successResponse, 1), ShouldBeFalse)
+				},
+			},
+			{
+				description: "json 3 group",
+				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					return ListGroupsUsers(3), nil
+				},
+				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(3)
 					return &output, nil
 				},
-				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
-					return ListGroupsUsers(l + 1), nil
-				},
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					var testOutJSON []models.ListGroupUsersType
-					jsonErr := json.Unmarshal(successResponse.Body, &testOutJSON)
-					So(jsonErr, ShouldBeNil)
-					So(testOutJSON, ShouldNotBeEmpty)
-					So(testOutJSON, ShouldHaveLength, 6)
-					testOutCSV := string(successResponse.Body[:])
-					stringSlice := strings.Split(testOutCSV, "\n")
-					So(stringSlice, ShouldHaveLength, 1)
-					So(stringSlice[0], ShouldNotBeEmpty)
-					So(successResponse.Status, ShouldEqual, http.StatusOK)
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(isJson(successResponse, 9), ShouldBeTrue)
+					So(isCSV(successResponse, 1), ShouldBeFalse)
+				},
+			},
+			{
+				description: "json error getting groups",
+				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					var exception cognitoidentityprovider.InternalErrorException
+					exception.Message_ = &internalErrorDescription
+					return nil, &exception
+				},
+				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					output := listGroups(3)
+					return &output, nil
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+				},
+			},
+			{
+				description: "json error getting group membership",
+				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					return ListGroupsUsers(3), nil
+				},
+				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					var exception cognitoidentityprovider.InternalErrorException
+					exception.Message_ = &internalErrorDescription
+					return nil, &exception
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldBeNil)
+					So(errorResponse, ShouldNotBeNil)
+					So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
 				},
 			},
 		}
 		for _, tt := range listGroupsUsers {
 			Convey(tt.description, func() {
-				m.ListGroupsFunc = tt.getGroupsFunc
-				m.ListUsersInGroupFunc = tt.listUsersForGroupFunc
+				m.ListUsersInGroupFunc = tt.listUsersInGroupFunc
+				m.ListGroupsFunc = tt.listGroupsFunc
 				r := httptest.NewRequest(http.MethodGet, getGroupsReportEndPoint, nil)
 				urlVars := map[string]string{
 					"id": "efgh5678",
@@ -2459,104 +2484,88 @@ func TestListGroupsUsersHandler(t *testing.T) {
 			})
 		}
 	})
-	Convey("check expected responses csv", t, func() {
+	Convey("Check results for csv", t, func() {
 		listGroupsUsers := []struct {
-			description           string
-			getGroupsFunc         func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
-			listUsersForGroupFunc func(usersInput *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
-			assertions            func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+			description          string
+			listUsersInGroupFunc func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
+			listGroupsFunc       func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
+			assertions           func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{
 			{
-				"200 response - no groups",
-				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
-					output := listGroups(0)
-					return &output, nil
-				},
-				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+				description: "empty group",
+				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
 					return ListGroupsUsers(l), nil
 				},
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					var testoutjson []models.ListGroupUsersType
-					jsonErr := json.Unmarshal(successResponse.Body, &testoutjson)
-					So(jsonErr, ShouldNotBeNil)
-					So(testoutjson, ShouldBeEmpty)
-					testOutCSV := string(successResponse.Body[:])
-					stringSlice := strings.Split(testOutCSV, "\n")
-					So(stringSlice, ShouldHaveLength, 2)
-					So(stringSlice[0], ShouldResemble, "GroupName,UserEmail")
-					So(stringSlice[1], ShouldBeEmpty)
-					So(successResponse.Status, ShouldEqual, http.StatusOK)
+				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					output := listGroups(0)
+					return &output, nil
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(isJson(successResponse, 0), ShouldBeFalse)
+					So(isCSV(successResponse, 2), ShouldBeTrue)
 				},
 			},
 			{
-				"200 response - 1 group",
-				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+				description: "1 group no users",
+				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
+					return ListGroupsUsers(l), nil
+				},
+				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(1)
 					return &output, nil
 				},
-				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
-					return ListGroupsUsers(l + 1), nil
-				},
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					testoutjson := []models.ListGroupUsersType{}
-					jsonErr := json.Unmarshal(successResponse.Body, &testoutjson)
-					So(jsonErr, ShouldNotBeNil)
-					So(testoutjson, ShouldBeEmpty)
-					testOutCSV := string(successResponse.Body[:])
-					tmpRows := strings.Split(testOutCSV, "\n")
-					So(tmpRows, ShouldHaveLength, 3)
-					So(tmpRows[0], ShouldResemble, "GroupName,UserEmail")
-					So(tmpRows[len(tmpRows)-1], ShouldBeEmpty)
-					So(tmpRows[1], ShouldNotBeEmpty)
-					tmpRow := strings.Split(tmpRows[1], ",")
-					So(tmpRow, ShouldHaveLength, 2)
-					So(strings.Contains(tmpRow[0], "group"), ShouldBeTrue)
-					So(strings.Contains(tmpRow[0], "description"), ShouldBeTrue)
-					So(strings.Contains(tmpRow[1], "user"), ShouldBeTrue)
-					So(strings.Contains(tmpRow[1], "email"), ShouldBeTrue)
-					So(successResponse.Status, ShouldEqual, http.StatusOK)
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(isJson(successResponse, 0), ShouldBeFalse)
+					So(isCSV(successResponse, 2), ShouldBeTrue)
 				},
 			},
 			{
-				"200 response - 3 groups",
-				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+				description: "json 1 group 1 user",
+				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					return ListGroupsUsers(1), nil
+				},
+				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					output := listGroups(1)
+					return &output, nil
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
+					So(errorResponse, ShouldBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(isJson(successResponse, 0), ShouldBeFalse)
+					So(isCSV(successResponse, 3), ShouldBeTrue)
+				},
+			},
+			{
+				description: "json 3 group",
+				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					return ListGroupsUsers(3), nil
+				},
+				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(3)
 					return &output, nil
 				},
-				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
-					return ListGroupsUsers(l + 1), nil
-				},
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					testoutjson := []models.ListGroupUsersType{}
-					jsonErr := json.Unmarshal(successResponse.Body, &testoutjson)
-					So(jsonErr, ShouldNotBeNil)
-					So(testoutjson, ShouldBeEmpty)
-					testOutCSV := string(successResponse.Body[:])
-					tmpRows := strings.Split(testOutCSV, "\n")
-					So(tmpRows, ShouldHaveLength, 8)
-					So(tmpRows[0], ShouldResemble, "GroupName,UserEmail")
-					So(tmpRows[len(tmpRows)-1], ShouldBeEmpty)
-					So(tmpRows[1], ShouldNotBeEmpty)
-					tmpRow := strings.Split(tmpRows[1], ",")
-					So(tmpRow, ShouldHaveLength, 2)
-					So(strings.Contains(tmpRow[0], "group"), ShouldBeTrue)
-					So(strings.Contains(tmpRow[0], "description"), ShouldBeTrue)
-					So(strings.Contains(tmpRow[1], "user"), ShouldBeTrue)
-					So(strings.Contains(tmpRow[1], "email"), ShouldBeTrue)
-					So(successResponse.Status, ShouldEqual, http.StatusOK)
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(isJson(successResponse, 0), ShouldBeFalse)
+					So(isCSV(successResponse, 11), ShouldBeTrue)
 				},
 			},
 		}
 		for _, tt := range listGroupsUsers {
 			Convey(tt.description, func() {
-				m.ListGroupsFunc = tt.getGroupsFunc
-				m.ListUsersInGroupFunc = tt.listUsersForGroupFunc
+				m.ListUsersInGroupFunc = tt.listUsersInGroupFunc
+				m.ListGroupsFunc = tt.listGroupsFunc
 				r := httptest.NewRequest(http.MethodGet, getGroupsReportEndPoint, nil)
 				r.Header.Set("Accept", "text/csv")
 				urlVars := map[string]string{
@@ -2568,55 +2577,88 @@ func TestListGroupsUsersHandler(t *testing.T) {
 			})
 		}
 	})
-	Convey("check error response", t, func() {
+	Convey("Check results for csv", t, func() {
 		listGroupsUsers := []struct {
-			description           string
-			getGroupsFunc         func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
-			listUsersForGroupFunc func(usersInput *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
-			assertions            func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+			description          string
+			listUsersInGroupFunc func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
+			listGroupsFunc       func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
+			assertions           func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{
 			{
-				"500 response ",
-				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
-					awsErrCode := "InternalErrorException"
-					awsErrMessage := internalErrorDescription
-					awsOrigErr := errors.New(awsErrCode)
-					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
-					return nil, awsErr
-				},
-				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+				description: "empty group",
+				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
 					return ListGroupsUsers(l), nil
 				},
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					So(successResponse, ShouldBeNil)
-					So(errorResponse, ShouldNotBeNil)
+				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					output := listGroups(0)
+					return &output, nil
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
+					So(errorResponse, ShouldBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(isJson(successResponse, 0), ShouldBeFalse)
+					So(isCSV(successResponse, 2), ShouldBeTrue)
 				},
 			},
 			{
-				"500 response users for group ",
-				func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+				description: "1 group no users",
+				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
+					return ListGroupsUsers(l), nil
+				},
+				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(1)
 					return &output, nil
-
 				},
-				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-					awsErrCode := "InternalErrorException"
-					awsErrMessage := internalErrorDescription
-					awsOrigErr := errors.New(awsErrCode)
-					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
-					return nil, awsErr
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
+					So(errorResponse, ShouldBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(isJson(successResponse, 0), ShouldBeFalse)
+					So(isCSV(successResponse, 2), ShouldBeTrue)
 				},
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
-					So(successResponse, ShouldBeNil)
-					So(errorResponse, ShouldNotBeNil)
+			},
+			{
+				description: "json 1 group 1 user",
+				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					return ListGroupsUsers(1), nil
+				},
+				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					output := listGroups(1)
+					return &output, nil
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
+					So(errorResponse, ShouldBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(isJson(successResponse, 0), ShouldBeFalse)
+					So(isCSV(successResponse, 3), ShouldBeTrue)
+				},
+			},
+			{
+				description: "json 3 group",
+				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					return ListGroupsUsers(3), nil
+				},
+				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+					output := listGroups(3)
+					return &output, nil
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(successResponse, ShouldNotBeNil)
+					So(errorResponse, ShouldBeNil)
+					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(isJson(successResponse, 0), ShouldBeFalse)
+					So(isCSV(successResponse, 11), ShouldBeTrue)
 				},
 			},
 		}
 		for _, tt := range listGroupsUsers {
 			Convey(tt.description, func() {
-				m.ListGroupsFunc = tt.getGroupsFunc
-				m.ListUsersInGroupFunc = tt.listUsersForGroupFunc
+				m.ListUsersInGroupFunc = tt.listUsersInGroupFunc
+				m.ListGroupsFunc = tt.listGroupsFunc
 				r := httptest.NewRequest(http.MethodGet, getGroupsReportEndPoint, nil)
 				r.Header.Set("Accept", "text/csv")
 				urlVars := map[string]string{
@@ -2630,14 +2672,108 @@ func TestListGroupsUsersHandler(t *testing.T) {
 	})
 }
 
+// isCSV will test that there is more than one slice and a header row
+func isCSV(successResponse *models.SuccessResponse, expectedLength int) bool {
+	testOutCSV := string(successResponse.Body[:])
+	stringSlice := strings.Split(testOutCSV, "\n")
+	if len(stringSlice) > 1 && stringSlice[0] == "Group,User" && len(stringSlice) == expectedLength {
+		return true
+	}
+	return false
+}
+
+// isJson test that can be unmarshal into the given structure
+func isJson(successResponse *models.SuccessResponse, expectedLength int) bool {
+	var testOutJSON []models.ListGroupUsersType
+	jsonErr := json.Unmarshal(successResponse.Body, &testOutJSON)
+	if expectedLength > 0 {
+		if jsonErr == nil && len(testOutJSON) == expectedLength {
+			return true
+		}
+	} else {
+		if jsonErr == nil && testOutJSON == nil {
+			return true
+		}
+	}
+	return false
+}
+
+func TestGetTeamsReportLines(t *testing.T) {
+	api, _, m := apiSetup()
+	Convey("init", t, func() {
+		listGroupsUsers := []struct {
+			description           string
+			groupsList            cognitoidentityprovider.ListGroupsOutput
+			listUsersForGroupFunc func(usersInput *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
+			assertions            func(Response []models.ListGroupUsersType, errorResponse error)
+		}{
+			{
+				"200 response - no groups",
+				listGroups(0),
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
+					return ListGroupsUsers(l), nil
+				},
+				func(groupsUsersList []models.ListGroupUsersType, errorResponse error) {
+					So(groupsUsersList, ShouldBeNil)
+					So(errorResponse, ShouldBeNil)
+				},
+			},
+			{
+				"200 response - 1 groups",
+				listGroups(1),
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
+					return ListGroupsUsers(l + 1), nil
+				},
+				func(groupsUsersList []models.ListGroupUsersType, errorResponse error) {
+					So(errorResponse, ShouldBeNil)
+					So(groupsUsersList, ShouldNotBeNil)
+					So(groupsUsersList, ShouldHaveLength, 1)
+					So(groupsUsersList[0].GroupName, ShouldResemble, "group 0 description")
+					So(groupsUsersList[0].UserEmail, ShouldResemble, "user0.email@domain.test")
+				},
+			},
+			{
+				"200 response - 3 groups",
+				listGroups(3),
+				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
+					return ListGroupsUsers(l + 1), nil
+				},
+				func(groupsUsersList []models.ListGroupUsersType, errorResponse error) {
+					So(errorResponse, ShouldBeNil)
+					So(groupsUsersList, ShouldNotBeNil)
+					So(groupsUsersList, ShouldHaveLength, 6)
+					So(groupsUsersList[0].GroupName, ShouldResemble, "group 0 description")
+					So(groupsUsersList[0].UserEmail, ShouldResemble, "user0.email@domain.test")
+					So(groupsUsersList[2].GroupName, ShouldResemble, "group 1 description")
+					So(groupsUsersList[2].UserEmail, ShouldResemble, "user1.email@domain.test")
+					So(groupsUsersList[4].GroupName, ShouldResemble, "group 2 description")
+					So(groupsUsersList[4].UserEmail, ShouldResemble, "user1.email@domain.test")
+					So(groupsUsersList[5].GroupName, ShouldResemble, "group 2 description")
+					So(groupsUsersList[5].UserEmail, ShouldResemble, "user2.email@domain.test")
+				},
+			},
+		}
+		for _, tt := range listGroupsUsers {
+			Convey(tt.description, func() {
+				m.ListUsersInGroupFunc = tt.listUsersForGroupFunc
+				groupMembershipList, errorResponse := api.GetTeamsReportLines(&tt.groupsList)
+				tt.assertions(*groupMembershipList, errorResponse)
+			})
+		}
+	})
+}
+
 func listGroups(noOfGroups int) cognitoidentityprovider.ListGroupsOutput {
 	groupList := []*cognitoidentityprovider.GroupType{}
 	for i := 0; i < noOfGroups; i++ {
-		groupname := "group" + strconv.Itoa(i)
-		groupdescription := "group " + strconv.Itoa(i) + " description"
+		groupName := "group" + strconv.Itoa(i)
+		groupDescription := "group " + strconv.Itoa(i) + " description"
 		groups := cognitoidentityprovider.GroupType{
-			Description: &groupdescription,
-			GroupName:   &groupname,
+			Description: &groupDescription,
+			GroupName:   &groupName,
 		}
 		groupList = append(groupList, &groups)
 	}
@@ -2672,4 +2808,26 @@ func ListGroupsUsers(noOfUsers int) *cognitoidentityprovider.ListUsersInGroupOut
 		NextToken: nil,
 		Users:     userList,
 	}
+}
+
+func listGroupsUsers(noOfGroups, noOfUsers int) ([]models.ListGroupUsersType, error) {
+	var output []models.ListGroupUsersType
+
+	groupsList := listGroups(noOfGroups)
+	for _, g := range groupsList.Groups {
+		userList := ListGroupsUsers(noOfUsers)
+		for _, user := range userList.Users {
+			fmt.Println(user)
+			for _, attribute := range user.Attributes {
+				if *attribute.Name == "Email" {
+					output = append(output, models.ListGroupUsersType{
+						GroupName: *g.Description,
+						UserEmail: *attribute.Value,
+					})
+				}
+			}
+		}
+
+	}
+	return output, nil
 }
