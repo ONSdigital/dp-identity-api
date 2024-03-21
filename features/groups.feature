@@ -1,6 +1,6 @@
 Feature: Groups
 
-#   Create new group goscenarios
+#   Create new group scenarios
 
 Scenario: POST /v1/groups to create group, group created returns 201
     Given I am an admin user

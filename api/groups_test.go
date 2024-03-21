@@ -2749,7 +2749,7 @@ func TestGetTeamsReportLines(t *testing.T) {
 					So(groupsUsersList, ShouldNotBeNil)
 					So(groupsUsersList, ShouldHaveLength, 1)
 					So(groupsUsersList[0].GroupName, ShouldResemble, "group 0 description")
-					So(groupsUsersList[0].UserEmail, ShouldResemble, "user0.email@domain.test")
+					So(groupsUsersList[0].UserEmail, ShouldResemble, "user_0.email@domain.test")
 				},
 			},
 			{
@@ -2764,13 +2764,13 @@ func TestGetTeamsReportLines(t *testing.T) {
 					So(groupsUsersList, ShouldNotBeNil)
 					So(groupsUsersList, ShouldHaveLength, 6)
 					So(groupsUsersList[0].GroupName, ShouldResemble, "group 0 description")
-					So(groupsUsersList[0].UserEmail, ShouldResemble, "user0.email@domain.test")
+					So(groupsUsersList[0].UserEmail, ShouldResemble, "user_0.email@domain.test")
 					So(groupsUsersList[2].GroupName, ShouldResemble, "group 1 description")
-					So(groupsUsersList[2].UserEmail, ShouldResemble, "user1.email@domain.test")
+					So(groupsUsersList[2].UserEmail, ShouldResemble, "user_1.email@domain.test")
 					So(groupsUsersList[4].GroupName, ShouldResemble, "group 2 description")
-					So(groupsUsersList[4].UserEmail, ShouldResemble, "user1.email@domain.test")
+					So(groupsUsersList[4].UserEmail, ShouldResemble, "user_1.email@domain.test")
 					So(groupsUsersList[5].GroupName, ShouldResemble, "group 2 description")
-					So(groupsUsersList[5].UserEmail, ShouldResemble, "user2.email@domain.test")
+					So(groupsUsersList[5].UserEmail, ShouldResemble, "user_0u98oihjbk2.email@domain.test")
 				},
 			},
 		}
@@ -2788,8 +2788,8 @@ func TestGetTeamsReportLines(t *testing.T) {
 func listGroups(noOfGroups int) cognitoidentityprovider.ListGroupsOutput {
 	groupList := []*cognitoidentityprovider.GroupType{}
 	for i := 0; i < noOfGroups; i++ {
-		groupName := "group" + strconv.Itoa(i)
-		groupDescription := "group " + strconv.Itoa(i) + " description"
+		groupName := fmt.Sprintf("group_%d", i)
+		groupDescription := fmt.Sprintf("group %d description", i)
 		groups := cognitoidentityprovider.GroupType{
 			Description: &groupDescription,
 			GroupName:   &groupName,
@@ -2812,13 +2812,14 @@ func ListGroupsUsers(noOfUsers int) *cognitoidentityprovider.ListUsersInGroupOut
 
 	for i := 0; i < noOfUsers; i++ {
 		userAttributes := []*cognitoidentityprovider.AttributeType{}
-		userEmail := "user" + strconv.Itoa(i) + ".email@domain.test"
+		userName := fmt.Sprintf("user_%d", i)
+		userEmail := userName + ".email@domain.test"
 		userAttribute := cognitoidentityprovider.AttributeType{Name: &attributeEmail, Value: &userEmail}
 		userAttributes = append(userAttributes, &userAttribute)
 		userType := cognitoidentityprovider.UserType{
 			Enabled:    aws.Bool(true),
 			UserStatus: aws.String("CONFIRMED"),
-			Username:   aws.String("user_" + strconv.Itoa(i)),
+			Username:   aws.String(userName),
 			Attributes: userAttributes,
 		}
 		userList = append(userList, &userType)
