@@ -898,8 +898,8 @@ Scenario: PUT /v1/groups/{id}/members and checking the response status 200
         """
     Then the HTTP status code should be "404"
 
-#   Get getgroupsreport scenarios
 
+@groups-report
 Scenario: GET /v1/groups-report and checking the response status 200 1 Group with 1 users
     Given group "test-group" and description "test-group description" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database

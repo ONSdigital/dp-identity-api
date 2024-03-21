@@ -2770,7 +2770,7 @@ func TestGetTeamsReportLines(t *testing.T) {
 					So(groupsUsersList[4].GroupName, ShouldResemble, "group 2 description")
 					So(groupsUsersList[4].UserEmail, ShouldResemble, "user_1.email@domain.test")
 					So(groupsUsersList[5].GroupName, ShouldResemble, "group 2 description")
-					So(groupsUsersList[5].UserEmail, ShouldResemble, "user_0u98oihjbk2.email@domain.test")
+					So(groupsUsersList[5].UserEmail, ShouldResemble, "user_2.email@domain.test")
 				},
 			},
 		}
