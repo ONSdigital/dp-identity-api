@@ -218,8 +218,6 @@ func (c *IdentityComponent) theResponseCodeShouldBe(code int) error {
 
 func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroups(body *godog.DocString) (err error) {
 	var expected, actual models.ListUserGroups
-
-	// re-encode expected response
 	if err = json.Unmarshal([]byte(body.Content), &expected); err != nil {
 		return
 	}
@@ -229,15 +227,11 @@ func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroups(
 	if err = json.Unmarshal(resBody, &actual); err != nil {
 		return
 	}
-
-	// the matching may be adapted per different requirements.
-
 	assert.Equal(c.apiFeature, expected.NextToken, actual.NextToken)
 	assert.Equal(c.apiFeature, expected.Count, actual.Count)
 	assert.Equal(c.apiFeature, len(expected.Groups), actual.Count)
-	// if actual.Count > 0 && expected.Count > 0 {
-	if actual.Count > 0 {
 
+	if actual.Count > 0 {
 		assert.Equal(c.apiFeature, *expected.Groups[0].Name, *actual.Groups[0].Name)
 		assert.Equal(c.apiFeature, *expected.Groups[0].ID, *actual.Groups[0].ID)
 		tmpPrecedence := int(*expected.Groups[0].Precedence)
@@ -246,15 +240,12 @@ func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroups(
 		tmpPrecedence = int(*actual.Groups[0].Precedence)
 		assert.GreaterOrEqual(c.apiFeature, 13, tmpPrecedence)
 		assert.LessOrEqual(c.apiFeature, 100, tmpPrecedence)
-
 	}
 	return nil
 }
 
 func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroupsusers(body *godog.DocString) (err error) {
 	var expected, actual []models.ListGroupUsersType
-
-	// re-encode expected response
 	if err = json.Unmarshal([]byte(body.Content), &expected); err != nil {
 		return
 	}
@@ -265,7 +256,6 @@ func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroupsu
 	if err = json.Unmarshal(resBody, &actual); err != nil {
 		return
 	}
-	// the matching may be adapted per different requirements.
 
 	for ind, act := range actual {
 		fmt.Println("\n\t---expected act ---", expected[ind].GroupName, act.GroupName)
