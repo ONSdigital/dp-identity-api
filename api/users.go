@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/ONSdigital/dp-identity-api/models"
@@ -21,7 +21,7 @@ const (
 	UsersUpdatePermission        = "users:update"
 )
 
-//CreateUserHandler creates a new user and returns a http handler interface
+// CreateUserHandler creates a new user and returns a http handler interface
 func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer func() {
 		if err := req.Body.Close(); err != nil {
@@ -29,7 +29,7 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 		}
 	}()
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
 	}
@@ -82,7 +82,7 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 	return models.NewSuccessResponse(jsonResponse, http.StatusCreated, nil), nil
 }
 
-//ListUsersHandler lists the users in the user pool
+// ListUsersHandler lists the users in the user pool
 func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	var (
 		filterString   = aws.String("")
@@ -115,7 +115,7 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 
 }
 
-//GetUserHandler lists the users in the user pool
+// GetUserHandler lists the users in the user pool
 func (api *API) GetUserHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	user := models.UserParams{ID: vars["id"]}
@@ -140,7 +140,7 @@ func (api *API) GetUserHandler(ctx context.Context, w http.ResponseWriter, req *
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
-//UpdateUserHandler updates a users details in Cognito and returns a http handler interface
+// UpdateUserHandler updates a users details in Cognito and returns a http handler interface
 func (api *API) UpdateUserHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer func() {
 		if err := req.Body.Close(); err != nil {
@@ -149,7 +149,7 @@ func (api *API) UpdateUserHandler(ctx context.Context, w http.ResponseWriter, re
 	}()
 	vars := mux.Vars(req)
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
 	}
@@ -213,7 +213,7 @@ func processUpdateCognitoError(ctx context.Context, err error, errContext string
 	return models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 }
 
-//ChangePasswordHandler processes changes to the users password
+// ChangePasswordHandler processes changes to the users password
 func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer func() {
 		if err := req.Body.Close(); err != nil {
@@ -224,7 +224,7 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 	var responseErr error = nil
 	var headers map[string]string = nil
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
 	}
@@ -305,7 +305,7 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 	return models.NewSuccessResponse(jsonResponse, http.StatusAccepted, headers), nil
 }
 
-//PasswordResetHandler requests a password reset email be sent to the user and returns a http handler interface
+// PasswordResetHandler requests a password reset email be sent to the user and returns a http handler interface
 func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer func() {
 		if err := req.Body.Close(); err != nil {
@@ -313,7 +313,7 @@ func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter,
 		}
 	}()
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		log.Error(ctx, "failed to read request body", err)
 		return nil, handleBodyReadError(ctx, err)
@@ -355,7 +355,7 @@ func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter,
 	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
 }
 
-//List Groups for user pagination allows first call and then any other call if nextToken is not ""
+// List Groups for user pagination allows first call and then any other call if nextToken is not ""
 func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupType, userId models.UserParams) ([]*cognitoidentityprovider.GroupType, error) {
 	firstTimeCheck := false
 	var nextToken string
@@ -380,7 +380,7 @@ func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupTy
 	return listOfGroups, nil
 }
 
-//ListUserGroupsHandler lists the users in the user pool
+// ListUserGroupsHandler lists the users in the user pool
 func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 
 	vars := mux.Vars(req)

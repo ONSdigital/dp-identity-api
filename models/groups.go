@@ -25,6 +25,15 @@ var (
 	groupPrecedenceMax    = int64(100)
 )
 
+// ListGroupUsersType list of groups and the membership returning group description and user email
+type ListGroupsUsers struct {
+	Groups []*ListGroupUsersType `json:"groups"`
+}
+type ListGroupUsersType struct {
+	GroupName string `type:"string" json:"group"`
+	UserEmail string `type:"string" json:"user"`
+}
+
 // Group is a type for the identity API representation of a group's details
 type Group struct {
 	ID         string    `json:"id"`
@@ -259,6 +268,17 @@ func (g *ListUserGroups) BuildListGroupsSuccessfulJsonResponse(ctx context.Conte
 	g.NextToken = result.NextToken
 	g.Count = len(result.Groups)
 
+	jsonResponse, err := json.Marshal(g)
+	if err != nil {
+		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
+	}
+	return jsonResponse, nil
+}
+
+func (g *ListGroupsUsers) BuildListGroupsSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.ListGroupsOutput) ([]byte, error) {
+	if result == nil {
+		return nil, NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
+	}
 	jsonResponse, err := json.Marshal(g)
 	if err != nil {
 		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
