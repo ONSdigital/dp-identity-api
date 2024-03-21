@@ -552,375 +552,375 @@ Scenario: DELETE /v1/groups/{id}/members/{user_id} get group, group not found re
         """
 
 #   Get users from group scenarios
-Scenario: GET /v1/groups/{id}/members and checking the response status 200
-    Given group "test-group" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And user "abcd1234" is a member of group "test-group"
-        And there are 1 users in group "test-group"
-        And I am an admin user
-    When I GET "/v1/groups/test-group/members"
-    Then I should receive the following JSON response with status "200":
-        """
-            {
-                "users": [
-                    {
-                        "id": "abcd1234",
-                        "forename": "Bob",
-                        "lastname": "Smith",
-                        "email": "email@ons.gov.uk",
-                        "groups": [],
-                        "status": "CONFIRMED",
-                        "active": true,
-                        "status_notes": ""
-                    }
-                ],
-                "count": 1,
-                "PaginationToken":""
-            }
-        """
-
-Scenario: GET /v1/groups/{id}/members without a JWT token and checking the response status 401
-    When I GET "/v1/groups/test-group/members"
-    Then the HTTP status code should be "401"
-
-Scenario: GET /v1/groups/{id}/members as a publisher user and checking the response status 403
-    Given I am a publisher user
-    When I GET "/v1/groups/test-group/members"
-    Then the HTTP status code should be "403"
-
-Scenario: GET /v1/groups/{id}/members, group not found returns 400
-    Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-    When I GET "/v1/groups/test-group/members"
-    Then I should receive the following JSON response with status "400":
-        """
-            {
-                "errors": [
-                    {
-                        "code": "NotFound",
-                        "description": "the group could not be found"
-                    }
-                ]
-            }
-        """
-
-Scenario: GET /v1/groups/{id}/members, internal server error returns 500
-Given group "internal-error" exists in the database
-    And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-    And I am an admin user
-When I GET "/v1/groups/internal-error/members"
-Then I should receive the following JSON response with status "500":
-    """
-        {"code":"InternalServerError", "description":"Internal Server Error"}
-    """
-
-#   Get listgroups scenarios
-#   list for no groups found
-Scenario: GET /v1/groups and checking the response status 200
-    Given there are 0 groups in the database
-        And I am an admin user
-    When I GET "/v1/groups"
-    Then the response code should be 200
-        And the response should match the following json for listgroups
-            """
-                {
-                    "groups":null,
-                    "count":0,
-                    "next_token":null
-                }
-    """
-
-#   list for one groups found
-Scenario: GET /v1/groups and checking the response status 200
-    Given there are 2 groups in the database
-        And I am an admin user
-    When I GET "/v1/groups"
-    Then the response code should be 200
-        And the response should match the following json for listgroups
-            """
-                {
-                    "count": 2,
-                    "groups": [
-                        {
-                            "name": "group name description 1",
-                            "id": "group_name_1",
-                            "precedence": 55
-                        }
-                    ],
-                    "next_token": null
-                }
-            """
-
-#   list for many groups found   given blocks of 60 for one cognito call
-Scenario: GET /v1/groups and checking the response status 200
-    Given there are 100 groups in the database
-        And I am an admin user
-    When I GET "/v1/groups"
-    Then the response code should be 200
-        And the response should match the following json for listgroups
-            """
-                {
-                    "count": 100,
-                    "groups": [
-                        {
-                            "name": "group name description 1",
-                            "id": "group_name_1",
-                            "precedence": 55
-                        }
-                    ],
-                    "next_token": null
-                }
-            """
-
-#   Get getGroup scenarios
-#   successful return
-Scenario: GET /v1/groups and checking the response status 200
+    Scenario: GET /v1/groups/{id}/members and checking the response status 200
         Given group "test-group" exists in the database
-        And I am an admin user
-        When I GET "/v1/groups/test-group"
+            And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+            And user "abcd1234" is a member of group "test-group"
+            And there are 1 users in group "test-group"
+            And I am an admin user
+        When I GET "/v1/groups/test-group/members"
         Then I should receive the following JSON response with status "200":
             """
                 {
-                    "id":"test-group",
-                    "name":"A test group",
-                    "precedence": 100,
-                    "created": "2010-01-01T00:00:00Z"
+                    "users": [
+                        {
+                            "id": "abcd1234",
+                            "forename": "Bob",
+                            "lastname": "Smith",
+                            "email": "email@ons.gov.uk",
+                            "groups": [],
+                            "status": "CONFIRMED",
+                            "active": true,
+                            "status_notes": ""
+                        }
+                    ],
+                    "count": 1,
+                    "PaginationToken":""
                 }
             """
-#   404 return
-Scenario: GET /v1/groups and checking the response status 404
-    Given group "get-group-not-found" exists in the database
-        And I am an admin user
-    When I GET "/v1/groups/get-group-not-found"
-    Then I should receive the following JSON response with status "404":
-        """
-            {
-                "errors": [
-                    {
-                        "code": "NotFound",
-                        "description": "get group - group not found"
-                    }
-                ]
-            }
-        """
 
-Scenario: GET /v1/groups/{id} internal server error returns 500
+    Scenario: GET /v1/groups/{id}/members without a JWT token and checking the response status 401
+        When I GET "/v1/groups/test-group/members"
+        Then the HTTP status code should be "401"
+
+    Scenario: GET /v1/groups/{id}/members as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I GET "/v1/groups/test-group/members"
+        Then the HTTP status code should be "403"
+
+    Scenario: GET /v1/groups/{id}/members, group not found returns 400
+        Given a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+            And I am an admin user
+        When I GET "/v1/groups/test-group/members"
+        Then I should receive the following JSON response with status "400":
+            """
+                {
+                    "errors": [
+                        {
+                            "code": "NotFound",
+                            "description": "the group could not be found"
+                        }
+                    ]
+                }
+            """
+
+    Scenario: GET /v1/groups/{id}/members, internal server error returns 500
     Given group "internal-error" exists in the database
+        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
-    When I GET "/v1/groups/internal-error"
+    When I GET "/v1/groups/internal-error/members"
     Then I should receive the following JSON response with status "500":
         """
             {"code":"InternalServerError", "description":"Internal Server Error"}
         """
 
-Scenario: GET /v1/groups/{id} without a JWT token and checking the response status 401
-    When I GET "/v1/groups/test-group"
-    Then the HTTP status code should be "401"
+#   Get listgroups scenarios
+#   list for no groups found
+    Scenario: GET /v1/groups and checking the response status 200
+        Given there are 0 groups in the database
+            And I am an admin user
+        When I GET "/v1/groups"
+        Then the response code should be 200
+            And the response should match the following json for listgroups
+                """
+                    {
+                        "groups":null,
+                        "count":0,
+                        "next_token":null
+                    }
+        """
 
-Scenario: GET /v1/groups/{id} as a publisher user and checking the response status 403
-    Given I am a publisher user
-    When I GET "/v1/groups/test-group"
-    Then the HTTP status code should be "403"
+#   list for one groups found
+    Scenario: GET /v1/groups and checking the response status 200
+        Given there are 2 groups in the database
+            And I am an admin user
+        When I GET "/v1/groups"
+        Then the response code should be 200
+            And the response should match the following json for listgroups
+                """
+                    {
+                        "count": 2,
+                        "groups": [
+                            {
+                                "name": "group name description 1",
+                                "id": "group_name_1",
+                                "precedence": 55
+                            }
+                        ],
+                        "next_token": null
+                    }
+                """
+
+#   list for many groups found   given blocks of 60 for one cognito call
+    Scenario: GET /v1/groups and checking the response status 200
+        Given there are 100 groups in the database
+            And I am an admin user
+        When I GET "/v1/groups"
+        Then the response code should be 200
+            And the response should match the following json for listgroups
+                """
+                    {
+                        "count": 100,
+                        "groups": [
+                            {
+                                "name": "group name description 1",
+                                "id": "group_name_1",
+                                "precedence": 55
+                            }
+                        ],
+                        "next_token": null
+                    }
+                """
+
+#   Get getGroup scenarios
+#   successful return
+    Scenario: GET /v1/groups and checking the response status 200
+            Given group "test-group" exists in the database
+            And I am an admin user
+            When I GET "/v1/groups/test-group"
+            Then I should receive the following JSON response with status "200":
+                """
+                    {
+                        "id":"test-group",
+                        "name":"A test group",
+                        "precedence": 100,
+                        "created": "2010-01-01T00:00:00Z"
+                    }
+            """
+#   404 return
+    Scenario: GET /v1/groups and checking the response status 404
+        Given group "get-group-not-found" exists in the database
+            And I am an admin user
+        When I GET "/v1/groups/get-group-not-found"
+        Then I should receive the following JSON response with status "404":
+            """
+                {
+                    "errors": [
+                        {
+                            "code": "NotFound",
+                            "description": "get group - group not found"
+                        }
+                    ]
+                }
+            """
+
+    Scenario: GET /v1/groups/{id} internal server error returns 500
+        Given group "internal-error" exists in the database
+            And I am an admin user
+        When I GET "/v1/groups/internal-error"
+        Then I should receive the following JSON response with status "500":
+            """
+                {"code":"InternalServerError", "description":"Internal Server Error"}
+            """
+
+    Scenario: GET /v1/groups/{id} without a JWT token and checking the response status 401
+        When I GET "/v1/groups/test-group"
+        Then the HTTP status code should be "401"
+
+    Scenario: GET /v1/groups/{id} as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I GET "/v1/groups/test-group"
+        Then the HTTP status code should be "403"
 
 
 #   Delete deleteGroup scenarios
 
 #   successful return
-Scenario: DELETE /v1/groups/{id} and checking the response status 204
-    Given group "test-group" exists in the database
-        And I am an admin user
-    When I DELETE "/v1/groups/test-group"
-    Then the HTTP status code should be "204"
+    Scenario: DELETE /v1/groups/{id} and checking the response status 204
+        Given group "test-group" exists in the database
+            And I am an admin user
+        When I DELETE "/v1/groups/test-group"
+        Then the HTTP status code should be "204"
 
-Scenario: DELETE /v1/groups/{id} without a JWT token and checking the response status 401
-    When I DELETE "/v1/groups/test-group"
-        """
-        """
-    Then the HTTP status code should be "401"
+    Scenario: DELETE /v1/groups/{id} without a JWT token and checking the response status 401
+        When I DELETE "/v1/groups/test-group"
+            """
+            """
+        Then the HTTP status code should be "401"
 
-Scenario: DELETE /v1/groups/{id} as a publisher user and checking the response status 403
-    Given I am a publisher user
-    When I DELETE "/v1/groups/test-group"
-        """
-        """
-    Then the HTTP status code should be "403"
+    Scenario: DELETE /v1/groups/{id} as a publisher user and checking the response status 403
+        Given I am a publisher user
+        When I DELETE "/v1/groups/test-group"
+            """
+            """
+        Then the HTTP status code should be "403"
 
 #   404 return
-Scenario: DELETE /v1/groups/{id} and checking the response status 404
-    Given I am an admin user
-    When I DELETE "/v1/groups/delete-group-not-found"
-    Then the HTTP status code should be "404"
+    Scenario: DELETE /v1/groups/{id} and checking the response status 404
+        Given I am an admin user
+        When I DELETE "/v1/groups/delete-group-not-found"
+        Then the HTTP status code should be "404"
 
-Scenario: DELETE /v1/groups/{id} internal server error returns 500
-    Given I am an admin user
-    When I DELETE "/v1/groups/internal-error"
-    Then the HTTP status code should be "500"
+    Scenario: DELETE /v1/groups/{id} internal server error returns 500
+        Given I am an admin user
+        When I DELETE "/v1/groups/internal-error"
+        Then the HTTP status code should be "500"
 
 #   Put SetGroupUsers scenarios
-Scenario: PUT /v1/groups/{id}/members and checking the response status 200
-    Given group "test-group" exists in the database
-        And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
-        And user "user_1" is a member of group "test-group"
-        And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
-        And user "user_2" is a member of group "test-group"
-        And there are 2 users in group "test-group"
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-    When I PUT "/v1/groups/test-group/members"
-        """
-            [
-                {
-                    "user_id": "abcd1234"
-                }
-            ]
-        """
-    Then I should receive the following JSON response with status "200":
-        """
-            {
-                "users": [
-                    {
-                        "id": "abcd1234",
-                        "forename": "Bob",
-                        "lastname": "Smith",
-                        "email": "email@ons.gov.uk",
-                        "groups": [],
-                        "status": "CONFIRMED",
-                        "active": true,
-                        "status_notes": ""
-                    }
-                ],
-                "count": 1,
-                "PaginationToken":""
-            }
-        """
-
-Scenario: PUT /v1/groups/{id}/members and checking the response status 200
-    Given group "test-group" exists in the database
-        And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
-        And user "user_1" is a member of group "test-group"
-        And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
-        And user "user_2" is a member of group "test-group"
-        And there are 2 users in group "test-group"
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-    When I PUT "/v1/groups/test-group/members"
-        """
-            [
-                {
-                    "user_id": "abcd1234"
-                },
-                {
-                    "user_id": "user_1"
-                }
-            ]
-        """
-    Then I should receive the following JSON response with status "200":
-        """
-           {
-                "users": [
-                    {
-                        "id": "user_1",
-                        "forename": "Bob",
-                        "lastname": "Smith",
-                        "email": "email@ons.gov.uk",
-                        "groups": [],
-                        "status": "CONFIRMED",
-                        "active": true,
-                        "status_notes": ""
-                    },
-                    {
-                        "active":true,
-                        "email":"email@ons.gov.uk",
-                        "forename":"Bob",
-                        "groups":[],
-                        "id":"abcd1234",
-                        "lastname":"Smith",
-                        "status":"CONFIRMED",
-                        "status_notes":""
-                    }
-                ],
-                "count": 2,
-                "PaginationToken":""
-            }
-        """
-
-Scenario: PUT /v1/groups/{id}/members and checking the response status 200
-    Given group "test-group" exists in the database
-        And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
-        And user "user_1" is a member of group "test-group"
-        And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
-        And user "user_2" is a member of group "test-group"
-        And there are 2 users in group "test-group"
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-    When I PUT "/v1/groups/test-group/members"
-        """
-            []
-        """
-    Then I should receive the following JSON response with status "200":
-        """
-           {
-                "users": [],
-                "count": 0,
-                "PaginationToken":""
-            }
-        """
-
-Scenario: PUT /v1/groups/{id}/members and non-admin user
-    Given group "test-group" exists in the database
-        And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
-        And user "user_1" is a member of group "test-group"
-        And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
-        And user "user_2" is a member of group "test-group"
-        And there are 2 users in group "test-group"
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-    When I PUT "/v1/groups/test-group/members"
-        """
-            []
-        """
-    Then the HTTP status code should be "401"
-
-Scenario: PUT /v1/groups/{id}/members and checking the response status 200
-    Given a user with username "user_1" and email "email@ons.gov.uk" exists in the database
-        And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And I am an admin user
-    When I PUT "/v1/groups/test-group/members"
-        """
-            [
-                {
-                    "user_id": "abcd1234"
-                },
-                {
-                    "user_id": "user_1"
-                }
-            ]
-        """
-    Then the HTTP status code should be "404"
-
-
-@groups-report
-Scenario: GET /v1/groups-report and checking the response status 200 1 Group with 1 users
-    Given group "test-group" and description "test-group description" exists in the database
-        And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
-        And user "abcd1234" is a member of group "test-group"
-        And group "test-group2" and description "test-group2 description" exists in the database
-        And a user with username "abcd1235" and email "otheremail@ons.gov.uk" exists in the database
-        And user "abcd1235" is a member of group "test-group2"
-        And I am an admin user
-    When I GET "/v1/groups-report"
-    Then the response code should be 200
-        And the response should match the following json for listgroupsusers
+    Scenario: PUT /v1/groups/{id}/members and checking the response status 200
+        Given group "test-group" exists in the database
+            And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
+            And user "user_1" is a member of group "test-group"
+            And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
+            And user "user_2" is a member of group "test-group"
+            And there are 2 users in group "test-group"
+            And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+            And I am an admin user
+        When I PUT "/v1/groups/test-group/members"
             """
                 [
                     {
-                      "group": "test-group description",
-                      "user": "email@ons.gov.uk"
+                        "user_id": "abcd1234"
+                    }
+                ]
+            """
+        Then I should receive the following JSON response with status "200":
+            """
+                {
+                    "users": [
+                        {
+                            "id": "abcd1234",
+                            "forename": "Bob",
+                            "lastname": "Smith",
+                            "email": "email@ons.gov.uk",
+                            "groups": [],
+                            "status": "CONFIRMED",
+                            "active": true,
+                            "status_notes": ""
+                        }
+                    ],
+                    "count": 1,
+                    "PaginationToken":""
+                }
+            """
+
+    Scenario: PUT /v1/groups/{id}/members and checking the response status 200
+        Given group "test-group" exists in the database
+            And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
+            And user "user_1" is a member of group "test-group"
+            And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
+            And user "user_2" is a member of group "test-group"
+            And there are 2 users in group "test-group"
+            And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+            And I am an admin user
+        When I PUT "/v1/groups/test-group/members"
+            """
+                [
+                    {
+                        "user_id": "abcd1234"
                     },
                     {
-                      "group": "test-group2 description",
-                      "user": "otheremail@ons.gov.uk"
+                        "user_id": "user_1"
                     }
-                  ]
+                ]
             """
+        Then I should receive the following JSON response with status "200":
+            """
+               {
+                    "users": [
+                        {
+                            "id": "user_1",
+                            "forename": "Bob",
+                            "lastname": "Smith",
+                            "email": "email@ons.gov.uk",
+                            "groups": [],
+                            "status": "CONFIRMED",
+                            "active": true,
+                            "status_notes": ""
+                        },
+                        {
+                            "active":true,
+                            "email":"email@ons.gov.uk",
+                            "forename":"Bob",
+                            "groups":[],
+                            "id":"abcd1234",
+                            "lastname":"Smith",
+                            "status":"CONFIRMED",
+                            "status_notes":""
+                        }
+                    ],
+                    "count": 2,
+                    "PaginationToken":""
+                }
+            """
+
+    Scenario: PUT /v1/groups/{id}/members and checking the response status 200
+        Given group "test-group" exists in the database
+            And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
+            And user "user_1" is a member of group "test-group"
+            And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
+            And user "user_2" is a member of group "test-group"
+            And there are 2 users in group "test-group"
+            And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+            And I am an admin user
+        When I PUT "/v1/groups/test-group/members"
+            """
+                []
+            """
+        Then I should receive the following JSON response with status "200":
+            """
+               {
+                    "users": [],
+                    "count": 0,
+                    "PaginationToken":""
+                }
+            """
+
+    Scenario: PUT /v1/groups/{id}/members and non-admin user
+        Given group "test-group" exists in the database
+            And a user with username "user_1" and email "email@ons.gov.uk" exists in the database
+            And user "user_1" is a member of group "test-group"
+            And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
+            And user "user_2" is a member of group "test-group"
+            And there are 2 users in group "test-group"
+            And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+        When I PUT "/v1/groups/test-group/members"
+            """
+                []
+            """
+        Then the HTTP status code should be "401"
+
+    Scenario: PUT /v1/groups/{id}/members and checking the response status 200
+        Given a user with username "user_1" and email "email@ons.gov.uk" exists in the database
+            And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
+            And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+            And I am an admin user
+        When I PUT "/v1/groups/test-group/members"
+            """
+                [
+                    {
+                        "user_id": "abcd1234"
+                    },
+                    {
+                        "user_id": "user_1"
+                    }
+                ]
+            """
+        Then the HTTP status code should be "404"
+
+@groups-report
+    Scenario: GET /v1/groups-report and checking the response status 200 1 Group with 1 users
+        Given group "test-group" and description "test-group description" exists in the database
+            And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
+            And user "abcd1234" is a member of group "test-group"
+            And group "test-group2" and description "test-group2 description" exists in the database
+            And a user with username "abcd1235" and email "otheremail@ons.gov.uk" exists in the database
+            And user "abcd1235" is a member of group "test-group2"
+            And I am an admin user
+        When I GET "/v1/groups-report"
+        Then the response code should be 200
+            And the response should match the following json for listgroupsusers
+                """
+                    [
+                        {
+                          "group": "test-group description",
+                          "user": "email@ons.gov.uk"
+                        },
+                        {
+                          "group": "test-group2 description",
+                          "user": "otheremail@ons.gov.uk"
+                        }
+                      ]
+                """
+
 
