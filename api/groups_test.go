@@ -2357,7 +2357,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
-					return ListGroupsUsers(l), nil
+					return listGroupsUsers(l), nil
 				},
 				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
@@ -2377,7 +2377,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
-					return ListGroupsUsers(l), nil
+					return listGroupsUsers(l), nil
 				},
 				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
@@ -2396,7 +2396,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				description: "json 1 group",
 				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-					return ListGroupsUsers(1), nil
+					return listGroupsUsers(1), nil
 				},
 				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
@@ -2415,7 +2415,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				description: "json 3 group",
 				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-					return ListGroupsUsers(3), nil
+					return listGroupsUsers(3), nil
 				},
 				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
@@ -2453,7 +2453,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				description: "json error getting group membership",
 				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-					return ListGroupsUsers(3), nil
+					return listGroupsUsers(3), nil
 				},
 				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
@@ -2496,7 +2496,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
-					return ListGroupsUsers(l), nil
+					return listGroupsUsers(l), nil
 				},
 				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
@@ -2516,7 +2516,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
-					return ListGroupsUsers(l), nil
+					return listGroupsUsers(l), nil
 				},
 				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
@@ -2535,7 +2535,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				description: "json 1 group 1 user",
 				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-					return ListGroupsUsers(1), nil
+					return listGroupsUsers(1), nil
 				},
 				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
@@ -2554,7 +2554,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				description: "json 3 group",
 				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-					return ListGroupsUsers(3), nil
+					return listGroupsUsers(3), nil
 				},
 				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(3)
@@ -2598,7 +2598,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
-					return ListGroupsUsers(l), nil
+					return listGroupsUsers(l), nil
 				},
 				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
@@ -2618,7 +2618,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
-					return ListGroupsUsers(l), nil
+					return listGroupsUsers(l), nil
 				},
 				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
@@ -2637,7 +2637,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				description: "json 1 group 1 user",
 				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-					return ListGroupsUsers(1), nil
+					return listGroupsUsers(1), nil
 				},
 				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
@@ -2656,7 +2656,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				description: "json 3 group",
 				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-					return ListGroupsUsers(3), nil
+					return listGroupsUsers(3), nil
 				},
 				listGroupsFunc: func(input *cognitoidentityprovider.ListGroupsInput) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
@@ -2729,7 +2729,7 @@ func TestGetTeamsReportLines(t *testing.T) {
 				listGroups(0),
 				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
-					return ListGroupsUsers(l), nil
+					return listGroupsUsers(l), nil
 				},
 				func(groupsUsersList []models.ListGroupUsersType, errorResponse error) {
 					So(groupsUsersList, ShouldBeNil)
@@ -2741,7 +2741,7 @@ func TestGetTeamsReportLines(t *testing.T) {
 				listGroups(1),
 				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
-					return ListGroupsUsers(l + 1), nil
+					return listGroupsUsers(l + 1), nil
 				},
 				func(groupsUsersList []models.ListGroupUsersType, errorResponse error) {
 					So(errorResponse, ShouldBeNil)
@@ -2756,7 +2756,7 @@ func TestGetTeamsReportLines(t *testing.T) {
 				listGroups(3),
 				func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi(string(*input.GroupName)[len(*input.GroupName)-1:])
-					return ListGroupsUsers(l + 1), nil
+					return listGroupsUsers(l + 1), nil
 				},
 				func(groupsUsersList []models.ListGroupUsersType, errorResponse error) {
 					So(errorResponse, ShouldBeNil)
@@ -2802,8 +2802,8 @@ func listGroups(noOfGroups int) cognitoidentityprovider.ListGroupsOutput {
 	return output
 }
 
-// ListGroupsUsers func to mock cognitoidentityprovider.ListUsersInGroupOutput for use in TestGetTeamsReportLines
-func ListGroupsUsers(noOfUsers int) *cognitoidentityprovider.ListUsersInGroupOutput {
+// listGroupsUsers func to mock cognitoidentityprovider.ListUsersInGroupOutput for use in TestGetTeamsReportLines
+func listGroupsUsers(noOfUsers int) *cognitoidentityprovider.ListUsersInGroupOutput {
 	userList := []*cognitoidentityprovider.UserType{}
 	var (
 		attributeEmail = "email"
@@ -2830,13 +2830,13 @@ func ListGroupsUsers(noOfUsers int) *cognitoidentityprovider.ListUsersInGroupOut
 	}
 }
 
-// listGroupsUsers func to mock []models.ListGroupUsersType for use in TestListGroupsUsersHandler
-func listGroupsUsers(noOfGroups, noOfUsers int) ([]models.ListGroupUsersType, error) {
+// listGroupsUsersMock func to mock []models.ListGroupUsersType for use in TestListGroupsUsersHandler
+func listGroupsUsersMock(noOfGroups, noOfUsers int) ([]models.ListGroupUsersType, error) {
 	var output []models.ListGroupUsersType
 
 	groupsList := listGroups(noOfGroups)
 	for _, g := range groupsList.Groups {
-		userList := ListGroupsUsers(noOfUsers)
+		userList := listGroupsUsers(noOfUsers)
 		for _, user := range userList.Users {
 			for _, attribute := range user.Attributes {
 				if strings.ToLower(*attribute.Name) == "email" {
