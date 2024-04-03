@@ -205,7 +205,6 @@ func TestAddUserToGroupHandler(t *testing.T) {
 					So(errorResponse.Status, ShouldNotBeNil)
 					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
 					castErr := errorResponse.Errors[0].(*models.Error)
-					fmt.Println(castErr)
 					So(castErr.Code, ShouldEqual, models.UserNotFoundError)
 					So(castErr.Description, ShouldResemble, userNotFoundDescription)
 				},
@@ -2807,7 +2806,7 @@ func listGroups(noOfGroups int) cognitoidentityprovider.ListGroupsOutput {
 func ListGroupsUsers(noOfUsers int) *cognitoidentityprovider.ListUsersInGroupOutput {
 	userList := []*cognitoidentityprovider.UserType{}
 	var (
-		attributeEmail = "Email"
+		attributeEmail = "email"
 	)
 
 	for i := 0; i < noOfUsers; i++ {
@@ -2839,9 +2838,8 @@ func listGroupsUsers(noOfGroups, noOfUsers int) ([]models.ListGroupUsersType, er
 	for _, g := range groupsList.Groups {
 		userList := ListGroupsUsers(noOfUsers)
 		for _, user := range userList.Users {
-			fmt.Println(user)
 			for _, attribute := range user.Attributes {
-				if *attribute.Name == "Email" {
+				if strings.ToLower(*attribute.Name) == "email" {
 					output = append(output, models.ListGroupUsersType{
 						GroupName: *g.Description,
 						UserEmail: *attribute.Value,

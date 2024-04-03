@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"io"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -188,7 +189,6 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWrit
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
-
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -500,6 +500,7 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWrite
 	if err != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
 	}
+
 	if req.Header.Get("Accept") == "text/csv" {
 		return models.NewSuccessResponse(api.ListGroupsUsersCSV(GroupsUsersList).Bytes(), http.StatusOK, nil), nil
 	}
@@ -508,6 +509,7 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWrite
 	if err != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
 	}
+
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -536,7 +538,6 @@ func (api *API) GetTeamsReportLines(listOfGroups *cognitoidentityprovider.ListGr
 	var GroupsUsersList []models.ListGroupUsersType
 	for _, ListGroup := range listOfGroups.Groups {
 		inputGroup := models.Group{ID: *ListGroup.GroupName}
-
 		var listOfUsersInput []*cognitoidentityprovider.UserType
 		listUsers, err := api.getUsersInAGroup(listOfUsersInput, inputGroup)
 		if err != nil {
@@ -544,7 +545,7 @@ func (api *API) GetTeamsReportLines(listOfGroups *cognitoidentityprovider.ListGr
 		}
 		for _, user := range listUsers {
 			for _, attribute := range user.Attributes {
-				if *attribute.Name == "Email" {
+				if strings.ToLower(*attribute.Name) == "email" {
 					GroupsUsersList = append(GroupsUsersList, models.ListGroupUsersType{
 						GroupName: *ListGroup.Description,
 						UserEmail: *attribute.Value,

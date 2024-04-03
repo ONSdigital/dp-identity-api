@@ -553,6 +553,11 @@ func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoident
 		}
 		userList = append(userList, &userDetails)
 	}
+
+	//fmt.Println("----- ListGroupUsers output ", cognitoidentityprovider.ListUsersInGroupOutput{
+	//	Users: userList,
+	//})
+
 	return &cognitoidentityprovider.ListUsersInGroupOutput{
 		Users: userList,
 	}, nil
@@ -693,7 +698,6 @@ func (m *CognitoIdentityProviderClientStub) ListGroups(input *cognitoidentitypro
 		output.NextToken = group.NextToken
 	}
 	return &output, nil
-
 }
 
 func (m *CognitoIdentityProviderClientStub) DescribeUserPoolClient(input *cognitoidentityprovider.DescribeUserPoolClientInput) (
@@ -754,28 +758,4 @@ func (m *CognitoIdentityProviderClientStub) UpdateGroup(input *cognitoidentitypr
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "Resource not found", nil)
 	}
 	return updateGroupOutput, nil
-}
-
-func (m *CognitoIdentityProviderClientStub) ListGroupsUsers(input *cognitoidentityprovider.ListGroupsOutput) (
-	[]models.ListGroupUsersType, error) {
-	var output []models.ListGroupUsersType
-	for _, group := range m.Groups {
-		if group.Name == "internal-error" {
-			return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
-		}
-		for _, user := range m.Users {
-			if user.ID == "get-user-not-found" {
-				println(cognitoidentityprovider.ErrCodeUserNotFoundException)
-				return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "get user - user not found", nil)
-			}
-			output = append(output, models.ListGroupUsersType{
-				GroupName: group.Description,
-				UserEmail: user.Email,
-			})
-		}
-
-	}
-
-	return output, nil
-
 }
