@@ -2679,7 +2679,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				r := httptest.NewRequest(http.MethodGet, getGroupsReportEndPoint, nil)
 				r.Header.Set("Accept", "text/csv")
 				urlVars := map[string]string{
-					"id": "efgh5678",
+					"id": "",
 				}
 				r = mux.SetURLVars(r, urlVars)
 				successResponse, errorResponse := api.ListGroupsUsersHandler(ctx, w, r)

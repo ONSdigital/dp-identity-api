@@ -452,26 +452,49 @@ paths:
       tags:
         - Groups
       summary: "List groups and the membership of the groups"
-      description: "
-      If a preview team ( cognito group ) is empty of users then this is not on the report.  
-      If the preview team ( cognito group ) acts as a role (i.e. publishers, admin) then this is included on the report
-      if header accept "
+      description: " To return a list of :-
+          preview team ( cognito group ) description
+          preview team ( cognito group ) member user email
+          json by default 
+          or if Request Header Accept 'text/csv' then csv format, consisting of preview team description amd user email.
+      Exceptions :- 
+          preview team ( cognito group ) is empty of members(users).  
+          preview team ( cognito group ) acts as a role (i.e. publishers, admin) then this is included on the report"
       consumes:
-        - "application/json"
-      produces:
         - "application/json"
       parameters:
         - in: header
-          name: Accept
+          name: Accept:application/json
           type: string
-          required: true
-          default: application/json
-          description: if text/csv will return csv list else json
+          required: false
+          description: "Produce array of json"
+        - in: header
+          name: Accept:text/scv
+          type: string
+          required:  false
+          description: "Produce string of csv list"
       responses:
         200:
-          description: "The list of groups and members"
+          description: OK The list of groups and members
           schema:
             $ref: '#/definitions/GroupsUsersList'
+          examples:
+            application/json:
+              [
+                {
+                  "group": "group dexription",
+                  "user": "user.email@emaildomain"
+                }
+              ]
+            text/csv:
+              "group, user 
+              group dexription,user.email@emaildomain
+              "
+        403:
+          description: "Forbidden. Incorrect user authorisation"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
         500:
           description: "Internal error occurred"
           schema:
@@ -803,21 +826,23 @@ definitions:
       count:
         type: integer
   GroupsUsersList:
-    description: "A list of group descriptions and the membership users email"
-    type: object
+    description: A list of group description and member's email
+    type: array
     properties:
       groups:
         type: array
         items:
-          $ref: '#/definitions/Group'
-  GroupMember:
-    description: "An entry of group description and the membership user email"
+          $ref: '#/definitions/GroupUser'
+  GroupUser:
+    description: Group description and User email
     type: object
     properties:
-      group:
-        type: string
-      user:
-        type: string
+        group:
+          type: string
+          description: The group description
+        user:
+          type: string
+          description: The user email.
   UserList:
     description: "A list of users for the response body"
     type: object

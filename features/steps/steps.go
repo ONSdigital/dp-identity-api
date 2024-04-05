@@ -35,13 +35,14 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the list response should contain "([^"]*)" entries$`, c.listResponseShouldContainCorrectNumberOfEntries)
 	ctx.Step(`^the response code should be (\d+)$`, c.theResponseCodeShouldBe)
 	ctx.Step(`^the response should match the following json for listgroups$`, c.theResponseShouldMatchTheFollowingJsonForListgroups)
-	ctx.Step(`^the response should match the following json for listGroupsUsers:$`, c.theResponseShouldMatchTheFollowingJsonForListGroupsUsers)
 	ctx.Step(`^there are "([^"]*)" active users and "([^"]*)" inactive users in the database$`, c.thereAreRequiredNumberOfActiveUsers)
 	ctx.Step(`^there are "([^"]*)" users in the database$`, c.thereAreRequiredNumberOfUsers)
 	ctx.Step(`^there are (\d+) groups in the database$`, c.thereAreGroupsInTheDatabase)
 	ctx.Step(`^there are (\d+) users in group "([^"]*)"$`, c.thereAreUsersInGroup)
 	ctx.Step(`^user "([^"]*)" active is "([^"]*)"$`, c.userSetState)
 	ctx.Step(`^user "([^"]*)" is a member of group "([^"]*)"$`, c.userIsAMemberOfGroup)
+	ctx.Step(`^request header Accept is "([^"]*)"$`, c.requestHeaderAcceptIs)
+	ctx.Step(`^the response should match the following csv:$`, c.theResponseShouldMatchTheFollowingCsv)
 }
 
 func (c *IdentityComponent) aResponseToAJWKSSetRequest() error {
@@ -242,17 +243,16 @@ func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroups(
 	return nil
 }
 
-func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListGroupsUsers(body *godog.DocString) (err error) {
-	var expected, actual []models.ListGroupUsersType
-	if err = json.Unmarshal([]byte(body.Content), &expected); err != nil {
-		return
-	}
+func (c *IdentityComponent) requestHeaderAcceptIs() error {
+	err := c.apiFeature.ISetTheHeaderTo("Accept", "text/csv")
+	return err
+}
 
+func (c *IdentityComponent) theResponseShouldMatchTheFollowingCsv(body *godog.DocString) (err error) {
 	responseBody := c.apiFeature.HTTPResponse.Body
 	resBody, _ := io.ReadAll(responseBody)
-	if err = json.Unmarshal(resBody, &actual); err != nil {
-		return
-	}
+	myString := string(resBody[:])
+	assert.Equal(c.apiFeature, body.Content, myString)
 
 	return nil
 }
