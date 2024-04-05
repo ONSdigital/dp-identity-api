@@ -456,8 +456,8 @@ paths:
           preview team ( cognito group ) description
           preview team ( cognito group ) member user email
           json by default 
-          or if Request Header Accept 'text/csv' then csv format, consisting of preview team description amd user email.
-      Exceptions :- 
+          or if Request Header Accept 'text/csv' then csv format, consisting of preview team description amd user email. 
+        Exceptions :- 
           preview team ( cognito group ) is empty of members(users).  
           preview team ( cognito group ) acts as a role (i.e. publishers, admin) then this is included on the report"
       consumes:
