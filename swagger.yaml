@@ -471,7 +471,7 @@ paths:
           required: false
           description: "Produce array of json"
         - in: header
-          name: Accept:text/scv
+          name: Accept:text/csv
           type: string
           required:  false
           description: "Produce string of csv list"
@@ -484,7 +484,7 @@ paths:
             application/json:
               [
                 {
-                  "group": "group dexription",
+                  "group": "group description",
                   "user": "user.email@emaildomain"
                 }
               ]
