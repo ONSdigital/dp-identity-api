@@ -554,5 +554,10 @@ func (api *API) GetTeamsReportLines(listOfGroups *cognitoidentityprovider.ListGr
 			}
 		}
 	}
+
+	if GroupsUsersList == nil {
+		GroupsUsersList = []models.ListGroupUsersType{}
+	}
+
 	return &GroupsUsersList, nil
 }
