@@ -903,7 +903,10 @@ Feature: Groups
     Scenario: GET /v1/groups-report checking the response status 200 got an empty report no groups
         Given I am an admin user
         When I GET "/v1/groups-report"
-    Then the response code should be 200
+    Then I should receive the following JSON response with status "200":
+        """
+        []
+        """
 
 @groups-report
     Scenario: GET /v1/groups-report checking the response status 200 an empty report with one groups but no users

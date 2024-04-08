@@ -2708,7 +2708,7 @@ func isJson(successResponse *models.SuccessResponse, expectedLength int) bool {
 			return true
 		}
 	} else {
-		if jsonErr == nil && testOutJSON == nil {
+		if jsonErr == nil && testOutJSON != nil {
 			return true
 		}
 	}
@@ -2732,7 +2732,7 @@ func TestGetTeamsReportLines(t *testing.T) {
 					return listGroupsUsers(l), nil
 				},
 				func(groupsUsersList []models.ListGroupUsersType, errorResponse error) {
-					So(groupsUsersList, ShouldBeNil)
+					So(groupsUsersList, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
 				},
 			},

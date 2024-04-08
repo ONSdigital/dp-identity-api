@@ -553,11 +553,6 @@ func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoident
 		}
 		userList = append(userList, &userDetails)
 	}
-
-	//fmt.Println("----- ListGroupUsers output ", cognitoidentityprovider.ListUsersInGroupOutput{
-	//	Users: userList,
-	//})
-
 	return &cognitoidentityprovider.ListUsersInGroupOutput{
 		Users: userList,
 	}, nil
