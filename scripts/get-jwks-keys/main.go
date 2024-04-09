@@ -14,13 +14,13 @@ func main() {
 
 	USER_POOL_ID, ok := os.LookupEnv("USER_POOL_ID")
 	if !ok {
-		fmt.Println("ensure the USER_POOL_ID environment variavble is set.")
+		fmt.Println("ensure the USER_POOL_ID environment variable is set.")
 		os.Exit(2)
 	}
 
 	REGION, ok := os.LookupEnv("REGION")
 	if !ok {
-		fmt.Println("ensure the REGION  environment variavble is set.")
+		fmt.Println("ensure the REGION environment variable is set.")
 		os.Exit(2)
 	}
 

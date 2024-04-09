@@ -1460,7 +1460,7 @@ Feature: Users
     Scenario: GET /v1/users/{id}/groups and checking the response status 200
         Given a user with username "listgrouptestuser" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
-        And there 1 groups exists in the database that username "listgrouptestuser" is a member
+        And 1 groups exist in the database that username "listgrouptestuser" is a member
         When I GET "/v1/users/listgrouptestuser/groups"
         Then I should receive the following JSON response with status "200":
             """
@@ -1484,7 +1484,7 @@ Feature: Users
     Scenario: GET /v1/users/{id}/groups  for 0 groups and checking the response status 200
         Given a user with username "listgrouptestuser2" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
-        And there 0 groups exists in the database that username "listgrouptestuser2" is a member
+        And 0 groups exist in the database that username "listgrouptestuser2" is a member
         When I GET "/v1/users/listgrouptestuser2/groups"
         Then I should receive the following JSON response with status "200":
             """
@@ -1498,7 +1498,7 @@ Feature: Users
     Scenario: GET /v1/users/{id}/groups  user not found returns 500
         Given a user with username "get-user-not-found" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
-        And there 0 groups exists in the database that username "get-user-not-found" is a member
+        And 0 groups exist in the database that username "get-user-not-found" is a member
         When I GET "/v1/users/get-user-not-found/groups"
         Then I should receive the following JSON response with status "500":
             """

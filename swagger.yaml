@@ -493,7 +493,7 @@ paths:
           name: "Group"
           description: "The updated details for the group"
           schema:
-            required: ["name", "precedence"]
+            required: ["name"]
             type: object
             properties:
               id:

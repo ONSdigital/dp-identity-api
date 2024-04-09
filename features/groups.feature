@@ -205,23 +205,20 @@ Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group wi
             }
         """
 
-Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group with no precedence in request, group update returns 400
+Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group with no precedence in request, group update returns 200
     Given I am an admin user
     When I PUT "/v1/groups/123e4567-e89b-12d3-a456-426614174000"
         """
             {
-                "name": "Thi$s is a te||st des$%£@^c ription for  a n ew group  $"
+                "name": "Thi$s is a te||st des$%£@^c ription for  updated group  $"
             }
         """
-    Then I should receive the following JSON response with status "400":
+    Then I should receive the following JSON response with status "200":
         """
             {
-                "errors": [
-                    {
-                        "code":"InvalidGroupPrecedence",
-                        "description":"the group precedence was not found"
-                    }
-                ]
+                "name": "Thi$s is a te||st des$%£@^c ription for  updated group  $",
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "precedence": null
             }
         """
 
@@ -327,7 +324,7 @@ Scenario: PUT /v1/groups/123e4567-e89b-12d3-a456-426614174000 to update group a 
 
 Scenario: POST /v1/groups/{id}/members and checking the response status 200
     Given group "test-group" exists in the database
-        And there are "0" users in group "test-group"
+        And there are 0 users in group "test-group"
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
     When I POST "/v1/groups/test-group/members"
@@ -371,7 +368,7 @@ Scenario: POST /v1/groups/{id}/members as a publisher user and checking the resp
 
 Scenario: POST /v1/groups/{id}/members with no user Id submitted and checking the response status 400
     Given group "test-group" exists in the database
-        And there are "0" users in group "test-group"
+        And there are 0 users in group "test-group"
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
     When I POST "/v1/groups/test-group/members"
@@ -415,7 +412,7 @@ Scenario: POST /v1/groups/{id}/members add user to group, group not found return
 
 Scenario: POST /v1/groups/{id}/members add user to group, user not found returns 400
     Given group "test-group" exists in the database
-        And there are "0" users in group "test-group"
+        And there are 0 users in group "test-group"
         And I am an admin user
     When I POST "/v1/groups/test-group/members"
         """
@@ -441,7 +438,7 @@ Scenario: DELETE /v1/groups/{id}/members/{user_id} and checking the response sta
     Given group "test-group" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And user "abcd1234" is a member of group "test-group"
-        And there are "1" users in group "test-group"
+        And there are 1 users in group "test-group"
         And I am an admin user
     When I DELETE "/v1/groups/test-group/members/abcd1234"
     Then I should receive the following JSON response with status "200":
@@ -468,7 +465,7 @@ Scenario: DELETE /v1/groups/{id}/members/{user_id} and checking the response sta
         And a user with username "efgh5678" and email "other-email@ons.gov.uk" exists in the database
         And user "abcd1234" is a member of group "test-group"
         And user "efgh5678" is a member of group "test-group"
-        And there are "2" users in group "test-group"
+        And there are 2 users in group "test-group"
         And I am an admin user
         When I DELETE "/v1/groups/test-group/members/abcd1234"
         Then I should receive the following JSON response with status "200":
@@ -509,7 +506,7 @@ Scenario: DELETE /v1/groups/{id}/members/{user_id} remove user from group, group
 
 Scenario: DELETE /v1/groups/{id}/members/{user_id} remove user from group, user not found returns 404
     Given group "test-group" exists in the database
-        And there are "0" users in group "test-group"
+        And there are 0 users in group "test-group"
         And I am an admin user
     When I DELETE "/v1/groups/test-group/members/abcd1234"
     Then I should receive the following JSON response with status "404":
@@ -559,7 +556,7 @@ Scenario: GET /v1/groups/{id}/members and checking the response status 200
     Given group "test-group" exists in the database
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And user "abcd1234" is a member of group "test-group"
-        And there are "1" users in group "test-group"
+        And there are 1 users in group "test-group"
         And I am an admin user
     When I GET "/v1/groups/test-group/members"
     Then I should receive the following JSON response with status "200":
@@ -620,7 +617,7 @@ Scenario: GET /v1/groups/{id}/members, group not found returns 400
 #   Get listgroups scenarios
 #   list for no groups found
 Scenario: GET /v1/groups and checking the response status 200
-    Given there "0" groups exists in the database
+    Given there are 0 groups in the database
         And I am an admin user
     When I GET "/v1/groups"
     Then the response code should be 200
@@ -634,7 +631,7 @@ Scenario: GET /v1/groups and checking the response status 200
             """
 #   list for one groups found
 Scenario: GET /v1/groups and checking the response status 200
-    Given there "2" groups exists in the database
+    Given there are 2 groups in the database
         And I am an admin user
     When I GET "/v1/groups"
     Then the response code should be 200
@@ -654,7 +651,7 @@ Scenario: GET /v1/groups and checking the response status 200
             """
 #   list for many groups found   given blocks of 60 for one cognito call
 Scenario: GET /v1/groups and checking the response status 200
-    Given there "100" groups exists in the database
+    Given there are 100 groups in the database
         And I am an admin user
     When I GET "/v1/groups"
     Then the response code should be 200
@@ -763,7 +760,7 @@ Scenario: PUT /v1/groups/{id}/members and checking the response status 200
         And user "user_1" is a member of group "test-group"
         And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
         And user "user_2" is a member of group "test-group"
-        And there are "2" users in group "test-group"
+        And there are 2 users in group "test-group"
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
     When I PUT "/v1/groups/test-group/members"
@@ -800,7 +797,7 @@ Scenario: PUT /v1/groups/{id}/members and checking the response status 200
         And user "user_1" is a member of group "test-group"
         And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
         And user "user_2" is a member of group "test-group"
-        And there are "2" users in group "test-group"
+        And there are 2 users in group "test-group"
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
     When I PUT "/v1/groups/test-group/members"
@@ -850,7 +847,7 @@ Scenario: PUT /v1/groups/{id}/members and checking the response status 200
         And user "user_1" is a member of group "test-group"
         And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
         And user "user_2" is a member of group "test-group"
-        And there are "2" users in group "test-group"
+        And there are 2 users in group "test-group"
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
         And I am an admin user
     When I PUT "/v1/groups/test-group/members"
@@ -872,7 +869,7 @@ Scenario: PUT /v1/groups/{id}/members and non-admin user
         And user "user_1" is a member of group "test-group"
         And a user with username "user_2" and email "email@ons.gov.uk" exists in the database
         And user "user_2" is a member of group "test-group"
-        And there are "2" users in group "test-group"
+        And there are 2 users in group "test-group"
         And a user with username "abcd1234" and email "email@ons.gov.uk" exists in the database
     When I PUT "/v1/groups/test-group/members"
         """
