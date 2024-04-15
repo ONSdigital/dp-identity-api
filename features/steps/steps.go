@@ -251,11 +251,12 @@ func (c *IdentityComponent) requestHeaderAcceptIs() error {
 }
 
 func (c *IdentityComponent) theResponseShouldMatchTheFollowingCsv(body *godog.DocString) (err error) {
-	responseBody := c.apiFeature.HTTPResponse.Body
-	resBody, _ := io.ReadAll(responseBody)
-	myString := string(resBody[:])
-	if strings.TrimSpace(myString) != strings.TrimSpace(body.Content) {
-		return errors.New("expected body to be: " + "\n" + body.Content + "\n\t but actual is: " + "\n" + myString)
+	tmpExpected, _ := io.ReadAll(c.apiFeature.HTTPResponse.Body)
+	actual := strings.Replace(strings.TrimSpace(string(tmpExpected[:])), "\t", "", -1)
+	expected := strings.Replace(strings.TrimSpace(body.Content), "\t", "", -1)
+
+	if actual != expected {
+		return errors.New("expected body to be: " + "\n" + expected + "\n\t but actual is: " + "\n" + actual)
 	}
 	return nil
 }

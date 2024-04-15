@@ -1017,15 +1017,15 @@ Feature: Groups
         Then the HTTP status code should be "200"
         And the response should match the following csv:
             """
-                Group,User
-                test group_1 description,email1@ons.gov.uk
-                test group_1 description,email2@ons.gov.uk
-                test group_2 description,email1@ons.gov.uk
-                test group_2 description,email2@ons.gov.uk
-                test group_4 description,email1@ons.gov.uk
-                test group_4 description,email3@ons.gov.uk
-                test group_5 description,email1@ons.gov.uk
-                test group_5 description,email3@ons.gov.uk
+            Group,User
+            test group_1 description,email1@ons.gov.uk
+            test group_1 description,email2@ons.gov.uk
+            test group_2 description,email1@ons.gov.uk
+            test group_2 description,email2@ons.gov.uk
+            test group_4 description,email1@ons.gov.uk
+            test group_4 description,email3@ons.gov.uk
+            test group_5 description,email1@ons.gov.uk
+            test group_5 description,email3@ons.gov.uk
             """
         And the response header "Content-Type" should contain "text/csv"
 
