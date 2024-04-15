@@ -2368,6 +2368,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse.Headers, ShouldBeNil)
 					So(isJson(successResponse, 0), ShouldBeTrue)
 					So(isCSV(successResponse, 1), ShouldBeFalse)
 				},
@@ -2388,6 +2389,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse.Headers, ShouldBeNil)
 					So(isJson(successResponse, 0), ShouldBeTrue)
 					So(isCSV(successResponse, 1), ShouldBeFalse)
 				},
@@ -2407,6 +2409,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse.Headers, ShouldBeNil)
 					So(isJson(successResponse, 1), ShouldBeTrue)
 					So(isCSV(successResponse, 1), ShouldBeFalse)
 				},
@@ -2426,6 +2429,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse.Headers, ShouldBeNil)
 					So(isJson(successResponse, 9), ShouldBeTrue)
 					So(isCSV(successResponse, 1), ShouldBeFalse)
 				},
@@ -2507,6 +2511,8 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse.Headers, ShouldNotBeNil)
+					So(successResponse.Headers["Content-type"], ShouldEqual, "text/csv")
 					So(isJson(successResponse, 0), ShouldBeFalse)
 					So(isCSV(successResponse, 2), ShouldBeTrue)
 				},
@@ -2527,12 +2533,14 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse.Headers, ShouldNotBeNil)
+					So(successResponse.Headers["Content-type"], ShouldEqual, "text/csv")
 					So(isJson(successResponse, 0), ShouldBeFalse)
 					So(isCSV(successResponse, 2), ShouldBeTrue)
 				},
 			},
 			{
-				description: "json 1 group 1 user",
+				description: "csv 1 group 1 user",
 				listUsersInGroupFunc: func(input *cognitoidentityprovider.ListUsersInGroupInput) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					return listGroupsUsers(1), nil
@@ -2546,6 +2554,8 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse.Headers, ShouldNotBeNil)
+					So(successResponse.Headers["Content-type"], ShouldEqual, "text/csv")
 					So(isJson(successResponse, 0), ShouldBeFalse)
 					So(isCSV(successResponse, 3), ShouldBeTrue)
 				},
@@ -2564,6 +2574,8 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					So(successResponse, ShouldNotBeNil)
 					So(errorResponse, ShouldBeNil)
 					So(successResponse.Status, ShouldEqual, http.StatusOK)
+					So(successResponse.Headers, ShouldNotBeNil)
+					So(successResponse.Headers["Content-type"], ShouldEqual, "text/csv")
 					So(isJson(successResponse, 0), ShouldBeFalse)
 					So(isCSV(successResponse, 11), ShouldBeTrue)
 				},

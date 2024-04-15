@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"strconv"
+	"strings"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
 
@@ -43,6 +44,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^user "([^"]*)" is a member of group "([^"]*)"$`, c.userIsAMemberOfGroup)
 	ctx.Step(`^request header Accept is "([^"]*)"$`, c.requestHeaderAcceptIs)
 	ctx.Step(`^the response should match the following csv:$`, c.theResponseShouldMatchTheFollowingCsv)
+	ctx.Step(`^the response header "([^"]*)" should contain "([^"]*)"$`, c.theResponseHeaderShouldContain)
 }
 
 func (c *IdentityComponent) aResponseToAJWKSSetRequest() error {
@@ -252,7 +254,21 @@ func (c *IdentityComponent) theResponseShouldMatchTheFollowingCsv(body *godog.Do
 	responseBody := c.apiFeature.HTTPResponse.Body
 	resBody, _ := io.ReadAll(responseBody)
 	myString := string(resBody[:])
-	assert.Equal(c.apiFeature, body.Content, myString)
+	if strings.TrimSpace(myString) != strings.TrimSpace(body.Content) {
+		return errors.New("expected body to be: " + "\n" + body.Content + "\n\t but actual is: " + "\n" + myString)
+	}
+	return nil
+}
+
+func (c *IdentityComponent) theResponseHeaderShouldContain(key, value string) (err error) {
+	responseHeader := c.apiFeature.HTTPResponse.Header
+	actualValue, actualExist := responseHeader[key]
+	if !actualExist {
+		return errors.New("expected header key " + key + ", does not exist in the header ")
+	}
+	if actualValue[0] != value {
+		return errors.New("expected header value " + value + ", but is actually is :" + actualValue[0])
+	}
 
 	return nil
 }

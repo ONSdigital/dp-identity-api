@@ -502,7 +502,8 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWrite
 	}
 
 	if req.Header.Get("Accept") == "text/csv" {
-		return models.NewSuccessResponse(api.ListGroupsUsersCSV(GroupsUsersList).Bytes(), http.StatusOK, nil), nil
+		header := map[string]string{"Content-type": "text/csv"}
+		return models.NewSuccessResponse(api.ListGroupsUsersCSV(GroupsUsersList).Bytes(), http.StatusOK, header), nil
 	}
 
 	jsonResponse, err := json.Marshal(GroupsUsersList)

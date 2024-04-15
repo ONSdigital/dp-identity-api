@@ -482,16 +482,22 @@ paths:
             $ref: '#/definitions/GroupsUsersList'
           examples:
             application/json:
-              [
-                {
-                  "group": "group description",
-                  "user": "user.email@emaildomain"
-                }
-              ]
+              header:
+              "Content-type": "application/json"
+              body:
+                [
+                  {
+                    "group": "group description",
+                    "user": "user.email@emaildomain"
+                  }
+                ]
             text/csv:
-              "group, user 
-              group description,user.email@emaildomain
-              "
+              header:
+                "Content-type": "text/csv"
+              body:
+                "group, user 
+                group description,user.email@emaildomain
+                "
         403:
           description: "Forbidden. Incorrect user authorisation"
           schema:
