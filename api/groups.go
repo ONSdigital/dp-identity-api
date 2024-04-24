@@ -6,12 +6,14 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"github.com/ONSdigital/dp-identity-api/models"
+	dplogs "github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"io"
 	"net/http"
+	"sort"
 	"strings"
 )
 
@@ -185,11 +187,44 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWrit
 	listOfUsers := models.UsersList{}
 	listOfUsers.MapCognitoUsers(&listUsers)
 
+	if err = req.ParseForm(); err != nil {
+		dplogs.Error(ctx, "error parsing form", err)
+	}
+	users := listOfUsers.Users
+	sortBy := strings.Split(req.Form.Get("sortBy"), ":")
+	sortUsers(ctx, users, sortBy)
+
 	jsonResponse, responseErr := listOfUsers.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
+
+func sortUsers(ctx context.Context, users []models.UserParams, sortBy []string) bool {
+	switch sortBy[0] {
+	case "forename":
+		switch sortBy[1] {
+		case "asc":
+			sortByUserNameAsc := func(i, j int) bool {
+				return users[i].Forename < users[j].Forename
+			}
+			sort.Slice(users, sortByUserNameAsc)
+			return true
+		case "desc":
+			sortByUserNameDesc := func(i, j int) bool {
+				return users[i].Forename > users[j].Forename
+			}
+			sort.Slice(users, sortByUserNameDesc)
+			return true
+		default:
+			dplogs.Info(ctx, "groups.sortUsers: Not a correct sort by value. Users not sorted.", dplogs.Data{"sortBy": sortBy})
+			return false
+		}
+	default:
+		dplogs.Info(ctx, "groups.sortUsers: Not a correct sort by value. Users not sorted.", dplogs.Data{"sortBy": sortBy})
+		return false
+	}
 }
 
 func (api *API) getUsersInAGroup(listOfUsers []*cognitoidentityprovider.UserType, group models.Group) ([]*cognitoidentityprovider.UserType, error) {

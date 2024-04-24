@@ -2701,6 +2701,78 @@ func TestListGroupsUsersHandler(t *testing.T) {
 	})
 }
 
+func TestSortUsers(t *testing.T) {
+	Convey("Given we have some test users", t, func() {
+		json1 := "{\n  \"count\": 9,\n  \"users\": [\n    {\n      \"forename\": \"DTestForename\",\n      \"lastname\": \"LTestSurname\",\n      \"email\": \"DTestForename.LTestSurname@ons.gov.uk\",\n      \"groups\": [],\n      \"status\": \"CONFIRMED\",\n      \"active\": true,\n      \"id\": \"1234\",\n      \"status_notes\": \"\"\n    },\n    {\n      \"forename\": \"ATestForename\",\n      \"lastname\": \"HTestSurname\",\n      \"email\": \"ATestForename.HTestSurname@ons.gov.uk\",\n      \"groups\": [],\n      \"status\": \"CONFIRMED\",\n      \"active\": true,\n      \"id\": \"1234\",\n      \"status_notes\": \"\"\n    },\n    {\n      \"forename\": \"OTestForename\",\n      \"lastname\": \"STestSurname\",\n      \"email\": \"OTestForename.STestSurname@ons.gov.uk\",\n      \"groups\": [],\n      \"status\": \"CONFIRMED\",\n      \"active\": true,\n      \"id\": \"1234\",\n      \"status_notes\": \"\"\n    } ],\n  \"PaginationToken\": \"\"\n}"
+		listOfUsers := models.UsersList{}
+		json.Unmarshal([]byte(json1), &listOfUsers)
+		fmt.Println(listOfUsers.Users)
+
+		Convey("When we call the sort function with sortedBy value of forename:asc", func() {
+			users := listOfUsers.Users
+			sortBy := strings.Split("forename:asc", ":")
+			sorted := sortUsers(ctx, users, sortBy)
+
+			jsonTmp, _ := json.Marshal(users)
+			fmt.Printf("jsonTmp = %s\n", string(jsonTmp))
+
+			Convey("Then the users should be sorted by forename in ascending order", func() {
+				usersSortedByForenameAsc := "{\n  \"count\": 9,\n  \"users\": [\n    {\"forename\":\"ATestForename\",\"lastname\":\"HTestSurname\",\"email\":\"ATestForename.HTestSurname@ons.gov.uk\",\"groups\":[],\"status\":\"CONFIRMED\",\"active\":true,\"id\":\"1234\",\"status_notes\":\"\"},{\"forename\":\"DTestForename\",\"lastname\":\"LTestSurname\",\"email\":\"DTestForename.LTestSurname@ons.gov.uk\",\"groups\":[],\"status\":\"CONFIRMED\",\"active\":true,\"id\":\"1234\",\"status_notes\":\"\"},{\"forename\":\"OTestForename\",\"lastname\":\"STestSurname\",\"email\":\"OTestForename.STestSurname@ons.gov.uk\",\"groups\":[],\"status\":\"CONFIRMED\",\"active\":true,\"id\":\"1234\",\"status_notes\":\"\"} ],\n  \"PaginationToken\": \"\"\n}"
+				listOfUsersSortedByForenameAsc := models.UsersList{}
+				json.Unmarshal([]byte(usersSortedByForenameAsc), &listOfUsersSortedByForenameAsc)
+
+				So(sorted, ShouldBeTrue)
+				So(users, ShouldResemble, listOfUsersSortedByForenameAsc.Users)
+			})
+		})
+
+		Convey("When we call the sort function with sortedBy value of forename:desc", func() {
+			users := listOfUsers.Users
+			sortBy := strings.Split("forename:desc", ":")
+			sorted := sortUsers(ctx, users, sortBy)
+
+			Convey("Then the users should be sorted by forename in descending order", func() {
+				usersSortedByForenameDesc := "{\n  \"count\": 9,\n  \"users\": [\n    {\"forename\":\"OTestForename\",\"lastname\":\"STestSurname\",\"email\":\"OTestForename.STestSurname@ons.gov.uk\",\"groups\":[],\"status\":\"CONFIRMED\",\"active\":true,\"id\":\"1234\",\"status_notes\":\"\"},{\"forename\":\"DTestForename\",\"lastname\":\"LTestSurname\",\"email\":\"DTestForename.LTestSurname@ons.gov.uk\",\"groups\":[],\"status\":\"CONFIRMED\",\"active\":true,\"id\":\"1234\",\"status_notes\":\"\"},{\"forename\":\"ATestForename\",\"lastname\":\"HTestSurname\",\"email\":\"ATestForename.HTestSurname@ons.gov.uk\",\"groups\":[],\"status\":\"CONFIRMED\",\"active\":true,\"id\":\"1234\",\"status_notes\":\"\"} ],\n  \"PaginationToken\": \"\"\n}"
+				listOfUsersSortedByForenameDesc := models.UsersList{}
+				json.Unmarshal([]byte(usersSortedByForenameDesc), &listOfUsersSortedByForenameDesc)
+
+				So(sorted, ShouldBeTrue)
+				So(users, ShouldResemble, listOfUsersSortedByForenameDesc.Users)
+			})
+		})
+
+		Convey("When we call the sort function with sortedBy value of wrongValue:desc", func() {
+			users := listOfUsers.Users
+			sortBy := strings.Split("wrongValue:desc", ":")
+			sorted := sortUsers(ctx, users, sortBy)
+
+			Convey("Then the users should not be sorted", func() {
+				usersUnsorted := "{\n  \"count\": 9,\n  \"users\": [\n    {\n      \"forename\": \"DTestForename\",\n      \"lastname\": \"LTestSurname\",\n      \"email\": \"DTestForename.LTestSurname@ons.gov.uk\",\n      \"groups\": [],\n      \"status\": \"CONFIRMED\",\n      \"active\": true,\n      \"id\": \"1234\",\n      \"status_notes\": \"\"\n    },\n    {\n      \"forename\": \"ATestForename\",\n      \"lastname\": \"HTestSurname\",\n      \"email\": \"ATestForename.HTestSurname@ons.gov.uk\",\n      \"groups\": [],\n      \"status\": \"CONFIRMED\",\n      \"active\": true,\n      \"id\": \"1234\",\n      \"status_notes\": \"\"\n    },\n    {\n      \"forename\": \"OTestForename\",\n      \"lastname\": \"STestSurname\",\n      \"email\": \"OTestForename.STestSurname@ons.gov.uk\",\n      \"groups\": [],\n      \"status\": \"CONFIRMED\",\n      \"active\": true,\n      \"id\": \"1234\",\n      \"status_notes\": \"\"\n    } ],\n  \"PaginationToken\": \"\"\n}"
+				listOfUsersUnsorted := models.UsersList{}
+				json.Unmarshal([]byte(usersUnsorted), &listOfUsersUnsorted)
+
+				So(sorted, ShouldBeFalse)
+				So(users, ShouldResemble, listOfUsersUnsorted.Users)
+			})
+		})
+
+		Convey("When we call the sort function with sortedBy value of forename:wrongValue", func() {
+			users := listOfUsers.Users
+			sortBy := strings.Split("forename:wrongValue", ":")
+			sorted := sortUsers(ctx, users, sortBy)
+
+			Convey("Then the users should not be sorted", func() {
+				usersUnsorted := "{\n  \"count\": 9,\n  \"users\": [\n    {\n      \"forename\": \"DTestForename\",\n      \"lastname\": \"LTestSurname\",\n      \"email\": \"DTestForename.LTestSurname@ons.gov.uk\",\n      \"groups\": [],\n      \"status\": \"CONFIRMED\",\n      \"active\": true,\n      \"id\": \"1234\",\n      \"status_notes\": \"\"\n    },\n    {\n      \"forename\": \"ATestForename\",\n      \"lastname\": \"HTestSurname\",\n      \"email\": \"ATestForename.HTestSurname@ons.gov.uk\",\n      \"groups\": [],\n      \"status\": \"CONFIRMED\",\n      \"active\": true,\n      \"id\": \"1234\",\n      \"status_notes\": \"\"\n    },\n    {\n      \"forename\": \"OTestForename\",\n      \"lastname\": \"STestSurname\",\n      \"email\": \"OTestForename.STestSurname@ons.gov.uk\",\n      \"groups\": [],\n      \"status\": \"CONFIRMED\",\n      \"active\": true,\n      \"id\": \"1234\",\n      \"status_notes\": \"\"\n    } ],\n  \"PaginationToken\": \"\"\n}"
+				listOfUsersUnsorted := models.UsersList{}
+				json.Unmarshal([]byte(usersUnsorted), &listOfUsersUnsorted)
+
+				So(sorted, ShouldBeFalse)
+				So(users, ShouldResemble, listOfUsersUnsorted.Users)
+			})
+		})
+	})
+}
+
 // isCSV will test that there is more than one slice and a header row
 func isCSV(successResponse *models.SuccessResponse, expectedLength int) bool {
 	testOutCSV := string(successResponse.Body[:])
