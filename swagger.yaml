@@ -703,6 +703,60 @@ paths:
           description: "Unexpected Cognito response"
           schema:
             $ref: '#/definitions/ErrorResponse'
+  /groups/{id}/members?sortBy=forename:asc:
+    get:
+      tags:
+        - Groups
+      summary: "Returns a list of users in a given group order by forename in ascending order"
+      description: "Returns a list of users in a given group in Cognito"
+      produces:
+        - "application/json"
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+          description: the group's ID
+      responses:
+        200:
+          description: "List of users in the group"
+          schema:
+            $ref: '#/definitions/Group'
+        404:
+          description: "Invalid group ID provided"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: "Unexpected Cognito response"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /groups/{id}/members?sortBy=forename:desc:
+    get:
+      tags:
+        - Groups
+      summary: "Returns a list of users in a given group order by forename in descending order"
+      description: "Returns a list of users in a given group in Cognito"
+      produces:
+        - "application/json"
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+          description: the group's ID
+      responses:
+        200:
+          description: "List of users in the group"
+          schema:
+            $ref: '#/definitions/Group'
+        404:
+          description: "Invalid group ID provided"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: "Unexpected Cognito response"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
   /groups/{id}/members/{user_id}:
     delete:
       tags:
