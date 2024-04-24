@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ONSdigital/dp-identity-api/query"
 	"io"
 	"net/http"
 
@@ -105,6 +106,13 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 	}
 
 	usersList.SetUsers(listUserResp)
+	fmt.Println("\n\t ----ListUsersHandler----", req.URL.Query().Get("?sortBy"))
+
+	query.sortBy("id", userArray[:])
+
+	//if req.URL.Query().Get("sortBy") != "" {
+	//	fmt.Println("\n\t ----ListUsersHandler----", req.URL.Query().Get("sortBy"))
+	//}
 
 	jsonResponse, responseErr := usersList.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {
