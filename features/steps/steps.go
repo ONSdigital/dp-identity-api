@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"strconv"
+	"strings"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
 
@@ -18,28 +19,32 @@ import (
 func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	c.apiFeature.RegisterSteps(ctx)
 
-	ctx.Step(`^a user with email "([^"]*)" and password "([^"]*)" exists in the database$`, c.aUserWithEmailAndPasswordExistsInTheDatabase)
-	ctx.Step(`^a user with username "([^"]*)" and email "([^"]*)" exists in the database$`, c.aUserWithUsernameAndEmailExistsInTheDatabase)
-	ctx.Step(`^an internal server error is returned from Cognito$`, c.anInternalServerErrorIsReturnedFromCognito)
-	ctx.Step(`^an error is returned from Cognito$`, c.anErrorIsReturnedFromCognito)
-	ctx.Step(`^I am an admin user$`, c.adminJWTToken)
-	ctx.Step(`^I am a publisher user$`, c.publisherJWTToken)
-	ctx.Step(`^I have an active session with access token "([^"]*)"$`, c.iHaveAnActiveSessionWithAccessToken)
 	ctx.Step(`I have a valid ID header for user "([^"]*)"$`, c.iHaveAValidIDHeaderForUser)
-	ctx.Step(`^the AdminUserGlobalSignOut endpoint in cognito returns an internal server error$`, c.theAdminUserGlobalSignOutEndpointInCognitoReturnsAnInternalServerError)
-	ctx.Step(`^a user with non-verified email "([^"]*)" and password "([^"]*)"$`, c.aUserWithNonverifiedEmailAndPassword)
-	ctx.Step(`^user "([^"]*)" active is "([^"]*)"$`, c.userSetState)
-	ctx.Step(`^group "([^"]*)" exists in the database$`, c.groupExistsInTheDatabase)
-	ctx.Step(`^there are (\d+) users in group "([^"]*)"$`, c.thereAreUsersInGroup)
-	ctx.Step(`^user "([^"]*)" is a member of group "([^"]*)"$`, c.userIsAMemberOfGroup)
-	ctx.Step(`^there are "([^"]*)" users in the database$`, c.thereAreRequiredNumberOfUsers)
-	ctx.Step(`^there are "([^"]*)" active users and "([^"]*)" inactive users in the database$`, c.thereAreRequiredNumberOfActiveUsers)
-	ctx.Step(`^the list response should contain "([^"]*)" entries$`, c.listResponseShouldContainCorrectNumberOfEntries)
 	ctx.Step(`^(\d+) groups exist in the database that username "([^"]*)" is a member$`, c.groupsExistInTheDatabaseThatUsernameIsAMember)
-	ctx.Step(`^there are (\d+) groups in the database$`, c.thereAreGroupsInTheDatabase)
+	ctx.Step(`^I GET the JSON web key set for cognito user pool$`, c.aResponseToAJWKSSetRequest)
+	ctx.Step(`^I am a publisher user$`, c.publisherJWTToken)
+	ctx.Step(`^I am an admin user$`, c.adminJWTToken)
+	ctx.Step(`^I have an active session with access token "([^"]*)"$`, c.iHaveAnActiveSessionWithAccessToken)
+	ctx.Step(`^a user with email "([^"]*)" and password "([^"]*)" exists in the database$`, c.aUserWithEmailAndPasswordExistsInTheDatabase)
+	ctx.Step(`^a user with non-verified email "([^"]*)" and password "([^"]*)"$`, c.aUserWithNonverifiedEmailAndPassword)
+	ctx.Step(`^a user with username "([^"]*)" and email "([^"]*)" exists in the database$`, c.aUserWithUsernameAndEmailExistsInTheDatabase)
+	ctx.Step(`^an error is returned from Cognito$`, c.anErrorIsReturnedFromCognito)
+	ctx.Step(`^an internal server error is returned from Cognito$`, c.anInternalServerErrorIsReturnedFromCognito)
+	ctx.Step(`^group "([^"]*)" and description "([^"]*)" exists in the database$`, c.groupAndDescriptionExistsInTheDatabase)
+	ctx.Step(`^group "([^"]*)" exists in the database$`, c.groupExistsInTheDatabase)
+	ctx.Step(`^the AdminUserGlobalSignOut endpoint in cognito returns an internal server error$`, c.theAdminUserGlobalSignOutEndpointInCognitoReturnsAnInternalServerError)
+	ctx.Step(`^the list response should contain "([^"]*)" entries$`, c.listResponseShouldContainCorrectNumberOfEntries)
 	ctx.Step(`^the response code should be (\d+)$`, c.theResponseCodeShouldBe)
 	ctx.Step(`^the response should match the following json for listgroups$`, c.theResponseShouldMatchTheFollowingJsonForListgroups)
-	ctx.Step(`^I GET the JSON web key set for cognito user pool$`, c.aResponseToAJWKSSetRequest)
+	ctx.Step(`^there are "([^"]*)" active users and "([^"]*)" inactive users in the database$`, c.thereAreRequiredNumberOfActiveUsers)
+	ctx.Step(`^there are "([^"]*)" users in the database$`, c.thereAreRequiredNumberOfUsers)
+	ctx.Step(`^there are (\d+) groups in the database$`, c.thereAreGroupsInTheDatabase)
+	ctx.Step(`^there are (\d+) users in group "([^"]*)"$`, c.thereAreUsersInGroup)
+	ctx.Step(`^user "([^"]*)" active is "([^"]*)"$`, c.userSetState)
+	ctx.Step(`^user "([^"]*)" is a member of group "([^"]*)"$`, c.userIsAMemberOfGroup)
+	ctx.Step(`^request header Accept is "([^"]*)"$`, c.requestHeaderAcceptIs)
+	ctx.Step(`^the response should match the following csv:$`, c.theResponseShouldMatchTheFollowingCsv)
+	ctx.Step(`^the response header "([^"]*)" should contain "([^"]*)"$`, c.theResponseHeaderShouldContain)
 }
 
 func (c *IdentityComponent) aResponseToAJWKSSetRequest() error {
@@ -105,6 +110,11 @@ func (c *IdentityComponent) userSetState(username, active string) error {
 
 func (c *IdentityComponent) groupExistsInTheDatabase(groupName string) error {
 	err := c.CognitoClient.AddGroupWithName(groupName)
+	return err
+}
+
+func (c *IdentityComponent) groupAndDescriptionExistsInTheDatabase(groupName, description string) error {
+	err := c.CognitoClient.AddGroupWithNameAndDescription(groupName, description)
 	return err
 }
 
@@ -209,8 +219,6 @@ func (c *IdentityComponent) theResponseCodeShouldBe(code int) error {
 
 func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroups(body *godog.DocString) (err error) {
 	var expected, actual models.ListUserGroups
-
-	// re-encode expected response
 	if err = json.Unmarshal([]byte(body.Content), &expected); err != nil {
 		return
 	}
@@ -220,15 +228,11 @@ func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroups(
 	if err = json.Unmarshal(resBody, &actual); err != nil {
 		return
 	}
-
-	// the matching may be adapted per different requirements.
-
 	assert.Equal(c.apiFeature, expected.NextToken, actual.NextToken)
 	assert.Equal(c.apiFeature, expected.Count, actual.Count)
 	assert.Equal(c.apiFeature, len(expected.Groups), actual.Count)
-	// if actual.Count > 0 && expected.Count > 0 {
-	if actual.Count > 0 {
 
+	if actual.Count > 0 {
 		assert.Equal(c.apiFeature, *expected.Groups[0].Name, *actual.Groups[0].Name)
 		assert.Equal(c.apiFeature, *expected.Groups[0].ID, *actual.Groups[0].ID)
 		tmpPrecedence := int(*expected.Groups[0].Precedence)
@@ -237,7 +241,35 @@ func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroups(
 		tmpPrecedence = int(*actual.Groups[0].Precedence)
 		assert.GreaterOrEqual(c.apiFeature, 13, tmpPrecedence)
 		assert.LessOrEqual(c.apiFeature, 100, tmpPrecedence)
-
 	}
+	return nil
+}
+
+func (c *IdentityComponent) requestHeaderAcceptIs() error {
+	err := c.apiFeature.ISetTheHeaderTo("Accept", "text/csv")
+	return err
+}
+
+func (c *IdentityComponent) theResponseShouldMatchTheFollowingCsv(body *godog.DocString) (err error) {
+	tmpExpected, _ := io.ReadAll(c.apiFeature.HTTPResponse.Body)
+	actual := strings.Replace(strings.TrimSpace(string(tmpExpected[:])), "\t", "", -1)
+	expected := strings.Replace(strings.TrimSpace(body.Content), "\t", "", -1)
+
+	if actual != expected {
+		return errors.New("expected body to be: " + "\n" + expected + "\n\t but actual is: " + "\n" + actual)
+	}
+	return nil
+}
+
+func (c *IdentityComponent) theResponseHeaderShouldContain(key, value string) (err error) {
+	responseHeader := c.apiFeature.HTTPResponse.Header
+	actualValue, actualExist := responseHeader[key]
+	if !actualExist {
+		return errors.New("expected header key " + key + ", does not exist in the header ")
+	}
+	if actualValue[0] != value {
+		return errors.New("expected header value " + value + ", but is actually is :" + actualValue[0])
+	}
+
 	return nil
 }

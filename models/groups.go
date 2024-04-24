@@ -25,6 +25,12 @@ var (
 	groupPrecedenceMax    = int64(100)
 )
 
+// ListGroupUsersType list of groups and the membership for user report group-report
+type ListGroupUsersType struct {
+	GroupName string `type:"string" json:"group"`
+	UserEmail string `type:"string" json:"user"`
+}
+
 // Group is a type for the identity API representation of a group's details
 type Group struct {
 	ID         string    `json:"id"`

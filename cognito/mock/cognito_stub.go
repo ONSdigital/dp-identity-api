@@ -22,7 +22,8 @@ type CognitoIdentityProviderClientStub struct {
 	GroupsList []cognitoidentityprovider.ListGroupsOutput
 }
 
-func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
+func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (
+	*cognitoidentityprovider.DescribeUserPoolOutput, error) {
 	for _, v := range m.UserPools {
 		if v == *poolInputData.UserPoolId {
 			return nil, nil
@@ -31,7 +32,8 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cogn
 	return nil, errors.New("failed to load user pool data")
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (
+	*cognitoidentityprovider.AdminCreateUserOutput, error) {
 	var (
 		status, subjectAttrName, forenameAttrName, surnameAttrName, emailAttrName, username, subUUID, forename, surname, email string = "FORCE_CHANGE_PASSWORD", "sub", "given_name", "family_name", "email", "123e4567-e89b-12d3-a456-426614174000", "f0cf8dd9-755c-4caf-884d-b0c56e7d0704", "smileons", "bobbings", "emailx@ons.gov.uk"
 	)
@@ -68,7 +70,8 @@ func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidenti
 	return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Failed to create new user in user pool", nil) // 500 - internal exception error
 }
 
-func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (
+	*cognitoidentityprovider.InitiateAuthOutput, error) {
 	var expiration int64 = 123
 
 	if *input.AuthFlow == "USER_PASSWORD_AUTH" {
@@ -136,7 +139,8 @@ func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityp
 	}
 }
 
-func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (
+	*cognitoidentityprovider.GlobalSignOutOutput, error) {
 	if *signOutInput.AccessToken == "InternalError" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	}
@@ -148,7 +152,9 @@ func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoi
 	return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Access Token has been revoked", nil)
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminUserGlobalSignOut(adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminUserGlobalSignOut(
+	adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (
+	*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 	if *adminUserGlobalSignOutInput.Username == "internalservererror@ons.gov.uk" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	} else if *adminUserGlobalSignOutInput.Username == "clienterror@ons.gov.uk" {
@@ -157,7 +163,8 @@ func (m *CognitoIdentityProviderClientStub) AdminUserGlobalSignOut(adminUserGlob
 	return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprovider.ListUsersInput) (
+	*cognitoidentityprovider.ListUsersOutput, error) {
 	var (
 		emailVerifiedAttr, emailVerifiedValue    string = "email_verified", "true"
 		givenNameAttr, familyNameAttr, emailAttr string = "given_name", "family_name", "email"
@@ -222,7 +229,8 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 	return users.ListUsersOutput, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(input *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
+func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(input *cognitoidentityprovider.RespondToAuthChallengeInput) (
+	*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
 	var expiration int64 = 123
 
 	if *input.ChallengeName == "NEW_PASSWORD_REQUIRED" {
@@ -255,7 +263,8 @@ func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(input *cognit
 	}
 }
 
-func (m *CognitoIdentityProviderClientStub) ConfirmForgotPassword(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+func (m *CognitoIdentityProviderClientStub) ConfirmForgotPassword(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (
+	*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 
 	challengeResponseOutput := &cognitoidentityprovider.ConfirmForgotPasswordOutput{}
 
@@ -278,7 +287,8 @@ func (m *CognitoIdentityProviderClientStub) ConfirmForgotPassword(input *cognito
 
 }
 
-func (m *CognitoIdentityProviderClientStub) ForgotPassword(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
+func (m *CognitoIdentityProviderClientStub) ForgotPassword(input *cognitoidentityprovider.ForgotPasswordInput) (
+	*cognitoidentityprovider.ForgotPasswordOutput, error) {
 	forgotPasswordOutput := &cognitoidentityprovider.ForgotPasswordOutput{
 		CodeDeliveryDetails: &cognitoidentityprovider.CodeDeliveryDetailsType{},
 	}
@@ -298,7 +308,8 @@ func (m *CognitoIdentityProviderClientStub) ForgotPassword(input *cognitoidentit
 	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "user not found", nil)
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityprovider.AdminGetUserInput) (
+	*cognitoidentityprovider.AdminGetUserOutput, error) {
 	var (
 		emailVerifiedAttr, emailVerifiedValue    string = "email_verified", "true"
 		givenNameAttr, familyNameAttr, emailAttr string = "given_name", "family_name", "email"
@@ -336,7 +347,8 @@ func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityp
 	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
 }
 
-func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentityprovider.CreateGroupInput) (
+	*cognitoidentityprovider.CreateGroupOutput, error) {
 	userPoolId := "aaaa-bbbb-ccc-dddd"
 	// non feature test functionality - input.GroupName starts with `test-group-` pattern
 	// feature test functionality by default
@@ -396,7 +408,8 @@ func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentitypr
 	return createGroupOutput, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(input *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(input *cognitoidentityprovider.AdminUpdateUserAttributesInput) (
+	*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 	for _, user := range m.Users {
 		if user.ID == *input.Username {
 			if user.Email == "update.internalerror@ons.gov.uk" {
@@ -417,7 +430,8 @@ func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(input *cog
 	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminEnableUser(input *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminEnableUser(input *cognitoidentityprovider.AdminEnableUserInput) (
+	*cognitoidentityprovider.AdminEnableUserOutput, error) {
 	for _, user := range m.Users {
 		if user.ID == *input.Username {
 			if user.Email == "enable.internalerror@ons.gov.uk" {
@@ -430,7 +444,8 @@ func (m *CognitoIdentityProviderClientStub) AdminEnableUser(input *cognitoidenti
 	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminDisableUser(input *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminDisableUser(input *cognitoidentityprovider.AdminDisableUserInput) (
+	*cognitoidentityprovider.AdminDisableUserOutput, error) {
 	for _, user := range m.Users {
 		if user.ID == *input.Username {
 			if user.Email == "disable.internalerror@ons.gov.uk" {
@@ -443,7 +458,8 @@ func (m *CognitoIdentityProviderClientStub) AdminDisableUser(input *cognitoident
 	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(input *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(input *cognitoidentityprovider.AdminAddUserToGroupInput) (
+	*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 	if *input.GroupName == "internal-error" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	}
@@ -464,7 +480,8 @@ func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(input *cognitoid
 	return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) GetGroup(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+func (m *CognitoIdentityProviderClientStub) GetGroup(input *cognitoidentityprovider.GetGroupInput) (
+	*cognitoidentityprovider.GetGroupOutput, error) {
 	if *input.GroupName == "internal-error" || *input.GroupName == "get-group-internal-error" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	}
@@ -489,7 +506,8 @@ func (m *CognitoIdentityProviderClientStub) GetGroup(input *cognitoidentityprovi
 	}, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoidentityprovider.ListUsersInGroupInput) (
+	*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 	var (
 		emailVerifiedAttr, emailVerifiedValue    string = "email_verified", "true"
 		givenNameAttr, familyNameAttr, emailAttr string = "given_name", "family_name", "email"
@@ -499,7 +517,8 @@ func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoident
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	}
 	if *input.GroupName == "list-group-users-not-found" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "list members - group not found", nil)
+		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException,
+			"list members - group not found", nil)
 	}
 
 	group := m.ReadGroup(*input.GroupName)
@@ -539,7 +558,9 @@ func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoident
 	}, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminRemoveUserFromGroup(input *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminRemoveUserFromGroup(
+	input *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (
+	*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error) {
 	if *input.GroupName == "internal-error" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	}
@@ -574,17 +595,20 @@ func (m *CognitoIdentityProviderClientStub) AdminRemoveUserFromGroup(input *cogn
 }
 
 // Added to fully implement interface but only used in the local dummy data builder
-func (m *CognitoIdentityProviderClientStub) AdminConfirmSignUp(input *cognitoidentityprovider.AdminConfirmSignUpInput) (*cognitoidentityprovider.AdminConfirmSignUpOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminConfirmSignUp(input *cognitoidentityprovider.AdminConfirmSignUpInput) (
+	*cognitoidentityprovider.AdminConfirmSignUpOutput, error) {
 	return nil, nil
 }
 
 // Added to fully implement interface but only used in the local dummy data builder
-func (m *CognitoIdentityProviderClientStub) AdminDeleteUser(input *cognitoidentityprovider.AdminDeleteUserInput) (*cognitoidentityprovider.AdminDeleteUserOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminDeleteUser(input *cognitoidentityprovider.AdminDeleteUserInput) (
+	*cognitoidentityprovider.AdminDeleteUserOutput, error) {
 	return nil, nil
 }
 
 // Added to fully implement interface but only used in the local dummy data builder
-func (m *CognitoIdentityProviderClientStub) DeleteGroup(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error) {
+func (m *CognitoIdentityProviderClientStub) DeleteGroup(input *cognitoidentityprovider.DeleteGroupInput) (
+	*cognitoidentityprovider.DeleteGroupOutput, error) {
 	if *input.GroupName == "internal-error" || *input.GroupName == "get-group-internal-error" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
 	}
@@ -595,12 +619,14 @@ func (m *CognitoIdentityProviderClientStub) DeleteGroup(input *cognitoidentitypr
 }
 
 // Added to fully implement interface but only used in the local dummy data builder
-func (m *CognitoIdentityProviderClientStub) AdminSetUserPassword(input *cognitoidentityprovider.AdminSetUserPasswordInput) (*cognitoidentityprovider.AdminSetUserPasswordOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminSetUserPassword(input *cognitoidentityprovider.AdminSetUserPasswordInput) (
+	*cognitoidentityprovider.AdminSetUserPasswordOutput, error) {
 	return nil, nil
 }
 
 func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
-	input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
+	input *cognitoidentityprovider.AdminListGroupsForUserInput) (
+	*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 	nextToken := "nextToken"
 	nextTokenNil := ""
 	if *input.Username == "internal-error" || *input.Username == "get-group-internal-error" {
@@ -654,7 +680,8 @@ func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
 	}, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) ListGroups(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
+func (m *CognitoIdentityProviderClientStub) ListGroups(input *cognitoidentityprovider.ListGroupsInput) (
+	*cognitoidentityprovider.ListGroupsOutput, error) {
 
 	if *input.UserPoolId == "internal-error" {
 		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
@@ -666,10 +693,10 @@ func (m *CognitoIdentityProviderClientStub) ListGroups(input *cognitoidentitypro
 		output.NextToken = group.NextToken
 	}
 	return &output, nil
-
 }
 
-func (m *CognitoIdentityProviderClientStub) DescribeUserPoolClient(input *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
+func (m *CognitoIdentityProviderClientStub) DescribeUserPoolClient(input *cognitoidentityprovider.DescribeUserPoolClientInput) (
+	*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
 	tokenValidDays := int64(1)
 	userPoolClient := &cognitoidentityprovider.DescribeUserPoolClientOutput{
 		UserPoolClient: &cognitoidentityprovider.UserPoolClientType{
@@ -679,7 +706,8 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPoolClient(input *cognit
 	return userPoolClient, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) UpdateGroup(input *cognitoidentityprovider.UpdateGroupInput) (*cognitoidentityprovider.UpdateGroupOutput, error) {
+func (m *CognitoIdentityProviderClientStub) UpdateGroup(input *cognitoidentityprovider.UpdateGroupInput) (
+	*cognitoidentityprovider.UpdateGroupOutput, error) {
 	var (
 		updateGroupOutput *cognitoidentityprovider.UpdateGroupOutput
 		response_200      = `Thi$s is a te||st des$%£@^c ription for  existing group  $`

@@ -79,7 +79,7 @@ paths:
     put:
       tags:
         - Tokens
-      summary: "Refreshs a users access token using the refresh and ID tokens"
+      summary: "Refreshes a users access token using the refresh and ID tokens"
       consumes:
         - application/json
       parameters:
@@ -351,7 +351,7 @@ paths:
           schema:
             $ref: '#/definitions/PasswordResetExpirationTime'
         400:
-          description: "Unable to validate the type, email, passowrd or session in the request"
+          description: "Unable to validate the type, email, password or session in the request"
           schema:
             $ref: '#/definitions/ErrorResponse'
         500:
@@ -445,6 +445,66 @@ paths:
             $ref: '#/definitions/ErrorResponse'
         500:
           description: "Invalid request body or unexpected Cognito response"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /groups-report:
+    get:
+      tags:
+        - Groups
+      summary: "List groups and the membership of the groups"
+      description: " To return a list of :-
+          preview team ( cognito group ) description
+          preview team ( cognito group ) member user email
+          json by default 
+          or if Request Header Accept 'text/csv' then csv format, consisting of preview team description amd user email. 
+        Notable Consideration :- 
+          Included on report
+            preview team ( cognito group ) acting as a role (i.e. publishers, admin)
+          Excluded from Report
+            preview team ( cognito group ) is empty of members(users)"
+      consumes:
+        - "application/json"
+      parameters:
+        - in: header
+          name: Accept:application/json
+          type: string
+          required: false
+          description: "Produce array of json"
+        - in: header
+          name: Accept:text/csv
+          type: string
+          required:  false
+          description: "Produce string of csv list"
+      responses:
+        200:
+          description: OK The list of groups and members
+          schema:
+            $ref: '#/definitions/GroupsUsersList'
+          examples:
+            application/json:
+              header:
+              "Content-type": "application/json"
+              body:
+                [
+                  {
+                    "group": "group description",
+                    "user": "user.email@emaildomain"
+                  }
+                ]
+            text/csv:
+              header:
+                "Content-type": "text/csv"
+              body:
+                "group, user 
+                group description,user.email@emaildomain
+                "
+        403:
+          description: "Forbidden. Incorrect user authorisation"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+        500:
+          description: "Internal error occurred"
           schema:
             $ref: '#/definitions/ErrorResponse'
   /groups/{id}:
@@ -610,7 +670,7 @@ paths:
           schema:
             $ref: '#/definitions/Group'
         400:
-          description: "Invalid group ID or user ID in providedlist"
+          description: "Invalid group ID or user ID in provided list"
           schema:
             $ref: '#/definitions/ErrorResponse'
         500:
@@ -773,6 +833,24 @@ definitions:
           $ref: '#/definitions/Group'
       count:
         type: integer
+  GroupsUsersList:
+    description: A list of group description and member's email
+    type: array
+    properties:
+      groups:
+        type: array
+        items:
+          $ref: '#/definitions/GroupUser'
+  GroupUser:
+    description: Group description and User email
+    type: object
+    properties:
+        group:
+          type: string
+          description: The group description
+        user:
+          type: string
+          description: The user email.
   UserList:
     description: "A list of users for the response body"
     type: object

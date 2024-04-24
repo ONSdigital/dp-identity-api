@@ -1,18 +1,19 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"encoding/csv"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sort"
 	"strings"
 
-	"github.com/google/uuid"
-
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -26,8 +27,7 @@ const (
 // CreateGroupHandler creates a new group
 func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	sortBy := req.URL.Query().Get("sortBy")
-
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
 	}
@@ -86,7 +86,7 @@ func (api *API) UpdateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 		ID: &id,
 	}
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
 	}
@@ -135,7 +135,7 @@ func (api *API) AddUserToGroupHandler(ctx context.Context, w http.ResponseWriter
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
 	}
@@ -192,7 +192,6 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWrit
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
-
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -372,7 +371,7 @@ func (api *API) SetGroupUsersHandler(ctx context.Context, w http.ResponseWriter,
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
 	}
@@ -491,6 +490,85 @@ func (api *API) RemoveUserFromGroup(ctx context.Context, group models.Group, use
 	listOfUsers.MapCognitoUsers(&listUsers)
 
 	return &listOfUsers, nil
+}
+
+// ListGroupsUsersHandler produces a user requested report of all groups with members including groups that act as roles
+// output by default is json but if request header accept == text/csv then the output is csv format
+// each line consists of the group description and user email
+func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	sortBy := req.URL.Query().Get("sortBy")
+	var (
+		GroupsUsersList *[]models.ListGroupUsersType
+	)
+	listOfGroups, err := api.GetListGroups(sortBy)
+	if err != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+	}
+	GroupsUsersList, err = api.GetTeamsReportLines(listOfGroups)
+	if err != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+	}
+
+	if req.Header.Get("Accept") == "text/csv" {
+		header := map[string]string{"Content-type": "text/csv"}
+		return models.NewSuccessResponse(api.ListGroupsUsersCSV(GroupsUsersList).Bytes(), http.StatusOK, header), nil
+	}
+
+	jsonResponse, err := json.Marshal(GroupsUsersList)
+	if err != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
+
+// ListGroupsUsersCSV converts the GroupsUsersList output to csv
+func (api *API) ListGroupsUsersCSV(GroupsUsersList *[]models.ListGroupUsersType) *bytes.Buffer {
+	var csvHeader = models.ListGroupUsersType{
+		GroupName: "Group",
+		UserEmail: "User",
+	}
+	buf := new(bytes.Buffer)
+	w := csv.NewWriter(buf)
+	rows := [][]string{}
+	rows = append(rows, []string{csvHeader.GroupName, csvHeader.UserEmail})
+
+	for _, record := range *GroupsUsersList {
+		rows = append(rows, []string{record.GroupName, record.UserEmail})
+	}
+
+	w.WriteAll(rows)
+	return buf
+}
+
+// GetTeamsReportLines  from the listOfGroups for each group gets the list of members and produces output
+// group description user email for each group member
+func (api *API) GetTeamsReportLines(listOfGroups *cognitoidentityprovider.ListGroupsOutput) (*[]models.ListGroupUsersType, error) {
+	var GroupsUsersList []models.ListGroupUsersType
+	for _, ListGroup := range listOfGroups.Groups {
+		inputGroup := models.Group{ID: *ListGroup.GroupName}
+		var listOfUsersInput []*cognitoidentityprovider.UserType
+		listUsers, err := api.getUsersInAGroup(listOfUsersInput, inputGroup)
+		if err != nil {
+			return nil, err
+		}
+		for _, user := range listUsers {
+			for _, attribute := range user.Attributes {
+				if strings.ToLower(*attribute.Name) == "email" {
+					GroupsUsersList = append(GroupsUsersList, models.ListGroupUsersType{
+						GroupName: *ListGroup.Description,
+						UserEmail: *attribute.Value,
+					})
+				}
+			}
+		}
+	}
+
+	if GroupsUsersList == nil {
+		GroupsUsersList = []models.ListGroupUsersType{}
+	}
+
+	return &GroupsUsersList, nil
 }
 
 func sortGroups(groups []*cognitoidentityprovider.GroupType, sortBy string) {
