@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"sort"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -23,6 +25,8 @@ const (
 
 // CreateGroupHandler creates a new group
 func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	sortBy := req.URL.Query().Get("sortBy")
+
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
@@ -40,7 +44,7 @@ func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 		createGroup.ID = &uuid
 	}
 
-	createGroup.GroupsList, err = api.GetListGroups()
+	createGroup.GroupsList, err = api.GetListGroups(sortBy)
 	if err != nil {
 		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListGroups request from update group endpoint")
 		if cognitoErr.Code == models.NotFoundError {
@@ -255,7 +259,7 @@ func (api *API) RemoveUserFromGroupHandler(ctx context.Context, w http.ResponseW
 }
 
 // List Groups pagination allows first call and then any other call if nextToken is not ""
-func (api *API) GetListGroups() (*cognitoidentityprovider.ListGroupsOutput, error) {
+func (api *API) GetListGroups(sortBy string) (*cognitoidentityprovider.ListGroupsOutput, error) {
 	firstTimeCheck := false
 	var nextToken string
 	group := models.ListUserGroupType{}
@@ -273,6 +277,8 @@ func (api *API) GetListGroups() (*cognitoidentityprovider.ListGroupsOutput, erro
 			return nil, err
 		}
 
+		sortGroups(listGroupsResponse.Groups, sortBy)
+
 		listOfGroups.Groups = append(listOfGroups.Groups, listGroupsResponse.Groups...)
 		nextToken = ""
 		if listGroupsResponse.NextToken != nil {
@@ -284,9 +290,11 @@ func (api *API) GetListGroups() (*cognitoidentityprovider.ListGroupsOutput, erro
 
 // ListGroupsHandler lists the users in the user pool
 func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	sortBy := req.URL.Query().Get("sortBy")
+
 	finalGroupsResponse := models.ListUserGroups{}
 
-	listOfGroups, err := api.GetListGroups()
+	listOfGroups, err := api.GetListGroups(sortBy)
 	if err != nil {
 		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListofUserGroups request from list user groups endpoint")
 		if cognitoErr.Code == models.NotFoundError {
@@ -483,4 +491,52 @@ func (api *API) RemoveUserFromGroup(ctx context.Context, group models.Group, use
 	listOfUsers.MapCognitoUsers(&listUsers)
 
 	return &listOfUsers, nil
+}
+
+func sortGroups(groups []*cognitoidentityprovider.GroupType, sortBy string) {
+
+	if !validateSortBy(sortBy) {
+		return
+	}
+
+	var asc bool
+	var sortByCriteria string
+	sections := strings.Split(sortBy, ":")
+
+	sortByCriteria = sections[0]
+	if sections[1] == "asc" {
+		asc = true
+	} else {
+		asc = false
+	}
+
+	switch sortByCriteria {
+	case "name":
+		if asc {
+			sort.Slice(groups, func(i, j int) bool {
+				return *groups[i].GroupName < *groups[j].GroupName
+			})
+		} else {
+			sort.Slice(groups, func(i, j int) bool {
+				return *groups[i].GroupName > *groups[j].GroupName
+			})
+		}
+	}
+}
+
+func validateSortBy(sortBy string) bool {
+	if sortBy == "" {
+		return false
+	}
+
+	sections := strings.Split(sortBy, ":")
+	if len(sections) != 2 {
+		return false
+	}
+
+	if sections[1] != "asc" && sections[1] != "desc" {
+		return false
+	}
+
+	return true
 }
