@@ -579,6 +579,108 @@ Feature: Groups
                 }
             """
 
+    Scenario: GET /v1/groups/{id}/members?sortBy=forename:asc and checking the response status 200
+        Given group "test-group" exists in the database
+        And a user with username "abcd1234" and email "email@ons.gov.uk" and forename "Andreas" exists in the database
+        And a user with username "bcde1234" and email "email@ons.gov.uk" and forename "Dimitris" exists in the database
+        And a user with username "cdef1234" and email "email@ons.gov.uk" and forename "Zeus" exists in the database
+        And user "abcd1234" is a member of group "test-group"
+        And user "bcde1234" is a member of group "test-group"
+        And user "cdef1234" is a member of group "test-group"
+        And there are 3 users in group "test-group"
+        And I am an admin user
+        When I GET "/v1/groups/test-group/members?sortBy=forename:asc"
+        Then I should receive the following JSON response with status "200":
+            """
+                {
+                    "users": [
+                        {
+                            "id": "abcd1234",
+                            "forename": "Andreas",
+                            "lastname": "Smith",
+                            "email": "email@ons.gov.uk",
+                            "groups": [],
+                            "status": "CONFIRMED",
+                            "active": true,
+                            "status_notes": ""
+                        },
+                        {
+                            "id": "bcde1234",
+                            "forename": "Dimitris",
+                            "lastname": "Smith",
+                            "email": "email@ons.gov.uk",
+                            "groups": [],
+                            "status": "CONFIRMED",
+                            "active": true,
+                            "status_notes": ""
+                        },
+                        {
+                            "id": "cdef1234",
+                            "forename": "Zeus",
+                            "lastname": "Smith",
+                            "email": "email@ons.gov.uk",
+                            "groups": [],
+                            "status": "CONFIRMED",
+                            "active": true,
+                            "status_notes": ""
+                        }
+                    ],
+                    "count": 3,
+                    "PaginationToken":""
+                }
+            """
+
+    Scenario: GET /v1/groups/{id}/members?sortBy=forename:desc and checking the response status 200
+        Given group "test-group" exists in the database
+        And a user with username "abcd1234" and email "email@ons.gov.uk" and forename "Andreas" exists in the database
+        And a user with username "bcde1234" and email "email@ons.gov.uk" and forename "Dimitris" exists in the database
+        And a user with username "cdef1234" and email "email@ons.gov.uk" and forename "Zeus" exists in the database
+        And user "abcd1234" is a member of group "test-group"
+        And user "bcde1234" is a member of group "test-group"
+        And user "cdef1234" is a member of group "test-group"
+        And there are 3 users in group "test-group"
+        And I am an admin user
+        When I GET "/v1/groups/test-group/members?sortBy=forename:desc"
+        Then I should receive the following JSON response with status "200":
+            """
+                {
+                    "users": [
+                        {
+                            "id": "cdef1234",
+                            "forename": "Zeus",
+                            "lastname": "Smith",
+                            "email": "email@ons.gov.uk",
+                            "groups": [],
+                            "status": "CONFIRMED",
+                            "active": true,
+                            "status_notes": ""
+                        },
+                        {
+                            "id": "bcde1234",
+                            "forename": "Dimitris",
+                            "lastname": "Smith",
+                            "email": "email@ons.gov.uk",
+                            "groups": [],
+                            "status": "CONFIRMED",
+                            "active": true,
+                            "status_notes": ""
+                        },
+                        {
+                            "id": "abcd1234",
+                            "forename": "Andreas",
+                            "lastname": "Smith",
+                            "email": "email@ons.gov.uk",
+                            "groups": [],
+                            "status": "CONFIRMED",
+                            "active": true,
+                            "status_notes": ""
+                        }
+                    ],
+                    "count": 3,
+                    "PaginationToken":""
+                }
+            """
+
     Scenario: GET /v1/groups/{id}/members without a JWT token and checking the response status 401
         When I GET "/v1/groups/test-group/members"
         Then the HTTP status code should be "401"
