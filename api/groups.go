@@ -189,6 +189,7 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWrit
 
 	if err = req.ParseForm(); err != nil {
 		dplogs.Error(ctx, "error parsing form", err)
+		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
 	}
 	users := listOfUsers.Users
 	sortBy := strings.Split(req.Form.Get("sortBy"), ":")
