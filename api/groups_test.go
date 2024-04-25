@@ -2891,6 +2891,14 @@ func TestSortGroups(t *testing.T) {
 				So(*groups[2].GroupName, ShouldEqual, "A Group")
 			})
 		})
+		Convey("When sorting without a specified sort order", func() {
+			sortGroups(groups, "name")
+			Convey("The groups should be sorted in ascending order", func() {
+				So(*groups[0].GroupName, ShouldEqual, "A Group")
+				So(*groups[1].GroupName, ShouldEqual, "B Group")
+				So(*groups[2].GroupName, ShouldEqual, "C Group")
+			})
+		})
 		Convey("When sorting with an invalid sortBy parameter", func() {
 			sortGroups(groups, "non:sense")
 			Convey("The groups should remain unsorted", func() {

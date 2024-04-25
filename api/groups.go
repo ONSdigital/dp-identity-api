@@ -572,19 +572,16 @@ func (api *API) GetTeamsReportLines(listOfGroups *cognitoidentityprovider.ListGr
 }
 
 func sortGroups(groups []*cognitoidentityprovider.GroupType, sortBy string) {
-
 	if !validateSortBy(sortBy) {
 		return
 	}
 
-	var asc bool
+	var asc bool = true
 	var sortByCriteria string
 	sections := strings.Split(sortBy, ":")
 
 	sortByCriteria = sections[0]
-	if sections[1] == "asc" {
-		asc = true
-	} else {
+	if len(sections) > 1 && sections[1] == "desc" {
 		asc = false
 	}
 
@@ -608,6 +605,10 @@ func validateSortBy(sortBy string) bool {
 	}
 
 	sections := strings.Split(sortBy, ":")
+	if len(sections) == 1 && sections[0] == "name" {
+		return true
+	}
+
 	if len(sections) != 2 {
 		return false
 	}
