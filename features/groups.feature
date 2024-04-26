@@ -655,6 +655,60 @@ Feature: Groups
                     }
                 """
 
+#   Get groups in ascending order scenarios
+    Scenario: GET /v1/groups?sortBy=name:asc and checking the groups are sorted in ascending order
+        Given I am an admin user
+        And group "B Group" exists in the database
+        And group "A Group" exists in the database
+        And group "C Group" exists in the database
+        When I GET "/v1/groups?sortBy=name:asc"
+        Then the response code should be 200
+            And the response should match the following json for listgroups
+                """
+                    {
+                        "count": 2,
+                        "groups": [
+                            {
+                                "name": "A group",
+                            },
+                                                        {
+                                "name": "B group",
+                            },
+                                                        {
+                                "name": "C group",
+                            },
+                        ],
+                        "next_token": null
+                    }
+                """
+
+#   Get groups in descending order scenarios
+    Scenario: GET /v1/groups??sortBy=name:desc and checking the groups are sorted in descending order
+        Given I am an admin user
+        And group "B Group" exists in the database
+        And group "A Group" exists in the database
+        And group "C Group" exists in the database
+        When I GET "/v1/groups?sortBy=name:desc"
+        Then the response code should be 200
+            And the response should match the following json for listgroups
+                """
+                    {
+                        "count": 2,
+                        "groups": [
+                            {
+                                "name": "C group"
+                            },
+                                                        {
+                                "name": "B group"
+                            },
+                                                        {
+                                "name": "A group"
+                            },
+                        ],
+                        "next_token": null
+                    }
+                """
+
 #   list for many groups found   given blocks of 60 for one cognito call
     Scenario: GET /v1/groups and checking the response status 200
         Given there are 100 groups in the database
