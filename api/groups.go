@@ -192,7 +192,7 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWrit
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
 	}
 	users := listOfUsers.Users
-	sortBy := strings.Split(req.Form.Get("sortBy"), ":")
+	sortBy := strings.Split(req.Form.Get("sort"), ":")
 	sortUsers(ctx, users, sortBy)
 
 	jsonResponse, responseErr := listOfUsers.BuildSuccessfulJsonResponse(ctx)
@@ -203,6 +203,9 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, w http.ResponseWrit
 }
 
 func sortUsers(ctx context.Context, users []models.UserParams, sortBy []string) bool {
+	if sortBy[0] == "created" || sortBy[0] == "" {
+		return true
+	}
 	switch sortBy[0] {
 	case "forename":
 		switch sortBy[1] {

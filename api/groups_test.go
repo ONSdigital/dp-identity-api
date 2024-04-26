@@ -2814,7 +2814,7 @@ func TestSortUsers(t *testing.T) {
 		json.Unmarshal([]byte(usersJson), &listOfUsers)
 		fmt.Println(listOfUsers.Users)
 
-		Convey("When we call the sort function with sortedBy value of forename:asc", func() {
+		Convey("When we call the sort function with sort value of forename:asc", func() {
 			users := listOfUsers.Users
 			sortBy := strings.Split("forename:asc", ":")
 			sorted := sortUsers(ctx, users, sortBy)
@@ -2831,7 +2831,7 @@ func TestSortUsers(t *testing.T) {
 			})
 		})
 
-		Convey("When we call the sort function with sortedBy value of forename:desc", func() {
+		Convey("When we call the sort function with sort value of forename:desc", func() {
 			users := listOfUsers.Users
 			sortBy := strings.Split("forename:desc", ":")
 			sorted := sortUsers(ctx, users, sortBy)
@@ -2845,7 +2845,7 @@ func TestSortUsers(t *testing.T) {
 			})
 		})
 
-		Convey("When we call the sort function with sortedBy value of wrongValue:desc", func() {
+		Convey("When we call the sort function with sort value of wrongValue:desc", func() {
 			users := listOfUsers.Users
 			sortBy := strings.Split("wrongValue:desc", ":")
 			sorted := sortUsers(ctx, users, sortBy)
@@ -2859,7 +2859,7 @@ func TestSortUsers(t *testing.T) {
 			})
 		})
 
-		Convey("When we call the sort function with sortedBy value of forename:wrongValue", func() {
+		Convey("When we call the sort function with sort value of forename:wrongValue", func() {
 			users := listOfUsers.Users
 			sortBy := strings.Split("forename:wrongValue", ":")
 			sorted := sortUsers(ctx, users, sortBy)
@@ -2869,6 +2869,34 @@ func TestSortUsers(t *testing.T) {
 				json.Unmarshal([]byte(usersJson), &listOfUsersUnsorted)
 
 				So(sorted, ShouldBeFalse)
+				So(users, ShouldResemble, listOfUsersUnsorted.Users)
+			})
+		})
+
+		Convey("When we call the sort function with sort value of created", func() {
+			users := listOfUsers.Users
+			sortBy := strings.Split("created", ":")
+			sorted := sortUsers(ctx, users, sortBy)
+
+			Convey("Then the users should be returned in the order they where created", func() {
+				listOfUsersUnsorted := models.UsersList{}
+				json.Unmarshal([]byte(usersJson), &listOfUsersUnsorted)
+
+				So(sorted, ShouldBeTrue)
+				So(users, ShouldResemble, listOfUsersUnsorted.Users)
+			})
+		})
+
+		Convey("When we call the sort function with sort value of \"\"", func() {
+			users := listOfUsers.Users
+			sortBy := strings.Split("", ":")
+			sorted := sortUsers(ctx, users, sortBy)
+
+			Convey("Then the users should be returned in the order they where created", func() {
+				listOfUsersUnsorted := models.UsersList{}
+				json.Unmarshal([]byte(usersJson), &listOfUsersUnsorted)
+
+				So(sorted, ShouldBeTrue)
 				So(users, ShouldResemble, listOfUsersUnsorted.Users)
 			})
 		})
