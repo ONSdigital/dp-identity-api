@@ -287,7 +287,6 @@ func (api *API) GetListGroups() (*cognitoidentityprovider.ListGroupsOutput, erro
 
 // ListGroupsHandler lists the users in the user pool
 func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	var sort []string
 	finalGroupsResponse := models.ListUserGroups{}
 
 	listOfGroups, err := api.GetListGroups()
@@ -304,8 +303,10 @@ func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, re
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
 	}
 	query := req.Form.Get("sort")
-	sort = validateQuery(query)
-	sortGroups(ctx, listOfGroups, sort)
+	if query != "" {
+		sort := validateQuery(query)
+		sortGroups(ctx, listOfGroups, sort)
+	}
 
 	jsonResponse, responseErr := finalGroupsResponse.BuildListGroupsSuccessfulJsonResponse(ctx, listOfGroups)
 	if responseErr != nil {
@@ -605,9 +606,9 @@ func sortGroups(ctx context.Context, listGroupOutput *cognitoidentityprovider.Li
 func sortByGroupName(groups []*cognitoidentityprovider.GroupType, ascending bool) {
 	sort.Slice(groups, func(i, j int) bool {
 		if ascending {
-			return *groups[i].Description < *groups[j].Description
+			return strings.ToLower(*groups[i].Description) < strings.ToLower(*groups[j].Description)
 		}
-		return *groups[i].Description > *groups[j].Description
+		return strings.ToLower(*groups[i].Description) > strings.ToLower(*groups[j].Description)
 	})
 }
 
@@ -620,5 +621,5 @@ func validateQuery(query string) []string {
 		return []string{"name"}
 	}
 
-	return nil
+	return []string{}
 }
