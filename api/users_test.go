@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"time"
 
 	"net/http"
@@ -384,7 +383,10 @@ func TestListUserHandlerWithFilter(t *testing.T) {
 }
 
 func TestListUserHandlerWithSort(t *testing.T) {
-	var ctx = context.Background()
+	var (
+		ctx = context.Background()
+	)
+
 	api, w, m := apiSetup()
 
 	Convey("List user - check expected responses", t, func() {
@@ -395,47 +397,24 @@ func TestListUserHandlerWithSort(t *testing.T) {
 			assertions        func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{
 			{
-				"200 response from Cognito ",
-				httptest.NewRequest(http.MethodGet, usersEndPointWithSortByEmail, nil),
-				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				description: "200 response from Cognito ",
+				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortByEmail, nil),
+				listUsersFunction: func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 
 					var cognitoUsersList = []*cognitoidentityprovider.UserType{}
-					var forename, surname, email, status, id string = "Bob", "Smith", "email@ons.gov.uk", "CONFIRMED", "user-1"
-					cognitoUser := cognitoidentityprovider.UserType{
-						Attributes: []*cognitoidentityprovider.AttributeType{
-							{
-								Name:  aws.String("given_name"),
-								Value: &forename,
-							},
-							{
-								Name:  aws.String("family_name"),
-								Value: &surname,
-							},
-							{
-								Name:  aws.String("email"),
-								Value: &email,
-							},
-						},
-						UserStatus: &status,
-						Username:   &id,
-						Enabled:    aws.Bool(true),
-					}
-
-					cognitoUsersList = append(cognitoUsersList, &cognitoUser)
+					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
+					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
+					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
 
 					users := &cognitoidentityprovider.ListUsersOutput{
 						Users: cognitoUsersList,
 					}
 					return users, nil
 				},
-				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(errorResponse, ShouldBeNil)
 					So(successResponse, ShouldNotBeNil)
 					So(successResponse.Status, ShouldEqual, 200)
-
-					var responseBody = cognitoidentityprovider.ListUsersOutput{}
-					json.Unmarshal(successResponse.Body, &responseBody)
-					fmt.Println(responseBody.Users)
 				},
 			},
 		}
@@ -450,6 +429,32 @@ func TestListUserHandlerWithSort(t *testing.T) {
 			)
 		}
 	})
+}
+
+func listUserOutput(forename, surname, email, id string, cognitoUsersList []*cognitoidentityprovider.UserType) []*cognitoidentityprovider.UserType {
+	var status = "CONFIRMED"
+	cognitoUser := cognitoidentityprovider.UserType{
+		Attributes: []*cognitoidentityprovider.AttributeType{
+			{
+				Name:  aws.String("given_name"),
+				Value: &forename,
+			},
+			{
+				Name:  aws.String("family_name"),
+				Value: &surname,
+			},
+			{
+				Name:  aws.String("email"),
+				Value: &email,
+			},
+		},
+		UserStatus: &status,
+		Username:   &id,
+		Enabled:    aws.Bool(true),
+	}
+
+	cognitoUsersList = append(cognitoUsersList, &cognitoUser)
+	return cognitoUsersList
 }
 
 func TestGetUserHandler(t *testing.T) {

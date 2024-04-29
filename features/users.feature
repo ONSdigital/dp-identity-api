@@ -268,232 +268,333 @@ Feature: Users
             """
                 {"code":"InternalServerError", "description":"Internal Server Error"}
             """
+
     @get-users-list
     Scenario: GET /v1/users and checking the response status 200 with sort default
-        Given  a user with forename "Adam", lastname "Wilson", email "email5@ons.gov.uk", id "id_10" and password "Passw0rd!" exists in the database
-        And a user with forename "William", lastname "Adams", email "email9@ons.gov.uk", id "id_11" and password "Passw0rd!" exists in the database
+        Given a user with forename "Adam", lastname "Adams", email "email5@ons.gov.uk", id "id_2" and password "Passw0rd!" exists in the database
+        And a user with forename "William", lastname "Williams", email "email9@ons.gov.uk", id "id_1" and password "Passw0rd!" exists in the database
+        And a user with forename "Mary", lastname "Martin", email "email7@ons.gov.uk", id "id_3" and password "Passw0rd!" exists in the database
         And I am an admin user
         When I GET "/v1/users"
         Then I should receive the following JSON response with status "200":
             """
+            {
+              "PaginationToken": "",
+              "count": 3,
+              "users": [
                 {
-                  "count": 2,
-                  "users": [
-                                      {
-                      "forename": "William",
-                      "lastname": "Adams",
-                      "email": "email9@ons.gov.uk",
-                      "groups": [],
-                      "status": "CONFIRMED",
-                      "active": true,
-                      "id": "id_11",
-                      "status_notes": ""
-                    },
-                    {
-                      "forename": "Adam",
-                      "lastname": "Wilson",
-                      "email": "email5@ons.gov.uk",
-                      "groups": [],
-                      "status": "CONFIRMED",
-                      "active": true,
-                      "id": "id_10",
-                      "status_notes": ""
-                    }
-                  ],
-                  "PaginationToken": ""
+                  "active": true,
+                  "email": "email5@ons.gov.uk",
+                  "forename": "Adam",
+                  "groups": [],
+                  "id": "id_2",
+                  "lastname": "Adams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
+                {
+                  "active": true,
+                  "email": "email9@ons.gov.uk",
+                  "forename": "William",
+                  "groups": [],
+                  "id": "id_1",
+                  "lastname": "Williams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
+                {
+                  "active": true,
+                  "email": "email7@ons.gov.uk",
+                  "forename": "Mary",
+                  "groups": [],
+                  "id": "id_3",
+                  "lastname": "Martin",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
                 }
+              ]
+            }
             """
 
     @get-users-list
-    Scenario: GET /v1/users and checking the response status 200 with sort by email asc
-        Given a user with forename "William", lastname "Adams", email "email9@ons.gov.uk", id "id_1" and password "Passw0rd!" exists in the database
-        And   a user with forename "Adam", lastname "Wilson", email "email5@ons.gov.uk", id "id_2" and password "Passw0rd!" exists in the database
+    Scenario: GET /v1/users and checking the response status 200 with sort by id
+        Given a user with forename "Adam", lastname "Adams", email "email5@ons.gov.uk", id "id_2" and password "Passw0rd!" exists in the database
+        And a user with forename "William", lastname "Williams", email "email9@ons.gov.uk", id "id_1" and password "Passw0rd!" exists in the database
+        And a user with forename "Mary", lastname "Martin", email "email7@ons.gov.uk", id "id_3" and password "Passw0rd!" exists in the database
         And I am an admin user
-        When I GET "/v1/users?sort=email"
+        When I GET "/v1/users?sort=id"
         Then I should receive the following JSON response with status "200":
             """
+            {
+              "PaginationToken": "",
+              "count": 3,
+              "users": [
+                              {
+                  "active": true,
+                  "email": "email9@ons.gov.uk",
+                  "forename": "William",
+                  "groups": [],
+                  "id": "id_1",
+                  "lastname": "Williams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
                 {
-                  "count": 2,
-                  "users": [
-                    {
-                      "forename": "Adam",
-                      "lastname": "Wilson",
-                      "email": "email5@ons.gov.uk",
-                      "groups": [],
-                      "status": "CONFIRMED",
-                      "active": true,
-                      "id": "id_2",
-                      "status_notes": ""
-                    },
-                    {
-                      "forename": "William",
-                      "lastname": "Adams",
-                      "email": "email9@ons.gov.uk",
-                      "groups": [],
-                      "status": "CONFIRMED",
-                      "active": true,
-                      "id": "id_1",
-                      "status_notes": ""
-                    }
-                  ],
-                  "PaginationToken": ""
+                  "active": true,
+                  "email": "email5@ons.gov.uk",
+                  "forename": "Adam",
+                  "groups": [],
+                  "id": "id_2",
+                  "lastname": "Adams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
+                {
+                  "active": true,
+                  "email": "email7@ons.gov.uk",
+                  "forename": "Mary",
+                  "groups": [],
+                  "id": "id_3",
+                  "lastname": "Martin",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
                 }
+              ]
+            }
             """
 
     @get-users-list
-    Scenario: GET /v1/users and checking the response status 200 with sort by email desc
-        Given a user with forename "Adam", lastname "Wilson", email "email5@ons.gov.uk", id "id_2" and password "Passw0rd!" exists in the database
-        And a user with forename "William", lastname "Adams", email "email9@ons.gov.uk", id "id_1" and password "Passw0rd!" exists in the database
+    Scenario: GET /v1/users and checking the response status 200 with sort by id:asc
+        Given a user with forename "Adam", lastname "Adams", email "email5@ons.gov.uk", id "id_2" and password "Passw0rd!" exists in the database
+        And a user with forename "William", lastname "Williams", email "email9@ons.gov.uk", id "id_1" and password "Passw0rd!" exists in the database
+        And a user with forename "Mary", lastname "Martin", email "email7@ons.gov.uk", id "id_3" and password "Passw0rd!" exists in the database
         And I am an admin user
-        When I GET "/v1/users?sort=email:desc"
+        When I GET "/v1/users?sort=id:asc"
         Then I should receive the following JSON response with status "200":
             """
+            {
+              "PaginationToken": "",
+              "count": 3,
+              "users": [
+                              {
+                  "active": true,
+                  "email": "email9@ons.gov.uk",
+                  "forename": "William",
+                  "groups": [],
+                  "id": "id_1",
+                  "lastname": "Williams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
                 {
-                  "count": 2,
-                  "users": [
-                  {
-                      "forename": "William",
-                      "lastname": "Adams",
-                      "email": "email9@ons.gov.uk",
-                      "groups": [],
-                      "status": "CONFIRMED",
-                      "active": true,
-                      "id": "id_1",
-                      "status_notes": ""
-                    },
-                  {
-                      "forename": "Adam",
-                      "lastname": "Wilson",
-                      "email": "email5@ons.gov.uk",
-                      "groups": [],
-                      "status": "CONFIRMED",
-                      "active": true,
-                      "id": "id_2",
-                      "status_notes": ""
-                    }
-                  ],
-                  "PaginationToken": ""
+                  "active": true,
+                  "email": "email5@ons.gov.uk",
+                  "forename": "Adam",
+                  "groups": [],
+                  "id": "id_2",
+                  "lastname": "Adams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
+                {
+                  "active": true,
+                  "email": "email7@ons.gov.uk",
+                  "forename": "Mary",
+                  "groups": [],
+                  "id": "id_3",
+                  "lastname": "Martin",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
                 }
+              ]
+            }
             """
 
     @get-users-list
-    Scenario: GET /v1/users and checking the response status 200 with sort by lastname,forename
-        Given a user with forename "William", lastname "Adams", email "email9@ons.gov.uk", id "id_1" and password "Passw0rd!" exists in the database
-        And   a user with forename "Adam", lastname "Wilson", email "email5@ons.gov.uk", id "id_2" and password "Passw0rd!" exists in the database
+    Scenario: GET /v1/users and checking the response status 200 with sort by id:desc
+        Given a user with forename "Adam", lastname "Adams", email "email5@ons.gov.uk", id "id_2" and password "Passw0rd!" exists in the database
+        And a user with forename "William", lastname "Williams", email "email9@ons.gov.uk", id "id_1" and password "Passw0rd!" exists in the database
+        And a user with forename "Mary", lastname "Martin", email "email7@ons.gov.uk", id "id_3" and password "Passw0rd!" exists in the database
         And I am an admin user
-        When I GET "/v1/users?sort=lastname,forename"
+        When I GET "/v1/users?sort=id:asc"
         Then I should receive the following JSON response with status "200":
             """
+            {
+              "PaginationToken": "",
+              "count": 3,
+              "users": [
+                              {
+                  "active": true,
+                  "email": "email9@ons.gov.uk",
+                  "forename": "William",
+                  "groups": [],
+                  "id": "id_1",
+                  "lastname": "Williams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
                 {
-                  "count": 2,
-                  "users": [
-                    {
-                      "forename": "William",
-                      "lastname": "Adams",
-                      "email": "email9@ons.gov.uk",
-                      "groups": [],
-                      "status": "CONFIRMED",
-                      "active": true,
-                      "id": "id_1",
-                      "status_notes": ""
-                    },
-                    {
-                      "forename": "Adam",
-                      "lastname": "Wilson",
-                      "email": "email5@ons.gov.uk",
-                      "groups": [],
-                      "status": "CONFIRMED",
-                      "active": true,
-                      "id": "id_2",
-                      "status_notes": ""
-                    }
-                  ],
-                  "PaginationToken": ""
+                  "active": true,
+                  "email": "email5@ons.gov.uk",
+                  "forename": "Adam",
+                  "groups": [],
+                  "id": "id_2",
+                  "lastname": "Adams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
+                {
+                  "active": true,
+                  "email": "email7@ons.gov.uk",
+                  "forename": "Mary",
+                  "groups": [],
+                  "id": "id_3",
+                  "lastname": "Martin",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
                 }
+              ]
+            }
             """
 
     @get-users-list
     Scenario: GET /v1/users and checking the response status 200 with sort by forename,lastname
-        Given a user with forename "William", lastname "Adams", email "email9@ons.gov.uk", id "id_1" and password "Passw0rd!" exists in the database
-        And   a user with forename "Adam", lastname "Wilson", email "email5@ons.gov.uk", id "id_2" and password "Passw0rd!" exists in the database
+        Given a user with forename "Adam", lastname "Adams", email "email5@ons.gov.uk", id "id_2" and password "Passw0rd!" exists in the database
+        And a user with forename "William", lastname "Williams", email "email9@ons.gov.uk", id "id_1" and password "Passw0rd!" exists in the database
+        And a user with forename "Mary", lastname "Martin", email "email7@ons.gov.uk", id "id_3" and password "Passw0rd!" exists in the database
+        And a user with forename "Adam", lastname "Williams", email "email10@ons.gov.uk", id "id_4" and password "Passw0rd!" exists in the database
+        And a user with forename "William", lastname "Adams", email "email11@ons.gov.uk", id "id_5" and password "Passw0rd!" exists in the database
+
         And I am an admin user
         When I GET "/v1/users?sort=forename,lastname"
         Then I should receive the following JSON response with status "200":
             """
+            {
+              "PaginationToken": "",
+              "count": 5,
+              "users": [
                 {
-                  "count": 2,
-                  "users": [
-                  {
-                      "forename": "Adam",
-                      "lastname": "Wilson",
-                      "email": "email5@ons.gov.uk",
-                      "groups": [],
-                      "status": "CONFIRMED",
-                      "active": true,
-                      "id": "id_2",
-                      "status_notes": ""
-                    },
-                    {
-                      "forename": "William",
-                      "lastname": "Adams",
-                      "email": "email9@ons.gov.uk",
-                      "groups": [],
-                      "status": "CONFIRMED",
-                      "active": true,
-                      "id": "id_1",
-                      "status_notes": ""
-                    }
-
-                  ],
-                  "PaginationToken": ""
+                  "active": true,
+                  "email": "email5@ons.gov.uk",
+                  "forename": "Adam",
+                  "groups": [],
+                  "id": "id_2",
+                  "lastname": "Adams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
+                                {
+                  "active": true,
+                  "email": "email10@ons.gov.uk",
+                  "forename": "Adam",
+                  "groups": [],
+                  "id": "id_4",
+                  "lastname": "Williams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
+                {
+                  "active": true,
+                  "email": "email7@ons.gov.uk",
+                  "forename": "Mary",
+                  "groups": [],
+                  "id": "id_3",
+                  "lastname": "Martin",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
+                                {
+                  "active": true,
+                  "email": "email11@ons.gov.uk",
+                  "forename": "William",
+                  "groups": [],
+                  "id": "id_5",
+                  "lastname": "Adams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
+                {
+                  "active": true,
+                  "email": "email9@ons.gov.uk",
+                  "forename": "William",
+                  "groups": [],
+                  "id": "id_1",
+                  "lastname": "Williams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
                 }
+                ]
+            }
             """
 
     @get-users-list
-    Scenario: GET /v1/users and checking the response status 200 with sort by forename desc,lastname desc
-        Given a user with forename "William", lastname "Adams", email "email9@ons.gov.uk", id "id_1" and password "Passw0rd!" exists in the database
-        And   a user with forename "Mary", lastname "Martin", email "email7@ons.gov.uk", id "id_10" and password "Passw0rd!" exists in the database
-        And   a user with forename "Adam", lastname "Wilson", email "email5@ons.gov.uk", id "id_2" and password "Passw0rd!" exists in the database
+    Scenario: GET /v1/users and checking the response status 200 with sort by forename,lastname:desc
+        Given a user with forename "Adam", lastname "Adams", email "email5@ons.gov.uk", id "id_2" and password "Passw0rd!" exists in the database
+        And a user with forename "William", lastname "Williams", email "email9@ons.gov.uk", id "id_1" and password "Passw0rd!" exists in the database
+        And a user with forename "Mary", lastname "Martin", email "email7@ons.gov.uk", id "id_3" and password "Passw0rd!" exists in the database
+        And a user with forename "Adam", lastname "Williams", email "email10@ons.gov.uk", id "id_4" and password "Passw0rd!" exists in the database
+        And a user with forename "William", lastname "Adams", email "email11@ons.gov.uk", id "id_5" and password "Passw0rd!" exists in the database
+
         And I am an admin user
-        When I GET "/v1/users?sort=forename:desc,lastname:desc"
+        When I GET "/v1/users?sort=forename,lastname:desc"
         Then I should receive the following JSON response with status "200":
             """
+            {
+              "PaginationToken": "",
+              "count": 5,
+              "users": [
+                                              {
+                  "active": true,
+                  "email": "email10@ons.gov.uk",
+                  "forename": "Adam",
+                  "groups": [],
+                  "id": "id_4",
+                  "lastname": "Williams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
                 {
-                  "count": 3,
-                  "users": [
-                                      {
-                      "forename": "William",
-                      "lastname": "Adams",
-                      "email": "email9@ons.gov.uk",
-                      "groups": [],
-                      "status": "CONFIRMED",
-                      "active": true,
-                      "id": "id_1",
-                      "status_notes": ""
-                    },
-                                                          {
-                      "forename": "Mary",
-                      "lastname": "Martin",
-                      "email": "email7@ons.gov.uk",
-                      "groups": [],
-                      "status": "CONFIRMED",
-                      "active": true,
-                      "id": "id_10",
-                      "status_notes": ""
-                    },
-                  {
-                      "forename": "Adam",
-                      "lastname": "Wilson",
-                      "email": "email5@ons.gov.uk",
-                      "groups": [],
-                      "status": "CONFIRMED",
-                      "active": true,
-                      "id": "id_2",
-                      "status_notes": ""
-                    }
-                  ],
-                  "PaginationToken": ""
+                  "active": true,
+                  "email": "email5@ons.gov.uk",
+                  "forename": "Adam",
+                  "groups": [],
+                  "id": "id_2",
+                  "lastname": "Adams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
+                {
+                  "active": true,
+                  "email": "email7@ons.gov.uk",
+                  "forename": "Mary",
+                  "groups": [],
+                  "id": "id_3",
+                  "lastname": "Martin",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
+                                {
+                  "active": true,
+                  "email": "email9@ons.gov.uk",
+                  "forename": "William",
+                  "groups": [],
+                  "id": "id_1",
+                  "lastname": "Williams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
+                },
+                                {
+                  "active": true,
+                  "email": "email11@ons.gov.uk",
+                  "forename": "William",
+                  "groups": [],
+                  "id": "id_5",
+                  "lastname": "Adams",
+                  "status": "CONFIRMED",
+                  "status_notes": ""
                 }
+                ]
+            }
             """
 
 #   Get User
@@ -514,6 +615,7 @@ Feature: Users
                 "status_notes": ""
             }
             """
+
     Scenario: GET /v1/users/{id} without a JWT token and checking the response status 401
         When I GET "/v1/users/abcd1234"
         Then the HTTP status code should be "401"

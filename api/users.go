@@ -107,7 +107,7 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 	usersList.SetUsers(listUserResp)
 
 	if req.URL.Query().Get("sort") != "" {
-		query.SortBy(req.URL.Query().Get("sortBy"), usersList.Users[:])
+		query.SortBy(req.URL.Query().Get("sort"), usersList.Users[:])
 	}
 
 	jsonResponse, responseErr := usersList.BuildSuccessfulJsonResponse(ctx)

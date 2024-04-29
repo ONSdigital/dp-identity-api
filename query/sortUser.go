@@ -51,7 +51,7 @@ func SortBy(paramsSlice string, arr []models.UserParams) {
 	lastnameDesc := func(c1, c2 *models.UserParams) bool { return c1.Lastname > c2.Lastname }
 	emailAsc := func(c1, c2 *models.UserParams) bool { return c1.Email < c2.Email }
 	emailDesc := func(c1, c2 *models.UserParams) bool { return c1.Email > c2.Email }
-	idAsc := func(c1, c2 *models.UserParams) bool { return c1.ID > c2.ID }
+	idAsc := func(c1, c2 *models.UserParams) bool { return c1.ID < c2.ID }
 	idDesc := func(c1, c2 *models.UserParams) bool { return c1.ID > c2.ID }
 
 	p1 := strings.Split(paramsSlice, ",")
