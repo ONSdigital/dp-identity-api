@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/ONSdigital/dp-identity-api/models"
+	dplogs "github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/google/uuid"
@@ -26,7 +27,6 @@ const (
 
 // CreateGroupHandler creates a new group
 func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	sortBy := req.URL.Query().Get("sortBy")
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
@@ -44,7 +44,7 @@ func (api *API) CreateGroupHandler(ctx context.Context, w http.ResponseWriter, r
 		createGroup.ID = &uuid
 	}
 
-	createGroup.GroupsList, err = api.GetListGroups(sortBy)
+	createGroup.GroupsList, err = api.GetListGroups()
 	if err != nil {
 		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListGroups request from update group endpoint")
 		if cognitoErr.Code == models.NotFoundError {
@@ -258,7 +258,7 @@ func (api *API) RemoveUserFromGroupHandler(ctx context.Context, w http.ResponseW
 }
 
 // List Groups pagination allows first call and then any other call if nextToken is not ""
-func (api *API) GetListGroups(sortBy string) (*cognitoidentityprovider.ListGroupsOutput, error) {
+func (api *API) GetListGroups() (*cognitoidentityprovider.ListGroupsOutput, error) {
 	firstTimeCheck := false
 	var nextToken string
 	group := models.ListUserGroupType{}
@@ -276,8 +276,6 @@ func (api *API) GetListGroups(sortBy string) (*cognitoidentityprovider.ListGroup
 			return nil, err
 		}
 
-		sortGroups(listGroupsResponse.Groups, sortBy)
-
 		listOfGroups.Groups = append(listOfGroups.Groups, listGroupsResponse.Groups...)
 		nextToken = ""
 		if listGroupsResponse.NextToken != nil {
@@ -289,11 +287,10 @@ func (api *API) GetListGroups(sortBy string) (*cognitoidentityprovider.ListGroup
 
 // ListGroupsHandler lists the users in the user pool
 func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	sortBy := req.URL.Query().Get("sortBy")
-
+	var sort []string
 	finalGroupsResponse := models.ListUserGroups{}
 
-	listOfGroups, err := api.GetListGroups(sortBy)
+	listOfGroups, err := api.GetListGroups()
 	if err != nil {
 		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListofUserGroups request from list user groups endpoint")
 		if cognitoErr.Code == models.NotFoundError {
@@ -301,6 +298,14 @@ func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, re
 		}
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
+
+	if err = req.ParseForm(); err != nil {
+		dplogs.Error(ctx, "error parsing form", err)
+		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
+	}
+	query := req.Form.Get("sort")
+	sort = validateQuery(query)
+	sortGroups(ctx, listOfGroups, sort)
 
 	jsonResponse, responseErr := finalGroupsResponse.BuildListGroupsSuccessfulJsonResponse(ctx, listOfGroups)
 	if responseErr != nil {
@@ -496,11 +501,10 @@ func (api *API) RemoveUserFromGroup(ctx context.Context, group models.Group, use
 // output by default is json but if request header accept == text/csv then the output is csv format
 // each line consists of the group description and user email
 func (api *API) ListGroupsUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	sortBy := req.URL.Query().Get("sortBy")
 	var (
 		GroupsUsersList *[]models.ListGroupUsersType
 	)
-	listOfGroups, err := api.GetListGroups(sortBy)
+	listOfGroups, err := api.GetListGroups()
 	if err != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
 	}
@@ -571,51 +575,50 @@ func (api *API) GetTeamsReportLines(listOfGroups *cognitoidentityprovider.ListGr
 	return &GroupsUsersList, nil
 }
 
-func sortGroups(groups []*cognitoidentityprovider.GroupType, sortBy string) {
-	if !validateSortBy(sortBy) {
-		return
-	}
+func sortGroups(ctx context.Context, listGroupOutput *cognitoidentityprovider.ListGroupsOutput, sortBy []string) bool {
+	groups := listGroupOutput.Groups
 
-	var asc bool = true
-	var sortByCriteria string
-	sections := strings.Split(sortBy, ":")
-
-	sortByCriteria = sections[0]
-	if len(sections) > 1 && sections[1] == "desc" {
-		asc = false
-	}
-
-	switch sortByCriteria {
-	case "name":
-		if asc {
-			sort.Slice(groups, func(i, j int) bool {
-				return *groups[i].GroupName < *groups[j].GroupName
-			})
-		} else {
-			sort.Slice(groups, func(i, j int) bool {
-				return *groups[i].GroupName > *groups[j].GroupName
-			})
+	switch {
+	case sortBy[0] == "created" || sortBy[0] == "":
+		return true
+	case sortBy[0] == "name" && len(sortBy) == 1:
+		sortByGroupName(groups, true)
+		return true
+	case sortBy[0] == "name" && len(sortBy) == 2:
+		switch sortBy[1] {
+		case "asc":
+			sortByGroupName(groups, true)
+			return true
+		case "desc":
+			sortByGroupName(groups, false)
+			return true
+		default:
+			dplogs.Info(ctx, "groups.sortGroups: Not a correct sort by value. Groups not sorted.", dplogs.Data{"sortBy": sortBy})
+			return false
 		}
+	default:
+		dplogs.Info(ctx, "groups.sortGroups: Not a correct sort by value. Groups not sorted.", dplogs.Data{"sortBy": sortBy})
+		return false
 	}
 }
 
-func validateSortBy(sortBy string) bool {
-	if sortBy == "" {
-		return false
+func sortByGroupName(groups []*cognitoidentityprovider.GroupType, ascending bool) {
+	sort.Slice(groups, func(i, j int) bool {
+		if ascending {
+			return *groups[i].Description < *groups[j].Description
+		}
+		return *groups[i].Description > *groups[j].Description
+	})
+}
+
+func validateQuery(query string) []string {
+	if strings.Contains(query, ":") {
+		return strings.Split(query, ":")
 	}
 
-	sections := strings.Split(sortBy, ":")
-	if len(sections) == 1 && sections[0] == "name" {
-		return true
+	if query == "name" {
+		return []string{"name"}
 	}
 
-	if len(sections) != 2 {
-		return false
-	}
-
-	if sections[1] != "asc" && sections[1] != "desc" {
-		return false
-	}
-
-	return true
+	return nil
 }

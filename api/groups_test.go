@@ -1159,7 +1159,7 @@ func TestGetListGroups(t *testing.T) {
 			return listGroups, nil
 		}
 
-		listOfGroupsResponse, errorResponse := api.GetListGroups("")
+		listOfGroupsResponse, errorResponse := api.GetListGroups()
 
 		So(errorResponse, ShouldBeNil)
 
@@ -1200,7 +1200,7 @@ func TestGetListGroups(t *testing.T) {
 			return listGroups, nil
 		}
 
-		listOfGroupsResponse, errorResponse := api.GetListGroups("")
+		listOfGroupsResponse, errorResponse := api.GetListGroups()
 
 		So(errorResponse, ShouldBeNil)
 		So(listOfGroupsResponse.NextToken, ShouldBeNil)
@@ -2866,61 +2866,73 @@ func listGroupsUsersMock(noOfGroups, noOfUsers int) ([]models.ListGroupUsersType
 
 func TestSortGroups(t *testing.T) {
 	Convey("Given a list of groups and a sort order", t, func() {
-
 		groupA := "A Group"
 		groupB := "B Group"
 		groupC := "C Group"
-		groups := []*cognitoidentityprovider.GroupType{
-			{GroupName: &groupB},
-			{GroupName: &groupC},
-			{GroupName: &groupA},
+
+		groups := cognitoidentityprovider.ListGroupsOutput{
+			NextToken: nil,
+			Groups: []*cognitoidentityprovider.GroupType{
+				{
+					Description: &groupB,
+				},
+				{
+					Description: &groupC,
+				},
+				{
+					Description: &groupA,
+				},
+			},
 		}
+
 		Convey("When sorting by name in ascending order", func() {
-			sortGroups(groups, "name:asc")
+			sort := strings.Split("name:asc", ":")
+			sorted := sortGroups(ctx, &groups, sort)
 			Convey("The groups should be sorted in ascending order", func() {
-				So(*groups[0].GroupName, ShouldEqual, "A Group")
-				So(*groups[1].GroupName, ShouldEqual, "B Group")
-				So(*groups[2].GroupName, ShouldEqual, "C Group")
+				So(sorted, ShouldBeTrue)
+				So(*groups.Groups[0].Description, ShouldResemble, "A Group")
+				So(*groups.Groups[1].Description, ShouldResemble, "B Group")
+				So(*groups.Groups[2].Description, ShouldResemble, "C Group")
 			})
 		})
 		Convey("When sorting by name in descending order", func() {
-			sortGroups(groups, "name:desc")
+			sort := strings.Split("name:desc", ":")
+			sorted := sortGroups(ctx, &groups, sort)
 			Convey("The groups should be sorted in descending order", func() {
-				So(*groups[0].GroupName, ShouldEqual, "C Group")
-				So(*groups[1].GroupName, ShouldEqual, "B Group")
-				So(*groups[2].GroupName, ShouldEqual, "A Group")
+				So(sorted, ShouldBeTrue)
+				So(*groups.Groups[0].Description, ShouldResemble, "C Group")
+				So(*groups.Groups[1].Description, ShouldResemble, "B Group")
+				So(*groups.Groups[2].Description, ShouldResemble, "A Group")
 			})
 		})
-		Convey("When sorting without a specified sort order", func() {
-			sortGroups(groups, "name")
+		Convey("When sorting by name without a specified sort order", func() {
+			sort := []string{"name"}
+			sorted := sortGroups(ctx, &groups, sort)
 			Convey("The groups should be sorted in ascending order", func() {
-				So(*groups[0].GroupName, ShouldEqual, "A Group")
-				So(*groups[1].GroupName, ShouldEqual, "B Group")
-				So(*groups[2].GroupName, ShouldEqual, "C Group")
+				So(sorted, ShouldBeTrue)
+				So(*groups.Groups[0].Description, ShouldEqual, "A Group")
+				So(*groups.Groups[1].Description, ShouldEqual, "B Group")
+				So(*groups.Groups[2].Description, ShouldEqual, "C Group")
 			})
 		})
 		Convey("When sorting with an invalid sortBy parameter", func() {
-			sortGroups(groups, "non:sense")
+			sort := strings.Split("abc:xyz", ":")
+			sorted := sortGroups(ctx, &groups, sort)
 			Convey("The groups should remain unsorted", func() {
-				So(*groups[0].GroupName, ShouldEqual, "B Group")
-				So(*groups[1].GroupName, ShouldEqual, "C Group")
-				So(*groups[2].GroupName, ShouldEqual, "A Group")
+				So(sorted, ShouldBeFalse)
+				So(*groups.Groups[0].Description, ShouldEqual, "B Group")
+				So(*groups.Groups[1].Description, ShouldEqual, "C Group")
+				So(*groups.Groups[2].Description, ShouldEqual, "A Group")
 			})
 		})
 		Convey("When sorting with an invalid asc or desc", func() {
-			sortGroups(groups, "name:xyz")
+			sort := strings.Split("name:xyz", ":")
+			sorted := sortGroups(ctx, &groups, sort)
 			Convey("The groups should remain unsorted", func() {
-				So(*groups[0].GroupName, ShouldEqual, "B Group")
-				So(*groups[1].GroupName, ShouldEqual, "C Group")
-				So(*groups[2].GroupName, ShouldEqual, "A Group")
-			})
-		})
-		Convey("When sorting with an empty sort order", func() {
-			sortGroups(groups, "")
-			Convey("The groups should remain unsorted", func() {
-				So(*groups[0].GroupName, ShouldEqual, "B Group")
-				So(*groups[1].GroupName, ShouldEqual, "C Group")
-				So(*groups[2].GroupName, ShouldEqual, "A Group")
+				So(sorted, ShouldBeFalse)
+				So(*groups.Groups[0].Description, ShouldEqual, "B Group")
+				So(*groups.Groups[1].Description, ShouldEqual, "C Group")
+				So(*groups.Groups[2].Description, ShouldEqual, "A Group")
 			})
 		})
 	})
