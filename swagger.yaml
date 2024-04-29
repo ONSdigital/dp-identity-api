@@ -696,8 +696,9 @@ paths:
           type: string
           required: false
           default: created
-          # for example, you can get the users in ascending order like this "http://localhost:25600/v1/groups/5/members?sort=forename:asc"
-          # and you can get the users in descending order like this "http://localhost:25600/v1/groups/5/members?sort=forename:desc"
+          enum:
+            - forename:asc
+            - forename:desc
       responses:
         200:
           description: "List of users in the group"
