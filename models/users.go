@@ -93,7 +93,7 @@ func (p *UsersList) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, er
 	return jsonResponse, nil
 }
 
-// Model for the User
+// UserParams Model for the User
 type UserParams struct {
 	Forename    string   `json:"forename"`
 	Lastname    string   `json:"lastname"`
@@ -492,7 +492,7 @@ func (p PasswordReset) BuildCognitoRequest(clientSecret string, clientId string)
 	}
 }
 
-// BuildListUserGroupsRequest build the require input for cognito query to obtain the groups for given user
+// BuildListUserGroupsRequest build the required input for cognito query to obtain the groups for given user
 func (p UserParams) BuildListUserGroupsRequest(userPoolId string, nextToken string) *cognitoidentityprovider.AdminListGroupsForUserInput {
 
 	if nextToken != "" {

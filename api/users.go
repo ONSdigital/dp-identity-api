@@ -4,16 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ONSdigital/dp-identity-api/query"
-	"io"
-	"net/http"
-
 	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/query"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"io"
+	"net/http"
 )
 
 const (
@@ -106,13 +105,10 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 	}
 
 	usersList.SetUsers(listUserResp)
-	fmt.Println("\n\t ----ListUsersHandler----", req.URL.Query().Get("?sortBy"))
 
-	query.sortBy("id", userArray[:])
-
-	//if req.URL.Query().Get("sortBy") != "" {
-	//	fmt.Println("\n\t ----ListUsersHandler----", req.URL.Query().Get("sortBy"))
-	//}
+	if req.URL.Query().Get("sort") != "" {
+		query.SortBy(req.URL.Query().Get("sortBy"), usersList.Users[:])
+	}
 
 	jsonResponse, responseErr := usersList.BuildSuccessfulJsonResponse(ctx)
 	if responseErr != nil {

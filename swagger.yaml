@@ -147,6 +147,10 @@ paths:
           name: active
           type: boolean
           description: filter on user active state.
+        - in: query
+          name: sortBy
+          type: string
+          description: sort the response by direction given key:asc or key:desc default asc, comma separates multi-field sorts
       tags:
         - Users
       summary: "List users"
