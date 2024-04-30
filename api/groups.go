@@ -594,11 +594,11 @@ func sortGroups(ctx context.Context, listGroupOutput *cognitoidentityprovider.Li
 			sortByGroupName(groups, false)
 			return true
 		default:
-			dplogs.Info(ctx, "groups.sortGroups: Not a correct sort by value. Groups not sorted.", dplogs.Data{"sortBy": sortBy})
+			dplogs.Info(ctx, "groups.sortGroups: Not a correct sort by value. Groups not sorted.", dplogs.Data{"sort": sortBy})
 			return false
 		}
 	default:
-		dplogs.Info(ctx, "groups.sortGroups: Not a correct sort by value. Groups not sorted.", dplogs.Data{"sortBy": sortBy})
+		dplogs.Info(ctx, "groups.sortGroups: Not a correct sort by value. Groups not sorted.", dplogs.Data{"sort": sortBy})
 		return false
 	}
 }

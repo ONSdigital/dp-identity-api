@@ -656,9 +656,8 @@ Feature: Groups
                 """
 
 #   Get groups in ascending order scenarios
-    Scenario: GET /v1/groups?sortBy=name:asc and checking the groups are sorted in ascending order
-        Given I am an admin user
-        And group "B Group" exists in the database
+    Scenario: GET /v1/groups?sort=name:asc and checking the groups are sorted in ascending order
+        Given group "B Group" exists in the database
         And group "A Group" exists in the database
         And group "C Group" exists in the database
         When I GET "/v1/groups?sortBy=name:asc"
@@ -682,7 +681,7 @@ Feature: Groups
                 """
 
 #   Get groups in descending order scenarios
-    Scenario: GET /v1/groups??sortBy=name:desc and checking the groups are sorted in descending order
+    Scenario: GET /v1/groups?sort=name:desc and checking the groups are sorted in descending order
         Given there are 3 groups in the database
         And group "B Group" exists in the database
         And group "A Group" exists in the database
