@@ -3,7 +3,6 @@ package steps
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -47,7 +46,6 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^request header Accept is "([^"]*)"$`, c.requestHeaderAcceptIs)
 	ctx.Step(`^the response should match the following csv:$`, c.theResponseShouldMatchTheFollowingCsv)
 	ctx.Step(`^the response header "([^"]*)" should contain "([^"]*)"$`, c.theResponseHeaderShouldContain)
-	ctx.Step(`^I should receive the following sorted JSON response with status "([^"]*)":$`, c.iShouldReceiveTheFollowingSortedJSONResponseWithStatus)
 	ctx.Step(`^a user with forename "([^"]*)", lastname "([^"]*)", email "([^"]*)", id "([^"]*)" and password "([^"]*)" exists in the database$`, c.aUserWithAttributesExistsInTheDatabase)
 }
 
@@ -283,27 +281,6 @@ func (c *IdentityComponent) theResponseHeaderShouldContain(key, value string) (e
 	}
 	if actualValue[0] != value {
 		return errors.New("expected header value " + value + ", but is actually is :" + actualValue[0])
-	}
-
-	return nil
-}
-
-func (c *IdentityComponent) iShouldReceiveTheFollowingSortedJSONResponseWithStatus(body *godog.DocString) (err error) {
-	var expected, actual []models.UserParams
-	if err = json.Unmarshal([]byte(body.Content), &expected); err != nil {
-		return
-	}
-
-	responseBody := c.apiFeature.HTTPResponse.Body
-	resBody, err := io.ReadAll(responseBody)
-	if err != nil {
-		return err
-	}
-	fmt.Println("\n\t--- actual ----", resBody)
-	fmt.Println("\n\t--- expected ----", expected)
-
-	if err = json.Unmarshal(resBody, &actual); err != nil {
-		return err
 	}
 
 	return nil

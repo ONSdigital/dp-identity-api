@@ -329,7 +329,7 @@ Feature: Users
               "PaginationToken": "",
               "count": 3,
               "users": [
-                              {
+              {
                   "active": true,
                   "email": "email9@ons.gov.uk",
                   "forename": "William",
