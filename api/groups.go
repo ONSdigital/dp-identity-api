@@ -576,28 +576,28 @@ func (api *API) GetTeamsReportLines(listOfGroups *cognitoidentityprovider.ListGr
 	return &GroupsUsersList, nil
 }
 
-func sortGroups(ctx context.Context, listGroupOutput *cognitoidentityprovider.ListGroupsOutput, sortBy []string) bool {
+func sortGroups(ctx context.Context, listGroupOutput *cognitoidentityprovider.ListGroupsOutput, sortBy []string) {
 	groups := listGroupOutput.Groups
 
 	switch {
 	case sortBy[0] == "name" && len(sortBy) == 1:
 		sortByGroupName(groups, true)
-		return true
+		return
 	case sortBy[0] == "name" && len(sortBy) == 2:
 		switch sortBy[1] {
 		case "asc":
 			sortByGroupName(groups, true)
-			return true
+			return
 		case "desc":
 			sortByGroupName(groups, false)
-			return true
+			return
 		default:
 			dplogs.Info(ctx, "groups.sortGroups: Not a correct sort by value. Groups not sorted.", dplogs.Data{"sort": sortBy})
-			return false
+			return
 		}
 	default:
 		dplogs.Info(ctx, "groups.sortGroups: Not a correct sort by value. Groups not sorted.", dplogs.Data{"sort": sortBy})
-		return false
+		return
 	}
 }
 

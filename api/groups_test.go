@@ -2887,9 +2887,8 @@ func TestSortGroups(t *testing.T) {
 
 		Convey("When sorting by name in ascending order", func() {
 			sort := strings.Split("name:asc", ":")
-			sorted := sortGroups(ctx, &groups, sort)
+			sortGroups(ctx, &groups, sort)
 			Convey("The groups should be sorted in ascending order", func() {
-				So(sorted, ShouldBeTrue)
 				So(*groups.Groups[0].Description, ShouldResemble, "A Group")
 				So(*groups.Groups[1].Description, ShouldResemble, "B Group")
 				So(*groups.Groups[2].Description, ShouldResemble, "C Group")
@@ -2897,9 +2896,8 @@ func TestSortGroups(t *testing.T) {
 		})
 		Convey("When sorting by name in descending order", func() {
 			sort := strings.Split("name:desc", ":")
-			sorted := sortGroups(ctx, &groups, sort)
+			sortGroups(ctx, &groups, sort)
 			Convey("The groups should be sorted in descending order", func() {
-				So(sorted, ShouldBeTrue)
 				So(*groups.Groups[0].Description, ShouldResemble, "C Group")
 				So(*groups.Groups[1].Description, ShouldResemble, "B Group")
 				So(*groups.Groups[2].Description, ShouldResemble, "A Group")
@@ -2907,9 +2905,8 @@ func TestSortGroups(t *testing.T) {
 		})
 		Convey("When sorting by name without a specified sort order", func() {
 			sort := []string{"name"}
-			sorted := sortGroups(ctx, &groups, sort)
+			sortGroups(ctx, &groups, sort)
 			Convey("The groups should be sorted in ascending order", func() {
-				So(sorted, ShouldBeTrue)
 				So(*groups.Groups[0].Description, ShouldEqual, "A Group")
 				So(*groups.Groups[1].Description, ShouldEqual, "B Group")
 				So(*groups.Groups[2].Description, ShouldEqual, "C Group")
@@ -2917,9 +2914,8 @@ func TestSortGroups(t *testing.T) {
 		})
 		Convey("When sorting with an invalid sortBy parameter", func() {
 			sort := strings.Split("abc:xyz", ":")
-			sorted := sortGroups(ctx, &groups, sort)
+			sortGroups(ctx, &groups, sort)
 			Convey("The groups should remain unsorted", func() {
-				So(sorted, ShouldBeFalse)
 				So(*groups.Groups[0].Description, ShouldEqual, "B Group")
 				So(*groups.Groups[1].Description, ShouldEqual, "C Group")
 				So(*groups.Groups[2].Description, ShouldEqual, "A Group")
@@ -2927,9 +2923,8 @@ func TestSortGroups(t *testing.T) {
 		})
 		Convey("When sorting with an invalid asc or desc", func() {
 			sort := strings.Split("name:xyz", ":")
-			sorted := sortGroups(ctx, &groups, sort)
+			sortGroups(ctx, &groups, sort)
 			Convey("The groups should remain unsorted", func() {
-				So(sorted, ShouldBeFalse)
 				So(*groups.Groups[0].Description, ShouldEqual, "B Group")
 				So(*groups.Groups[1].Description, ShouldEqual, "C Group")
 				So(*groups.Groups[2].Description, ShouldEqual, "A Group")
