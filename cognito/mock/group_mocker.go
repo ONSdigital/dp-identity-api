@@ -26,6 +26,15 @@ func (m *CognitoIdentityProviderClientStub) AddGroupWithName(name string) error 
 	return nil
 }
 
+func (m *CognitoIdentityProviderClientStub) AddGroupWithNameSort(name string) error {
+	newGroup, err := m.GenerateGroupSort(name)
+	if err != nil {
+		return err
+	}
+	m.GroupsList = append(m.GroupsList, newGroup)
+	return nil
+}
+
 func (m *CognitoIdentityProviderClientStub) AddGroupWithNameAndDescription(name, description string) error {
 	newGroup, err := m.GenerateGroup(name, description, 0)
 	if err != nil {
@@ -85,6 +94,26 @@ func (m *CognitoIdentityProviderClientStub) GenerateGroup(name, description stri
 		Precedence:  precedence,
 		Created:     createdTime,
 		Members:     []*User{},
+	}, nil
+}
+
+func (m *CognitoIdentityProviderClientStub) GenerateGroupSort(description string) (cognitoidentityprovider.ListGroupsOutput, error) {
+	time, _ := time.Parse("2006-Jan-1", "2010-Jan-1")
+	emptyString := ""
+	var num int64
+	num = 1
+	return cognitoidentityprovider.ListGroupsOutput{
+		Groups: []*cognitoidentityprovider.GroupType{
+			{
+				Description:      &description,
+				CreationDate:     &time,
+				GroupName:        &emptyString,
+				LastModifiedDate: &time,
+				Precedence:       &num,
+				RoleArn:          &emptyString,
+				UserPoolId:       &emptyString,
+			},
+		},
 	}, nil
 }
 

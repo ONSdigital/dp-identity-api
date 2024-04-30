@@ -303,7 +303,7 @@ func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, re
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
 	}
 	query := req.Form.Get("sort")
-	if query != "" {
+	if query != "" && query != "created" {
 		sort := validateQuery(query)
 		sortGroups(ctx, listOfGroups, sort)
 	}
@@ -580,8 +580,6 @@ func sortGroups(ctx context.Context, listGroupOutput *cognitoidentityprovider.Li
 	groups := listGroupOutput.Groups
 
 	switch {
-	case sortBy[0] == "created" || sortBy[0] == "":
-		return true
 	case sortBy[0] == "name" && len(sortBy) == 1:
 		sortByGroupName(groups, true)
 		return true
@@ -621,5 +619,5 @@ func validateQuery(query string) []string {
 		return []string{"name"}
 	}
 
-	return []string{}
+	return nil
 }

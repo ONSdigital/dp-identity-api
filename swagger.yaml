@@ -402,6 +402,17 @@ paths:
       description: "List all the groups in the user pool"
       produces:
         - "application/json"
+      parameters:
+        - in: query
+          name: sort
+          type: string
+          required: false
+          default: created
+          enum:
+            - created
+            - name
+            - name:asc
+            - name:desc
       responses:
         200:
           description: "The list of groups"

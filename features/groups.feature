@@ -655,57 +655,177 @@ Feature: Groups
                     }
                 """
 
-#   Get groups in ascending order scenarios
-    Scenario: GET /v1/groups?sort=name:asc and checking the groups are sorted in ascending order
-        Given group "B Group" exists in the database
-        And group "A Group" exists in the database
-        And group "C Group" exists in the database
-        When I GET "/v1/groups?sortBy=name:asc"
-        Then the response code should be 200
-            And the response should match the following json for listgroups
-                """
-                    {
-                        "count": 2,
-                        "groups": [
-                            {
-                                "name": "A group",
-                            },
-                                                        {
-                                "name": "B group",
-                            },
-                                                        {
-                                "name": "C group",
-                            },
-                        ],
-                    }
-                """
+    Scenario: GET /v1/groups?sort=name:asc and checking the response status 200
+        Given group "B Group" exists in the database to sort
+        And group "A Group" exists in the database to sort
+        And group "C Group" exists in the database to sort
+        And I am an admin user
+        When I GET "/v1/groups?sort=name:asc"
+        Then I should receive the following JSON response with status "200":
+            """
+                {
+                    "count": 3,
+                    "groups": [
+                        {
+                            "name": "A Group",
+                            "id": "",
+                            "creation_date": "2010-01-01T00:00:00Z",
+                            "last_modified_date": "2010-01-01T00:00:00Z",
+                            "precedence": 1,
+                            "role_arn": "",
+                            "user_pool_id": ""
+                        },
+                        {
+                            "name": "B Group",
+                            "id": "",
+                            "creation_date": "2010-01-01T00:00:00Z",
+                            "last_modified_date": "2010-01-01T00:00:00Z",
+                            "precedence": 1,
+                            "role_arn": "",
+                            "user_pool_id": ""
+                        },
+                                                {
+                            "name": "C Group",
+                            "id": "",
+                            "creation_date": "2010-01-01T00:00:00Z",
+                            "last_modified_date": "2010-01-01T00:00:00Z",
+                            "precedence": 1,
+                            "role_arn": "",
+                            "user_pool_id": ""
+                        }
+                    ],
+                    "next_token": null
+                }
+            """
 
-#   Get groups in descending order scenarios
-    Scenario: GET /v1/groups?sort=name:desc and checking the groups are sorted in descending order
-        Given there are 3 groups in the database
-        And group "B Group" exists in the database
-        And group "A Group" exists in the database
-        And group "C Group" exists in the database
-        When I GET "/v1/groups?sortBy=name:desc"
-        Then the response code should be 200
-            And the response should match the following json for listgroups
-                """
-                    {
-                        "count": 2,
-                        "groups": [
-                            {
-                                "name": "C group"
-                            },
-                                                        {
-                                "name": "B group"
-                            },
-                                                        {
-                                "name": "A group"
-                            },
-                        ],
-                        "next_token": null
-                    }
-                """
+    Scenario: GET /v1/groups?sort=name:desc and checking the response status 200
+        Given group "B Group" exists in the database to sort
+        And group "A Group" exists in the database to sort
+        And group "C Group" exists in the database to sort
+        And I am an admin user
+        When I GET "/v1/groups?sort=name:desc"
+        Then I should receive the following JSON response with status "200":
+            """
+                {
+                    "count": 3,
+                    "groups": [
+                        {
+                            "name": "C Group",
+                            "id": "",
+                            "creation_date": "2010-01-01T00:00:00Z",
+                            "last_modified_date": "2010-01-01T00:00:00Z",
+                            "precedence": 1,
+                            "role_arn": "",
+                            "user_pool_id": ""
+                        },
+                        {
+                            "name": "B Group",
+                            "id": "",
+                            "creation_date": "2010-01-01T00:00:00Z",
+                            "last_modified_date": "2010-01-01T00:00:00Z",
+                            "precedence": 1,
+                            "role_arn": "",
+                            "user_pool_id": ""
+                        },
+                                                {
+                            "name": "A Group",
+                            "id": "",
+                            "creation_date": "2010-01-01T00:00:00Z",
+                            "last_modified_date": "2010-01-01T00:00:00Z",
+                            "precedence": 1,
+                            "role_arn": "",
+                            "user_pool_id": ""
+                        }
+                    ],
+                    "next_token": null
+                }
+            """
+
+    Scenario: GET /v1/groups?sort=name and checking the response status 200
+        Given group "B Group" exists in the database to sort
+        And group "A Group" exists in the database to sort
+        And group "C Group" exists in the database to sort
+        And I am an admin user
+        When I GET "/v1/groups?sort=name"
+        Then I should receive the following JSON response with status "200":
+            """
+                {
+                    "count": 3,
+                    "groups": [
+                        {
+                            "name": "A Group",
+                            "id": "",
+                            "creation_date": "2010-01-01T00:00:00Z",
+                            "last_modified_date": "2010-01-01T00:00:00Z",
+                            "precedence": 1,
+                            "role_arn": "",
+                            "user_pool_id": ""
+                        },
+                        {
+                            "name": "B Group",
+                            "id": "",
+                            "creation_date": "2010-01-01T00:00:00Z",
+                            "last_modified_date": "2010-01-01T00:00:00Z",
+                            "precedence": 1,
+                            "role_arn": "",
+                            "user_pool_id": ""
+                        },
+                                                {
+                            "name": "C Group",
+                            "id": "",
+                            "creation_date": "2010-01-01T00:00:00Z",
+                            "last_modified_date": "2010-01-01T00:00:00Z",
+                            "precedence": 1,
+                            "role_arn": "",
+                            "user_pool_id": ""
+                        }
+                    ],
+                    "next_token": null
+                }
+            """
+
+    Scenario: GET /v1/groups?sort=created and checking the response status 200
+        Given group "B Group" exists in the database to sort
+        And group "A Group" exists in the database to sort
+        And group "C Group" exists in the database to sort
+        And I am an admin user
+        When I GET "/v1/groups?sort=created"
+        Then I should receive the following JSON response with status "200":
+            """
+                {
+                    "count": 3,
+                    "groups": [
+                        {
+                            "name": "B Group",
+                            "id": "",
+                            "creation_date": "2010-01-01T00:00:00Z",
+                            "last_modified_date": "2010-01-01T00:00:00Z",
+                            "precedence": 1,
+                            "role_arn": "",
+                            "user_pool_id": ""
+                        },
+                        {
+                            "name": "A Group",
+                            "id": "",
+                            "creation_date": "2010-01-01T00:00:00Z",
+                            "last_modified_date": "2010-01-01T00:00:00Z",
+                            "precedence": 1,
+                            "role_arn": "",
+                            "user_pool_id": ""
+                        },
+                                                {
+                            "name": "C Group",
+                            "id": "",
+                            "creation_date": "2010-01-01T00:00:00Z",
+                            "last_modified_date": "2010-01-01T00:00:00Z",
+                            "precedence": 1,
+                            "role_arn": "",
+                            "user_pool_id": ""
+                        }
+                    ],
+                    "next_token": null
+                }
+            """
 
 #   list for many groups found   given blocks of 60 for one cognito call
     Scenario: GET /v1/groups and checking the response status 200
