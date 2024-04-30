@@ -701,6 +701,16 @@ paths:
           type: string
           required: true
           description: the group's ID
+        - in: query
+          name: sort
+          description: The sort order of the returned set of users
+          type: string
+          required: false
+          default: created
+          enum:
+            - created
+            - forename:asc
+            - forename:desc
       responses:
         200:
           description: "List of users in the group"

@@ -27,14 +27,18 @@ func (m *CognitoIdentityProviderClientStub) AddUserWithUsername(username, email 
 	m.Users = append(m.Users, m.GenerateUser(username, email, "", "", "", isConfirmed))
 }
 
-//Generates the required number of users in the system
+func (m *CognitoIdentityProviderClientStub) AddUserWithForename(username, email, forename string, isConfirmed bool) {
+	m.Users = append(m.Users, m.GenerateUser(username, email, "", forename, "", isConfirmed))
+}
+
+// Generates the required number of users in the system
 func (m *CognitoIdentityProviderClientStub) AddMultipleUsers(usersCount int) {
 	for len(m.Users) < usersCount {
 		m.Users = append(m.Users, m.GenerateUser("", "", "", "", "", true))
 	}
 }
 
-//Generates the required number of users in the system
+// Generates the required number of users in the system
 func (m *CognitoIdentityProviderClientStub) AddMultipleActiveUsers(activeusersCount, inactiveusersCount int) {
 	for len(m.Users) < activeusersCount {
 		m.Users = append(m.Users, m.GenerateUser("", "", "", "", "", true))
@@ -107,8 +111,9 @@ func (m *CognitoIdentityProviderClientStub) MakeUserMember(userName string) {
 	}
 }
 
-//BulkGenerateUsers - bulk generate 'n' users for testing purposes
-//                    if usernames array is nil or length is different, will auto-assign UUIDs
+// BulkGenerateUsers - bulk generate 'n' users for testing purposes
+//
+//	if usernames array is nil or length is different, will auto-assign UUIDs
 func BulkGenerateUsers(userCount int, userNames []string) *cognitoidentityprovider.ListUsersOutput {
 	paginationToken := "abc-123-xyz-345-xxx"
 	usersList := &cognitoidentityprovider.ListUsersOutput{}

@@ -29,6 +29,113 @@ const (
 	createGroupEndPoint         = "http://localhost:25600/v1/groups"
 	getListGroupsEndPoint       = "http://localhost:25600/v1/groups"
 	updateGroupEndPoint         = "http://localhost:25600/v1/groups/123e4567-e89b-12d3-a456-426614174000"
+	usersJson                   = `{
+  "count": 3,
+  "users": [
+    {
+      "forename": "DTestForename",
+      "lastname": "LTestSurname",
+      "email": "DTestForename.LTestSurname@ons.gov.uk",
+      "groups": [],
+      "status": "CONFIRMED",
+      "active": true,
+      "id": "1234",
+      "status_notes": ""
+    },
+    {
+      "forename": "ATestForename",
+      "lastname": "HTestSurname",
+      "email": "ATestForename.HTestSurname@ons.gov.uk",
+      "groups": [],
+      "status": "CONFIRMED",
+      "active": true,
+      "id": "1234",
+      "status_notes": ""
+    },
+    {
+      "forename": "OTestForename",
+      "lastname": "STestSurname",
+      "email": "OTestForename.STestSurname@ons.gov.uk",
+      "groups": [],
+      "status": "CONFIRMED",
+      "active": true,
+      "id": "1234",
+      "status_notes": ""
+    } ],
+  "PaginationToken": ""
+}`
+	usersSortedByForenameAsc = `{
+  "count": 3,
+  "users": [
+    {
+      "forename": "ATestForename",
+      "lastname": "HTestSurname",
+      "email": "ATestForename.HTestSurname@ons.gov.uk",
+      "groups": [],
+      "status": "CONFIRMED",
+      "active": true,
+      "id": "1234",
+      "status_notes": ""
+    },
+    {
+      "forename": "DTestForename",
+      "lastname": "LTestSurname",
+      "email": "DTestForename.LTestSurname@ons.gov.uk",
+      "groups": [],
+      "status": "CONFIRMED",
+      "active": true,
+      "id": "1234",
+      "status_notes": ""
+    },
+    {
+      "forename": "OTestForename",
+      "lastname": "STestSurname",
+      "email": "OTestForename.STestSurname@ons.gov.uk",
+      "groups": [],
+      "status": "CONFIRMED",
+      "active": true,
+      "id": "1234",
+      "status_notes": ""
+    }
+  ],
+  "PaginationToken": ""
+}`
+	usersSortedByForenameDesc = `{
+  "count": 3,
+  "users": [
+    {
+      "forename": "OTestForename",
+      "lastname": "STestSurname",
+      "email": "OTestForename.STestSurname@ons.gov.uk",
+      "groups": [],
+      "status": "CONFIRMED",
+      "active": true,
+      "id": "1234",
+      "status_notes": ""
+    },
+    {
+      "forename": "DTestForename",
+      "lastname": "LTestSurname",
+      "email": "DTestForename.LTestSurname@ons.gov.uk",
+      "groups": [],
+      "status": "CONFIRMED",
+      "active": true,
+      "id": "1234",
+      "status_notes": ""
+    },
+    {
+      "forename": "ATestForename",
+      "lastname": "HTestSurname",
+      "email": "ATestForename.HTestSurname@ons.gov.uk",
+      "groups": [],
+      "status": "CONFIRMED",
+      "active": true,
+      "id": "1234",
+      "status_notes": ""
+    }
+  ],
+  "PaginationToken": ""
+}`
 )
 
 var (
@@ -2698,6 +2805,101 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				tt.assertions(successResponse, errorResponse)
 			})
 		}
+	})
+}
+
+func TestSortUsers(t *testing.T) {
+	Convey("Given we have some test users", t, func() {
+		listOfUsers := models.UsersList{}
+		json.Unmarshal([]byte(usersJson), &listOfUsers)
+		fmt.Println(listOfUsers.Users)
+
+		Convey("When we call the sort function with sort value of forename:asc", func() {
+			users := listOfUsers.Users
+			sortBy := strings.Split("forename:asc", ":")
+			sorted := sortUsers(ctx, users, sortBy)
+
+			jsonTmp, _ := json.Marshal(users)
+			fmt.Printf("jsonTmp = %s\n", string(jsonTmp))
+
+			Convey("Then the users should be sorted by forename in ascending order", func() {
+				listOfUsersSortedByForenameAsc := models.UsersList{}
+				json.Unmarshal([]byte(usersSortedByForenameAsc), &listOfUsersSortedByForenameAsc)
+
+				So(sorted, ShouldBeTrue)
+				So(users, ShouldResemble, listOfUsersSortedByForenameAsc.Users)
+			})
+		})
+
+		Convey("When we call the sort function with sort value of forename:desc", func() {
+			users := listOfUsers.Users
+			sortBy := strings.Split("forename:desc", ":")
+			sorted := sortUsers(ctx, users, sortBy)
+
+			Convey("Then the users should be sorted by forename in descending order", func() {
+				listOfUsersSortedByForenameDesc := models.UsersList{}
+				json.Unmarshal([]byte(usersSortedByForenameDesc), &listOfUsersSortedByForenameDesc)
+
+				So(sorted, ShouldBeTrue)
+				So(users, ShouldResemble, listOfUsersSortedByForenameDesc.Users)
+			})
+		})
+
+		Convey("When we call the sort function with sort value of wrongValue:desc", func() {
+			users := listOfUsers.Users
+			sortBy := strings.Split("wrongValue:desc", ":")
+			sorted := sortUsers(ctx, users, sortBy)
+
+			Convey("Then the users should not be sorted", func() {
+				listOfUsersUnsorted := models.UsersList{}
+				json.Unmarshal([]byte(usersJson), &listOfUsersUnsorted)
+
+				So(sorted, ShouldBeFalse)
+				So(users, ShouldResemble, listOfUsersUnsorted.Users)
+			})
+		})
+
+		Convey("When we call the sort function with sort value of forename:wrongValue", func() {
+			users := listOfUsers.Users
+			sortBy := strings.Split("forename:wrongValue", ":")
+			sorted := sortUsers(ctx, users, sortBy)
+
+			Convey("Then the users should not be sorted", func() {
+				listOfUsersUnsorted := models.UsersList{}
+				json.Unmarshal([]byte(usersJson), &listOfUsersUnsorted)
+
+				So(sorted, ShouldBeFalse)
+				So(users, ShouldResemble, listOfUsersUnsorted.Users)
+			})
+		})
+
+		Convey("When we call the sort function with sort value of created", func() {
+			users := listOfUsers.Users
+			sortBy := strings.Split("created", ":")
+			sorted := sortUsers(ctx, users, sortBy)
+
+			Convey("Then the users should be returned in the order they where created", func() {
+				listOfUsersUnsorted := models.UsersList{}
+				json.Unmarshal([]byte(usersJson), &listOfUsersUnsorted)
+
+				So(sorted, ShouldBeTrue)
+				So(users, ShouldResemble, listOfUsersUnsorted.Users)
+			})
+		})
+
+		Convey("When we call the sort function with sort value of \"\"", func() {
+			users := listOfUsers.Users
+			sortBy := strings.Split("", ":")
+			sorted := sortUsers(ctx, users, sortBy)
+
+			Convey("Then the users should be returned in the order they where created", func() {
+				listOfUsersUnsorted := models.UsersList{}
+				json.Unmarshal([]byte(usersJson), &listOfUsersUnsorted)
+
+				So(sorted, ShouldBeTrue)
+				So(users, ShouldResemble, listOfUsersUnsorted.Users)
+			})
+		})
 	})
 }
 
