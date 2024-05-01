@@ -342,7 +342,7 @@ func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, re
 	query := req.Form.Get("sort")
 	if query != "" && query != "created" {
 		sort := validateQuery(query)
-		sortGroups(ctx, listOfGroups, sort)
+		sortGroups(w, listOfGroups, sort)
 	}
 
 	jsonResponse, responseErr := finalGroupsResponse.BuildListGroupsSuccessfulJsonResponse(ctx, listOfGroups)
@@ -613,7 +613,8 @@ func (api *API) GetTeamsReportLines(listOfGroups *cognitoidentityprovider.ListGr
 	return &GroupsUsersList, nil
 }
 
-func sortGroups(ctx context.Context, listGroupOutput *cognitoidentityprovider.ListGroupsOutput, sortBy []string) {
+// sortGroups sorts groups in alphabetical order based on the specified sorting criteria
+func sortGroups(w http.ResponseWriter, listGroupOutput *cognitoidentityprovider.ListGroupsOutput, sortBy []string) {
 	groups := listGroupOutput.Groups
 
 	switch {
@@ -629,15 +630,16 @@ func sortGroups(ctx context.Context, listGroupOutput *cognitoidentityprovider.Li
 			sortByGroupName(groups, false)
 			return
 		default:
-			dplogs.Info(ctx, "groups.sortGroups: Not a correct sort by value. Groups not sorted.", dplogs.Data{"sort": sortBy})
+			http.Error(w, "incorrect sort value. Groups not sorted.", http.StatusBadRequest)
 			return
 		}
 	default:
-		dplogs.Info(ctx, "groups.sortGroups: Not a correct sort by value. Groups not sorted.", dplogs.Data{"sort": sortBy})
+		http.Error(w, "incorrect sort value. Groups not sorted.", http.StatusBadRequest)
 		return
 	}
 }
 
+// sortByGroupName determines the sorting criteria and sorts groups in either ascending or descending order
 func sortByGroupName(groups []*cognitoidentityprovider.GroupType, ascending bool) {
 	sort.Slice(groups, func(i, j int) bool {
 		if ascending {
@@ -647,6 +649,7 @@ func sortByGroupName(groups []*cognitoidentityprovider.GroupType, ascending bool
 	})
 }
 
+// validateQuery validates the incoming "sort" query string
 func validateQuery(query string) []string {
 	if strings.Contains(query, ":") {
 		return strings.Split(query, ":")
