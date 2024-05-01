@@ -151,6 +151,19 @@ paths:
           name: sort
           type: string
           description: sort the response by direction given key:asc or key:desc default asc, comma separates multi-field sorts
+          enum:
+            - forename
+            - forename:asc
+            - forename:desc
+            - lastname
+            - lastname:asc
+            - lastname:desc
+            - email
+            - email:asc
+            - email:desc
+            - id
+            - id:asc
+            - id:desc
       tags:
         - Users
       summary: "List users"
@@ -701,7 +714,6 @@ paths:
           required: false
           default: created
           enum:
-            - created
             - forename:asc
             - forename:desc
       responses:

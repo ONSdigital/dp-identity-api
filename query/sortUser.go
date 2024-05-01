@@ -6,29 +6,39 @@ import (
 	"strings"
 )
 
+// lessFunc used by multiSorter OrderedBy  used to hold the seq of sort
 type lessFunc func(p1, p2 *models.UserParams) bool
 
+// multiSorter
 type multiSorter struct {
 	changes []models.UserParams
 	less    []lessFunc
 }
 
+// ms
 func (ms *multiSorter) Sort(changes []models.UserParams) {
 	ms.changes = changes
 	sort.Sort(ms)
 }
 
+// OrderedBy
 func OrderedBy(less ...lessFunc) *multiSorter {
 	return &multiSorter{
 		less: less,
 	}
 }
+
+// ms
 func (ms *multiSorter) Len() int {
 	return len(ms.changes)
 }
+
+// Swap ms  called by sort to swap two records by sort parameters
 func (ms *multiSorter) Swap(i, j int) {
 	ms.changes[i], ms.changes[j] = ms.changes[j], ms.changes[i]
 }
+
+// Less ms
 func (ms *multiSorter) Less(i, j int) bool {
 	p, q := &ms.changes[i], &ms.changes[j]
 	var k int
@@ -44,7 +54,8 @@ func (ms *multiSorter) Less(i, j int) bool {
 	return ms.less[k](p, q)
 }
 
-func SortBy(paramsSlice string, arr []models.UserParams) {
+// SortBy from the request query get the sort parameters
+func SortBy(requestSortParameters string, arr []models.UserParams) {
 	forenameAsc := func(c1, c2 *models.UserParams) bool { return c1.Forename < c2.Forename }
 	forenameDesc := func(c1, c2 *models.UserParams) bool { return c1.Forename > c2.Forename }
 	lastnameAsc := func(c1, c2 *models.UserParams) bool { return c1.Lastname < c2.Lastname }
@@ -54,43 +65,43 @@ func SortBy(paramsSlice string, arr []models.UserParams) {
 	idAsc := func(c1, c2 *models.UserParams) bool { return c1.ID < c2.ID }
 	idDesc := func(c1, c2 *models.UserParams) bool { return c1.ID > c2.ID }
 
-	p1 := strings.Split(paramsSlice, ",")
+	inputSplit := strings.Split(requestSortParameters, ",")
 
 	var orderFunc []lessFunc
-	for _, p2 := range p1 {
-		p3 := strings.Split(p2, ":")
-		if len(p3) > 1 {
-			if p3[0] == "forename" {
-				if p3[1] == "asc" {
+	for _, inputSplitItem := range inputSplit {
+		inputSplitItemSplit := strings.Split(inputSplitItem, ":")
+		if len(inputSplitItemSplit) > 1 {
+			if inputSplitItemSplit[0] == "forename" {
+				if inputSplitItemSplit[1] == "asc" {
 					orderFunc = append(orderFunc, forenameAsc)
 				} else {
 					orderFunc = append(orderFunc, forenameDesc)
 				}
-			} else if p3[0] == "lastname" {
-				if p3[1] == "asc" {
+			} else if inputSplitItemSplit[0] == "lastname" {
+				if inputSplitItemSplit[1] == "asc" {
 					orderFunc = append(orderFunc, lastnameAsc)
 				} else {
 					orderFunc = append(orderFunc, lastnameDesc)
 				}
-			} else if p3[0] == "email" {
-				if p3[1] == "asc" {
+			} else if inputSplitItemSplit[0] == "email" {
+				if inputSplitItemSplit[1] == "asc" {
 					orderFunc = append(orderFunc, emailAsc)
 				} else {
 					orderFunc = append(orderFunc, emailDesc)
 				}
-			} else if p3[0] == "id" {
-				if p3[1] == "asc" {
+			} else if inputSplitItemSplit[0] == "id" {
+				if inputSplitItemSplit[1] == "asc" {
 					orderFunc = append(orderFunc, idAsc)
 				} else {
 					orderFunc = append(orderFunc, idDesc)
 				}
 			}
 		} else {
-			if p3[0] == "forename" {
+			if inputSplitItemSplit[0] == "forename" {
 				orderFunc = append(orderFunc, forenameAsc)
-			} else if p3[0] == "lastname" {
+			} else if inputSplitItemSplit[0] == "lastname" {
 				orderFunc = append(orderFunc, lastnameAsc)
-			} else if p3[0] == "email" {
+			} else if inputSplitItemSplit[0] == "email" {
 				orderFunc = append(orderFunc, emailAsc)
 			} else {
 				orderFunc = append(orderFunc, idAsc)
