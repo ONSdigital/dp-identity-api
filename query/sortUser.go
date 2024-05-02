@@ -1,7 +1,10 @@
 package query
 
 import (
+	"fmt"
 	"github.com/ONSdigital/dp-identity-api/models"
+	"reflect"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -15,20 +18,20 @@ type multiSorter struct {
 	less    []lessFunc
 }
 
-// ms
+// Sort some description of the function
 func (ms *multiSorter) Sort(changes []models.UserParams) {
 	ms.changes = changes
 	sort.Sort(ms)
 }
 
-// OrderedBy
+// OrderedBy some descrription of the function
 func OrderedBy(less ...lessFunc) *multiSorter {
 	return &multiSorter{
 		less: less,
 	}
 }
 
-// ms
+// Len
 func (ms *multiSorter) Len() int {
 	return len(ms.changes)
 }
@@ -56,59 +59,56 @@ func (ms *multiSorter) Less(i, j int) bool {
 
 // SortBy from the request query get the sort parameters
 func SortBy(requestSortParameters string, arr []models.UserParams) {
-	forenameAsc := func(c1, c2 *models.UserParams) bool { return c1.Forename < c2.Forename }
-	forenameDesc := func(c1, c2 *models.UserParams) bool { return c1.Forename > c2.Forename }
-	lastnameAsc := func(c1, c2 *models.UserParams) bool { return c1.Lastname < c2.Lastname }
-	lastnameDesc := func(c1, c2 *models.UserParams) bool { return c1.Lastname > c2.Lastname }
-	emailAsc := func(c1, c2 *models.UserParams) bool { return c1.Email < c2.Email }
-	emailDesc := func(c1, c2 *models.UserParams) bool { return c1.Email > c2.Email }
-	idAsc := func(c1, c2 *models.UserParams) bool { return c1.ID < c2.ID }
-	idDesc := func(c1, c2 *models.UserParams) bool { return c1.ID > c2.ID }
+	//forenameAsc := func(c1, c2 *models.UserParams) bool { return c1.Forename < c2.Forename }
+	//forenameDesc := func(c1, c2 *models.UserParams) bool { return c1.Forename > c2.Forename }
+	//lastnameAsc := func(c1, c2 *models.UserParams) bool { return c1.Lastname < c2.Lastname }
+	//lastnameDesc := func(c1, c2 *models.UserParams) bool { return c1.Lastname > c2.Lastname }
+	//emailAsc := func(c1, c2 *models.UserParams) bool { return c1.Email < c2.Email }
+	//emailDesc := func(c1, c2 *models.UserParams) bool { return c1.Email > c2.Email }
+	//idAsc := func(c1, c2 *models.UserParams) bool { return c1.ID < c2.ID }
+	//idDesc := func(c1, c2 *models.UserParams) bool { return c1.ID > c2.ID }
 
 	inputSplit := strings.Split(requestSortParameters, ",")
 
-	var orderFunc []lessFunc
+	var (
+		orderFunc  []lessFunc
+		v          interface{}
+		userparams models.UserParams
+	)
+	v = userparams
+
 	for _, inputSplitItem := range inputSplit {
 		inputSplitItemSplit := strings.Split(inputSplitItem, ":")
-		if len(inputSplitItemSplit) > 1 {
-			if inputSplitItemSplit[0] == "forename" {
-				if inputSplitItemSplit[1] == "asc" {
-					orderFunc = append(orderFunc, forenameAsc)
-				} else {
-					orderFunc = append(orderFunc, forenameDesc)
-				}
-			} else if inputSplitItemSplit[0] == "lastname" {
-				if inputSplitItemSplit[1] == "asc" {
-					orderFunc = append(orderFunc, lastnameAsc)
-				} else {
-					orderFunc = append(orderFunc, lastnameDesc)
-				}
-			} else if inputSplitItemSplit[0] == "email" {
-				if inputSplitItemSplit[1] == "asc" {
-					orderFunc = append(orderFunc, emailAsc)
-				} else {
-					orderFunc = append(orderFunc, emailDesc)
-				}
-			} else if inputSplitItemSplit[0] == "id" {
-				if inputSplitItemSplit[1] == "asc" {
-					orderFunc = append(orderFunc, idAsc)
-				} else {
-					orderFunc = append(orderFunc, idDesc)
-				}
-			}
-		} else {
-			if inputSplitItemSplit[0] == "forename" {
-				orderFunc = append(orderFunc, forenameAsc)
-			} else if inputSplitItemSplit[0] == "lastname" {
-				orderFunc = append(orderFunc, lastnameAsc)
-			} else if inputSplitItemSplit[0] == "email" {
-				orderFunc = append(orderFunc, emailAsc)
+		IsDesc := slices.Contains(inputSplitItemSplit, "desc")
+		userfield := GetBooleanFieldValueByJsonTag(strings.ToLower(inputSplitItemSplit[0]), v)
+		fmt.Println(userfield)
+		if strings.ToLower(inputSplitItemSplit[0]) == "forename" {
+			if IsDesc {
+				orderFunc = append(orderFunc, func(c1, c2 *models.UserParams) bool { return c1.Forename > c2.Forename })
 			} else {
-				orderFunc = append(orderFunc, idAsc)
+				orderFunc = append(orderFunc, func(c1, c2 *models.UserParams) bool { return c1.Forename < c2.Forename })
 			}
+
 		}
 
 		OrderedBy(orderFunc...).Sort(arr)
 
 	}
+}
+
+func GetBooleanFieldValueByJsonTag(jsonTagValue string, s interface{}) bool {
+	rt := reflect.TypeOf(s)
+	if rt.Kind() != reflect.Struct {
+		return false
+	}
+	for i := 0; i < rt.NumField(); i++ {
+		f := rt.Field(i)
+		v := strings.Split(f.Tag.Get("json"), ",")[0] // use split to ignore tag "options" like omitempty, etc.
+		if v == jsonTagValue {
+			r := reflect.ValueOf(s)
+			field := reflect.Indirect(r).FieldByName(f.Name)
+			return field.Bool()
+		}
+	}
+	return false
 }

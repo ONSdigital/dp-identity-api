@@ -150,7 +150,11 @@ paths:
         - in: query
           name: sort
           type: string
-          description: sort the response by direction given key:asc or key:desc default asc, comma separates multi-field sorts
+          description:
+              Default id:asc.  
+              If the key or direction are not in the enum list below, will default.
+            
+            The Request Query sort parameter gives multiple keys and direction key:desc default asc, comma separates multi-field sorts
           enum:
             - forename
             - forename:asc
