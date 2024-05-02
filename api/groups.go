@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"sort"
@@ -342,7 +343,10 @@ func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, re
 	query := req.Form.Get("sort")
 	if query != "" && query != "created" {
 		sort := validateQuery(query)
-		sortGroups(w, listOfGroups, sort)
+		err := sortGroups(w, listOfGroups, sort)
+		if err != nil {
+			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
+		}
 	}
 
 	jsonResponse, responseErr := finalGroupsResponse.BuildListGroupsSuccessfulJsonResponse(ctx, listOfGroups)
@@ -614,28 +618,26 @@ func (api *API) GetTeamsReportLines(listOfGroups *cognitoidentityprovider.ListGr
 }
 
 // sortGroups sorts groups in alphabetical order based on the specified sorting criteria
-func sortGroups(w http.ResponseWriter, listGroupOutput *cognitoidentityprovider.ListGroupsOutput, sortBy []string) {
+func sortGroups(w http.ResponseWriter, listGroupOutput *cognitoidentityprovider.ListGroupsOutput, sortBy []string) error {
 	groups := listGroupOutput.Groups
 
 	switch {
 	case sortBy[0] == "name" && len(sortBy) == 1:
 		sortByGroupName(groups, true)
-		return
+		return nil
 	case sortBy[0] == "name" && len(sortBy) == 2:
 		switch sortBy[1] {
 		case "asc":
 			sortByGroupName(groups, true)
-			return
+			return nil
 		case "desc":
 			sortByGroupName(groups, false)
-			return
+			return nil
 		default:
-			http.Error(w, "incorrect sort value. Groups not sorted.", http.StatusBadRequest)
-			return
+			return fmt.Errorf("incorrect sort value. Groups not sorted")
 		}
 	default:
-		http.Error(w, "incorrect sort value. Groups not sorted.", http.StatusBadRequest)
-		return
+		return fmt.Errorf("incorrect sort value. Groups not sorted")
 	}
 }
 
