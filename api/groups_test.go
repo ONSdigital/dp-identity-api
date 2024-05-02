@@ -3067,8 +3067,6 @@ func listGroupsUsersMock(noOfGroups, noOfUsers int) ([]models.ListGroupUsersType
 }
 
 func TestSortGroups(t *testing.T) {
-	_, w, _ := apiSetup()
-
 	Convey("Given a list of groups and a sort order", t, func() {
 		groupA := "A Group"
 		groupB := "B Group"
@@ -3103,8 +3101,9 @@ func TestSortGroups(t *testing.T) {
 
 		Convey("When sorting by name in ascending order", func() {
 			sort := strings.Split("name:asc", ":")
-			sortGroups(w, &groups, sort)
+			err := sortGroups(&groups, sort)
 			Convey("The groups should be sorted in ascending order", func() {
+				So(err, ShouldBeNil)
 				So(*groups.Groups[0].Description, ShouldResemble, "A Group")
 				So(*groups.Groups[1].Description, ShouldResemble, "a Group")
 				So(*groups.Groups[2].Description, ShouldResemble, "B Group")
@@ -3115,8 +3114,9 @@ func TestSortGroups(t *testing.T) {
 		})
 		Convey("When sorting by name in descending order", func() {
 			sort := strings.Split("name:desc", ":")
-			sortGroups(w, &groups, sort)
+			err := sortGroups(&groups, sort)
 			Convey("The groups should be sorted in descending order", func() {
+				So(err, ShouldBeNil)
 				So(*groups.Groups[0].Description, ShouldResemble, "C Group")
 				So(*groups.Groups[1].Description, ShouldResemble, "c Group")
 				So(*groups.Groups[2].Description, ShouldResemble, "B Group")
@@ -3127,8 +3127,9 @@ func TestSortGroups(t *testing.T) {
 		})
 		Convey("When sorting by name without a specified sort order", func() {
 			sort := []string{"name"}
-			sortGroups(w, &groups, sort)
+			err := sortGroups(&groups, sort)
 			Convey("The groups should be sorted in ascending order", func() {
+				So(err, ShouldBeNil)
 				So(*groups.Groups[0].Description, ShouldResemble, "A Group")
 				So(*groups.Groups[1].Description, ShouldResemble, "a Group")
 				So(*groups.Groups[2].Description, ShouldResemble, "B Group")
@@ -3138,35 +3139,27 @@ func TestSortGroups(t *testing.T) {
 			})
 		})
 		Convey("When sorting with an invalid sortBy parameter", func() {
-			sort := strings.Split("abc:xyz", ":")
-			sortGroups(w, &groups, sort)
-			Convey("The groups should remain unsorted", func() {
-				So(*groups.Groups[0].Description, ShouldResemble, "B Group")
-				So(*groups.Groups[1].Description, ShouldResemble, "C Group")
-				So(*groups.Groups[2].Description, ShouldResemble, "A Group")
-				So(*groups.Groups[3].Description, ShouldResemble, "b Group")
-				So(*groups.Groups[4].Description, ShouldResemble, "c Group")
-				So(*groups.Groups[5].Description, ShouldResemble, "a Group")
+			sort := strings.Split("abc", ":")
+			errResponse := sortGroups(&groups, sort)
+			Convey("An error should be returned with the message `incorrect sort value. Groups not sorted`", func() {
+				So(errResponse, ShouldNotBeNil)
+				So(errResponse.Error(), ShouldEqual, "incorrect sort value. Groups not sorted")
 			})
 		})
 		Convey("When sorting with an invalid asc or desc", func() {
 			sort := strings.Split("name:xyz", ":")
-			sortGroups(w, &groups, sort)
-			Convey("The groups should remain unsorted", func() {
-				So(*groups.Groups[0].Description, ShouldResemble, "B Group")
-				So(*groups.Groups[1].Description, ShouldResemble, "C Group")
-				So(*groups.Groups[2].Description, ShouldResemble, "A Group")
-				So(*groups.Groups[3].Description, ShouldResemble, "b Group")
-				So(*groups.Groups[4].Description, ShouldResemble, "c Group")
-				So(*groups.Groups[5].Description, ShouldResemble, "a Group")
+			errResponse := sortGroups(&groups, sort)
+			Convey("An error should be returned with the message `incorrect sort value. Groups not sorted`", func() {
+				So(errResponse, ShouldNotBeNil)
+				So(errResponse.Error(), ShouldEqual, "incorrect sort value. Groups not sorted")
 			})
 		})
 		Convey("When providing an incorrect query string", func() {
 			sort := strings.Split("abc:asc", ":")
-			sortGroups(w, &groups, sort)
-			Convey("The HTTP response status code should be 400", func() {
-				So(w.Code, ShouldEqual, http.StatusBadRequest)
-				So(w.Body.String(), ShouldContainSubstring, "incorrect sort value")
+			errResponse := sortGroups(&groups, sort)
+			Convey("An error should be returned with the message `incorrect sort value. Groups not sorted`", func() {
+				So(errResponse, ShouldNotBeNil)
+				So(errResponse.Error(), ShouldEqual, "incorrect sort value. Groups not sorted")
 			})
 		})
 	})

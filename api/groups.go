@@ -343,7 +343,7 @@ func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, re
 	query := req.Form.Get("sort")
 	if query != "" && query != "created" {
 		sort := validateQuery(query)
-		err := sortGroups(w, listOfGroups, sort)
+		err := sortGroups(listOfGroups, sort)
 		if err != nil {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
 		}
@@ -618,7 +618,7 @@ func (api *API) GetTeamsReportLines(listOfGroups *cognitoidentityprovider.ListGr
 }
 
 // sortGroups sorts groups in alphabetical order based on the specified sorting criteria
-func sortGroups(w http.ResponseWriter, listGroupOutput *cognitoidentityprovider.ListGroupsOutput, sortBy []string) error {
+func sortGroups(listGroupOutput *cognitoidentityprovider.ListGroupsOutput, sortBy []string) error {
 	groups := listGroupOutput.Groups
 
 	switch {
