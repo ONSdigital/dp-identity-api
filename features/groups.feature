@@ -860,7 +860,7 @@ Feature: Groups
                 """
 
     Scenario: GET /v1/groups?sort=name:asc and checking the response status 200
-        Given group "B Group" exists in a list the database
+        Given group "B Group" exists in a list in the database
         And group "A Group" exists in a list in the database
         And group "C Group" exists in a list in the database
         And I am an admin user
@@ -903,7 +903,7 @@ Feature: Groups
             """
 
     Scenario: GET /v1/groups?sort=name:desc and checking the response status 200
-        Given group "B Group" exists in a list the database
+        Given group "B Group" exists in a list in the database
         And group "A Group" exists in a list in the database
         And group "C Group" exists in a list in the database
         And I am an admin user
@@ -946,7 +946,7 @@ Feature: Groups
             """
 
     Scenario: GET /v1/groups?sort=name and checking the response status 200
-        Given group "B Group" exists in a list the database
+        Given group "B Group" exists in a list in the database
         And group "A Group" exists in a list in the database
         And group "C Group" exists in a list in the database
         And I am an admin user
@@ -989,7 +989,7 @@ Feature: Groups
             """
 
     Scenario: GET /v1/groups?sort=created and checking the response status 200
-        Given group "B Group" exists in a list the database
+        Given group "B Group" exists in a list in the database
         And group "A Group" exists in a list in the database
         And group "C Group" exists in a list in the database
         And I am an admin user
