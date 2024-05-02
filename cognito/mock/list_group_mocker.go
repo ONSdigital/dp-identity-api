@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
-func (m *CognitoIdentityProviderClientStub) AddSortableGroupWithName(name string) error {
-	newGroup, err := m.GenerateSortableGroup(name)
+func (m *CognitoIdentityProviderClientStub) AddListGroupWithName(name string) error {
+	newGroup, err := m.GenerateListGroup(name)
 	if err != nil {
 		return err
 	}
@@ -15,7 +15,7 @@ func (m *CognitoIdentityProviderClientStub) AddSortableGroupWithName(name string
 	return nil
 }
 
-func (m *CognitoIdentityProviderClientStub) GenerateSortableGroup(description string) (cognitoidentityprovider.ListGroupsOutput, error) {
+func (m *CognitoIdentityProviderClientStub) GenerateListGroup(description string) (cognitoidentityprovider.ListGroupsOutput, error) {
 	time, _ := time.Parse("2006-Jan-1", "2010-Jan-1")
 	emptyString := ""
 	num := int64(1)

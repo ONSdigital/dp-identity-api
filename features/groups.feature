@@ -860,9 +860,9 @@ Feature: Groups
                 """
 
     Scenario: GET /v1/groups?sort=name:asc and checking the response status 200
-        Given sortable group "B Group" exists in the database
-        And sortable group "A Group" exists in the database
-        And sortable group "C Group" exists in the database
+        Given list group "B Group" exists in the database
+        And list group "A Group" exists in the database
+        And list group "C Group" exists in the database
         And I am an admin user
         When I GET "/v1/groups?sort=name:asc"
         Then I should receive the following JSON response with status "200":
@@ -903,9 +903,9 @@ Feature: Groups
             """
 
     Scenario: GET /v1/groups?sort=name:desc and checking the response status 200
-        Given sortable group "B Group" exists in the database
-        And sortable group "A Group" exists in the database
-        And sortable group "C Group" exists in the database
+        Given list group "B Group" exists in the database
+        And list group "A Group" exists in the database
+        And list group "C Group" exists in the database
         And I am an admin user
         When I GET "/v1/groups?sort=name:desc"
         Then I should receive the following JSON response with status "200":
@@ -946,9 +946,9 @@ Feature: Groups
             """
 
     Scenario: GET /v1/groups?sort=name and checking the response status 200
-        Given sortable group "B Group" exists in the database
-        And sortable group "A Group" exists in the database
-        And sortable group "C Group" exists in the database
+        Given list group "B Group" exists in the database
+        And list group "A Group" exists in the database
+        And list group "C Group" exists in the database
         And I am an admin user
         When I GET "/v1/groups?sort=name"
         Then I should receive the following JSON response with status "200":
@@ -989,9 +989,9 @@ Feature: Groups
             """
 
     Scenario: GET /v1/groups?sort=created and checking the response status 200
-        Given sortable group "B Group" exists in the database
-        And sortable group "A Group" exists in the database
-        And sortable group "C Group" exists in the database
+        Given list group "B Group" exists in the database
+        And list group "A Group" exists in the database
+        And list group "C Group" exists in the database
         And I am an admin user
         When I GET "/v1/groups?sort=created"
         Then I should receive the following JSON response with status "200":

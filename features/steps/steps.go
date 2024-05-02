@@ -33,7 +33,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^an internal server error is returned from Cognito$`, c.anInternalServerErrorIsReturnedFromCognito)
 	ctx.Step(`^group "([^"]*)" and description "([^"]*)" exists in the database$`, c.groupAndDescriptionExistsInTheDatabase)
 	ctx.Step(`^group "([^"]*)" exists in the database$`, c.groupExistsInTheDatabase)
-	ctx.Step(`^sortable group "([^"]*)" exists in the database$`, c.sortableGroupExistsInTheDatabase)
+	ctx.Step(`^list group "([^"]*)" exists in the database$`, c.listGroupExistsInTheDatabase)
 	ctx.Step(`^the AdminUserGlobalSignOut endpoint in cognito returns an internal server error$`, c.theAdminUserGlobalSignOutEndpointInCognitoReturnsAnInternalServerError)
 	ctx.Step(`^the list response should contain "([^"]*)" entries$`, c.listResponseShouldContainCorrectNumberOfEntries)
 	ctx.Step(`^the response code should be (\d+)$`, c.theResponseCodeShouldBe)
@@ -120,8 +120,8 @@ func (c *IdentityComponent) groupExistsInTheDatabase(groupName string) error {
 	return err
 }
 
-func (c *IdentityComponent) sortableGroupExistsInTheDatabase(groupName string) error {
-	err := c.CognitoClient.AddSortableGroupWithName(groupName)
+func (c *IdentityComponent) listGroupExistsInTheDatabase(groupName string) error {
+	err := c.CognitoClient.AddListGroupWithName(groupName)
 	return err
 }
 
