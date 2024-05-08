@@ -342,9 +342,11 @@ func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, re
 	}
 	query := req.Form.Get("sort")
 	if query != "" && query != "created" {
-		sort := validateQuery(query)
-		err := sortGroups(listOfGroups, sort)
+		sort, err := validateQuery(query)
 		if err != nil {
+			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
+		}
+		if err := sortGroups(listOfGroups, sort); err != nil {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
 		}
 	}
@@ -634,10 +636,10 @@ func sortGroups(listGroupOutput *cognitoidentityprovider.ListGroupsOutput, sortB
 			sortByGroupName(groups, false)
 			return nil
 		default:
-			return fmt.Errorf("incorrect sort value. Groups not sorted")
+			return fmt.Errorf("incorrect sort value: %v Groups not sorted", sortBy)
 		}
 	default:
-		return fmt.Errorf("incorrect sort value. Groups not sorted")
+		return fmt.Errorf("incorrect sort value: %v Groups not sorted", sortBy)
 	}
 }
 
@@ -652,14 +654,14 @@ func sortByGroupName(groups []*cognitoidentityprovider.GroupType, ascending bool
 }
 
 // validateQuery validates the incoming "sort" query string
-func validateQuery(query string) []string {
+func validateQuery(query string) ([]string, error) {
 	if strings.Contains(query, ":") {
-		return strings.Split(query, ":")
+		return strings.Split(query, ":"), nil
 	}
 
 	if query == "name" {
-		return []string{"name"}
+		return []string{"name"}, nil
 	}
 
-	return nil
+	return nil, fmt.Errorf("invalid query string: %v", query)
 }

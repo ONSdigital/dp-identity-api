@@ -418,6 +418,10 @@ paths:
           description: "The list of groups"
           schema:
             $ref: '#/definitions/GroupsList'
+        400:
+          description: "Incorrect sort query value"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
         500:
           description: "Internal error occurred"
           schema:

@@ -1031,6 +1031,30 @@ Feature: Groups
                 }
             """
 
+    Scenario: GET /v1/groups?sort=abc and checking the response status 400
+        Given group "B Group" exists in a list in the database
+        And group "A Group" exists in a list in the database
+        And group "C Group" exists in a list in the database
+        And I am an admin user
+        When I GET "/v1/groups?sort=abc"
+        Then the HTTP status code should be "400"
+    
+    Scenario: GET /v1/groups?sort=name:xyz and checking the response status 400
+        Given group "B Group" exists in a list in the database
+        And group "A Group" exists in a list in the database
+        And group "C Group" exists in a list in the database
+        And I am an admin user
+        When I GET "/v1/groups?sort=name:xyz"
+        Then the HTTP status code should be "400"
+
+    Scenario: GET /v1/groups?sort=abc:asc and checking the response status 400
+        Given group "B Group" exists in a list in the database
+        And group "A Group" exists in a list in the database
+        And group "C Group" exists in a list in the database
+        And I am an admin user
+        When I GET "/v1/groups?sort=abc:asc"
+        Then the HTTP status code should be "400"
+
 #   list for many groups found   given blocks of 60 for one cognito call
     Scenario: GET /v1/groups and checking the response status 200
         Given there are 100 groups in the database

@@ -3143,15 +3143,15 @@ func TestSortGroups(t *testing.T) {
 			errResponse := sortGroups(&groups, sort)
 			Convey("An error should be returned with the message `incorrect sort value. Groups not sorted`", func() {
 				So(errResponse, ShouldNotBeNil)
-				So(errResponse.Error(), ShouldEqual, "incorrect sort value. Groups not sorted")
+				So(errResponse.Error(), ShouldEqual, "incorrect sort value: [abc] Groups not sorted")
 			})
 		})
 		Convey("When sorting with an invalid asc or desc", func() {
 			sort := strings.Split("name:xyz", ":")
 			errResponse := sortGroups(&groups, sort)
-			Convey("An error should be returned with the message `incorrect sort value. Groups not sorted`", func() {
+			Convey("An error should be returned with the message `incorrect sort value: name:xyz Groups not sorted`", func() {
 				So(errResponse, ShouldNotBeNil)
-				So(errResponse.Error(), ShouldEqual, "incorrect sort value. Groups not sorted")
+				So(errResponse.Error(), ShouldEqual, "incorrect sort value: [name xyz] Groups not sorted")
 			})
 		})
 		Convey("When providing an incorrect query string", func() {
@@ -3159,7 +3159,7 @@ func TestSortGroups(t *testing.T) {
 			errResponse := sortGroups(&groups, sort)
 			Convey("An error should be returned with the message `incorrect sort value. Groups not sorted`", func() {
 				So(errResponse, ShouldNotBeNil)
-				So(errResponse.Error(), ShouldEqual, "incorrect sort value. Groups not sorted")
+				So(errResponse.Error(), ShouldEqual, "incorrect sort value: [abc asc] Groups not sorted")
 			})
 		})
 	})
