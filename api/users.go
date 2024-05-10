@@ -107,9 +107,9 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 	usersList.SetUsers(listUserResp)
 
 	if req.URL.Query().Get("sort") != "" {
-		err := query.SortBy(req.URL.Query().Get("sort"), usersList.Users[:])
-		if err != nil {
-			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
+		requestSortQueryErrs := query.SortBy(req.URL.Query().Get("sort"), usersList.Users[:])
+		if requestSortQueryErrs != nil {
+			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, requestSortQueryErrs)
 		}
 	}
 

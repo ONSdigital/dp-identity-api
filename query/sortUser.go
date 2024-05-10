@@ -88,7 +88,7 @@ func getType(myVar interface{}) string {
 func GetFieldByJsonTag(jsonTagValue string, s interface{}) (reflect.StructField, error) {
 	rt := reflect.TypeOf(s)
 	if rt.Kind() != reflect.Struct {
-		return reflect.StructField{}, errors.New("Not found")
+		return reflect.StructField{}, errors.New("incorrect structure")
 	}
 
 	for i := 0; i < rt.NumField(); i++ {

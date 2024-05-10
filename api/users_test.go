@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"net/http"
@@ -499,6 +500,8 @@ func TestListUserHandlerWithSort(t *testing.T) {
 				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(errorResponse, ShouldNotBeNil)
 					So(errorResponse.Errors[0].Error(), ShouldResemble, " request query sort parameter not found dog")
+					fmt.Println(errorResponse.Errors[0])
+
 					So(errorResponse.Status, ShouldEqual, 400)
 				},
 			},
