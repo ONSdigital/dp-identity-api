@@ -28,6 +28,7 @@ const usersEndPointWithSortByEmail = "http://localhost:25600/v1/users?sort=email
 const usersEndPointWithSortByEmailAsc = "http://localhost:25600/v1/users?sort=email:asc"
 const usersEndPointWithSortByEmailDesc = "http://localhost:25600/v1/users?sort=email:desc"
 const usersEndPointWithSortBy2fieldsDesc = "http://localhost:25600/v1/users?sort=forename:desc,lastname:desc"
+const usersEndPointWithSortBy2knowFieldsandUnknown = "http://localhost:25600/v1/users?sort=forename:desc,lastname:desc,dog"
 const userEndPoint = "http://localhost:25600/v1/users/abcd1234"
 const changePasswordEndPoint = "http://localhost:25600/v1/users/self/password"
 const requestResetEndPoint = "http://localhost:25600/v1/password-reset"
@@ -480,8 +481,28 @@ func TestListUserHandlerWithSort(t *testing.T) {
 					So(successResponse.Status, ShouldEqual, 200)
 				},
 			},
-		}
+			{
+				description: "200 response from Cognito sort forename:desc, lastname:desc, dog  ",
+				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortBy2knowFieldsandUnknown, nil),
+				listUsersFunction: func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 
+					var cognitoUsersList = []*cognitoidentityprovider.UserType{}
+					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
+					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
+					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
+
+					users := &cognitoidentityprovider.ListUsersOutput{
+						Users: cognitoUsersList,
+					}
+					return users, nil
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(errorResponse, ShouldNotBeNil)
+					So(errorResponse.Errors[0].Error(), ShouldResemble, " request query sort parameter not found dog")
+					So(errorResponse.Status, ShouldEqual, 400)
+				},
+			},
+		}
 		for _, tt := range listUsersTest {
 			Convey(tt.description, func() {
 				m.ListUsersFunc = tt.listUsersFunction

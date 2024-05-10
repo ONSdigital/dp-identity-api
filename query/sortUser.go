@@ -1,7 +1,7 @@
 package query
 
 import (
-	"fmt"
+	"errors"
 	"github.com/ONSdigital/dp-identity-api/models"
 	"reflect"
 	"slices"
@@ -9,40 +9,40 @@ import (
 	"strings"
 )
 
-// lessFunc used by multiSorter OrderedBy  used to hold the seq of sort
-type lessFunc func(p1, p2 *models.UserParams) bool
+// LessFunc used by MultiSorter OrderedBy  used to hold the seq of sort
+type LessFunc func(p1, p2 *models.UserParams) bool
 
-// multiSorter
-type multiSorter struct {
+// MultiSorter structure to hold input array and the rwquest query parameters converted see GetLessFunc
+type MultiSorter struct {
 	changes []models.UserParams
-	less    []lessFunc
+	less    []LessFunc
 }
 
 // Sort some description of the function
-func (ms *multiSorter) Sort(changes []models.UserParams) {
+func (ms *MultiSorter) Sort(changes []models.UserParams) {
 	ms.changes = changes
 	sort.Sort(ms)
 }
 
-// OrderedBy some descrription of the function
-func OrderedBy(less ...lessFunc) *multiSorter {
-	return &multiSorter{
+// OrderedBy some description of the function
+func OrderedBy(less ...LessFunc) *MultiSorter {
+	return &MultiSorter{
 		less: less,
 	}
 }
 
-// Len
-func (ms *multiSorter) Len() int {
+// Len function to produce length of changes required by Sort third party
+func (ms *MultiSorter) Len() int {
 	return len(ms.changes)
 }
 
 // Swap ms  called by sort to swap two records by sort parameters
-func (ms *multiSorter) Swap(i, j int) {
+func (ms *MultiSorter) Swap(i, j int) {
 	ms.changes[i], ms.changes[j] = ms.changes[j], ms.changes[i]
 }
 
-// Less ms
-func (ms *multiSorter) Less(i, j int) bool {
+// Less either swaps the two concurrent values by the sort rules
+func (ms *MultiSorter) Less(i, j int) bool {
 	p, q := &ms.changes[i], &ms.changes[j]
 	var k int
 	for k = 0; k < len(ms.less)-1; k++ {
@@ -58,57 +58,76 @@ func (ms *multiSorter) Less(i, j int) bool {
 }
 
 // SortBy from the request query get the sort parameters
-func SortBy(requestSortParameters string, arr []models.UserParams) {
-	//forenameAsc := func(c1, c2 *models.UserParams) bool { return c1.Forename < c2.Forename }
-	//forenameDesc := func(c1, c2 *models.UserParams) bool { return c1.Forename > c2.Forename }
-	//lastnameAsc := func(c1, c2 *models.UserParams) bool { return c1.Lastname < c2.Lastname }
-	//lastnameDesc := func(c1, c2 *models.UserParams) bool { return c1.Lastname > c2.Lastname }
-	//emailAsc := func(c1, c2 *models.UserParams) bool { return c1.Email < c2.Email }
-	//emailDesc := func(c1, c2 *models.UserParams) bool { return c1.Email > c2.Email }
-	//idAsc := func(c1, c2 *models.UserParams) bool { return c1.ID < c2.ID }
-	//idDesc := func(c1, c2 *models.UserParams) bool { return c1.ID > c2.ID }
-
-	inputSplit := strings.Split(requestSortParameters, ",")
+func SortBy(requestSortParameters string, arr []models.UserParams) error {
 
 	var (
-		orderFunc  []lessFunc
-		v          interface{}
-		userparams models.UserParams
+		orderFunc []LessFunc
+		v         interface{} = arr[0]
 	)
-	v = userparams
 
+	inputSplit := strings.Split(requestSortParameters, ",")
 	for _, inputSplitItem := range inputSplit {
 		inputSplitItemSplit := strings.Split(inputSplitItem, ":")
 		IsDesc := slices.Contains(inputSplitItemSplit, "desc")
-		userfield := GetBooleanFieldValueByJsonTag(strings.ToLower(inputSplitItemSplit[0]), v)
-		fmt.Println(userfield)
-		if strings.ToLower(inputSplitItemSplit[0]) == "forename" {
-			if IsDesc {
-				orderFunc = append(orderFunc, func(c1, c2 *models.UserParams) bool { return c1.Forename > c2.Forename })
-			} else {
-				orderFunc = append(orderFunc, func(c1, c2 *models.UserParams) bool { return c1.Forename < c2.Forename })
-			}
-
+		userField, err := GetFieldByJsonTag(strings.ToLower(inputSplitItemSplit[0]), v)
+		if err != nil {
+			return err
 		}
-
-		OrderedBy(orderFunc...).Sort(arr)
-
+		orderFunc = append(orderFunc, GetLessFunc(getType(v), userField.Name, IsDesc))
 	}
+	OrderedBy(orderFunc...).Sort(arr)
+	return nil
 }
 
-func GetBooleanFieldValueByJsonTag(jsonTagValue string, s interface{}) bool {
+// getType returns the type of interface as string
+func getType(myVar interface{}) string {
+	return reflect.TypeOf(myVar).Name()
+}
+
+// GetFieldByJsonTag returns the field name as a string from the json value supplied by the request query params
+func GetFieldByJsonTag(jsonTagValue string, s interface{}) (reflect.StructField, error) {
 	rt := reflect.TypeOf(s)
 	if rt.Kind() != reflect.Struct {
-		return false
+		return reflect.StructField{}, errors.New("Not found")
 	}
+
 	for i := 0; i < rt.NumField(); i++ {
 		f := rt.Field(i)
-		v := strings.Split(f.Tag.Get("json"), ",")[0] // use split to ignore tag "options" like omitempty, etc.
+		v := strings.Split(f.Tag.Get("json"), ",")[0]
 		if v == jsonTagValue {
-			r := reflect.ValueOf(s)
-			field := reflect.Indirect(r).FieldByName(f.Name)
-			return field.Bool()
+			return rt.Field(i), nil
 		}
 	}
-	return false
+	return reflect.StructField{}, errors.New(" request query sort parameter not found " + jsonTagValue)
+}
+
+// GetLessFunc supplies the output function from the
+func GetLessFunc(name, field string, direction bool) LessFunc {
+
+	if direction {
+		if name == "UserParams" {
+			if field == "Forename" {
+				return func(c1, c2 *models.UserParams) bool { return c1.Forename > c2.Forename }
+			} else if field == "Lastname" {
+				return func(c1, c2 *models.UserParams) bool { return c1.Lastname > c2.Lastname }
+			} else if field == "Email" {
+				return func(c1, c2 *models.UserParams) bool { return c1.Email > c2.Email }
+			} else {
+				return func(c1, c2 *models.UserParams) bool { return c1.ID > c2.ID }
+			}
+		}
+	} else {
+		if name == "UserParams" {
+			if field == "Forename" {
+				return func(c1, c2 *models.UserParams) bool { return c1.Forename < c2.Forename }
+			} else if field == "Lastname" {
+				return func(c1, c2 *models.UserParams) bool { return c1.Lastname < c2.Lastname }
+			} else if field == "Email" {
+				return func(c1, c2 *models.UserParams) bool { return c1.Email < c2.Email }
+			} else {
+				return func(c1, c2 *models.UserParams) bool { return c1.ID < c2.ID }
+			}
+		}
+	}
+	return func(c1, c2 *models.UserParams) bool { return c1.ID < c2.ID }
 }
