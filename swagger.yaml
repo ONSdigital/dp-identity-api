@@ -717,6 +717,7 @@ paths:
           required: false
           default: created
           enum:
+            - created
             - forename:asc
             - forename:desc
       responses:
