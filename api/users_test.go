@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"net/http"
@@ -24,7 +25,11 @@ const usersEndPoint = "http://localhost:25600/v1/users"
 const usersEndPointWithActiveFilterTrue = "http://localhost:25600/v1/users?active=true"
 const usersEndPointWithActiveFilterFalse = "http://localhost:25600/v1/users?active=false"
 const usersEndPointWithActiveFilterError = "http://localhost:25600/v1/user?active=false"
-
+const usersEndPointWithSortByEmail = "http://localhost:25600/v1/users?sort=email"
+const usersEndPointWithSortByEmailAsc = "http://localhost:25600/v1/users?sort=email:asc"
+const usersEndPointWithSortByEmailDesc = "http://localhost:25600/v1/users?sort=email:desc"
+const usersEndPointWithSortBy2FieldsDesc = "http://localhost:25600/v1/users?sort=forename:desc,lastname:desc"
+const usersEndPointWithSortBy2KnownFieldsAndUnknown = "http://localhost:25600/v1/users?sort=forename:desc,lastname:desc,dog"
 const userEndPoint = "http://localhost:25600/v1/users/abcd1234"
 const changePasswordEndPoint = "http://localhost:25600/v1/users/self/password"
 const requestResetEndPoint = "http://localhost:25600/v1/password-reset"
@@ -377,6 +382,166 @@ func TestListUserHandlerWithFilter(t *testing.T) {
 			)
 		}
 	})
+}
+
+func TestListUserHandlerWithSort(t *testing.T) {
+	var (
+		ctx = context.Background()
+	)
+
+	api, w, m := apiSetup()
+
+	Convey("List user - check expected responses", t, func() {
+		listUsersTest := []struct {
+			description       string
+			endpoint          *http.Request
+			listUsersFunction func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
+			assertions        func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
+		}{
+			{
+				description: "200 response from Cognito sort asc by Email ",
+				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortByEmail, nil),
+				listUsersFunction: func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+
+					var cognitoUsersList = []*cognitoidentityprovider.UserType{}
+					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
+					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
+					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
+
+					users := &cognitoidentityprovider.ListUsersOutput{
+						Users: cognitoUsersList,
+					}
+					return users, nil
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(errorResponse, ShouldBeNil)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, 200)
+				},
+			},
+			{
+				description: "200 response from Cognito sort EmailAsc  ",
+				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortByEmailAsc, nil),
+				listUsersFunction: func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+
+					var cognitoUsersList = []*cognitoidentityprovider.UserType{}
+					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
+					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
+					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
+
+					users := &cognitoidentityprovider.ListUsersOutput{
+						Users: cognitoUsersList,
+					}
+					return users, nil
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(errorResponse, ShouldBeNil)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, 200)
+				},
+			},
+			{
+				description: "200 response from Cognito sort EmailDesc  ",
+				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortByEmailDesc, nil),
+				listUsersFunction: func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+
+					var cognitoUsersList = []*cognitoidentityprovider.UserType{}
+					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
+					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
+					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
+
+					users := &cognitoidentityprovider.ListUsersOutput{
+						Users: cognitoUsersList,
+					}
+					return users, nil
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(errorResponse, ShouldBeNil)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, 200)
+				},
+			},
+			{
+				description: "200 response from Cognito sort forename:desc, lastname:desc  ",
+				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortBy2FieldsDesc, nil),
+				listUsersFunction: func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+
+					var cognitoUsersList = []*cognitoidentityprovider.UserType{}
+					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
+					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
+					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
+
+					users := &cognitoidentityprovider.ListUsersOutput{
+						Users: cognitoUsersList,
+					}
+					return users, nil
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(errorResponse, ShouldBeNil)
+					So(successResponse, ShouldNotBeNil)
+					So(successResponse.Status, ShouldEqual, 200)
+				},
+			},
+			{
+				description: "200 response from Cognito sort forename:desc, lastname:desc, dog  ",
+				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortBy2KnownFieldsAndUnknown, nil),
+				listUsersFunction: func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+
+					var cognitoUsersList = []*cognitoidentityprovider.UserType{}
+					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
+					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
+					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
+
+					users := &cognitoidentityprovider.ListUsersOutput{
+						Users: cognitoUsersList,
+					}
+					return users, nil
+				},
+				assertions: func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
+					So(errorResponse, ShouldNotBeNil)
+					So(errorResponse.Errors[0].Error(), ShouldResemble, " request query sort parameter not found dog")
+					fmt.Println(errorResponse.Errors[0])
+
+					So(errorResponse.Status, ShouldEqual, 400)
+				},
+			},
+		}
+		for _, tt := range listUsersTest {
+			Convey(tt.description, func() {
+				m.ListUsersFunc = tt.listUsersFunction
+				r := tt.endpoint
+				successResponse, errorResponse := api.ListUsersHandler(ctx, w, r)
+				tt.assertions(successResponse, errorResponse)
+			},
+			)
+		}
+	})
+}
+
+func listUserOutput(forename, surname, email, id string, cognitoUsersList []*cognitoidentityprovider.UserType) []*cognitoidentityprovider.UserType {
+	var status = "CONFIRMED"
+	cognitoUser := cognitoidentityprovider.UserType{
+		Attributes: []*cognitoidentityprovider.AttributeType{
+			{
+				Name:  aws.String("given_name"),
+				Value: &forename,
+			},
+			{
+				Name:  aws.String("family_name"),
+				Value: &surname,
+			},
+			{
+				Name:  aws.String("email"),
+				Value: &email,
+			},
+		},
+		UserStatus: &status,
+		Username:   &id,
+		Enabled:    aws.Bool(true),
+	}
+
+	cognitoUsersList = append(cognitoUsersList, &cognitoUser)
+	return cognitoUsersList
 }
 
 func TestGetUserHandler(t *testing.T) {

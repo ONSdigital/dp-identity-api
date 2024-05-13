@@ -47,6 +47,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^request header Accept is "([^"]*)"$`, c.requestHeaderAcceptIs)
 	ctx.Step(`^the response should match the following csv:$`, c.theResponseShouldMatchTheFollowingCsv)
 	ctx.Step(`^the response header "([^"]*)" should contain "([^"]*)"$`, c.theResponseHeaderShouldContain)
+	ctx.Step(`^a user with forename "([^"]*)", lastname "([^"]*)", email "([^"]*)", id "([^"]*)" and password "([^"]*)" exists in the database$`, c.aUserWithAttributesExistsInTheDatabase)
 }
 
 func (c *IdentityComponent) aResponseToAJWKSSetRequest() error {
@@ -56,6 +57,11 @@ func (c *IdentityComponent) aResponseToAJWKSSetRequest() error {
 
 func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(email, password string) error {
 	c.CognitoClient.AddUserWithEmail(email, password, true)
+	return nil
+}
+
+func (c *IdentityComponent) aUserWithAttributesExistsInTheDatabase(forename, lastname, email, id, password string) error {
+	c.CognitoClient.AddUserWithAttributes(id, forename, lastname, email, password, true)
 	return nil
 }
 
