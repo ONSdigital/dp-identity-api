@@ -57,7 +57,7 @@ func (cli *Client) GetGroups(ctx context.Context, sort *sortParam) (*GroupsRespo
 	return &groupsResponse, nil
 }
 
-// GetGroupByID gets a single group by its ID
+// GetGroup gets a single group by its ID
 func (cli *Client) GetGroup(ctx context.Context, id string) (*Group, apiError.Error) {
 	path := fmt.Sprintf("%s/groups/%s", cli.hcCli.URL, id)
 
