@@ -14,6 +14,7 @@ import (
 func TestGetGroups(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
+	timeCreated := time.Date(2024, 05, 13, 12, 00, 00, 00, time.UTC)
 	groupsEndpoint := "/groups"
 	groupsBody := `{
 		"groups":[
@@ -60,19 +61,19 @@ func TestGetGroups(t *testing.T) {
 							ID:         "1",
 							Name:       "Group A",
 							Precedence: 1,
-							Created:    time.Date(2024, 05, 13, 12, 00, 00, 00, time.UTC),
+							Created:    timeCreated,
 						},
 						{
 							ID:         "1",
 							Name:       "Group B",
 							Precedence: 1,
-							Created:    time.Date(2024, 05, 13, 12, 00, 00, 00, time.UTC),
+							Created:    timeCreated,
 						},
 						{
 							ID:         "1",
 							Name:       "Group C",
 							Precedence: 1,
-							Created:    time.Date(2024, 05, 13, 12, 00, 00, 00, time.UTC),
+							Created:    timeCreated,
 						},
 					},
 					Count: 1,
@@ -123,6 +124,7 @@ func TestGetGroups(t *testing.T) {
 func TestGetGroup(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
+	timeCreated := time.Date(2024, 05, 13, 12, 00, 00, 00, time.UTC)
 	groupBody := `{"group":{"id":"1","name":"Group A","precedence":1,"created":"2024-05-13T12:00:00Z"}}`
 	groupID := "1"
 	groupsEndpoint := "/groups/" + groupID
@@ -146,7 +148,7 @@ func TestGetGroup(t *testing.T) {
 					ID:         "1",
 					Name:       "Group A",
 					Precedence: 1,
-					Created:    time.Date(2024, 05, 13, 12, 00, 00, 00, time.UTC),
+					Created:    timeCreated,
 				}
 				So(groupResponse, ShouldResemble, &expectedGroupResponse)
 
