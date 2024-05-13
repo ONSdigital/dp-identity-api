@@ -28,7 +28,7 @@ const usersEndPointWithActiveFilterError = "http://localhost:25600/v1/user?activ
 const usersEndPointWithSortByEmail = "http://localhost:25600/v1/users?sort=email"
 const usersEndPointWithSortByEmailAsc = "http://localhost:25600/v1/users?sort=email:asc"
 const usersEndPointWithSortByEmailDesc = "http://localhost:25600/v1/users?sort=email:desc"
-const usersEndPointWithSortBy2fieldsDesc = "http://localhost:25600/v1/users?sort=forename:desc,lastname:desc"
+const usersEndPointWithSortBy2FieldsDesc = "http://localhost:25600/v1/users?sort=forename:desc,lastname:desc"
 const usersEndPointWithSortBy2KnownFieldsAndUnknown = "http://localhost:25600/v1/users?sort=forename:desc,lastname:desc,dog"
 const userEndPoint = "http://localhost:25600/v1/users/abcd1234"
 const changePasswordEndPoint = "http://localhost:25600/v1/users/self/password"
@@ -463,7 +463,7 @@ func TestListUserHandlerWithSort(t *testing.T) {
 			},
 			{
 				description: "200 response from Cognito sort forename:desc, lastname:desc  ",
-				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortBy2fieldsDesc, nil),
+				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortBy2FieldsDesc, nil),
 				listUsersFunction: func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 
 					var cognitoUsersList = []*cognitoidentityprovider.UserType{}
