@@ -44,7 +44,7 @@ func TestGetGroupsReport(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			Convey("Then the expected groupsreport response is returned", func() {
-				expectedGroupsReportResponse := []GroupsReportResponse{
+				expectedGroupsReportResponse := GroupsReportResponse{
 					{
 						Group: "Group A",
 						User:  "user1@ons.gov.uk",

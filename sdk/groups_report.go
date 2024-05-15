@@ -9,12 +9,17 @@ import (
 	apiError "github.com/ONSdigital/dp-identity-api/sdk/errors"
 )
 
-type GroupsReportResponse struct {
+// GroupsReportResponse represents the response structure containing a list of GroupsReportItems.
+type GroupsReportResponse []GroupsReportItem
+
+// GroupsReportItem represents an item in the /groups-report response.
+type GroupsReportItem struct {
 	Group string `json:"group"`
 	User  string `json:"user"`
 }
 
-func (cli *Client) GetGroupsReport(ctx context.Context) (*[]GroupsReportResponse, apiError.Error) {
+// GetGroupsReport gets a list of groups-report
+func (cli *Client) GetGroupsReport(ctx context.Context) (*GroupsReportResponse, apiError.Error) {
 	path := fmt.Sprintf("%s/groups-report", cli.hcCli.URL)
 
 	respInfo, apiErr := cli.callIdentityAPI(ctx, path, http.MethodGet, nil)
@@ -22,7 +27,7 @@ func (cli *Client) GetGroupsReport(ctx context.Context) (*[]GroupsReportResponse
 		return nil, apiErr
 	}
 
-	var groupsReportResponse []GroupsReportResponse
+	var groupsReportResponse GroupsReportResponse
 
 	if err := json.Unmarshal(respInfo.Body, &groupsReportResponse); err != nil {
 		return nil, apiError.StatusError{
