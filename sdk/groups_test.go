@@ -37,7 +37,7 @@ func TestGetGroups(t *testing.T) {
 			"created":"2024-05-13T12:00:00Z"
 		   }
 		],
-		"count":1
+		"count":3
 	 }`
 
 	Convey("Given GetGroups is called successfully", t, func() {
@@ -76,7 +76,7 @@ func TestGetGroups(t *testing.T) {
 							Created:    timeCreated,
 						},
 					},
-					Count: 1,
+					Count: 3,
 				}
 				So(groupsResponse, ShouldResemble, &expectedGroupsResponse)
 
@@ -140,21 +140,25 @@ func TestGetGroup(t *testing.T) {
 		identityAPIClient := newIdentityAPIClient(t, httpClient)
 
 		Convey("When GetGroup is called", func() {
-			groupResponse, err := identityAPIClient.GetGroup(ctx, groupID)
+			groupsResponse, err := identityAPIClient.GetGroup(ctx, groupID)
 			So(err, ShouldBeNil)
 
 			Convey("Then the expected group response is returned", func() {
-				expectedGroupResponse := Group{
-					ID:         "1",
-					Name:       "Group A",
-					Precedence: 1,
-					Created:    timeCreated,
+				expectedGroupResponse := GroupsResponse{
+					Groups: []Group{
+						{
+							ID:         "1",
+							Name:       "Group A",
+							Precedence: 1,
+							Created:    timeCreated,
+						},
+					},
+					Count: 1,
 				}
-				So(groupResponse, ShouldResemble, &expectedGroupResponse)
+				So(groupsResponse, ShouldResemble, &expectedGroupResponse)
 
 				Convey("And no error is returned", func() {
 					So(err, ShouldBeNil)
-
 					Convey("And client.Do should be called once with the expected parameters", func() {
 						doCalls := httpClient.DoCalls()
 						So(doCalls, ShouldHaveLength, 1)

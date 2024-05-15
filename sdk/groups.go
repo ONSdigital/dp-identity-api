@@ -58,7 +58,7 @@ func (cli *Client) GetGroups(ctx context.Context, sort *sortParam) (*GroupsRespo
 }
 
 // GetGroup gets a single group by its ID
-func (cli *Client) GetGroup(ctx context.Context, id string) (*Group, apiError.Error) {
+func (cli *Client) GetGroup(ctx context.Context, id string) (*GroupsResponse, apiError.Error) {
 	path := fmt.Sprintf("%s/groups/%s", cli.hcCli.URL, id)
 
 	respInfo, apiErr := cli.callIdentityAPI(ctx, path, http.MethodGet, nil)
@@ -74,5 +74,9 @@ func (cli *Client) GetGroup(ctx context.Context, id string) (*Group, apiError.Er
 		}
 	}
 
-	return &groupResponse.Group, nil
+	groupsResponse := &GroupsResponse{
+		Groups: []Group{groupResponse.Group},
+		Count:  1,
+	}
+	return groupsResponse, nil
 }
