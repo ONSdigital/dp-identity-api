@@ -10,36 +10,37 @@ import (
 
 type MockCognitoIdentityProviderClient struct {
 	cognitoidentityprovideriface.CognitoIdentityProviderAPI
-	DescribeUserPoolFunc          func(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error)
-	AdminCreateUserFunc           func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error)
-	GlobalSignOutFunc             func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
-	ListUsersFunc                 func(usersInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
-	InitiateAuthFunc              func(authInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-	AdminUserGlobalSignOutFunc    func(adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
-	RespondToAuthChallengeFunc    func(input *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error)
-	ConfirmForgotPasswordFunc     func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error)
-	ForgotPasswordFunc            func(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error)
-	AdminGetUserFunc              func(input *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
-	CreateGroupFunc               func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error)
-	GetGroupFunc                  func(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error)
-	AdminUpdateUserAttributesFunc func(input *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error)
-	AdminEnableUserFunc           func(input *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error)
-	AdminDisableUserFunc          func(input *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error)
-	AdminAddUserToGroupFunc       func(input *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error)
-	ListUsersInGroupFunc          func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
-	SetGroupUsersfunc             func(ctx context.Context, group models.Group, users models.UsersList) (*models.UsersList, *models.ErrorResponse)
 	AddUserToGroupfunc            func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse)
-	RemoveUserFromGroupfunc       func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse)
-	AdminRemoveUserFromGroupFunc  func(input *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error)
+	AdminAddUserToGroupFunc       func(input *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error)
 	AdminConfirmSignUpFunc        func(input *cognitoidentityprovider.AdminConfirmSignUpInput) (*cognitoidentityprovider.AdminConfirmSignUpOutput, error)
+	AdminCreateUserFunc           func(userInput *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error)
 	AdminDeleteUserFunc           func(input *cognitoidentityprovider.AdminDeleteUserInput) (*cognitoidentityprovider.AdminDeleteUserOutput, error)
-	DeleteGroupFunc               func(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error)
+	AdminDisableUserFunc          func(input *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error)
+	AdminEnableUserFunc           func(input *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error)
+	AdminGetUserFunc              func(input *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
+	AdminRemoveUserFromGroupFunc  func(input *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error)
 	AdminSetUserPasswordFunc      func(input *cognitoidentityprovider.AdminSetUserPasswordInput) (*cognitoidentityprovider.AdminSetUserPasswordOutput, error)
-	ListGroupsForUserFunc         func(input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error)
+	AdminUpdateUserAttributesFunc func(input *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error)
+	AdminUserGlobalSignOutFunc    func(adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
+	ConfirmForgotPasswordFunc     func(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error)
+	CreateGroupFunc               func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error)
+	DeleteGroupFunc               func(input *cognitoidentityprovider.DeleteGroupInput) (*cognitoidentityprovider.DeleteGroupOutput, error)
 	DescribeUserPoolClientFunc    func(input *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error)
-	ListGroupsFunc                func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
-	UpdateGroupFunc               func(input *cognitoidentityprovider.UpdateGroupInput) (*cognitoidentityprovider.UpdateGroupOutput, error)
-	ValidateAddRemoveUserFunc     func(ctx context.Context, userId string) error
+	DescribeUserPoolFunc          func(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error)
+	ForgotPasswordFunc            func(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error)
+	GetGroupFunc                  func(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error)
+	GlobalSignOutFunc             func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
+	InitiateAuthFunc              func(authInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
+	ListGroupsForUserFunc         func(input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error)
+	//ListGroupsUsersFunc           func(input *cognitoidentityprovider.ListGroupsOutput) (*[]models.ListGroupUsersType, error)
+	ListGroupsFunc             func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
+	ListUsersFunc              func(usersInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
+	ListUsersInGroupFunc       func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
+	RemoveUserFromGroupfunc    func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse)
+	RespondToAuthChallengeFunc func(input *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error)
+	SetGroupUsersfunc          func(ctx context.Context, group models.Group, users models.UsersList) (*models.UsersList, *models.ErrorResponse)
+	UpdateGroupFunc            func(input *cognitoidentityprovider.UpdateGroupInput) (*cognitoidentityprovider.UpdateGroupOutput, error)
+	ValidateAddRemoveUserFunc  func(ctx context.Context, userId string) error
 }
 
 func (m *MockCognitoIdentityProviderClient) DescribeUserPool(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
@@ -139,6 +140,9 @@ func (m *MockCognitoIdentityProviderClient) DescribeUserPoolClient(input *cognit
 	return m.DescribeUserPoolClientFunc(input)
 }
 
+//	func (m *MockCognitoIdentityProviderClient) ListGroupsUsers(input *cognitoidentityprovider.ListGroupsOutput) (*[]models.ListGroupUsersType, error) {
+//		return m.ListGroupsUsersFunc(input)
+//	}
 func (m *MockCognitoIdentityProviderClient) ListGroups(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error) {
 	return m.ListGroupsFunc(input)
 }
@@ -157,5 +161,4 @@ func (m *MockCognitoIdentityProviderClient) AddUserToGroup(ctx context.Context, 
 
 func (m *MockCognitoIdentityProviderClient) RemoveUserFromGroup(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse) {
 	return m.RemoveUserFromGroupfunc(ctx, group, userId)
-
 }

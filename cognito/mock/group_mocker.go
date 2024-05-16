@@ -32,6 +32,25 @@ func (m *CognitoIdentityProviderClientStub) AddGroupWithNameAndDescription(name,
 		return err
 	}
 	m.Groups = append(m.Groups, newGroup)
+
+	pres := int64(0)
+	newGroupType := cognitoidentityprovider.GroupType{
+		CreationDate:     nil,
+		Description:      &description,
+		GroupName:        &name,
+		LastModifiedDate: nil,
+		Precedence:       &pres,
+		RoleArn:          nil,
+		UserPoolId:       nil,
+	}
+	newGroupTypeList := []*cognitoidentityprovider.GroupType{}
+	newGroupTypeList = append(newGroupTypeList, &newGroupType)
+	groupsListOutput := cognitoidentityprovider.ListGroupsOutput{
+		Groups:    newGroupTypeList,
+		NextToken: nil,
+	}
+	m.GroupsList = append(m.GroupsList, groupsListOutput)
+
 	return nil
 }
 
