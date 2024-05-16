@@ -13,10 +13,12 @@ import (
 
 type sortParam string
 
-var SortCreated sortParam = "created"
-var SortName sortParam = "name"
-var SortNameAsc sortParam = "name:asc"
-var SortNameDesc sortParam = "name:desc"
+var (
+	SortCreated  sortParam = "created"
+	SortName     sortParam = "name"
+	SortNameAsc  sortParam = "name:asc"
+	SortNameDesc sortParam = "name:desc"
+)
 
 type GroupsResponse struct {
 	Groups []Group

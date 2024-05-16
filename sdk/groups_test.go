@@ -40,7 +40,7 @@ func TestGetGroups(t *testing.T) {
 		"count":3
 	 }`
 
-	Convey("Given GetGroups is called successfully", t, func() {
+	Convey("Given GetGroups will returns several groups successfully", t, func() {
 		httpClient := newMockHTTPClient(
 			&http.Response{
 				StatusCode: http.StatusOK,
@@ -129,7 +129,7 @@ func TestGetGroup(t *testing.T) {
 	groupID := "1"
 	groupsEndpoint := "/groups/" + groupID
 
-	Convey("Given GetGroup is called successfully", t, func() {
+	Convey("Given GetGroup will return a group successfully", t, func() {
 		httpClient := newMockHTTPClient(
 			&http.Response{
 				StatusCode: http.StatusOK,
