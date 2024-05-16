@@ -147,6 +147,26 @@ paths:
           name: active
           type: boolean
           description: filter on user active state.
+        - in: query
+          name: sort
+          type: string
+          default: id:asc
+          description:
+            If the key or direction are not in the enum list below, will default.
+            The Request Query sort parameter gives multiple keys and direction key:desc default asc, comma separates multi-field sorts
+          enum:
+            - forename
+            - forename:asc
+            - forename:desc
+            - lastname
+            - lastname:asc
+            - lastname:desc
+            - email
+            - email:asc
+            - email:desc
+            - id
+            - id:asc
+            - id:desc
       tags:
         - Users
       summary: "List users"
@@ -402,11 +422,26 @@ paths:
       description: "List all the groups in the user pool"
       produces:
         - "application/json"
+      parameters:
+        - in: query
+          name: sort
+          type: string
+          required: false
+          default: created
+          enum:
+            - created
+            - name
+            - name:asc
+            - name:desc
       responses:
         200:
           description: "The list of groups"
           schema:
             $ref: '#/definitions/GroupsList'
+        400:
+          description: "Incorrect sort query value"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
         500:
           description: "Internal error occurred"
           schema:

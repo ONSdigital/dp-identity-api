@@ -3065,3 +3065,102 @@ func listGroupsUsersMock(noOfGroups, noOfUsers int) ([]models.ListGroupUsersType
 	}
 	return output, nil
 }
+
+func TestSortGroups(t *testing.T) {
+	Convey("Given a list of groups and a sort order", t, func() {
+		groupA := "A Group"
+		groupB := "B Group"
+		groupC := "C Group"
+		groupAa := "a Group"
+		groupBb := "b Group"
+		groupCc := "c Group"
+
+		groups := cognitoidentityprovider.ListGroupsOutput{
+			NextToken: nil,
+			Groups: []*cognitoidentityprovider.GroupType{
+				{
+					Description: &groupB,
+				},
+				{
+					Description: &groupC,
+				},
+				{
+					Description: &groupA,
+				},
+				{
+					Description: &groupBb,
+				},
+				{
+					Description: &groupCc,
+				},
+				{
+					Description: &groupAa,
+				},
+			},
+		}
+
+		Convey("When sorting by name in ascending order", func() {
+			sort := strings.Split("name:asc", ":")
+			err := sortGroups(&groups, sort)
+			Convey("The groups should be sorted in ascending order", func() {
+				So(err, ShouldBeNil)
+				So(*groups.Groups[0].Description, ShouldResemble, "A Group")
+				So(*groups.Groups[1].Description, ShouldResemble, "a Group")
+				So(*groups.Groups[2].Description, ShouldResemble, "B Group")
+				So(*groups.Groups[3].Description, ShouldResemble, "b Group")
+				So(*groups.Groups[4].Description, ShouldResemble, "C Group")
+				So(*groups.Groups[5].Description, ShouldResemble, "c Group")
+			})
+		})
+		Convey("When sorting by name in descending order", func() {
+			sort := strings.Split("name:desc", ":")
+			err := sortGroups(&groups, sort)
+			Convey("The groups should be sorted in descending order", func() {
+				So(err, ShouldBeNil)
+				So(*groups.Groups[0].Description, ShouldResemble, "C Group")
+				So(*groups.Groups[1].Description, ShouldResemble, "c Group")
+				So(*groups.Groups[2].Description, ShouldResemble, "B Group")
+				So(*groups.Groups[3].Description, ShouldResemble, "b Group")
+				So(*groups.Groups[4].Description, ShouldResemble, "A Group")
+				So(*groups.Groups[5].Description, ShouldResemble, "a Group")
+			})
+		})
+		Convey("When sorting by name without a specified sort order", func() {
+			sort := []string{"name"}
+			err := sortGroups(&groups, sort)
+			Convey("The groups should be sorted in ascending order", func() {
+				So(err, ShouldBeNil)
+				So(*groups.Groups[0].Description, ShouldResemble, "A Group")
+				So(*groups.Groups[1].Description, ShouldResemble, "a Group")
+				So(*groups.Groups[2].Description, ShouldResemble, "B Group")
+				So(*groups.Groups[3].Description, ShouldResemble, "b Group")
+				So(*groups.Groups[4].Description, ShouldResemble, "C Group")
+				So(*groups.Groups[5].Description, ShouldResemble, "c Group")
+			})
+		})
+		Convey("When sorting with an invalid sortBy parameter", func() {
+			sort := strings.Split("abc", ":")
+			errResponse := sortGroups(&groups, sort)
+			Convey("An error should be returned with the message `incorrect sort value. Groups not sorted`", func() {
+				So(errResponse, ShouldNotBeNil)
+				So(errResponse.Error(), ShouldEqual, "incorrect sort value: [abc] Groups not sorted")
+			})
+		})
+		Convey("When sorting with an invalid asc or desc", func() {
+			sort := strings.Split("name:xyz", ":")
+			errResponse := sortGroups(&groups, sort)
+			Convey("An error should be returned with the message `incorrect sort value: name:xyz Groups not sorted`", func() {
+				So(errResponse, ShouldNotBeNil)
+				So(errResponse.Error(), ShouldEqual, "incorrect sort value: [name xyz] Groups not sorted")
+			})
+		})
+		Convey("When providing an incorrect query string", func() {
+			sort := strings.Split("abc:asc", ":")
+			errResponse := sortGroups(&groups, sort)
+			Convey("An error should be returned with the message `incorrect sort value. Groups not sorted`", func() {
+				So(errResponse, ShouldNotBeNil)
+				So(errResponse.Error(), ShouldEqual, "incorrect sort value: [abc asc] Groups not sorted")
+			})
+		})
+	})
+}

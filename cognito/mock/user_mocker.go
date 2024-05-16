@@ -26,6 +26,9 @@ func (m *CognitoIdentityProviderClientStub) AddUserWithEmail(email, password str
 func (m *CognitoIdentityProviderClientStub) AddUserWithUsername(username, email string, isConfirmed bool) {
 	m.Users = append(m.Users, m.GenerateUser(username, email, "", "", "", isConfirmed))
 }
+func (m *CognitoIdentityProviderClientStub) AddUserWithAttributes(id, forename, lastname, email, password string, isConfirmed bool) {
+	m.Users = append(m.Users, m.GenerateUser(id, email, password, forename, lastname, isConfirmed))
+}
 
 func (m *CognitoIdentityProviderClientStub) AddUserWithForename(username, email, forename string, isConfirmed bool) {
 	m.Users = append(m.Users, m.GenerateUser(username, email, "", forename, "", isConfirmed))
@@ -111,9 +114,8 @@ func (m *CognitoIdentityProviderClientStub) MakeUserMember(userName string) {
 	}
 }
 
-// BulkGenerateUsers - bulk generate 'n' users for testing purposes
-//
-//	if usernames array is nil or length is different, will auto-assign UUIDs
+//BulkGenerateUsers - bulk generate 'n' users for testing purposes
+//                    if usernames array is nil or length is different, will auto-assign UUIDs
 func BulkGenerateUsers(userCount int, userNames []string) *cognitoidentityprovider.ListUsersOutput {
 	paginationToken := "abc-123-xyz-345-xxx"
 	usersList := &cognitoidentityprovider.ListUsersOutput{}

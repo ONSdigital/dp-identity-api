@@ -3,7 +3,6 @@ package sdk
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,7 +11,6 @@ import (
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 
 	healthcheck "github.com/ONSdigital/dp-api-clients-go/v2/health"
-	"github.com/ONSdigital/dp-identity-api/models"
 	apiError "github.com/ONSdigital/dp-identity-api/sdk/errors"
 )
 
@@ -22,13 +20,6 @@ const (
 
 type Client struct {
 	hcCli *healthcheck.Client
-}
-
-type TokenResponse struct {
-	Token                      string `json:"-"`
-	RefreshToken               string `json:"-"`
-	ExpirationTime             string `json:"expirationTime"`
-	RefreshTokenExpirationTime string `json:"refreshTokenExpirationTime"`
 }
 
 // New creates a new instance of Client with a given topic api url
@@ -59,33 +50,6 @@ func (cli *Client) Health() *healthcheck.Client {
 // Checker calls identity api health endpoint and returns a check object to the caller
 func (cli *Client) Checker(ctx context.Context, check *health.CheckState) error {
 	return cli.hcCli.Checker(ctx, check)
-}
-
-// GetToken attempts to sign in and obtain a JWT token from the API
-func (cli *Client) GetToken(ctx context.Context, credentials models.UserSignIn) (*TokenResponse, apiError.Error) {
-	path := fmt.Sprintf("%s/tokens", cli.hcCli.URL)
-
-	b, _ := json.Marshal(credentials)
-
-	respInfo, apiErr := cli.callIdentityAPI(ctx, path, http.MethodPost, b)
-	if apiErr != nil {
-		return nil, apiErr
-	}
-
-	var tokenResponse TokenResponse
-
-	if err := json.Unmarshal(respInfo.Body, &tokenResponse); err != nil {
-		return nil, apiError.StatusError{
-			Err: fmt.Errorf("failed to unmarshal tokenResponse - error is: %v", err),
-		}
-	}
-
-	var headers = respInfo.Headers
-
-	tokenResponse.Token = headers.Get("Authorization")
-	tokenResponse.RefreshToken = headers.Get("Refresh")
-
-	return &tokenResponse, nil
 }
 
 type ResponseInfo struct {

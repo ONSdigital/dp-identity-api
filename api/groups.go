@@ -5,16 +5,18 @@ import (
 	"context"
 	"encoding/csv"
 	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"sort"
+	"strings"
+
 	"github.com/ONSdigital/dp-identity-api/models"
 	dplogs "github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"io"
-	"net/http"
-	"sort"
-	"strings"
 )
 
 const (
@@ -334,6 +336,21 @@ func (api *API) ListGroupsHandler(ctx context.Context, w http.ResponseWriter, re
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
 
+	if err = req.ParseForm(); err != nil {
+		dplogs.Error(ctx, "error parsing form", err)
+		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
+	}
+	query := req.Form.Get("sort")
+	if query != "" && query != "created" {
+		sort, err := validateQuery(query)
+		if err != nil {
+			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
+		}
+		if err := sortGroups(listOfGroups, sort); err != nil {
+			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
+		}
+	}
+
 	jsonResponse, responseErr := finalGroupsResponse.BuildListGroupsSuccessfulJsonResponse(ctx, listOfGroups)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
@@ -600,4 +617,51 @@ func (api *API) GetTeamsReportLines(listOfGroups *cognitoidentityprovider.ListGr
 	}
 
 	return &GroupsUsersList, nil
+}
+
+// sortGroups sorts groups in alphabetical order based on the specified sorting criteria
+func sortGroups(listGroupOutput *cognitoidentityprovider.ListGroupsOutput, sortBy []string) error {
+	groups := listGroupOutput.Groups
+
+	switch {
+	case sortBy[0] == "name" && len(sortBy) == 1:
+		sortByGroupName(groups, true)
+		return nil
+	case sortBy[0] == "name" && len(sortBy) == 2:
+		switch sortBy[1] {
+		case "asc":
+			sortByGroupName(groups, true)
+			return nil
+		case "desc":
+			sortByGroupName(groups, false)
+			return nil
+		default:
+			return fmt.Errorf("incorrect sort value: %v Groups not sorted", sortBy)
+		}
+	default:
+		return fmt.Errorf("incorrect sort value: %v Groups not sorted", sortBy)
+	}
+}
+
+// sortByGroupName determines the sorting criteria and sorts groups in either ascending or descending order
+func sortByGroupName(groups []*cognitoidentityprovider.GroupType, ascending bool) {
+	sort.Slice(groups, func(i, j int) bool {
+		if ascending {
+			return strings.ToLower(*groups[i].Description) < strings.ToLower(*groups[j].Description)
+		}
+		return strings.ToLower(*groups[i].Description) > strings.ToLower(*groups[j].Description)
+	})
+}
+
+// validateQuery validates the incoming "sort" query string
+func validateQuery(query string) ([]string, error) {
+	if strings.Contains(query, ":") {
+		return strings.Split(query, ":"), nil
+	}
+
+	if query == "name" {
+		return []string{"name"}, nil
+	}
+
+	return nil, fmt.Errorf("invalid query string: %v", query)
 }

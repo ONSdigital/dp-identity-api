@@ -33,6 +33,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^an internal server error is returned from Cognito$`, c.anInternalServerErrorIsReturnedFromCognito)
 	ctx.Step(`^group "([^"]*)" and description "([^"]*)" exists in the database$`, c.groupAndDescriptionExistsInTheDatabase)
 	ctx.Step(`^group "([^"]*)" exists in the database$`, c.groupExistsInTheDatabase)
+	ctx.Step(`^group "([^"]*)" exists in a list in the database$`, c.listGroupExistsInTheDatabase)
 	ctx.Step(`^the AdminUserGlobalSignOut endpoint in cognito returns an internal server error$`, c.theAdminUserGlobalSignOutEndpointInCognitoReturnsAnInternalServerError)
 	ctx.Step(`^the list response should contain "([^"]*)" entries$`, c.listResponseShouldContainCorrectNumberOfEntries)
 	ctx.Step(`^the response code should be (\d+)$`, c.theResponseCodeShouldBe)
@@ -46,6 +47,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^request header Accept is "([^"]*)"$`, c.requestHeaderAcceptIs)
 	ctx.Step(`^the response should match the following csv:$`, c.theResponseShouldMatchTheFollowingCsv)
 	ctx.Step(`^the response header "([^"]*)" should contain "([^"]*)"$`, c.theResponseHeaderShouldContain)
+	ctx.Step(`^a user with forename "([^"]*)", lastname "([^"]*)", email "([^"]*)", id "([^"]*)" and password "([^"]*)" exists in the database$`, c.aUserWithAttributesExistsInTheDatabase)
 }
 
 func (c *IdentityComponent) aResponseToAJWKSSetRequest() error {
@@ -55,6 +57,11 @@ func (c *IdentityComponent) aResponseToAJWKSSetRequest() error {
 
 func (c *IdentityComponent) aUserWithEmailAndPasswordExistsInTheDatabase(email, password string) error {
 	c.CognitoClient.AddUserWithEmail(email, password, true)
+	return nil
+}
+
+func (c *IdentityComponent) aUserWithAttributesExistsInTheDatabase(forename, lastname, email, id, password string) error {
+	c.CognitoClient.AddUserWithAttributes(id, forename, lastname, email, password, true)
 	return nil
 }
 
@@ -116,6 +123,11 @@ func (c *IdentityComponent) userSetState(username, active string) error {
 
 func (c *IdentityComponent) groupExistsInTheDatabase(groupName string) error {
 	err := c.CognitoClient.AddGroupWithName(groupName)
+	return err
+}
+
+func (c *IdentityComponent) listGroupExistsInTheDatabase(groupName string) error {
+	err := c.CognitoClient.AddListGroupWithName(groupName)
 	return err
 }
 
