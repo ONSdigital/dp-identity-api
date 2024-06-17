@@ -1009,9 +1009,14 @@ func TestChangePasswordHandler(t *testing.T) {
 
 	m.DescribeUserPoolClientFunc = func(input *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
 		tokenValidDays := int64(1)
+		refreshTokenUnits := cognitoidentityprovider.TimeUnitsTypeDays
+
 		userPoolClient := &cognitoidentityprovider.DescribeUserPoolClientOutput{
 			UserPoolClient: &cognitoidentityprovider.UserPoolClientType{
 				RefreshTokenValidity: &tokenValidDays,
+				TokenValidityUnits: &cognitoidentityprovider.TokenValidityUnitsType{
+					RefreshToken: &refreshTokenUnits,
+				},
 			},
 		}
 		return userPoolClient, nil

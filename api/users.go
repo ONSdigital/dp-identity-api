@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/dp-identity-api/query"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -11,8 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"io"
-	"net/http"
 )
 
 const (
@@ -272,7 +273,8 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 				return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, awsErr)
 			}
 
-			refreshTokenTTL := int(*userPoolClient.UserPoolClient.RefreshTokenValidity)
+			clientTokenValidityUnits := *userPoolClient.UserPoolClient.TokenValidityUnits
+			refreshTokenTTL := calculateTokenTTLInSeconds(*clientTokenValidityUnits.RefreshToken, int(*userPoolClient.UserPoolClient.RefreshTokenValidity))
 
 			jsonResponse, responseErr = changePasswordParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, result, refreshTokenTTL)
 			if responseErr == nil {

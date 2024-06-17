@@ -73,7 +73,9 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, awsErr)
 	}
 
-	refreshTokenTTL := int(*userPoolClient.UserPoolClient.RefreshTokenValidity)
+	clientTokenValidityUnits := *userPoolClient.UserPoolClient.TokenValidityUnits
+	refreshTokenTTL := calculateTokenTTLInSeconds(*clientTokenValidityUnits.RefreshToken, int(*userPoolClient.UserPoolClient.RefreshTokenValidity))
+
 	jsonResponse, responseErr := userSignIn.BuildSuccessfulJsonResponse(ctx, result, refreshTokenTTL)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
@@ -320,4 +322,20 @@ func (api *API) generateGlobalSignOutRequest(user *cognitoidentityprovider.Admin
 // generateListUsersRequest - local routine to generate a list users request
 func (api *API) generateListUsersRequest(input *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 	return api.CognitoClient.ListUsers(input)
+}
+
+// calculateTokenTTLInSeconds takes a token unit and a number as received from Cognito and
+// returns the number of seconds.
+func calculateTokenTTLInSeconds(unit string, number int) int {
+	switch unit {
+	case cognitoidentityprovider.TimeUnitsTypeDays:
+		return number * models.SecondsInDay
+	case cognitoidentityprovider.TimeUnitsTypeHours:
+		return number * 3600
+	case cognitoidentityprovider.TimeUnitsTypeMinutes:
+		return number * 60
+	case cognitoidentityprovider.TimeUnitsTypeSeconds:
+		return number
+	}
+	return 0
 }
