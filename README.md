@@ -4,7 +4,11 @@ An API used to manage the authorisation of users accessing data publishing servi
 
 ### Getting started
 
-* Run `make debug`
+Run `make debug` to get started
+
+To run the app with reflex and have it restart when you make changes, run:
+
+`make debug-watch`
 
 ### Dummy data
 If test data is required in the local Cognito user pool:
