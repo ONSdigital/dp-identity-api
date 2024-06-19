@@ -27,6 +27,10 @@ build:
 	@mkdir -p $(BUILD_ARCH)/$(BIN_DIR)
 	go build $(LDFLAGS) -o $(BUILD_ARCH)/$(BIN_DIR)/$(MAIN) main.go
 
+.PHONY: debug-watch
+debug-watch: 
+	reflex -d none -c ./reflex
+
 .PHONY: debug
 debug:
 	export AWS_COGNITO_USER_POOL_ID=$(LOCAL_USER_POOL_ID);

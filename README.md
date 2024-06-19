@@ -1,12 +1,17 @@
-dp-identity-api
-================
+# dp-identity-api
+
 An API used to manage the authorisation of users accessing data publishing services.
 
-### Getting started
+## Getting started
 
-* Run `make debug`
+Run `make debug` to get started
+
+To run the app with reflex and have it restart when you make changes, run:
+
+`make debug-watch`
 
 ### Dummy data
+
 If test data is required in the local Cognito user pool:
 
 * Run `make populate-local`
@@ -41,7 +46,8 @@ To get the values for the other AWS Cognito secrets:
 * AWS_COGNITO_CLIENT_SECRET get from AWS > Cognito > User Pools > App Integration > App clients > dp-identity-api > client secret
 
 ### Configuration needed to import user and group from s3
-```
+
+```sh
 export GroupsFilename=""
 export GroupUsersFilename=""
 export UserFileName=""
@@ -51,12 +57,12 @@ export S3Region=""
 export AWSCognitoUserPoolID=""
 ```
 
-### Contributing
+## Contributing
 
 See [CONTRIBUTING](CONTRIBUTING.md) for details.
 
-### License
+## License
 
-Copyright © 2021, Office for National Statistics (https://www.ons.gov.uk)
+Copyright © 2024, [Office for National Statistics](https://www.ons.gov.uk)
 
 Released under MIT license, see [LICENSE](LICENSE.md) for details.

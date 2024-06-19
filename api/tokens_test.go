@@ -47,9 +47,14 @@ func TestAPI_TokensHandler(t *testing.T) {
 	}
 	m.DescribeUserPoolClientFunc = func(input *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
 		tokenValidDays := int64(1)
+		refreshTokenUnits := cognitoidentityprovider.TimeUnitsTypeDays
+
 		userPoolClient := &cognitoidentityprovider.DescribeUserPoolClientOutput{
 			UserPoolClient: &cognitoidentityprovider.UserPoolClientType{
 				RefreshTokenValidity: &tokenValidDays,
+				TokenValidityUnits: &cognitoidentityprovider.TokenValidityUnitsType{
+					RefreshToken: &refreshTokenUnits,
+				},
 			},
 		}
 		return userPoolClient, nil
@@ -466,11 +471,11 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 		signOutAllUsersTests := []struct {
 			listUsersFunction              func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
 			adminUserGlobalSignOutFunction func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
-			globalUserSignOutMod		   models.GlobalSignOut
-			numberOfUsers				   int
-			expectedResults				   int
+			globalUserSignOutMod           models.GlobalSignOut
+			numberOfUsers                  int
+			expectedResults                int
 			httpResponse                   int
-		}{	
+		}{
 			{
 				// 200 response from Cognito - 202 from identity api
 				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
@@ -581,9 +586,9 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 	api, _, m := apiSetup()
 
 	Convey("Testing users global signout - go routine", t, func() {
-		var(
+		var (
 			paginationToken, usersFilterString string = "abc-123-xyz-345-xxx", "status=\"Enabled\""
-			backoff = []time.Duration{
+			backoff                                   = []time.Duration{
 				1 * time.Second,
 				2 * time.Second,
 				3 * time.Second,
@@ -595,7 +600,7 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 			BackoffSchedule   []time.Duration
 			expectedUserNumb  int
 			httpResponse      []int
-		}{	
+		}{
 			{
 				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					if userInput.PaginationToken != nil {
@@ -624,7 +629,7 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 				},
 				backoff,
 				0,
-				[]int {
+				[]int{
 					http.StatusInternalServerError,
 				},
 			},
@@ -656,7 +661,7 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 			usersList, awsErr := api.ListUsersWorker(ctx, &usersFilterString, tt.BackoffSchedule)
 
 			// we should receive the expected number of processed usernames on the ResultsChannel
-			if (tt.httpResponse[errCode] >= http.StatusBadRequest) {
+			if tt.httpResponse[errCode] >= http.StatusBadRequest {
 				So(usersList, ShouldBeNil)
 				So(awsErr.Status, ShouldEqual, tt.httpResponse[errCode])
 			} else {

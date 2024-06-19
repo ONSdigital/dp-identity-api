@@ -358,7 +358,7 @@ func (p *UserSignIn) BuildSuccessfulJsonResponse(ctx context.Context, result *co
 	if result.AuthenticationResult != nil {
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
 		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
-		refreshTokenDuration := time.Duration(SecondsInDay * refreshTokenTTL)
+		refreshTokenDuration := time.Duration(refreshTokenTTL)
 		refreshTokenExpirationTime := time.Now().UTC().Add(time.Second * refreshTokenDuration).String()
 
 		postBody := map[string]interface{}{"expirationTime": expirationTime, "refreshTokenExpirationTime": refreshTokenExpirationTime}
@@ -430,7 +430,7 @@ func (p ChangePassword) BuildAuthChallengeSuccessfulJsonResponse(ctx context.Con
 	if result.AuthenticationResult != nil {
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
 		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
-		refreshTokenDuration := time.Duration(SecondsInDay * refreshTokenTTL)
+		refreshTokenDuration := time.Duration(refreshTokenTTL)
 		refreshTokenExpirationTime := time.Now().UTC().Add(time.Second * refreshTokenDuration).String()
 
 		postBody := map[string]interface{}{"expirationTime": expirationTime, "refreshTokenExpirationTime": refreshTokenExpirationTime}

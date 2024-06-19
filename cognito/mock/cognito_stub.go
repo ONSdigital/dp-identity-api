@@ -698,9 +698,13 @@ func (m *CognitoIdentityProviderClientStub) ListGroups(input *cognitoidentitypro
 func (m *CognitoIdentityProviderClientStub) DescribeUserPoolClient(input *cognitoidentityprovider.DescribeUserPoolClientInput) (
 	*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
 	tokenValidDays := int64(1)
+	refreshTokenUnits := cognitoidentityprovider.TimeUnitsTypeDays
 	userPoolClient := &cognitoidentityprovider.DescribeUserPoolClientOutput{
 		UserPoolClient: &cognitoidentityprovider.UserPoolClientType{
 			RefreshTokenValidity: &tokenValidDays,
+			TokenValidityUnits: &cognitoidentityprovider.TokenValidityUnitsType{
+				RefreshToken: &refreshTokenUnits,
+			},
 		},
 	}
 	return userPoolClient, nil
