@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	cognitoclient "github.com/ONSdigital/dp-identity-api/cognito"
@@ -71,6 +72,7 @@ func (e *ExternalServiceList) GetAuthorisationMiddleware(ctx context.Context, au
 func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer {
 	s := dphttp.NewServer(bindAddr, router)
 	s.HandleOSSignals = false
+	s.WriteTimeout = 100 * time.Second
 	return s
 }
 
