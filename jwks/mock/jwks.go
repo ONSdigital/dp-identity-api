@@ -14,22 +14,22 @@ var _ jwks.JWKSInt = &JWKSIntMock{}
 
 // JWKSIntMock is a mock implementation of jwks.JWKSInt.
 //
-// 	func TestSomethingThatUsesJWKSInt(t *testing.T) {
+//	func TestSomethingThatUsesJWKSInt(t *testing.T) {
 //
-// 		// make and configure a mocked jwks.JWKSInt
-// 		mockedJWKSInt := &JWKSIntMock{
-// 			JWKSGetKeysetFunc: func(awsRegion string, poolId string) (*jwks.JWKS, error) {
-// 				panic("mock out the JWKSGetKeyset method")
-// 			},
-// 			JWKSToRSAJSONResponseFunc: func(jwksMoqParam *jwks.JWKS) ([]byte, error) {
-// 				panic("mock out the JWKSToRSAJSONResponse method")
-// 			},
-// 		}
+//		// make and configure a mocked jwks.JWKSInt
+//		mockedJWKSInt := &JWKSIntMock{
+//			JWKSGetKeysetFunc: func(awsRegion string, poolId string) (*jwks.JWKS, error) {
+//				panic("mock out the JWKSGetKeyset method")
+//			},
+//			JWKSToRSAJSONResponseFunc: func(jwksMoqParam *jwks.JWKS) ([]byte, error) {
+//				panic("mock out the JWKSToRSAJSONResponse method")
+//			},
+//		}
 //
-// 		// use mockedJWKSInt in code that requires jwks.JWKSInt
-// 		// and then make assertions.
+//		// use mockedJWKSInt in code that requires jwks.JWKSInt
+//		// and then make assertions.
 //
-// 	}
+//	}
 type JWKSIntMock struct {
 	// JWKSGetKeysetFunc mocks the JWKSGetKeyset method.
 	JWKSGetKeysetFunc func(awsRegion string, poolId string) (*jwks.JWKS, error)
@@ -76,7 +76,8 @@ func (mock *JWKSIntMock) JWKSGetKeyset(awsRegion string, poolId string) (*jwks.J
 
 // JWKSGetKeysetCalls gets all the calls that were made to JWKSGetKeyset.
 // Check the length with:
-//     len(mockedJWKSInt.JWKSGetKeysetCalls())
+//
+//	len(mockedJWKSInt.JWKSGetKeysetCalls())
 func (mock *JWKSIntMock) JWKSGetKeysetCalls() []struct {
 	AwsRegion string
 	PoolId    string
@@ -109,7 +110,8 @@ func (mock *JWKSIntMock) JWKSToRSAJSONResponse(jwksMoqParam *jwks.JWKS) ([]byte,
 
 // JWKSToRSAJSONResponseCalls gets all the calls that were made to JWKSToRSAJSONResponse.
 // Check the length with:
-//     len(mockedJWKSInt.JWKSToRSAJSONResponseCalls())
+//
+//	len(mockedJWKSInt.JWKSToRSAJSONResponseCalls())
 func (mock *JWKSIntMock) JWKSToRSAJSONResponseCalls() []struct {
 	JwksMoqParam *jwks.JWKS
 } {
