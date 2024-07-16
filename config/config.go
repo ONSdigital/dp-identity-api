@@ -11,18 +11,20 @@ import (
 
 // Config represents service configuration for dp-identity-api
 type Config struct {
-	BindAddr                   string        `envconfig:"BIND_ADDR"`
-	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
-	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
-	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
-	AWSRegion                  string        `envconfig:"AWS_REGION"`
-	AWSCognitoUserPoolID       string        `envconfig:"AWS_COGNITO_USER_POOL_ID" json:"-"`
-	AWSCognitoClientId         string        `envconfig:"AWS_COGNITO_CLIENT_ID" json:"-"`
-	AWSCognitoClientSecret     string        `envconfig:"AWS_COGNITO_CLIENT_SECRET" json:"-"`
-	AWSAuthFlow                string        `envconfig:"AWS_AUTH_FLOW" json:"-"`
-	AllowedEmailDomains        []string      `envconfig:"ALLOWED_EMAIL_DOMAINS" json:"-"`
-	AuthorisationConfig        *authorisation.Config
-	MessageAction              string `envconfig:"MESSAGE_ACTION" json:"-"`
+	BindAddr                   string         `envconfig:"BIND_ADDR"`
+	GracefulShutdownTimeout    time.Duration  `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
+	HealthCheckInterval        time.Duration  `envconfig:"HEALTHCHECK_INTERVAL"`
+	HealthCheckCriticalTimeout time.Duration  `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
+	AWSRegion                  string         `envconfig:"AWS_REGION"`
+	AWSCognitoUserPoolID       string         `envconfig:"AWS_COGNITO_USER_POOL_ID" json:"-"`
+	AWSCognitoClientId         string         `envconfig:"AWS_COGNITO_CLIENT_ID" json:"-"`
+	AWSCognitoClientSecret     string         `envconfig:"AWS_COGNITO_CLIENT_SECRET" json:"-"`
+	AWSAuthFlow                string         `envconfig:"AWS_AUTH_FLOW"`
+	AllowedEmailDomains        []string       `envconfig:"ALLOWED_EMAIL_DOMAINS"`
+	MessageAction              string         `envconfig:"MESSAGE_ACTION"`
+	HTTPWriteTimeout           *time.Duration `envconfig:"HTTP_WRITE_TIMEOUT"`
+
+	AuthorisationConfig *authorisation.Config
 }
 
 var cfg *Config
@@ -44,6 +46,7 @@ func Get() (*Config, error) {
 		AllowedEmailDomains:        []string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 		AuthorisationConfig:        authorisation.NewDefaultConfig(),
 		MessageAction:              "",
+		HTTPWriteTimeout:           nil,
 	}
 
 	return cfg, envconfig.Process("", cfg)

@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	cognitoclient "github.com/ONSdigital/dp-identity-api/cognito"
@@ -37,8 +36,8 @@ func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 type Init struct{}
 
 // GetHTTPServer creates an http server
-func (e *ExternalServiceList) GetHTTPServer(bindAddr string, router http.Handler) HTTPServer {
-	s := e.Init.DoGetHTTPServer(bindAddr, router)
+func (e *ExternalServiceList) GetHTTPServer(bindAddr string, router http.Handler, cfg *config.Config) HTTPServer {
+	s := e.Init.DoGetHTTPServer(bindAddr, router, cfg)
 	return s
 }
 
@@ -69,10 +68,12 @@ func (e *ExternalServiceList) GetAuthorisationMiddleware(ctx context.Context, au
 }
 
 // DoGetHTTPServer creates an HTTP Server with the provided bind address and router
-func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer {
+func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler, cfg *config.Config) HTTPServer {
 	s := dphttp.NewServer(bindAddr, router)
 	s.HandleOSSignals = false
-	s.WriteTimeout = 100 * time.Second
+	if cfg.HTTPWriteTimeout != nil {
+		s.WriteTimeout = *cfg.HTTPWriteTimeout
+	}
 	return s
 }
 

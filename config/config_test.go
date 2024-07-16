@@ -35,6 +35,7 @@ func TestConfig(t *testing.T) {
 					AllowedEmailDomains:        []string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 					AuthorisationConfig:        authorisation.NewDefaultConfig(),
 					MessageAction:              "",
+					HTTPWriteTimeout:           nil,
 				})
 			})
 

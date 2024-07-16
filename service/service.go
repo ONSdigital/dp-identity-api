@@ -34,7 +34,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	r := mux.NewRouter()
 
-	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
+	s := serviceList.GetHTTPServer(cfg.BindAddr, r, cfg)
 
 	cognitoclient := serviceList.GetCognitoClient(cfg.AWSRegion)
 
