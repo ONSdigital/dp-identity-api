@@ -167,7 +167,7 @@ func (c *IdentityComponent) DoGetHealthcheckOk(cfg *config.Config, buildTime str
 	}, nil
 }
 
-func (c *IdentityComponent) DoGetHTTPServer(bindAddr string, router http.Handler) service.HTTPServer {
+func (c *IdentityComponent) DoGetHTTPServer(bindAddr string, router http.Handler, cfg *config.Config) service.HTTPServer {
 	c.HTTPServer.Addr = bindAddr
 	c.HTTPServer.Handler = router
 	return c.HTTPServer
