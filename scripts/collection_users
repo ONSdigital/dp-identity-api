@@ -43,6 +43,13 @@ ARGUMENTS
 	  | --help | -h
 	]
 
+EXAMPLES
+
+	$me prod			# get prompted for collection
+	$me prod ${colln_url_pre}/example
+	$me prod $pub_log_pre/2024-10-01-12-55-example	# post-publish collection
+	$me prod 2024-10-01-12-55-example		# post-publish collection
+
 DESCRIPTION
 
 Obtain creator details (email, name, etc) for zebedee collections, either:
