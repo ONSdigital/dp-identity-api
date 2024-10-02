@@ -1,0 +1,225 @@
+#!/usr/bin/env bash
+
+set -Eueo pipefail
+
+GIT_REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+GIT_REPO_PARENT=$GIT_REPO_ROOT/..
+
+source $GIT_REPO_PARENT/dp-configs/scripts/g_lib.sh
+g_opts nohost
+
+zebedee_dir=/var/florence/zebedee
+colln_dir=$zebedee_dir/collections
+colln_url_pre=http://localhost:8081/florence/collections/
+colln=
+summary=
+
+published_at=
+pub_log_pre=publish-log
+pub_date_pre="20??-??-??-??-??-*"
+pub_log_dir=$zebedee_dir/$pub_log_pre
+
+env=${ONS_DP_ENV:-sandbox}
+
+###################
+
+usage() {
+        local me=$(basename $0)
+	cat <<EOFusage
+$me
+
+SUMMARY
+
+Display the Cognito user details related to collection(s)
+in a given environment.
+
+ARGUMENTS
+
+	[ sandbox | staging | prod ]
+	[   ${colln_url_pre}example-colln
+	  | $pub_log_pre/2024-09-17-12-34-example-colln
+	  |             2024-09-17-12-34-example-colln
+	  | --summary [ optional-args-passed-to-collection_summary ]
+	  | --help | -h
+	]
+
+EXAMPLES
+
+	$me prod			# get prompted for collection
+	$me prod ${colln_url_pre}/example
+	$me prod $pub_log_pre/2024-10-01-12-55-example	# post-publish collection
+	$me prod 2024-10-01-12-55-example		# post-publish collection
+
+DESCRIPTION
+
+Obtain creator details (email, name, etc) for zebedee collections, either:
+
+- pre-publish by collection name
+- post-publish by collection name
+- or all pre-publish collections (uses the 'collection_summary' script)
+
+Without the environment argument, the script will use your ONS_DP_ENV shell
+variable to determine which remote environment to query.
+
+Without a collection argument (or --summary), the script will prompt for a
+collection name.
+
+This script typically logs-in to publishing_mount in the given environment and
+obtains the collection JSON for the given (pre- or post-published) collection.
+From that JSON, it extracts any login IDs/"email" fields (which are really,
+Cognito ID/"Username") and extracts that user from Cognito and displays the
+details for those users.
+
+When using '--summary', this script will run 'collection_summary' on the
+remote host to list (by default: a limited number of the most recent)
+pre-publish collections.  This script will translate the creators of those
+collections to their Cognito details.  For the list to include more and/or
+older collections, we recommend using one of:
+
+1. if you have a collection directory prefix (e.g. 'YOUR_COLLECTION_PREFIX')
+    $me --summary -NT --pre YOUR_COLLECTION_PREFIX
+2. or, for all collections
+    $me --summary -NT
+(i.e. the args after '--summary' are passed to the remote 'collection_summary')
+EOFusage
+}
+
+users_from_json_file() {
+	local curr_json_f local_json_f
+	if [[ -n $published_at ]]; then
+		curr_json_f=$pub_log_dir/$published_at.json
+		local_json_f=tmp-$published_at.json
+	else
+		curr_json_f=$colln_dir/$colln.json
+		local_json_f=tmp-$colln.json
+	fi
+
+	g_trace "SCP-ing to get JSON from $env $curr_json_f"
+	dp scp $env publishing_mount 1 --pull --confirm-non-sensitive $curr_json_f $local_json_f
+
+	local colln_json="$(cat $local_json_f)"
+	rm "$local_json_f"
+	if [[ $colln_json != "{"* ]]; then
+		g_trace "get JSON results: $(g_colr white "$colln_json")"
+		g_die 2 "failed to obtain collection JSON from ssh results"
+	fi
+
+	g_trace "Getting users from collection JSON"
+	local cog_ids=( $(jq -er '.events[].email' <<<"$colln_json" | sort -u) )
+
+	local id_num=1
+	for cog_id in ${cog_ids[@]}; do
+		if [[ $cog_id = System ]]; then g_warn "[$id_num/${#cog_ids[*]}] Skipping ID '$cog_id'"; continue; fi
+		g_trace "[$id_num/${#cog_ids[*]}] Getting cognito account details for $cog_id"
+		aws cognito-idp list-users --user-pool-id "$user_pool_id" --profile dp-$env --filter "username = '$cog_id'" \
+			| jq -C '.Users[] | .Attributes = ( .Attributes | from_entries )'
+		let id_num+=1
+	done
+}
+
+get_whom_column() {
+	local i=1
+	while [[ -n ${1-} ]]; do
+		if [[ $1 = WHOM ]]; then echo $i; break; fi
+		(( i++ ))
+		shift
+	done
+}
+
+users_from_summary() {
+	local summary_line= post_whom_line= whom_column=
+	dp ssh $env publishing_mount 1 -- bin/collection_summary -vvC "$@" | while read summary_line; do
+		if [[ -z $post_whom_line ]]; then
+			if [[ $summary_line == *" WHOM "* ]]; then
+				echo "$summary_line"
+				post_whom_line=1
+
+				# remove colour/date/etc e.g. "(now: yyyy-mm-dd hh:mm)" and then find WHOM column number
+				whom_column=$(get_whom_column $(sed -E 's/\[[0-9;]+m//g;s/\([^()]*\)/ /g' <<<"$summary_line"))
+				[[ -z $whom_column || ! $whom_column =~ ^[0-9]+$ ]] && g_die 2 "could not find WHOM column in collection_summary header output"
+			fi
+			continue
+		fi
+		echo "$summary_line"
+		summary_line="$(sed -E 's/\[[0-9;]+m//g' <<<"$summary_line")"		# remove colour-escapes to get plaintext columns
+		local cog_id=$(cut -wf $whom_column <<<"$summary_line")			# WHOM column
+		if   [[ $cog_id = "-" ]]; then
+			g_warn "no cognito-id for this collection"
+		elif [[ $cog_id =~ ^[[:alnum:]][-[:alnum:]]+$ ]]; then
+			aws cognito-idp list-users --user-pool-id "$user_pool_id" --profile dp-$env --filter "username = '$cog_id'"	\
+				| jq -C '.Users[0] | .Attributes = ( .Attributes | from_entries )'	\
+				| sed 's/^/			/'
+		else
+			g_warn "unexpected cognito-id: $cog_id"
+		fi
+	done
+}
+
+url_to_colln() {
+	colln=${1##*/}
+	colln=${colln%-*}
+}
+
+while [[ -n ${1-} ]]; do
+	arg=$1
+	shift
+	case $arg in
+		(sandbox|staging|prod)
+			env=$arg
+			;;
+		(--summary)
+			summary=1
+			break
+			;;
+		($colln_url_pre*)
+			url_to_colln $arg
+			;;
+		($pub_log_pre/*)
+			published_at=${arg#$pub_log_pre/}
+			;;
+		($pub_date_pre) # 2024-08-28-12-45-testmaxage
+			published_at=$arg
+			;;
+		(-h|--help)
+			usage
+			exit 0
+			;;
+		(*)
+			usage
+			g_die 2 "Bad arg: '$arg'"
+			;;
+	esac
+done
+
+dp_id_json=${ONS_DP_SRC_ROOT:-${DP_REPO_DIR:-${GIT_REPO_PARENT:-..}}}/dp-configs/secrets/$env/dp-identity-api.json
+
+while [[ -z $colln && -z $published_at && -z $summary ]]; do
+	read -p "$env collection dir (or its Slack - $colln_url_pre* URL) or $pub_log_pre/* entry: " url
+	if   [[ $url == $pub_log_pre/* ]]; then
+		published_at=${url#$pub_log_pre/}
+	elif [[ $url == $pub_date_pre ]]; then
+		published_at=$url
+	elif [[ $url == $colln_url_pre* ]]; then
+		url_to_colln "$url"
+	elif [[ -n $url ]]; then
+		colln=$url
+	fi
+done
+
+if [[ -f $dp_id_json ]]; then
+	g_trace "Getting $env user pool from $dp_id_json"
+	user_pool_id=$( jq -er .AWS_COGNITO_USER_POOL_ID "$dp_id_json" )
+
+elif [[ -f $dp_id_json.asc ]]; then
+	g_trace "Getting $env user pool from $dp_id_json.asc"
+	user_pool_id=$( jq -er .AWS_COGNITO_USER_POOL_ID <<<"$( gpg -d < "$dp_id_json.asc" )" )
+
+else
+	g_die 3 "Failed to get $env Cognito user-pool-id (tried $dp_id_json)"
+fi
+
+if [[ -n $summary ]]; then
+	users_from_summary "$@"
+else
+	users_from_json_file
+fi
