@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	IdTokenHeaderName      = "ID"
+	IDTokenHeaderName      = "ID"
 	AccessTokenHeaderName  = "Authorization"
 	RefreshTokenHeaderName = "Refresh"
 	WWWAuthenticateName    = "WWW-Authenticate"
@@ -34,8 +34,8 @@ var (
 type API struct {
 	Router           *mux.Router
 	CognitoClient    cognito.Client
-	UserPoolId       string
-	ClientId         string
+	UserPoolID       string
+	ClientID         string
 	ClientSecret     string
 	ClientAuthFlow   string
 	AWSRegion        string
@@ -62,25 +62,24 @@ func contextAndErrors(h baseHandler) http.HandlerFunc {
 func Setup(ctx context.Context,
 	r *mux.Router,
 	cognitoClient cognito.Client,
-	userPoolId, clientId, clientSecret, awsRegion, clientAuthFlow string,
+	userPoolID, clientID, clientSecret, awsRegion, clientAuthFlow string,
 	allowedDomains []string,
 	auth authorisation.Middleware,
 	jwksHandler jwks.JWKSInt) (*API, error) {
-
 	// Return an error if empty required parameter was passed.
-	if userPoolId == "" || clientId == "" || clientSecret == "" || awsRegion == "" || clientAuthFlow == "" || allowedDomains == nil || len(allowedDomains) == 0 || jwksHandler == nil {
+	if userPoolID == "" || clientID == "" || clientSecret == "" || awsRegion == "" || clientAuthFlow == "" || allowedDomains == nil || len(allowedDomains) == 0 || jwksHandler == nil {
 		return nil, models.NewError(ctx, nil, models.MissingConfigError, models.MissingConfigDescription)
 	}
 
-	if err := initialiseRoleGroups(ctx, cognitoClient, userPoolId); err != nil {
+	if err := initialiseRoleGroups(ctx, cognitoClient, userPoolID); err != nil {
 		return nil, err
 	}
 
 	api := &API{
 		Router:         r,
 		CognitoClient:  cognitoClient,
-		UserPoolId:     userPoolId,
-		ClientId:       clientId,
+		UserPoolID:     userPoolID,
+		ClientID:       clientID,
 		ClientSecret:   clientSecret,
 		ClientAuthFlow: clientAuthFlow,
 		AWSRegion:      awsRegion,
@@ -203,9 +202,9 @@ func handleBodyUnmarshalError(ctx context.Context, err error) *models.ErrorRespo
 	)
 }
 
-func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, userPoolId string) error {
+func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, userPoolID string) error {
 	adminGroup := models.NewAdminRoleGroup()
-	adminGroupCreateInput := adminGroup.BuildCreateGroupRequest(userPoolId)
+	adminGroupCreateInput := adminGroup.BuildCreateGroupRequest(userPoolID)
 	_, err := cognitoClient.CreateGroup(adminGroupCreateInput)
 	if err != nil && !models.IsGroupExistsError(err) {
 		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for admin group from API start up")
@@ -215,7 +214,7 @@ func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, use
 	}
 
 	publisherGroup := models.NewPublisherRoleGroup()
-	publisherGroupCreateInput := publisherGroup.BuildCreateGroupRequest(userPoolId)
+	publisherGroupCreateInput := publisherGroup.BuildCreateGroupRequest(userPoolID)
 	_, err = cognitoClient.CreateGroup(publisherGroupCreateInput)
 	if err != nil && !models.IsGroupExistsError(err) {
 		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for publisher group from API start up")

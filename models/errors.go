@@ -22,7 +22,7 @@ func (e *Error) Error() string {
 	return e.Code + ": " + e.Description
 }
 
-func NewError(ctx context.Context, cause error, code string, description string) *Error {
+func NewError(ctx context.Context, cause error, code, description string) *Error {
 	err := &Error{
 		Cause:       cause,
 		Code:        code,
@@ -32,7 +32,7 @@ func NewError(ctx context.Context, cause error, code string, description string)
 	return err
 }
 
-func NewValidationError(ctx context.Context, code string, description string) *Error {
+func NewValidationError(ctx context.Context, code, description string) *Error {
 	err := &Error{
 		Cause:       errors.New(code),
 		Code:        code,
@@ -43,7 +43,7 @@ func NewValidationError(ctx context.Context, code string, description string) *E
 	return err
 }
 
-//IsGroupExistsError validates if the err occurred because group already exists
+// IsGroupExistsError validates if the err occurred because group already exists
 func IsGroupExistsError(err error) bool {
 	var cognitoErr awserr.Error
 	if errors.As(err, &cognitoErr) && cognitoErr.Code() == cognitoidentityprovider.ErrCodeGroupExistsException {

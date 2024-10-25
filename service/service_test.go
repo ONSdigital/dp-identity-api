@@ -55,7 +55,7 @@ func TestRun(t *testing.T) {
 
 		// set dummy config data
 		cfg.AWSCognitoUserPoolID = "eu-west-18_73289nds8w932"
-		cfg.AWSCognitoClientId = "client-aaa-bbb"
+		cfg.AWSCognitoClientID = "client-aaa-bbb"
 		cfg.AWSCognitoClientSecret = "secret-ccc-ddd"
 		cfg.AWSAuthFlow = "authflow"
 
@@ -196,7 +196,7 @@ func TestClose(t *testing.T) {
 
 		// set dummy config data
 		cfg.AWSCognitoUserPoolID = "eu-west-18_73289nds8w932"
-		cfg.AWSCognitoClientId = "client-aaa-bbb"
+		cfg.AWSCognitoClientID = "client-aaa-bbb"
 		cfg.AWSCognitoClientSecret = "secret-ccc-ddd"
 		cfg.AWSAuthFlow = "authflow"
 
@@ -323,7 +323,7 @@ func TestClose(t *testing.T) {
 	})
 }
 
-func DoGetCognitoClient(AWSRegion string) cognito.Client {
+func DoGetCognitoClient(awsRegion string) cognito.Client {
 	return &cognitoMock.CognitoIdentityProviderClientStub{}
 }
 

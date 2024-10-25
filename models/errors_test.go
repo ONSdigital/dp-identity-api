@@ -3,10 +3,11 @@ package models_test
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestError_Error(t *testing.T) {

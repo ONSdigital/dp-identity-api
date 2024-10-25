@@ -18,8 +18,8 @@ import (
 
 const (
 	UsersCreatePermission string = "users:create"
-	UsersReadPermission          = "users:read"
-	UsersUpdatePermission        = "users:update"
+	UsersReadPermission   string = "users:read"
+	UsersUpdatePermission string = "users:update"
 )
 
 // CreateUserHandler creates a new user and returns a http handler interface
@@ -48,7 +48,7 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 
 	validationErrs := user.ValidateRegistration(ctx, api.AllowedDomains)
 
-	listUserInput := models.UsersList{}.BuildListUserRequest("email = \""+user.Email+"\"", "email", int64(1), nil, &api.UserPoolId)
+	listUserInput := models.UsersList{}.BuildListUserRequest("email = \""+user.Email+"\"", "email", int64(1), nil, &api.UserPoolID)
 	listUserResp, err := api.CognitoClient.ListUsers(listUserInput)
 	if err != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint"))
@@ -62,7 +62,7 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}
 
-	createUserRequest := user.BuildCreateUserRequest(uuid.NewString(), api.UserPoolId)
+	createUserRequest := user.BuildCreateUserRequest(uuid.NewString(), api.UserPoolID)
 
 	resultUser, err := api.CognitoClient.AdminCreateUser(createUserRequest)
 	if err != nil {
@@ -75,7 +75,7 @@ func (api *API) CreateUserHandler(ctx context.Context, w http.ResponseWriter, re
 	}
 	resultUser.User.Enabled = aws.Bool(true)
 	createdUser := models.UserParams{}.MapCognitoDetails(resultUser.User)
-	jsonResponse, responseErr := createdUser.BuildSuccessfulJsonResponse(ctx)
+	jsonResponse, responseErr := createdUser.BuildSuccessfulJSONResponse(ctx)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
@@ -108,26 +108,24 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 	usersList.SetUsers(listUserResp)
 
 	if req.URL.Query().Get("sort") != "" {
-		requestSortQueryErrs := query.SortBy(req.URL.Query().Get("sort"), usersList.Users[:])
+		requestSortQueryErrs := query.SortBy(req.URL.Query().Get("sort"), usersList.Users)
 		if requestSortQueryErrs != nil {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, requestSortQueryErrs)
 		}
 	}
 
-	jsonResponse, responseErr := usersList.BuildSuccessfulJsonResponse(ctx)
+	jsonResponse, responseErr := usersList.BuildSuccessfulJSONResponse(ctx)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
-
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
-
 }
 
 // GetUserHandler lists the users in the user pool
 func (api *API) GetUserHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	user := models.UserParams{ID: vars["id"]}
-	userInput := user.BuildAdminGetUserRequest(api.UserPoolId)
+	userInput := user.BuildAdminGetUserRequest(api.UserPoolID)
 	userResp, err := api.CognitoClient.AdminGetUser(userInput)
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint")
@@ -140,7 +138,7 @@ func (api *API) GetUserHandler(ctx context.Context, w http.ResponseWriter, req *
 
 	user.MapCognitoGetResponse(userResp)
 
-	jsonResponse, responseErr := user.BuildSuccessfulJsonResponse(ctx)
+	jsonResponse, responseErr := user.BuildSuccessfulJSONResponse(ctx)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
@@ -176,25 +174,25 @@ func (api *API) UpdateUserHandler(ctx context.Context, w http.ResponseWriter, re
 	}
 
 	if user.Active {
-		userEnableRequest := user.BuildEnableUserRequest(api.UserPoolId)
+		userEnableRequest := user.BuildEnableUserRequest(api.UserPoolID)
 		if _, err = api.CognitoClient.AdminEnableUser(userEnableRequest); err != nil {
 			return nil, processUpdateCognitoError(ctx, err, "AdminEnableUser request from update user endpoint")
 		}
 	} else {
-		userDisableRequest := user.BuildDisableUserRequest(api.UserPoolId)
+		userDisableRequest := user.BuildDisableUserRequest(api.UserPoolID)
 		if _, err = api.CognitoClient.AdminDisableUser(userDisableRequest); err != nil {
 			return nil, processUpdateCognitoError(ctx, err, "AdminDisableUser request from update user endpoint")
 		}
 	}
 
-	userUpdateRequest := user.BuildUpdateUserRequest(api.UserPoolId)
+	userUpdateRequest := user.BuildUpdateUserRequest(api.UserPoolID)
 
 	_, err = api.CognitoClient.AdminUpdateUserAttributes(userUpdateRequest)
 	if err != nil {
 		return nil, processUpdateCognitoError(ctx, err, "AdminUpdateUserAttributes request from update user endpoint")
 	}
 
-	userDetailsRequest := user.BuildAdminGetUserRequest(api.UserPoolId)
+	userDetailsRequest := user.BuildAdminGetUserRequest(api.UserPoolID)
 	userDetailsResponse, err := api.CognitoClient.AdminGetUser(userDetailsRequest)
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "AdminGetUser request from update user endpoint")
@@ -203,7 +201,7 @@ func (api *API) UpdateUserHandler(ctx context.Context, w http.ResponseWriter, re
 
 	user.MapCognitoGetResponse(userDetailsResponse)
 
-	jsonResponse, responseErr := user.BuildSuccessfulJsonResponse(ctx)
+	jsonResponse, responseErr := user.BuildSuccessfulJSONResponse(ctx)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
@@ -249,7 +247,7 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 		}
 
-		changePasswordRequest := changePasswordParams.BuildAuthChallengeResponseRequest(api.ClientSecret, api.ClientId, NewPasswordChallenge)
+		changePasswordRequest := changePasswordParams.BuildAuthChallengeResponseRequest(api.ClientSecret, api.ClientID, NewPasswordChallenge)
 
 		result, cognitoErr := api.CognitoClient.RespondToAuthChallenge(changePasswordRequest)
 
@@ -264,8 +262,8 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 			// Determine the refresh token TTL (DescribeUserPoolClient)
 			userPoolClient, err := api.CognitoClient.DescribeUserPoolClient(
 				&cognitoidentityprovider.DescribeUserPoolClientInput{
-					UserPoolId: &api.UserPoolId,
-					ClientId:   &api.ClientId,
+					UserPoolId: &api.UserPoolID,
+					ClientId:   &api.ClientID,
 				},
 			)
 			if err != nil {
@@ -276,11 +274,11 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 			clientTokenValidityUnits := *userPoolClient.UserPoolClient.TokenValidityUnits
 			refreshTokenTTL := calculateTokenTTLInSeconds(*clientTokenValidityUnits.RefreshToken, int(*userPoolClient.UserPoolClient.RefreshTokenValidity))
 
-			jsonResponse, responseErr = changePasswordParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, result, refreshTokenTTL)
+			jsonResponse, responseErr = changePasswordParams.BuildAuthChallengeSuccessfulJSONResponse(ctx, result, refreshTokenTTL)
 			if responseErr == nil {
 				headers = map[string]string{
 					AccessTokenHeaderName:  "Bearer " + *result.AuthenticationResult.AccessToken,
-					IdTokenHeaderName:      *result.AuthenticationResult.IdToken,
+					IDTokenHeaderName:      *result.AuthenticationResult.IdToken,
 					RefreshTokenHeaderName: *result.AuthenticationResult.RefreshToken,
 				}
 			}
@@ -290,7 +288,7 @@ func (api *API) ChangePasswordHandler(ctx context.Context, w http.ResponseWriter
 		if len(validationErrs) != 0 {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 		}
-		changeForgottenPasswordRequest := changePasswordParams.BuildConfirmForgotPasswordRequest(api.ClientSecret, api.ClientId)
+		changeForgottenPasswordRequest := changePasswordParams.BuildConfirmForgotPasswordRequest(api.ClientSecret, api.ClientID)
 
 		_, cognitoErr := api.CognitoClient.ConfirmForgotPassword(changeForgottenPasswordRequest)
 
@@ -344,7 +342,7 @@ func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter,
 
 	log.Info(ctx, "request reset parameters validated", log.Data{"user_email": passwordResetParams.Email})
 
-	forgotPasswordRequest := passwordResetParams.BuildCognitoRequest(api.ClientSecret, api.ClientId)
+	forgotPasswordRequest := passwordResetParams.BuildCognitoRequest(api.ClientSecret, api.ClientID)
 
 	_, err = api.CognitoClient.ForgotPassword(forgotPasswordRequest)
 	if err != nil {
@@ -365,7 +363,7 @@ func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter,
 }
 
 // List Groups for user pagination allows first call and then any other call if nextToken is not ""
-func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupType, userId models.UserParams) ([]*cognitoidentityprovider.GroupType, error) {
+func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupType, userID models.UserParams) ([]*cognitoidentityprovider.GroupType, error) {
 	firstTimeCheck := false
 	var nextToken string
 	for {
@@ -374,7 +372,7 @@ func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupTy
 		}
 		firstTimeCheck = true
 
-		userGroupsRequest := userId.BuildListUserGroupsRequest(api.UserPoolId, nextToken)
+		userGroupsRequest := userID.BuildListUserGroupsRequest(api.UserPoolID, nextToken)
 		userGroupsResponse, err := api.CognitoClient.AdminListGroupsForUser(userGroupsRequest)
 		if err != nil {
 			return nil, err
@@ -391,7 +389,6 @@ func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupTy
 
 // ListUserGroupsHandler lists the users in the user pool
 func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-
 	vars := mux.Vars(req)
 	userID := models.UserParams{ID: vars["id"]}
 	listofgroupsInput := []*cognitoidentityprovider.GroupType{}
@@ -407,19 +404,18 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
 	finalUserResponse.Groups = append(finalUserResponse.Groups, listofGroupsOutput...)
-	jsonResponse, responseErr := listusergroups.BuildListUserGroupsSuccessfulJsonResponse(ctx, &finalUserResponse)
+	jsonResponse, responseErr := listusergroups.BuildListUserGroupsSuccessfulJSONResponse(ctx, &finalUserResponse)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
-
 }
 
-func (api *API) GetFilterStringAndValidate(path string, query string) (string, error) {
+func (api *API) GetFilterStringAndValidate(path, qry string) (string, error) {
 	ctx := context.Background()
 
-	if api.APIRequestFilter[path] != nil && api.APIRequestFilter[path][query] != "" {
-		return api.APIRequestFilter[path][query], nil
+	if api.APIRequestFilter[path] != nil && api.APIRequestFilter[path][qry] != "" {
+		return api.APIRequestFilter[path][qry], nil
 	} else {
 		return "", models.NewValidationError(ctx, models.InvalidFilterQuery, models.InvalidFilterQueryDescription)
 	}

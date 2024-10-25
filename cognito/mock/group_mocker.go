@@ -66,7 +66,7 @@ func (m *CognitoIdentityProviderClientStub) ReadGroup(groupName string) *Group {
 	return nil
 }
 
-func (m *CognitoIdentityProviderClientStub) AddUserToGroup(username string, groupName string) error {
+func (m *CognitoIdentityProviderClientStub) AddUserToGroup(username, groupName string) error {
 	group := m.ReadGroup(groupName)
 	if group == nil {
 		return errors.New("could not find the group")
@@ -82,11 +82,10 @@ func (m *CognitoIdentityProviderClientStub) AddUserToGroup(username string, grou
 	return nil
 }
 
-//BulkGenerateGroups - bulk generate 'n' groups for testing purposes
+// BulkGenerateGroups - bulk generate 'n' groups for testing purposes
 //                    if groupnames array is nil or length is different, will autofill with
 
 func (m *CognitoIdentityProviderClientStub) BulkGenerateGroups(groupCount int) {
-
 	for i := 0; i < groupCount; i++ {
 		D := "group name description " + fmt.Sprint(i)
 		G := "group_name_" + fmt.Sprint(i)
@@ -99,6 +98,5 @@ func (m *CognitoIdentityProviderClientStub) BulkGenerateGroups(groupCount int) {
 		}
 
 		m.Groups = append(m.Groups, &group)
-
 	}
 }
