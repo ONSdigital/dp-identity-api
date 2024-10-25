@@ -45,7 +45,7 @@ acceptance:
 
 .PHONY: lint
 lint:
-	exit
+	golangci-lint run ./...
 
 .PHONY: test
 test:
