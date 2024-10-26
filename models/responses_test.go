@@ -12,7 +12,6 @@ import (
 
 func TestNewErrorResponse(t *testing.T) {
 	Convey("successfully constructs an ErrorResponse object", t, func() {
-
 		Convey("with one error", func() {
 			err := models.Error{
 				Cause:       errors.New("TestError"),

@@ -8,9 +8,7 @@ import (
 )
 
 func TestEmailValidationConformsToExpectedFormat(t *testing.T) {
-
 	Convey("The email conforms to the expected format and is validated", t, func() {
-
 		email := "email.email@ons.gov.uk"
 
 		emailResponse := IsEmailValid(email)
@@ -18,7 +16,6 @@ func TestEmailValidationConformsToExpectedFormat(t *testing.T) {
 	})
 
 	Convey("The email conforms to the expected format and is validated", t, func() {
-
 		email := "email.email@domain.host"
 
 		emailResponse := IsEmailValid(email)
@@ -26,7 +23,6 @@ func TestEmailValidationConformsToExpectedFormat(t *testing.T) {
 	})
 
 	Convey("A capitalised email conforms to the expected format and is validated", t, func() {
-
 		email := "EMAIL.EMAIL@DOMAIN.HOST"
 
 		emailResponse := IsEmailValid(email)
@@ -34,7 +30,6 @@ func TestEmailValidationConformsToExpectedFormat(t *testing.T) {
 	})
 
 	Convey("The empty email does not conform to the expected format and is validated", t, func() {
-
 		email := ""
 
 		emailResponse := IsEmailValid(email)
@@ -42,7 +37,6 @@ func TestEmailValidationConformsToExpectedFormat(t *testing.T) {
 	})
 
 	Convey("The small email does not conform to the expected format and is validated", t, func() {
-
 		email := "aaa"
 
 		emailResponse := IsEmailValid(email)
@@ -82,7 +76,6 @@ func TestEmailValidationConformsToExpectedFormat(t *testing.T) {
 		emailResponse := IsEmailValid(email)
 		So(emailResponse, ShouldBeTrue)
 	})
-
 }
 
 func TestEmailDomainValidationCorrectlyValidatesAllowedDomains(t *testing.T) {
@@ -127,9 +120,9 @@ func TestEmailDomainValidationCorrectlyValidatesAllowedDomains(t *testing.T) {
 		emailResponse := IsAllowedEmailDomain(email, allowedDomains)
 		So(emailResponse, ShouldBeFalse)
 
-		newAllowedDomains := append(allowedDomains, "@gmail.com")
+		allowedDomains = append(allowedDomains, "@gmail.com")
 
-		emailResponse = IsAllowedEmailDomain(email, newAllowedDomains)
+		emailResponse = IsAllowedEmailDomain(email, allowedDomains)
 		So(emailResponse, ShouldBeTrue)
 	})
 }

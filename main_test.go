@@ -22,7 +22,7 @@ type ComponentTest struct {
 func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
 	component, err := steps.NewIdentityComponent()
 	if err != nil {
-		log.Fatal(context.Background(), "fatal error initialising a test scenario", err)
+		log.Fatal(context.Background(), "fatal error initializing a test scenario", err)
 		os.Exit(1)
 	}
 
@@ -31,7 +31,7 @@ func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
 	})
 
 	ctx.AfterScenario(func(*godog.Scenario, error) {
-		if err = component.Close(); err != nil {
+		if err := component.Close(); err != nil {
 			log.Warn(context.Background(), "error closing identity component", log.FormatErrors([]error{err}))
 		}
 	})

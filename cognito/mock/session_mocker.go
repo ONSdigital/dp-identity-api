@@ -7,7 +7,7 @@ import (
 
 type Session struct {
 	AccessToken  string
-	IdToken      string
+	IDToken      string
 	RefreshToken string
 }
 
@@ -16,21 +16,21 @@ func (m *CognitoIdentityProviderClientStub) CreateSessionWithAccessToken(accessT
 	m.Sessions = append(m.Sessions, m.GenerateSession(accessToken, idToken, refreshToken))
 }
 
-func (m *CognitoIdentityProviderClientStub) GenerateSession(accessToken string, idToken string, refreshToken string) Session {
+func (m *CognitoIdentityProviderClientStub) GenerateSession(accessToken, idToken, refreshToken string) Session {
 	return Session{
 		AccessToken:  accessToken,
-		IdToken:      idToken,
+		IDToken:      idToken,
 		RefreshToken: refreshToken,
 	}
 }
 
-func (m *CognitoIdentityProviderClientStub) CreateIdTokenForEmail(email string) string {
+func (m *CognitoIdentityProviderClientStub) CreateIDTokenForEmail(email string) string {
 	return GenerateMockIDToken(email)
 }
 
 func GenerateMockIDToken(email string) string {
 	testSigningKey := []byte("TestSigningKey")
-	idClaims := models.IdClaims{
+	idClaims := models.IDClaims{
 		Sub:           "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 		Aud:           "xxxxxxxxxxxxexample",
 		EmailVerified: true,

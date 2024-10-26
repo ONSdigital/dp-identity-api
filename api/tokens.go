@@ -35,7 +35,7 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, *validationErrs...)
 	}
 
-	input := userSignIn.BuildCognitoRequest(api.ClientId, api.ClientSecret, api.ClientAuthFlow)
+	input := userSignIn.BuildCognitoRequest(api.ClientID, api.ClientSecret, api.ClientAuthFlow)
 	result, authErr := api.CognitoClient.InitiateAuth(input)
 
 	if authErr != nil {
@@ -64,8 +64,8 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 	// Determine the refresh token TTL (DescribeUserPoolClient)
 	userPoolClient, err := api.CognitoClient.DescribeUserPoolClient(
 		&cognitoidentityprovider.DescribeUserPoolClientInput{
-			UserPoolId: &api.UserPoolId,
-			ClientId:   &api.ClientId,
+			UserPoolId: &api.UserPoolID,
+			ClientId:   &api.ClientID,
 		},
 	)
 	if err != nil {
@@ -76,7 +76,7 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 	clientTokenValidityUnits := *userPoolClient.UserPoolClient.TokenValidityUnits
 	refreshTokenTTL := calculateTokenTTLInSeconds(*clientTokenValidityUnits.RefreshToken, int(*userPoolClient.UserPoolClient.RefreshTokenValidity))
 
-	jsonResponse, responseErr := userSignIn.BuildSuccessfulJsonResponse(ctx, result, refreshTokenTTL)
+	jsonResponse, responseErr := userSignIn.BuildSuccessfulJSONResponse(ctx, result, refreshTokenTTL)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
@@ -86,7 +86,7 @@ func (api *API) TokensHandler(ctx context.Context, w http.ResponseWriter, req *h
 	if result.AuthenticationResult != nil {
 		headers = map[string]string{
 			AccessTokenHeaderName:  "Bearer " + *result.AuthenticationResult.AccessToken,
-			IdTokenHeaderName:      *result.AuthenticationResult.IdToken,
+			IDTokenHeaderName:      *result.AuthenticationResult.IdToken,
 			RefreshTokenHeaderName: *result.AuthenticationResult.RefreshToken,
 		}
 	} else {
@@ -135,7 +135,7 @@ func (api *API) RefreshHandler(ctx context.Context, w http.ResponseWriter, req *
 		validationErrs = append(validationErrs, validationErr)
 	}
 
-	idToken := models.IdToken{TokenString: req.Header.Get(IdTokenHeaderName)}
+	idToken := models.IDToken{TokenString: req.Header.Get(IDTokenHeaderName)}
 	validationErr = idToken.Validate(ctx)
 	if validationErr != nil {
 		validationErrs = append(validationErrs, validationErr)
@@ -145,7 +145,7 @@ func (api *API) RefreshHandler(ctx context.Context, w http.ResponseWriter, req *
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 	}
 
-	authInput := refreshToken.GenerateRefreshRequest(api.ClientSecret, idToken.Claims.CognitoUser, api.ClientId)
+	authInput := refreshToken.GenerateRefreshRequest(api.ClientSecret, idToken.Claims.CognitoUser, api.ClientID)
 	result, authErr := api.CognitoClient.InitiateAuth(authInput)
 
 	if authErr != nil {
@@ -157,14 +157,14 @@ func (api *API) RefreshHandler(ctx context.Context, w http.ResponseWriter, req *
 		}
 	}
 
-	jsonResponse, responseErr := refreshToken.BuildSuccessfulJsonResponse(ctx, result)
+	jsonResponse, responseErr := refreshToken.BuildSuccessfulJSONResponse(ctx, result)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
 	headers := map[string]string{
 		AccessTokenHeaderName: "Bearer " + *result.AuthenticationResult.AccessToken,
-		IdTokenHeaderName:     *result.AuthenticationResult.IdToken,
+		IDTokenHeaderName:     *result.AuthenticationResult.IdToken,
 	}
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusCreated, headers), nil
@@ -173,7 +173,7 @@ func (api *API) RefreshHandler(ctx context.Context, w http.ResponseWriter, req *
 // SignOutAllUsersHandler bulk refresh token invalidation for panic sign out handling
 func (api *API) SignOutAllUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	var (
-		userFilterString string = "status=\"Enabled\""
+		userFilterString = "status=\"Enabled\""
 	)
 	usersList, awsErr := api.ListUsersWorker(req.Context(), &userFilterString, DefaultBackOffSchedule)
 	if awsErr != nil {
@@ -187,7 +187,7 @@ func (api *API) SignOutAllUsersHandler(ctx context.Context, w http.ResponseWrite
 	// run api.SignOutUsersWorker concurrently
 	go api.SignOutUsersWorker(req.Context(), globalSignOut, usersList)
 
-	postBody, resErr := models.BuildSuccessfulSignOutAllUsersJsonResponse(ctx)
+	postBody, resErr := models.BuildSuccessfulSignOutAllUsersJSONResponse(ctx)
 	if resErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, resErr)
 	}
@@ -206,7 +206,7 @@ func (api *API) ListUsersWorker(ctx context.Context, userFilterString *string, b
 			"",
 			int64(0),
 			nil,
-			&api.UserPoolId,
+			&api.UserPoolID,
 		)
 		usersListError *models.ErrorResponse
 	)
@@ -214,33 +214,31 @@ func (api *API) ListUsersWorker(ctx context.Context, userFilterString *string, b
 	if awsErr != nil {
 		err := models.NewCognitoError(ctx, awsErr, "Cognito ListUsers request from signout all users from group endpoint")
 		usersListError = models.NewErrorResponse(http.StatusInternalServerError, nil, err)
-	} else {
-		if listUsersResp.PaginationToken != nil {
-			listUserInput.PaginationToken = listUsersResp.PaginationToken
-			// set `loadingInProgress` to control requesting new list data
-			loadingInProgress := true
-			for loadingInProgress {
-				for _, backoff := range backoffSchedule {
-					result, awsErr = api.generateListUsersRequest(listUserInput)
-					if awsErr == nil {
-						listUsersResp.Users = append(listUsersResp.Users, result.Users...)
-						if result.PaginationToken != nil {
-							listUserInput.PaginationToken = result.PaginationToken
-							break
-						} else {
-							loadingInProgress = false
-							break
-						}
+	} else if listUsersResp.PaginationToken != nil {
+		listUserInput.PaginationToken = listUsersResp.PaginationToken
+		// set `loadingInProgress` to control requesting new list data
+		loadingInProgress := true
+		for loadingInProgress {
+			for _, backoff := range backoffSchedule {
+				result, awsErr = api.generateListUsersRequest(listUserInput)
+				if awsErr == nil {
+					listUsersResp.Users = append(listUsersResp.Users, result.Users...)
+					if result.PaginationToken != nil {
+						listUserInput.PaginationToken = result.PaginationToken
+						break
 					} else {
-						err := models.NewCognitoError(ctx, awsErr, "Cognito ListUsers request from signout all users from group endpoint")
-						if err.Code != models.TooManyRequestsError {
-							usersListError = models.NewErrorResponse(http.StatusInternalServerError, nil, err)
-							loadingInProgress = false
-							break
-						}
+						loadingInProgress = false
+						break
 					}
-					time.Sleep(backoff)
+				} else {
+					err := models.NewCognitoError(ctx, awsErr, "Cognito ListUsers request from signout all users from group endpoint")
+					if err.Code != models.TooManyRequestsError {
+						usersListError = models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+						loadingInProgress = false
+						break
+					}
 				}
+				time.Sleep(backoff)
 			}
 		}
 	}
@@ -254,7 +252,7 @@ func (api *API) ListUsersWorker(ctx context.Context, userFilterString *string, b
 
 // SignOutUsersWorker - signs out users globally by invalidating user's refresh token
 func (api *API) SignOutUsersWorker(ctx context.Context, g *models.GlobalSignOut, usersList *[]models.UserParams) {
-	userSignOutRequestData := g.BuildSignOutUserRequest(usersList, &api.UserPoolId)
+	userSignOutRequestData := g.BuildSignOutUserRequest(usersList, &api.UserPoolID)
 
 	for _, userSignoutRequest := range userSignOutRequestData {
 		for _, backoff := range g.BackoffSchedule {
@@ -309,7 +307,6 @@ func (api *API) SignOutUsersWorker(ctx context.Context, g *models.GlobalSignOut,
 			// backoff for predetermined length of time before requesting again
 			time.Sleep(backoff)
 		}
-
 	}
 	close(g.ResultsChannel)
 }

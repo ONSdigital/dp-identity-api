@@ -32,7 +32,7 @@ type MockCognitoIdentityProviderClient struct {
 	GlobalSignOutFunc             func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
 	InitiateAuthFunc              func(authInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
 	ListGroupsForUserFunc         func(input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error)
-	//ListGroupsUsersFunc           func(input *cognitoidentityprovider.ListGroupsOutput) (*[]models.ListGroupUsersType, error)
+	// ListGroupsUsersFunc           func(input *cognitoidentityprovider.ListGroupsOutput) (*[]models.ListGroupUsersType, error)
 	ListGroupsFunc             func(input *cognitoidentityprovider.ListGroupsInput) (*cognitoidentityprovider.ListGroupsOutput, error)
 	ListUsersFunc              func(usersInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
 	ListUsersInGroupFunc       func(input *cognitoidentityprovider.ListUsersInGroupInput) (*cognitoidentityprovider.ListUsersInGroupOutput, error)
@@ -155,10 +155,10 @@ func (m *MockCognitoIdentityProviderClient) SetGroupUsers(ctx context.Context, g
 	return m.SetGroupUsersfunc(ctx, group, users)
 }
 
-func (m *MockCognitoIdentityProviderClient) AddUserToGroup(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse) {
-	return m.AddUserToGroupfunc(ctx, group, userId)
+func (m *MockCognitoIdentityProviderClient) AddUserToGroup(ctx context.Context, group models.Group, userID string) (*models.UsersList, *models.ErrorResponse) {
+	return m.AddUserToGroupfunc(ctx, group, userID)
 }
 
-func (m *MockCognitoIdentityProviderClient) RemoveUserFromGroup(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse) {
-	return m.RemoveUserFromGroupfunc(ctx, group, userId)
+func (m *MockCognitoIdentityProviderClient) RemoveUserFromGroup(ctx context.Context, group models.Group, userID string) (*models.UsersList, *models.ErrorResponse) {
+	return m.RemoveUserFromGroupfunc(ctx, group, userID)
 }

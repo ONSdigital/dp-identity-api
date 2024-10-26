@@ -58,81 +58,81 @@ func NewPublisherRoleGroup() Group {
 }
 
 // ValidateAddRemoveUser validates the required fields for adding a user to a group, returns validation errors for anything that fails
-func (g *Group) ValidateAddRemoveUser(ctx context.Context, userId string) []error {
+func (g *Group) ValidateAddRemoveUser(ctx context.Context, userID string) []error {
 	var validationErrs []error
 	if g.ID == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupIDError, MissingGroupIDErrorDescription))
 	}
 
-	if userId == "" {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidUserIdError, MissingUserIdErrorDescription))
+	if userID == "" {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidUserIDError, MissingUserIDErrorDescription))
 	}
 	return validationErrs
 }
 
 // BuildCreateGroupRequest builds a correctly populated CreateGroupInput object using the Groups values
-func (g *Group) BuildCreateGroupRequest(userPoolId string) *cognitoidentityprovider.CreateGroupInput {
+func (g *Group) BuildCreateGroupRequest(userPoolID string) *cognitoidentityprovider.CreateGroupInput {
 	return &cognitoidentityprovider.CreateGroupInput{
 		GroupName:   &g.ID,
 		Description: &g.Name,
 		Precedence:  &g.Precedence,
-		UserPoolId:  &userPoolId,
+		UserPoolId:  &userPoolID,
 	}
 }
 
 // BuildGetGroupRequest builds a correctly populated GetGroupInput object using the Groups values
-func (g *Group) BuildGetGroupRequest(userPoolId string) *cognitoidentityprovider.GetGroupInput {
+func (g *Group) BuildGetGroupRequest(userPoolID string) *cognitoidentityprovider.GetGroupInput {
 	return &cognitoidentityprovider.GetGroupInput{
 		GroupName:  &g.ID,
-		UserPoolId: &userPoolId,
+		UserPoolId: &userPoolID,
 	}
 }
 
 // BuildDeleteGroupRequest builds a correctly populated DeleteGroupInput object using the Groups values
-func (g *Group) BuildDeleteGroupRequest(userPoolId string) *cognitoidentityprovider.DeleteGroupInput {
+func (g *Group) BuildDeleteGroupRequest(userPoolID string) *cognitoidentityprovider.DeleteGroupInput {
 	return &cognitoidentityprovider.DeleteGroupInput{
 		GroupName:  &g.ID,
-		UserPoolId: &userPoolId,
+		UserPoolId: &userPoolID,
 	}
 }
 
 // BuildAddUserToGroupRequest builds a correctly populated AdminAddUserToGroupInput object
-func (g *Group) BuildAddUserToGroupRequest(userPoolId, userId string) *cognitoidentityprovider.AdminAddUserToGroupInput {
+func (g *Group) BuildAddUserToGroupRequest(userPoolID, userID string) *cognitoidentityprovider.AdminAddUserToGroupInput {
 	return &cognitoidentityprovider.AdminAddUserToGroupInput{
 		GroupName:  &g.ID,
-		UserPoolId: &userPoolId,
-		Username:   &userId,
+		UserPoolId: &userPoolID,
+		Username:   &userID,
 	}
 }
 
 // BuildRemoveUserFromGroupRequest builds a correctly populated AdminRemoveUserFromGroupInput object
-func (g *Group) BuildRemoveUserFromGroupRequest(userPoolId, userId string) *cognitoidentityprovider.AdminRemoveUserFromGroupInput {
+func (g *Group) BuildRemoveUserFromGroupRequest(userPoolID, userID string) *cognitoidentityprovider.AdminRemoveUserFromGroupInput {
 	return &cognitoidentityprovider.AdminRemoveUserFromGroupInput{
 		GroupName:  &g.ID,
-		UserPoolId: &userPoolId,
-		Username:   &userId,
+		UserPoolId: &userPoolID,
+		Username:   &userID,
 	}
 }
 
 // BuildListUsersInGroupRequest builds a correctly populated ListUsersInGroupInput object
-func (g *Group) BuildListUsersInGroupRequest(userPoolId string) *cognitoidentityprovider.ListUsersInGroupInput {
+func (g *Group) BuildListUsersInGroupRequest(userPoolID string) *cognitoidentityprovider.ListUsersInGroupInput {
 	return &cognitoidentityprovider.ListUsersInGroupInput{
 		GroupName:  &g.ID,
-		UserPoolId: &userPoolId,
+		UserPoolId: &userPoolID,
 	}
 }
 
 // BuildListUsersInGroupRequestWithNextToken builds a correctly populated ListUsersInGroupInput object with Next Token
-func (g *Group) BuildListUsersInGroupRequestWithNextToken(userPoolId string, nextToken string) *cognitoidentityprovider.ListUsersInGroupInput {
+func (g *Group) BuildListUsersInGroupRequestWithNextToken(userPoolID, nextToken string) *cognitoidentityprovider.ListUsersInGroupInput {
 	if nextToken == "" {
 		return &cognitoidentityprovider.ListUsersInGroupInput{
 			GroupName:  &g.ID,
-			UserPoolId: &userPoolId,
+			UserPoolId: &userPoolID,
 		}
 	}
 	return &cognitoidentityprovider.ListUsersInGroupInput{
 		GroupName:  &g.ID,
-		UserPoolId: &userPoolId,
+		UserPoolId: &userPoolID,
 		NextToken:  &nextToken,
 	}
 }
@@ -145,8 +145,8 @@ func (g *Group) MapCognitoDetails(groupDetails *cognitoidentityprovider.GroupTyp
 	g.Created = *groupDetails.CreationDate
 }
 
-// BuildSuccessfulJsonResponse builds the Group response json for client responses
-func (g *Group) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
+// BuildSuccessfulJSONResponse builds the Group response json for client responses
+func (g *Group) BuildSuccessfulJSONResponse(ctx context.Context) ([]byte, error) {
 	jsonResponse, err := json.Marshal(g)
 	if err != nil {
 		return nil, NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
@@ -161,55 +161,58 @@ type CreateUpdateGroup struct {
 	GroupsList *cognitoidentityprovider.ListGroupsOutput
 }
 
-// ValidateCreateUpdateGroupRequest validate the create group request
-func (g *CreateUpdateGroup) ValidateCreateUpdateGroupRequest(ctx context.Context, isCreate bool) []error {
+// ValidateCreateUpdateGroupRequest validates the create group request.
+func (c *CreateUpdateGroup) ValidateCreateUpdateGroupRequest(ctx context.Context, isCreate bool) []error {
 	var validationErrs []error
 
-	if g.Name == nil {
+	if c.Name == nil {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, MissingGroupName))
-	} else if m, _ := regexp.MatchString("(?i)^role-.*", *g.Name); m {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, IncorrectPatternInGroupName))
 	} else {
-		//ensure group name in description doesn't already exist - creation only - g.GroupsList not set on updates
-		if g.GroupsList != nil {
-			for _, group := range g.GroupsList.Groups {
-				if group.Description != nil && CleanString(*group.Description) == CleanString(*g.Name) {
+		if m, _ := regexp.MatchString("(?i)^role-.*", *c.Name); m {
+			validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, IncorrectPatternInGroupName))
+		}
+
+		// Ensure group name in description doesn't already exist - creation only
+		// g.GroupsList not set on updates
+		if c.GroupsList != nil {
+			for _, group := range c.GroupsList.Groups {
+				if group.Description != nil && CleanString(*group.Description) == CleanString(*c.Name) {
 					validationErrs = append(validationErrs, NewValidationError(ctx, GroupExistsError, GroupAlreadyExistsDescription))
 					break
 				}
 			}
 		}
 	}
-	if g.Precedence == nil {
+
+	if c.Precedence == nil {
 		if isCreate {
 			validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, MissingGroupPrecedence))
 		}
-	} else if *g.Precedence < groupPrecedenceMin || *g.Precedence > groupPrecedenceMax {
+	} else if *c.Precedence < groupPrecedenceMin || *c.Precedence > groupPrecedenceMax {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, GroupPrecedenceIncorrect))
 	}
-
 	return validationErrs
 }
 
-func (c *CreateUpdateGroup) BuildCreateGroupInput(userPoolId *string) *cognitoidentityprovider.CreateGroupInput {
+func (c *CreateUpdateGroup) BuildCreateGroupInput(userPoolID *string) *cognitoidentityprovider.CreateGroupInput {
 	return &cognitoidentityprovider.CreateGroupInput{
 		Description: c.Name,
 		GroupName:   c.ID,
 		Precedence:  c.Precedence,
-		UserPoolId:  userPoolId,
+		UserPoolId:  userPoolID,
 	}
 }
 
 // BuildUpdateGroupInput builds a correctly populated UpdateGroupInput object using Groups values
-func (g *CreateUpdateGroup) BuildUpdateGroupInput(userPoolId string) *cognitoidentityprovider.UpdateGroupInput {
+func (c *CreateUpdateGroup) BuildUpdateGroupInput(userPoolID string) *cognitoidentityprovider.UpdateGroupInput {
 	return &cognitoidentityprovider.UpdateGroupInput{
-		GroupName:   g.ID,
-		Description: g.Name,
-		UserPoolId:  &userPoolId,
+		GroupName:   c.ID,
+		Description: c.Name,
+		UserPoolId:  &userPoolID,
 	}
 }
 
-func (c *CreateUpdateGroup) BuildSuccessfulJsonResponse(ctx context.Context) ([]byte, error) {
+func (c *CreateUpdateGroup) BuildSuccessfulJSONResponse(ctx context.Context) ([]byte, error) {
 	jsonResponse, err := json.Marshal(c)
 	if err != nil {
 		e := NewError(ctx, err, JSONMarshalError, ErrorMarshalFailedDescription)
@@ -239,16 +242,14 @@ func (c *CreateUpdateGroup) NewSuccessResponse(jsonBody []byte, statusCode int, 
 	}
 }
 
-// BuildListGroupsSuccessfulJsonResponse
+// BuildListGroupsSuccessfulJSONResponse
 // formats the output to comply with current standards and to json , adds the count of groups returned and
-func (g *ListUserGroups) BuildListGroupsSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.ListGroupsOutput) ([]byte, error) {
-
+func (g *ListUserGroups) BuildListGroupsSuccessfulJSONResponse(ctx context.Context, result *cognitoidentityprovider.ListGroupsOutput) ([]byte, error) {
 	if result == nil {
 		return nil, NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
 	}
 
 	for _, tmpGroup := range result.Groups {
-
 		newGroup := ListUserGroupType{
 			CreationDate:     tmpGroup.CreationDate,
 			Name:             tmpGroup.Description,
@@ -256,7 +257,7 @@ func (g *ListUserGroups) BuildListGroupsSuccessfulJsonResponse(ctx context.Conte
 			LastModifiedDate: tmpGroup.LastModifiedDate,
 			Precedence:       tmpGroup.Precedence,
 			RoleArn:          tmpGroup.RoleArn,
-			UserPoolId:       tmpGroup.UserPoolId,
+			UserPoolID:       tmpGroup.UserPoolId,
 		}
 
 		g.Groups = append(g.Groups, &newGroup)
@@ -273,18 +274,16 @@ func (g *ListUserGroups) BuildListGroupsSuccessfulJsonResponse(ctx context.Conte
 }
 
 // BuildListGroupsRequest build the require input for cognito query to obtain the groups for given user
-func (g *ListUserGroupType) BuildListGroupsRequest(userPoolId string, nextToken string) *cognitoidentityprovider.ListGroupsInput {
-
+func (g *ListUserGroupType) BuildListGroupsRequest(userPoolID, nextToken string) *cognitoidentityprovider.ListGroupsInput {
 	if nextToken != "" {
 		return &cognitoidentityprovider.ListGroupsInput{
-			UserPoolId: &userPoolId,
+			UserPoolId: &userPoolID,
 			NextToken:  &nextToken,
 		}
 	}
 
 	return &cognitoidentityprovider.ListGroupsInput{
-		UserPoolId: &userPoolId}
-
+		UserPoolId: &userPoolID}
 }
 
 // CleanString - strip special chars out of incoming string and trim

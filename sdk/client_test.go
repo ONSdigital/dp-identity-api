@@ -27,7 +27,7 @@ var (
 
 	defaultExpirationTime        = "2023-09-27 17:30:00.000000000 +0000 UTC"
 	defaultRefreshExpirationTime = "2023-09-28 16:30:00.000000000 +0000 UTC"
-	defaultId                    = "testId1234"
+	defaultID                    = "testId1234"
 	defaultRefreshToken          = "refreshtoken1234"
 	defaultAuthorization         = "Bearer testToken1234"
 )

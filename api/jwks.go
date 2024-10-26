@@ -9,7 +9,7 @@ import (
 
 // CognitoPoolJWKSHandler handles the retrieval of pool specific web key set
 func (api *API) CognitoPoolJWKSHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	keyData, err := api.JWKSHandler.JWKSGetKeyset(api.AWSRegion, api.UserPoolId)
+	keyData, err := api.JWKSHandler.JWKSGetKeyset(api.AWSRegion, api.UserPoolID)
 	if err != nil {
 		return nil, models.NewErrorResponse(http.StatusNotFound, nil, err)
 	}

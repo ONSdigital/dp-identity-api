@@ -10,7 +10,7 @@ import (
 )
 
 var validJWKS = &jwks.JWKS{
-	Keys: []jwks.JsonKey{
+	Keys: []jwks.JSONKey{
 		mock.KeySetOne,
 		mock.KeySetTwo,
 	},
