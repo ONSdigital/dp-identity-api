@@ -53,7 +53,7 @@ type IdToken struct {
 	Claims      IdClaims
 }
 
-//ParseWithoutValidating parses the claims in an ID token JWT in to a IdClaims struct without validating the token
+// ParseWithoutValidating parses the claims in an ID token JWT in to a IdClaims struct without validating the token
 func (t *IdToken) ParseWithoutValidating(ctx context.Context, tokenString string) *Error {
 	parser := new(jwt.Parser)
 
@@ -71,7 +71,7 @@ func (t *IdToken) ParseWithoutValidating(ctx context.Context, tokenString string
 	return nil
 }
 
-//Validate validates the existence of a JWT string and that it is correctly formatting, storing the tokens claims in an IdClaims struct
+// Validate validates the existence of a JWT string and that it is correctly formatting, storing the tokens claims in an IdClaims struct
 func (t *IdToken) Validate(ctx context.Context) *Error {
 	if t.TokenString == "" {
 		return NewValidationError(ctx, InvalidTokenError, MissingIDTokenDescription)
@@ -87,8 +87,8 @@ type RefreshToken struct {
 	TokenString string
 }
 
-//GenerateRefreshRequest produces a Cognito InitiateAuthInput struct for refreshing a users current session
-func (t *RefreshToken) GenerateRefreshRequest(clientSecret string, username string, clientId string) *cognitoidentityprovider.InitiateAuthInput {
+// GenerateRefreshRequest produces a Cognito InitiateAuthInput struct for refreshing a users current session
+func (t *RefreshToken) GenerateRefreshRequest(clientSecret, username, clientId string) *cognitoidentityprovider.InitiateAuthInput {
 	refreshAuthFlow := "REFRESH_TOKEN_AUTH"
 
 	secretHash := utilities.ComputeSecretHash(clientSecret, username, clientId)
@@ -106,7 +106,7 @@ func (t *RefreshToken) GenerateRefreshRequest(clientSecret string, username stri
 	return authInput
 }
 
-//Validate validates the existence of a JWT string
+// Validate validates the existence of a JWT string
 func (t *RefreshToken) Validate(ctx context.Context) *Error {
 	if t.TokenString != "" {
 		return nil

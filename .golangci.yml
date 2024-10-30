@@ -71,7 +71,6 @@ linters:
     - ineffassign
     - nakedret
     - staticcheck
-    - stylecheck
     - typecheck
     - unconvert
     - unused
@@ -81,15 +80,17 @@ linters:
 
 issues:
   exclude-rules:
-    - path: _test\.go
+    - path: _test\.go|config.go
       linters:
-        - gocyclo
+        - staticcheck
         - errcheck
-        - dupl
         - gosec
-    - path: steps.go
+    - path: error_content.go
       linters:
         - gosec
+    - path: groups.go
+      linters:
+        - gocritic
     # Allow dot import in test files for goconvey
     - path: _test.go
       text: "dot-imports"

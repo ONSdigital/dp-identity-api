@@ -7,13 +7,14 @@ import (
 )
 
 type GlobalSignOut struct {
-	ResultsChannel chan string
+	ResultsChannel  chan string
 	BackoffSchedule []time.Duration
-	RetryAllowed bool
+	RetryAllowed    bool
 }
 
 // buildSignOutUserRequest - standalone request builder - builds a signout request array
-//                           this is required for concurrent global signout requests
+//
+//	this is required for concurrent global signout requests
 func (g GlobalSignOut) BuildSignOutUserRequest(users *[]UserParams, userPoolId *string) []*cognitoidentityprovider.AdminUserGlobalSignOutInput {
 	var usersDataArray []*cognitoidentityprovider.AdminUserGlobalSignOutInput
 	userData := *users
@@ -23,7 +24,7 @@ func (g GlobalSignOut) BuildSignOutUserRequest(users *[]UserParams, userPoolId *
 			usersDataArray,
 			&cognitoidentityprovider.AdminUserGlobalSignOutInput{
 				UserPoolId: userPoolId,
-				Username: &userName,
+				Username:   &userName,
 			},
 		)
 	}

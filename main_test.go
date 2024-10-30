@@ -31,7 +31,7 @@ func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
 	})
 
 	ctx.AfterScenario(func(*godog.Scenario, error) {
-		if err = component.Close(); err != nil {
+		if err := component.Close(); err != nil {
 			log.Warn(context.Background(), "error closing identity component", log.FormatErrors([]error{err}))
 		}
 	})

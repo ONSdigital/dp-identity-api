@@ -173,7 +173,7 @@ func (api *API) RefreshHandler(ctx context.Context, w http.ResponseWriter, req *
 // SignOutAllUsersHandler bulk refresh token invalidation for panic sign out handling
 func (api *API) SignOutAllUsersHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	var (
-		userFilterString string = "status=\"Enabled\""
+		userFilterString = "status=\"Enabled\""
 	)
 	usersList, awsErr := api.ListUsersWorker(req.Context(), &userFilterString, DefaultBackOffSchedule)
 	if awsErr != nil {
@@ -214,33 +214,31 @@ func (api *API) ListUsersWorker(ctx context.Context, userFilterString *string, b
 	if awsErr != nil {
 		err := models.NewCognitoError(ctx, awsErr, "Cognito ListUsers request from signout all users from group endpoint")
 		usersListError = models.NewErrorResponse(http.StatusInternalServerError, nil, err)
-	} else {
-		if listUsersResp.PaginationToken != nil {
-			listUserInput.PaginationToken = listUsersResp.PaginationToken
-			// set `loadingInProgress` to control requesting new list data
-			loadingInProgress := true
-			for loadingInProgress {
-				for _, backoff := range backoffSchedule {
-					result, awsErr = api.generateListUsersRequest(listUserInput)
-					if awsErr == nil {
-						listUsersResp.Users = append(listUsersResp.Users, result.Users...)
-						if result.PaginationToken != nil {
-							listUserInput.PaginationToken = result.PaginationToken
-							break
-						} else {
-							loadingInProgress = false
-							break
-						}
+	} else if listUsersResp.PaginationToken != nil {
+		listUserInput.PaginationToken = listUsersResp.PaginationToken
+		// set `loadingInProgress` to control requesting new list data
+		loadingInProgress := true
+		for loadingInProgress {
+			for _, backoff := range backoffSchedule {
+				result, awsErr = api.generateListUsersRequest(listUserInput)
+				if awsErr == nil {
+					listUsersResp.Users = append(listUsersResp.Users, result.Users...)
+					if result.PaginationToken != nil {
+						listUserInput.PaginationToken = result.PaginationToken
+						break
 					} else {
-						err := models.NewCognitoError(ctx, awsErr, "Cognito ListUsers request from signout all users from group endpoint")
-						if err.Code != models.TooManyRequestsError {
-							usersListError = models.NewErrorResponse(http.StatusInternalServerError, nil, err)
-							loadingInProgress = false
-							break
-						}
+						loadingInProgress = false
+						break
 					}
-					time.Sleep(backoff)
+				} else {
+					err := models.NewCognitoError(ctx, awsErr, "Cognito ListUsers request from signout all users from group endpoint")
+					if err.Code != models.TooManyRequestsError {
+						usersListError = models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+						loadingInProgress = false
+						break
+					}
 				}
+				time.Sleep(backoff)
 			}
 		}
 	}
@@ -309,7 +307,6 @@ func (api *API) SignOutUsersWorker(ctx context.Context, g *models.GlobalSignOut,
 			// backoff for predetermined length of time before requesting again
 			time.Sleep(backoff)
 		}
-
 	}
 	close(g.ResultsChannel)
 }

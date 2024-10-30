@@ -55,8 +55,8 @@ func Get() (*Config, error) {
 // String is implemented to prevent sensitive fields being logged.
 // The config is returned as JSON with sensitive fields omitted.
 func (config Config) String() string {
-	configJson, _ := json.Marshal(config)
-	return string(configJson)
+	configJSON, _ := json.Marshal(config)
+	return string(configJSON)
 }
 
 func GetMessageAction() string {

@@ -14,14 +14,14 @@ import (
 	"github.com/ONSdigital/dp-identity-api/models"
 )
 
-const(
+const (
 	jwksEndpoint = "/v1/jwt-keys"
 	errorMessage = "Random Error!"
 )
 
 func TestCognitoPoolJWKSHandler(t *testing.T) {
 	api, w, _ := apiSetup()
-	r := httptest.NewRequest(http.MethodGet, jwksEndpoint, nil)
+	r := httptest.NewRequest(http.MethodGet, jwksEndpoint, http.NoBody)
 
 	resp, err := api.CognitoPoolJWKSHandler(context.Background(), w, r)
 
@@ -43,7 +43,7 @@ func TestCognitoPoolJWKSHandlerErrors404(t *testing.T) {
 		},
 	}
 
-	r := httptest.NewRequest(http.MethodGet, jwksEndpoint, nil)
+	r := httptest.NewRequest(http.MethodGet, jwksEndpoint, http.NoBody)
 
 	resp, err := api.CognitoPoolJWKSHandler(context.Background(), w, r)
 
@@ -73,7 +73,7 @@ func TestCognitoPoolJWKSHandlerErrors500(t *testing.T) {
 		},
 	}
 
-	r := httptest.NewRequest(http.MethodGet, jwksEndpoint, nil)
+	r := httptest.NewRequest(http.MethodGet, jwksEndpoint, http.NoBody)
 
 	resp, err := api.CognitoPoolJWKSHandler(context.Background(), w, r)
 

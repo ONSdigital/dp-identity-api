@@ -75,7 +75,7 @@ func checkPoolExistsAndIsLocal(ctx context.Context, client cognito.Client, userP
 
 func createUsers(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
 	var (
-		baseFirstName, baseLastName, emailDomain string = "test", "user-", "@ons.gov.uk"
+		baseFirstName, baseLastName, emailDomain = "test", "user-", "@ons.gov.uk"
 	)
 	for i := range [UserCount]int{} {
 		for _, backoff := range backoffSchedule {
@@ -126,7 +126,7 @@ func createUsers(ctx context.Context, client cognito.Client, userPoolId string, 
 
 func confirmUsers(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
 	var (
-		baseEmailPrefix, emailDomain string = "test.user-", "@ons.gov.uk"
+		baseEmailPrefix, emailDomain = "test.user-", "@ons.gov.uk"
 	)
 	for i := range [UserCount]int{} {
 		if math.Mod(float64(i), float64(11)) == 0 {
@@ -160,7 +160,7 @@ func confirmUsers(ctx context.Context, client cognito.Client, userPoolId string,
 
 func disableUsers(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
 	var (
-		baseFirstName, baseLastName, emailDomain string = "test", "user-", "@ons.gov.uk"
+		baseFirstName, baseLastName, emailDomain = "test", "user-", "@ons.gov.uk"
 	)
 	for i := range [UserCount]int{} {
 		if math.Mod(float64(i), float64(51)) != 0 {
@@ -188,7 +188,7 @@ func disableUsers(ctx context.Context, client cognito.Client, userPoolId string,
 
 func createGroups(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
 	var (
-		baseGroupName, baseDescription string = "test-group-", "Test Group "
+		baseGroupName, baseDescription = "test-group-", "Test Group "
 	)
 	for i := range [GroupCount]int{} {
 		for _, backoff := range backoffSchedule {
@@ -233,8 +233,8 @@ func addUsersToGroups(ctx context.Context, client cognito.Client, userPoolId str
 
 func addUserToGroup(ctx context.Context, userNumber, groupNumber, userPoolId string, client cognito.Client, backoffSchedule []time.Duration) {
 	var (
-		baseFirstName, baseLastName, emailDomain string = "test", "user-", "@ons.gov.uk"
-		baseGroupName                            string = "test-group-"
+		baseFirstName, baseLastName, emailDomain = "test", "user-", "@ons.gov.uk"
+		baseGroupName                            = "test-group-"
 	)
 	for _, backoff := range backoffSchedule {
 		lastName := baseLastName + userNumber

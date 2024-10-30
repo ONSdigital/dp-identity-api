@@ -18,8 +18,8 @@ import (
 
 const (
 	UsersCreatePermission string = "users:create"
-	UsersReadPermission          = "users:read"
-	UsersUpdatePermission        = "users:update"
+	UsersReadPermission   string = "users:read"
+	UsersUpdatePermission string = "users:update"
 )
 
 // CreateUserHandler creates a new user and returns a http handler interface
@@ -108,7 +108,7 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 	usersList.SetUsers(listUserResp)
 
 	if req.URL.Query().Get("sort") != "" {
-		requestSortQueryErrs := query.SortBy(req.URL.Query().Get("sort"), usersList.Users[:])
+		requestSortQueryErrs := query.SortBy(req.URL.Query().Get("sort"), usersList.Users)
 		if requestSortQueryErrs != nil {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, requestSortQueryErrs)
 		}
@@ -118,9 +118,7 @@ func (api *API) ListUsersHandler(ctx context.Context, w http.ResponseWriter, req
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
-
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
-
 }
 
 // GetUserHandler lists the users in the user pool
@@ -365,7 +363,7 @@ func (api *API) PasswordResetHandler(ctx context.Context, w http.ResponseWriter,
 }
 
 // List Groups for user pagination allows first call and then any other call if nextToken is not ""
-func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupType, userId models.UserParams) ([]*cognitoidentityprovider.GroupType, error) {
+func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupType, userID models.UserParams) ([]*cognitoidentityprovider.GroupType, error) {
 	firstTimeCheck := false
 	var nextToken string
 	for {
@@ -374,7 +372,7 @@ func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupTy
 		}
 		firstTimeCheck = true
 
-		userGroupsRequest := userId.BuildListUserGroupsRequest(api.UserPoolId, nextToken)
+		userGroupsRequest := userID.BuildListUserGroupsRequest(api.UserPoolId, nextToken)
 		userGroupsResponse, err := api.CognitoClient.AdminListGroupsForUser(userGroupsRequest)
 		if err != nil {
 			return nil, err
@@ -391,7 +389,6 @@ func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupTy
 
 // ListUserGroupsHandler lists the users in the user pool
 func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-
 	vars := mux.Vars(req)
 	userID := models.UserParams{ID: vars["id"]}
 	listofgroupsInput := []*cognitoidentityprovider.GroupType{}
@@ -412,14 +409,13 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, w http.ResponseWriter
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
-
 }
 
-func (api *API) GetFilterStringAndValidate(path string, query string) (string, error) {
+func (api *API) GetFilterStringAndValidate(path, qry string) (string, error) {
 	ctx := context.Background()
 
-	if api.APIRequestFilter[path] != nil && api.APIRequestFilter[path][query] != "" {
-		return api.APIRequestFilter[path][query], nil
+	if api.APIRequestFilter[path] != nil && api.APIRequestFilter[path][qry] != "" {
+		return api.APIRequestFilter[path][qry], nil
 	} else {
 		return "", models.NewValidationError(ctx, models.InvalidFilterQuery, models.InvalidFilterQueryDescription)
 	}

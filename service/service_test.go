@@ -323,7 +323,7 @@ func TestClose(t *testing.T) {
 	})
 }
 
-func DoGetCognitoClient(AWSRegion string) cognito.Client {
+func DoGetCognitoClient(awsRegion string) cognito.Client {
 	return &cognitoMock.CognitoIdentityProviderClientStub{}
 }
 

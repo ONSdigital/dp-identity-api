@@ -168,17 +168,17 @@ func TestRefreshToken_Validate(t *testing.T) {
 
 func TestRefreshToken_GenerateRefreshRequest(t *testing.T) {
 	Convey("returns a filled InitiateAuthInput object", t, func() {
-		var clientId, clientSecret, username, refreshTokenString string = "abcdefg12345", "hijklmnop67890", "onsTestUser", "zzzz.yyyy.xxxx.wwww.vvvv"
+		var clientID, clientSecret, username, refreshTokenString = "abcdefg12345", "hijklmnop67890", "onsTestUser", "zzzz.yyyy.xxxx.wwww.vvvv"
 		refreshToken := models.RefreshToken{TokenString: refreshTokenString}
 
-		initiateAuthInput := refreshToken.GenerateRefreshRequest(clientSecret, username, clientId)
+		initiateAuthInput := refreshToken.GenerateRefreshRequest(clientSecret, username, clientID)
 
 		expectedAuthFlow := "REFRESH_TOKEN_AUTH"
-		expectedSecretHash := utilities.ComputeSecretHash(clientSecret, username, clientId)
+		expectedSecretHash := utilities.ComputeSecretHash(clientSecret, username, clientID)
 		So(*initiateAuthInput.AuthFlow, ShouldEqual, expectedAuthFlow)
 		So(*initiateAuthInput.AuthParameters["REFRESH_TOKEN"], ShouldEqual, refreshTokenString)
 		So(*initiateAuthInput.AuthParameters["SECRET_HASH"], ShouldEqual, expectedSecretHash)
-		So(*initiateAuthInput.ClientId, ShouldEqual, clientId)
+		So(*initiateAuthInput.ClientId, ShouldEqual, clientID)
 	})
 }
 

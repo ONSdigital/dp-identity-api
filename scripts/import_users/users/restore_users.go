@@ -14,14 +14,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-func ImportUsersFromS3(ctx context.Context, config *config.Config) error {
-	log.Info(ctx, fmt.Sprintf("started restoring users to cognito from s3 file: %v", config.GetS3UsersFilePath()))
+func ImportUsersFromS3(ctx context.Context, cfg *config.Config) error {
+	log.Info(ctx, fmt.Sprintf("started restoring users to cognito from s3 file: %v", cfg.GetS3UsersFilePath()))
 
 	s3FileReader := utils.S3Reader{}
-	responseBody := s3FileReader.GetS3Reader(ctx, config.AWSProfile, config.S3Region, config.S3Bucket, config.GetS3UsersFilePath())
+	responseBody := s3FileReader.GetS3Reader(ctx, cfg.AWSProfile, cfg.S3Region, cfg.S3Bucket, cfg.GetS3UsersFilePath())
 	defer responseBody.Close()
 	reader := csv.NewReader(responseBody)
-	client := utils.GetCognitoClient(config.AWSProfile, config.S3Region)
+	client := utils.GetCognitoClient(cfg.AWSProfile, cfg.S3Region)
 
 	// Extract column indexes from header line
 	cols, err := reader.Read()
@@ -46,35 +46,40 @@ func ImportUsersFromS3(ctx context.Context, config *config.Config) error {
 				break
 			}
 		}
-		createUser(ctx, client, line, count, config, colsMap)
+		createUser(ctx, client, line, count, cfg, colsMap)
 		count += 1
 	}
 	log.Info(ctx, "Successfully processed all the users in S3 file")
 	return nil
 }
 
-func createUser(ctx context.Context, client *cognitoidentityprovider.CognitoIdentityProvider, line []string, lineNumber int, config *config.Config, colsMap map[string]int) {
+func createUser(ctx context.Context, client *cognitoidentityprovider.CognitoIdentityProvider, line []string, lineNumber int, cfg *config.Config, colsMap map[string]int) {
 	userInfo := models.UserParams{
 		Forename: line[colsMap["given_name"]],
 		Lastname: line[colsMap["family_name"]],
 		Email:    line[colsMap["email"]],
 		ID:       line[colsMap["cognito:username"]],
 	}
-	userInfo.GeneratePassword(ctx)
 
-	createUserRequest := userInfo.BuildCreateUserRequest(userInfo.ID, config.AWSCognitoUserPoolID)
+	if err := userInfo.GeneratePassword(ctx); err != nil {
+		log.Error(ctx, "failed to generate password for user", err, log.Data{
+			"email": userInfo.Email,
+		})
+		return
+	}
+
+	createUserRequest := userInfo.BuildCreateUserRequest(userInfo.ID, cfg.AWSCognitoUserPoolID)
 	_, err := client.AdminCreateUser(createUserRequest)
 	if err != nil {
 		log.Error(ctx, fmt.Sprintf("failed to processline %v user: %+v", lineNumber, userInfo), err)
 	}
 
-	//Disable user if it's 'enabled' column is not TRUE
+	// Disable user if it's 'enabled' column is not TRUE
 	enabledCol, ok := colsMap["enabled"]
 	if ok && len(line) > enabledCol && line[enabledCol] == "false" {
-		userDisableRequest := userInfo.BuildDisableUserRequest(config.AWSCognitoUserPoolID)
+		userDisableRequest := userInfo.BuildDisableUserRequest(cfg.AWSCognitoUserPoolID)
 		if _, err = client.AdminDisableUser(userDisableRequest); err != nil {
 			log.Error(ctx, fmt.Sprintf("failed to disable user: %+v", userInfo), err)
 		}
 	}
-
 }

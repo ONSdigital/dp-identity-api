@@ -66,7 +66,6 @@ func Setup(ctx context.Context,
 	allowedDomains []string,
 	auth authorisation.Middleware,
 	jwksHandler jwks.JWKSInt) (*API, error) {
-
 	// Return an error if empty required parameter was passed.
 	if userPoolId == "" || clientId == "" || clientSecret == "" || awsRegion == "" || clientAuthFlow == "" || allowedDomains == nil || len(allowedDomains) == 0 || jwksHandler == nil {
 		return nil, models.NewError(ctx, nil, models.MissingConfigError, models.MissingConfigDescription)

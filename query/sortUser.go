@@ -2,11 +2,12 @@ package query
 
 import (
 	"errors"
-	"github.com/ONSdigital/dp-identity-api/models"
 	"reflect"
 	"slices"
 	"sort"
 	"strings"
+
+	"github.com/ONSdigital/dp-identity-api/models"
 )
 
 // LessFunc used by MultiSorter OrderedBy  used to hold the seq of sort
@@ -59,13 +60,12 @@ func (ms *MultiSorter) Less(i, j int) bool {
 
 // SortBy from the request query get the sort parameters
 func SortBy(requestSortParameters string, arr []models.UserParams) error {
-
 	var (
-		orderFunc []LessFunc
-		v         interface{} = arr[0]
+		inputSplit             = strings.Split(requestSortParameters, ",")
+		orderFunc              = make([]LessFunc, 0, len(inputSplit)) // Pre-allocate with expected capacity
+		v          interface{} = arr[0]
 	)
 
-	inputSplit := strings.Split(requestSortParameters, ",")
 	for _, inputSplitItem := range inputSplit {
 		inputSplitItemSplit := strings.Split(inputSplitItem, ":")
 		IsDesc := slices.Contains(inputSplitItemSplit, "desc")
@@ -103,7 +103,6 @@ func GetFieldByJsonTag(jsonTagValue string, s interface{}) (reflect.StructField,
 
 // GetLessFunc supplies the output function from the
 func GetLessFunc(name, field string, direction bool) LessFunc {
-
 	if direction {
 		if name == "UserParams" {
 			if field == "Forename" {

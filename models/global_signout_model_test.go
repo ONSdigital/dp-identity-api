@@ -8,7 +8,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-
 func TestBuildSignOutUserRequest(t *testing.T) {
 	Convey("builds a signout request array of data for AdminUserGlobalSignout", t, func() {
 		userPoolId := "eu-test-11_hdsahj9hjxsZ"

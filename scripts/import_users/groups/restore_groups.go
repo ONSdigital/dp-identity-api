@@ -17,14 +17,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-func ImportGroupsFromS3(ctx context.Context, config *config.Config) error {
-	log.Info(ctx, fmt.Sprintf("started restoring groups to cognito from s3 file: %v", config.GetS3GroupsFilePath()))
+func ImportGroupsFromS3(ctx context.Context, cfg *config.Config) error {
+	log.Info(ctx, fmt.Sprintf("started restoring groups to cognito from s3 file: %v", cfg.GetS3GroupsFilePath()))
 
 	s3FileReader := utils.S3Reader{}
-	responseBody := s3FileReader.GetS3Reader(ctx, config.AWSProfile, config.S3Region, config.S3Bucket, config.GetS3GroupsFilePath())
+	responseBody := s3FileReader.GetS3Reader(ctx, cfg.AWSProfile, cfg.S3Region, cfg.S3Bucket, cfg.GetS3GroupsFilePath())
 	defer responseBody.Close()
 	reader := csv.NewReader(responseBody)
-	client := utils.GetCognitoClient(config.AWSProfile, config.S3Region)
+	client := utils.GetCognitoClient(cfg.AWSProfile, cfg.S3Region)
 
 	// Extract column indexes from header line
 	cols, err := reader.Read()
@@ -49,21 +49,21 @@ func ImportGroupsFromS3(ctx context.Context, config *config.Config) error {
 				break
 			}
 		}
-		createGroup(count, line, client, ctx, config.AWSCognitoUserPoolID, colsMap)
+		createGroup(count, line, client, ctx, cfg.AWSCognitoUserPoolID, colsMap)
 		count += 1
 	}
 	log.Info(ctx, "Successfully processed all the groups in S3 file")
 	return nil
 }
 
-func ImportGroupsMembersFromS3(ctx context.Context, config *config.Config) error {
-	log.Info(ctx, fmt.Sprintf("started restoring group members to cognito from s3 file: %v", config.GetS3GroupsFilePath()))
+func ImportGroupsMembersFromS3(ctx context.Context, cfg *config.Config) error {
+	log.Info(ctx, fmt.Sprintf("started restoring group members to cognito from s3 file: %v", cfg.GetS3GroupsFilePath()))
 
 	s3FileReader := utils.S3Reader{}
-	responseBody := s3FileReader.GetS3Reader(ctx, config.AWSProfile, config.S3Region, config.S3Bucket, config.GetS3GroupUsersFilePath())
+	responseBody := s3FileReader.GetS3Reader(ctx, cfg.AWSProfile, cfg.S3Region, cfg.S3Bucket, cfg.GetS3GroupUsersFilePath())
 	defer responseBody.Close()
 	reader := csv.NewReader(responseBody)
-	client := utils.GetCognitoClient(config.AWSProfile, config.S3Region)
+	client := utils.GetCognitoClient(cfg.AWSProfile, cfg.S3Region)
 
 	// Extract column indexes from header line
 	cols, err := reader.Read()
@@ -88,7 +88,7 @@ func ImportGroupsMembersFromS3(ctx context.Context, config *config.Config) error
 				break
 			}
 		}
-		adduserToGroup(ctx, client, line, count, config.AWSCognitoUserPoolID, colsMap)
+		adduserToGroup(ctx, client, line, count, cfg.AWSCognitoUserPoolID, colsMap)
 		count += 1
 	}
 	log.Info(ctx, "Successfully processed all the group members in S3 file")
@@ -110,16 +110,16 @@ func createGroup(lineNumber int, line []string, client *cognito.CognitoIdentityP
 	}
 }
 
-func adduserToGroup(ctx context.Context, client *cognito.CognitoIdentityProvider, line []string, lineNumber int, userPoolId string, colsMap map[string]int) {
-	userId := line[colsMap["user_name"]]
+func adduserToGroup(ctx context.Context, client *cognito.CognitoIdentityProvider, line []string, lineNumber int, userPoolID string, colsMap map[string]int) {
+	userID := line[colsMap["user_name"]]
 	groups := strings.Split(line[colsMap["groups"]], ", ")
 	for _, group := range groups {
 		if group == "" {
 			continue
 		}
-		_, err := client.AdminAddUserToGroup(&cognito.AdminAddUserToGroupInput{GroupName: &group, UserPoolId: &userPoolId, Username: &userId})
+		_, err := client.AdminAddUserToGroup(&cognito.AdminAddUserToGroupInput{GroupName: &group, UserPoolId: &userPoolID, Username: &userID})
 		if err != nil {
-			log.Error(ctx, fmt.Sprintf("failed to process line: %d (incl. header) - user %v group: %v", lineNumber+1, userId, group), err)
+			log.Error(ctx, fmt.Sprintf("failed to process line: %d (incl. header) - user %v group: %v", lineNumber+1, userID, group), err)
 		}
 	}
 }

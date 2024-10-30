@@ -27,9 +27,7 @@ type Service struct {
 
 // Run the service
 func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceList, jwksHandler jwks.JWKSInt, buildTime, gitCommit, version string, svcErrors chan error) (*Service, error) {
-
 	log.Info(ctx, "running service")
-
 	log.Info(ctx, "using service configuration", log.Data{"config": cfg})
 
 	r := mux.NewRouter()

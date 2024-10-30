@@ -3,10 +3,12 @@ package steps
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
 	"github.com/ONSdigital/dp-permissions-api/sdk"
+	"github.com/ONSdigital/log.go/v2/log"
 
 	"github.com/ONSdigital/dp-identity-api/cognito"
 	cognitoMock "github.com/ONSdigital/dp-identity-api/cognito/mock"
@@ -38,7 +40,9 @@ func NewIdentityComponent() (*IdentityComponent, error) {
 	svcErrors := make(chan error, 1)
 
 	c := &IdentityComponent{
-		HTTPServer:     &http.Server{},
+		HTTPServer: &http.Server{
+			ReadHeaderTimeout: 5 * time.Second,
+		},
 		errorChan:      svcErrors,
 		ServiceRunning: false,
 	}
@@ -84,7 +88,9 @@ func setupFakePermissionsAPI() *authorisationtest.FakePermissionsAPI {
 	fakePermissionsAPI := authorisationtest.NewFakePermissionsAPI()
 	bundle := getPermissionsBundle()
 	fakePermissionsAPI.Reset()
-	fakePermissionsAPI.UpdatePermissionsBundleResponse(bundle)
+	if err := fakePermissionsAPI.UpdatePermissionsBundleResponse(bundle); err != nil {
+		log.Error(context.Background(), "failed to update permissions bundle response", err)
+	}
 	return fakePermissionsAPI
 }
 
@@ -159,7 +165,7 @@ func (c *IdentityComponent) InitialiseService() (http.Handler, error) {
 	return c.HTTPServer.Handler, nil
 }
 
-func (c *IdentityComponent) DoGetHealthcheckOk(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
+func (c *IdentityComponent) DoGetHealthcheckOk(cfg *config.Config, buildTime, gitCommit, version string) (service.HealthChecker, error) {
 	return &mock.HealthCheckerMock{
 		AddCheckFunc: func(name string, checker healthcheck.Checker) error { return nil },
 		StartFunc:    func(ctx context.Context) {},
@@ -173,7 +179,7 @@ func (c *IdentityComponent) DoGetHTTPServer(bindAddr string, router http.Handler
 	return c.HTTPServer
 }
 
-func (c *IdentityComponent) DoGetCognitoClient(AWSRegion string) cognito.Client {
+func (c *IdentityComponent) DoGetCognitoClient(awsRegion string) cognito.Client {
 	c.CognitoClient = &cognitoMock.CognitoIdentityProviderClientStub{}
 	return c.CognitoClient
 }

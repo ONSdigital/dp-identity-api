@@ -65,7 +65,7 @@ func (g *Group) ValidateAddRemoveUser(ctx context.Context, userId string) []erro
 	}
 
 	if userId == "" {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidUserIdError, MissingUserIdErrorDescription))
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidUserIDError, MissingUserIDErrorDescription))
 	}
 	return validationErrs
 }
@@ -161,33 +161,36 @@ type CreateUpdateGroup struct {
 	GroupsList *cognitoidentityprovider.ListGroupsOutput
 }
 
-// ValidateCreateUpdateGroupRequest validate the create group request
-func (g *CreateUpdateGroup) ValidateCreateUpdateGroupRequest(ctx context.Context, isCreate bool) []error {
+// ValidateCreateUpdateGroupRequest validates the create group request.
+func (c *CreateUpdateGroup) ValidateCreateUpdateGroupRequest(ctx context.Context, isCreate bool) []error {
 	var validationErrs []error
 
-	if g.Name == nil {
+	if c.Name == nil {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, MissingGroupName))
-	} else if m, _ := regexp.MatchString("(?i)^role-.*", *g.Name); m {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, IncorrectPatternInGroupName))
 	} else {
-		//ensure group name in description doesn't already exist - creation only - g.GroupsList not set on updates
-		if g.GroupsList != nil {
-			for _, group := range g.GroupsList.Groups {
-				if group.Description != nil && CleanString(*group.Description) == CleanString(*g.Name) {
+		if m, _ := regexp.MatchString("(?i)^role-.*", *c.Name); m {
+			validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, IncorrectPatternInGroupName))
+		}
+
+		// Ensure group name in description doesn't already exist - creation only
+		// g.GroupsList not set on updates
+		if c.GroupsList != nil {
+			for _, group := range c.GroupsList.Groups {
+				if group.Description != nil && CleanString(*group.Description) == CleanString(*c.Name) {
 					validationErrs = append(validationErrs, NewValidationError(ctx, GroupExistsError, GroupAlreadyExistsDescription))
 					break
 				}
 			}
 		}
 	}
-	if g.Precedence == nil {
+
+	if c.Precedence == nil {
 		if isCreate {
 			validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, MissingGroupPrecedence))
 		}
-	} else if *g.Precedence < groupPrecedenceMin || *g.Precedence > groupPrecedenceMax {
+	} else if *c.Precedence < groupPrecedenceMin || *c.Precedence > groupPrecedenceMax {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupPrecedence, GroupPrecedenceIncorrect))
 	}
-
 	return validationErrs
 }
 
@@ -201,10 +204,10 @@ func (c *CreateUpdateGroup) BuildCreateGroupInput(userPoolId *string) *cognitoid
 }
 
 // BuildUpdateGroupInput builds a correctly populated UpdateGroupInput object using Groups values
-func (g *CreateUpdateGroup) BuildUpdateGroupInput(userPoolId string) *cognitoidentityprovider.UpdateGroupInput {
+func (c *CreateUpdateGroup) BuildUpdateGroupInput(userPoolId string) *cognitoidentityprovider.UpdateGroupInput {
 	return &cognitoidentityprovider.UpdateGroupInput{
-		GroupName:   g.ID,
-		Description: g.Name,
+		GroupName:   c.ID,
+		Description: c.Name,
 		UserPoolId:  &userPoolId,
 	}
 }
@@ -242,13 +245,11 @@ func (c *CreateUpdateGroup) NewSuccessResponse(jsonBody []byte, statusCode int, 
 // BuildListGroupsSuccessfulJsonResponse
 // formats the output to comply with current standards and to json , adds the count of groups returned and
 func (g *ListUserGroups) BuildListGroupsSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.ListGroupsOutput) ([]byte, error) {
-
 	if result == nil {
 		return nil, NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
 	}
 
 	for _, tmpGroup := range result.Groups {
-
 		newGroup := ListUserGroupType{
 			CreationDate:     tmpGroup.CreationDate,
 			Name:             tmpGroup.Description,
@@ -274,7 +275,6 @@ func (g *ListUserGroups) BuildListGroupsSuccessfulJsonResponse(ctx context.Conte
 
 // BuildListGroupsRequest build the require input for cognito query to obtain the groups for given user
 func (g *ListUserGroupType) BuildListGroupsRequest(userPoolId string, nextToken string) *cognitoidentityprovider.ListGroupsInput {
-
 	if nextToken != "" {
 		return &cognitoidentityprovider.ListGroupsInput{
 			UserPoolId: &userPoolId,
@@ -284,7 +284,6 @@ func (g *ListUserGroupType) BuildListGroupsRequest(userPoolId string, nextToken 
 
 	return &cognitoidentityprovider.ListGroupsInput{
 		UserPoolId: &userPoolId}
-
 }
 
 // CleanString - strip special chars out of incoming string and trim

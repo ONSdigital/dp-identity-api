@@ -21,6 +21,11 @@ import (
 	jwksmock "github.com/ONSdigital/dp-identity-api/jwks/mock"
 )
 
+const awsUNFErrCode = "UserNotFoundException"
+const awsUNFErrMessage = "user could not be found"
+const awsIEErrCode = "InternalErrorException"
+const awsIEErrMessage = "Something strange happened"
+
 var jwksHandler = jwksmock.JWKSStubbed
 
 func TestSetup(t *testing.T) {
@@ -151,17 +156,17 @@ func TestSetup(t *testing.T) {
 }
 
 func hasRoute(r *mux.Router, path, method string) bool {
-	req := httptest.NewRequest(method, path, nil)
+	req := httptest.NewRequest(method, path, http.NoBody)
 	match := &mux.RouteMatch{}
 	return r.Match(req, match)
 }
 
 func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProviderClient) {
 	var (
-		ctx                                                          = context.Background()
-		r                                                            = mux.NewRouter()
-		poolId, clientId, clientSecret, awsRegion, authFlow string   = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "eu-west-1234", "USER_PASSWORD_AUTH"
-		allowedDomains                                      []string = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
+		ctx                                                 = context.Background()
+		r                                                   = mux.NewRouter()
+		poolId, clientId, clientSecret, awsRegion, authFlow = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "eu-west-1234", "USER_PASSWORD_AUTH"
+		allowedDomains                                      = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
@@ -183,17 +188,17 @@ func TestWriteErrorResponse(t *testing.T) {
 	Convey("the status code and the list of errors from the ErrorResponse object are written to a http response", t, func() {
 		ctx := context.Background()
 
-		errorResponseBodyExample := `{"errors":[{"code":"TestError","description":"a error generated for testing purposes"},{"code":"TestError","description":"a error generated for testing purposes"}]}`
+		errorResponseBodyExample := `{"errors":[{"code":"TestError","description":"a error generated for testing purposes"},{"code":"TestError","description":"another error generated for testing purposes"}]}`
 		var errorResponse models.ErrorResponse
 
 		errCode := "TestError"
 		errDescription := "a error generated for testing purposes"
+		anotherErrDescription := "another error generated for testing purposes"
 		statusCode := http.StatusBadRequest
 
 		headerMessage := "Test header message."
 
-		errorResponse.Errors = append(errorResponse.Errors, models.NewValidationError(ctx, errCode, errDescription))
-		errorResponse.Errors = append(errorResponse.Errors, models.NewValidationError(ctx, errCode, errDescription))
+		errorResponse.Errors = append(errorResponse.Errors, models.NewValidationError(ctx, errCode, errDescription), models.NewValidationError(ctx, errCode, anotherErrDescription))
 		errorResponse.Status = statusCode
 		errorResponse.Headers = map[string]string{
 			WWWAuthenticateName: headerMessage,
@@ -237,7 +242,7 @@ func TestWriteSuccessResponse(t *testing.T) {
 		So(err, ShouldBeNil)
 		successResponseBodyExample := `{"expirationTime":"12/12/2021T12:00:00Z","refreshTokenExpirationTime":"13/12/2021T11:00:00Z"}`
 		var (
-			accessTokenHeaderMessage, idTokenHeaderMessage, refreshTokenHeaderMessage string = "test-access-token-1", "test-id-token-1", "test-refresh-token-1"
+			accessTokenHeaderMessage, idTokenHeaderMessage, refreshTokenHeaderMessage = "test-access-token-1", "test-id-token-1", "test-refresh-token-1"
 		)
 		successResponse := models.SuccessResponse{
 			Body:   body,
@@ -348,10 +353,9 @@ func TestInitialiseRoleGroups(t *testing.T) {
 			{
 				// create group internal error
 				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
-					awsErrCode := "InternalErrorException"
 					awsErrMessage := "Something weird happened"
-					awsOrigErr := errors.New(awsErrCode)
-					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					awsOrigErr := errors.New(awsIEErrCode)
+					awsErr := awserr.New(awsIEErrCode, awsErrMessage, awsOrigErr)
 					return nil, awsErr
 				},
 				models.NewError(ctx, nil, models.InternalError, "Something weird happened"),
