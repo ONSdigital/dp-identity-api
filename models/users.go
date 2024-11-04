@@ -452,7 +452,7 @@ func (p ChangePassword) ValidateForgottenPasswordRequest(ctx context.Context) []
 	}
 	// 'Email' in the forgotten password request is actually the user id, so we are only checking for presence rather than format
 	if p.Email == "" {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidUserIDError, MissingUserIDErrorDescription))
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidUserIdError, MissingUserIdErrorDescription))
 	}
 	if p.VerificationToken == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidTokenError, InvalidTokenDescription))

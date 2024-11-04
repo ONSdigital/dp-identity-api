@@ -371,8 +371,8 @@ func TestAddUserToGroupHandler(t *testing.T) {
 					So(errorResponse.Status, ShouldNotBeNil)
 					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
 					castErr := errorResponse.Errors[0].(*models.Error)
-					So(castErr.Code, ShouldEqual, models.InvalidUserIDError)
-					So(castErr.Description, ShouldEqual, models.MissingUserIDErrorDescription)
+					So(castErr.Code, ShouldEqual, models.InvalidUserIdError)
+					So(castErr.Description, ShouldEqual, models.MissingUserIdErrorDescription)
 				},
 			},
 			{
@@ -633,8 +633,8 @@ func TestRemoveUserFromGroupHandler(t *testing.T) {
 					So(errorResponse.Status, ShouldNotBeNil)
 					So(errorResponse.Status, ShouldEqual, http.StatusBadRequest)
 					castErr := errorResponse.Errors[0].(*models.Error)
-					So(castErr.Code, ShouldEqual, models.InvalidUserIDError)
-					So(castErr.Description, ShouldEqual, models.MissingUserIDErrorDescription)
+					So(castErr.Code, ShouldEqual, models.InvalidUserIdError)
+					So(castErr.Description, ShouldEqual, models.MissingUserIdErrorDescription)
 				},
 			},
 			{
@@ -1759,7 +1759,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 				},
 				func(ctx context.Context, group models.Group, users models.UsersList) (*models.UsersList, *models.ErrorResponse) {
 					errorResponse := models.ErrorResponse{
-						Errors: []error{models.NewValidationError(ctx, models.InvalidUserIDError, userNotFoundDescription)},
+						Errors: []error{models.NewValidationError(ctx, models.InvalidUserIdError, userNotFoundDescription)},
 						Status: http.StatusNotFound,
 					}
 					return nil, &errorResponse
@@ -1781,7 +1781,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 					So(errorResponse, ShouldNotBeNil)
 					So(errorResponse.Status, ShouldEqual, 400)
 					castErr := errorResponse.Errors[0].(*models.Error)
-					So(castErr.Code, ShouldEqual, models.InvalidUserIDError)
+					So(castErr.Code, ShouldEqual, models.InvalidUserIdError)
 					So(castErr.Description, ShouldEqual, "the user id was missing")
 				},
 			},

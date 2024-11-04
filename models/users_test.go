@@ -864,7 +864,7 @@ func TestChangePassword_ValidateForgottenPasswordRequest(t *testing.T) {
 				"≈",
 				"",
 				"Password2",
-				[]string{models.InvalidUserIDError},
+				[]string{models.InvalidUserIdError},
 			},
 			{
 				// missing password
@@ -878,7 +878,7 @@ func TestChangePassword_ValidateForgottenPasswordRequest(t *testing.T) {
 				"",
 				"",
 				"Password2",
-				[]string{models.InvalidUserIDError, models.InvalidTokenError},
+				[]string{models.InvalidUserIdError, models.InvalidTokenError},
 			},
 			{
 				// missing VerificationToken and password
@@ -892,14 +892,14 @@ func TestChangePassword_ValidateForgottenPasswordRequest(t *testing.T) {
 				"verification_token",
 				"",
 				"",
-				[]string{models.InvalidPasswordError, models.InvalidUserIDError},
+				[]string{models.InvalidPasswordError, models.InvalidUserIdError},
 			},
 			{
 				// missing VerificationToken, email and password
 				"",
 				"",
 				"",
-				[]string{models.InvalidPasswordError, models.InvalidUserIDError, models.InvalidTokenError},
+				[]string{models.InvalidPasswordError, models.InvalidUserIdError, models.InvalidTokenError},
 			},
 		}
 		for _, tt := range missingParamsTests {

@@ -65,7 +65,7 @@ func (g *Group) ValidateAddRemoveUser(ctx context.Context, userId string) []erro
 	}
 
 	if userId == "" {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidUserIDError, MissingUserIDErrorDescription))
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidUserIdError, MissingUserIdErrorDescription))
 	}
 	return validationErrs
 }
@@ -123,7 +123,7 @@ func (g *Group) BuildListUsersInGroupRequest(userPoolId string) *cognitoidentity
 }
 
 // BuildListUsersInGroupRequestWithNextToken builds a correctly populated ListUsersInGroupInput object with Next Token
-func (g *Group) BuildListUsersInGroupRequestWithNextToken(userPoolId string, nextToken string) *cognitoidentityprovider.ListUsersInGroupInput {
+func (g *Group) BuildListUsersInGroupRequestWithNextToken(userPoolId, nextToken string) *cognitoidentityprovider.ListUsersInGroupInput {
 	if nextToken == "" {
 		return &cognitoidentityprovider.ListUsersInGroupInput{
 			GroupName:  &g.ID,
@@ -274,7 +274,7 @@ func (g *ListUserGroups) BuildListGroupsSuccessfulJsonResponse(ctx context.Conte
 }
 
 // BuildListGroupsRequest build the require input for cognito query to obtain the groups for given user
-func (g *ListUserGroupType) BuildListGroupsRequest(userPoolId string, nextToken string) *cognitoidentityprovider.ListGroupsInput {
+func (g *ListUserGroupType) BuildListGroupsRequest(userPoolId, nextToken string) *cognitoidentityprovider.ListGroupsInput {
 	if nextToken != "" {
 		return &cognitoidentityprovider.ListGroupsInput{
 			UserPoolId: &userPoolId,

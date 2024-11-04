@@ -51,8 +51,8 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 1)
 		castErr := errs[0].(*models.Error)
-		So(castErr.Code, ShouldEqual, models.InvalidUserIDError)
-		So(castErr.Description, ShouldEqual, models.MissingUserIDErrorDescription)
+		So(castErr.Code, ShouldEqual, models.InvalidUserIdError)
+		So(castErr.Description, ShouldEqual, models.MissingUserIdErrorDescription)
 	})
 
 	Convey("returns InvalidGroupID error if no group ID is set", t, func() {
@@ -80,8 +80,8 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		So(castErr.Code, ShouldEqual, models.InvalidGroupIDError)
 		So(castErr.Description, ShouldEqual, models.MissingGroupIDErrorDescription)
 		castErr = errs[1].(*models.Error)
-		So(castErr.Code, ShouldEqual, models.InvalidUserIDError)
-		So(castErr.Description, ShouldEqual, models.MissingUserIDErrorDescription)
+		So(castErr.Code, ShouldEqual, models.InvalidUserIdError)
+		So(castErr.Description, ShouldEqual, models.MissingUserIdErrorDescription)
 	})
 
 	Convey("returns nil if user id is present", t, func() {

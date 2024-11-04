@@ -7,7 +7,7 @@ import (
 
 type Session struct {
 	AccessToken  string
-	IDToken      string
+	IdToken      string
 	RefreshToken string
 }
 
@@ -19,7 +19,7 @@ func (m *CognitoIdentityProviderClientStub) CreateSessionWithAccessToken(accessT
 func (m *CognitoIdentityProviderClientStub) GenerateSession(accessToken, idToken, refreshToken string) Session {
 	return Session{
 		AccessToken:  accessToken,
-		IDToken:      idToken,
+		IdToken:      idToken,
 		RefreshToken: refreshToken,
 	}
 }

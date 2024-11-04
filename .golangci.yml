@@ -85,10 +85,14 @@ issues:
         - staticcheck
         - errcheck
         - gosec
+    # Allow G101 in error_content.go
     - path: error_content.go
+      text: "G101"
       linters:
         - gosec
+    # Allow rangeValCopy in groups.go
     - path: groups.go
+      text: "rangeValCopy"
       linters:
         - gocritic
     # Allow dot import in test files for goconvey
