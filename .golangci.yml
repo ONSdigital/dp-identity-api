@@ -85,12 +85,20 @@ issues:
         - staticcheck
         - errcheck
         - gosec
-    # Allow G101 in error_content.go
+    # Allow specific G101 (hardcoded credentials) warning in error_content.go
+    # Reason: The G101 linter detects potential hardcoded credentials, which is critical in security-sensitive areas.
+    # However, the flagged code in error_content.go does not contain actual credentials but rather uses placeholder text
+    # for error handling purposes. This is reviewed periodically to ensure no real credentials are inadvertently included.
     - path: error_content.go
       text: "G101"
       linters:
         - gosec
-    # Allow rangeValCopy in groups.go
+      source: "IDTokenDescription"
+    # Allow rangeValCopy warning in groups.go
+    # Reason: The rangeValCopy warning is triggered when a range loop copies values rather than referencing them, which
+    # can lead to unnecessary allocations and impact performance. However, in groups.go, this copy is intentional
+    # and safe because the data is minimal and not modified within the loop. Refactoring this would add unnecessary
+    # complexity without performance benefits.
     - path: groups.go
       text: "rangeValCopy"
       linters:
