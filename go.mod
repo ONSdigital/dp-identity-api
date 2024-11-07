@@ -7,12 +7,12 @@ require (
 	github.com/ONSdigital/dp-authorisation/v2 v2.31.2
 	github.com/ONSdigital/dp-component-test v0.15.0
 	github.com/ONSdigital/dp-healthcheck v1.6.3
-	github.com/ONSdigital/dp-net/v2 v2.11.2
-	github.com/ONSdigital/dp-permissions-api v0.24.0
+	github.com/ONSdigital/dp-net/v2 v2.12.0
+	github.com/ONSdigital/dp-permissions-api v0.25.0
 	github.com/ONSdigital/log.go/v2 v2.4.3
 	github.com/aws/aws-sdk-go v1.55.5
-	github.com/cucumber/godog v0.14.1
-	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/cucumber/godog v0.15.0
+	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -24,7 +24,7 @@ require (
 
 require (
 	github.com/ONSdigital/dp-mongodb-in-memory v1.7.0 // indirect
-	github.com/chromedp/cdproto v0.0.0-20241022234722-4d5d5faf59fb // indirect
+	github.com/chromedp/cdproto v0.0.0-20241030022559-23c28aebe8cb // indirect
 	github.com/chromedp/chromedp v0.11.1 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/cucumber/gherkin/go/v26 v26.2.0 // indirect
