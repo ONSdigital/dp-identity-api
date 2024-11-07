@@ -16,7 +16,7 @@ export GOOS?=$(shell go env GOOS)
 export GOARCH?=$(shell go env GOARCH)
 
 .PHONY: all
-all: audit test build
+all: audit lint test build
 
 .PHONY: audit
 audit:
@@ -45,7 +45,7 @@ acceptance:
 
 .PHONY: lint
 lint:
-	exit
+	golangci-lint run ./...
 
 .PHONY: test
 test:
