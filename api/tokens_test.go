@@ -19,23 +19,23 @@ import (
 
 const signInEndPoint = "http://localhost:25600/v1/tokens"
 const signOutEndPoint = "http://localhost:25600/v1/tokens/self"
-const tokenRefreshEndPoint = "http://localhost:25600/v1/tokens/self"
+const tokenRefreshEndPoint = "http://localhost:25600/v1/tokens/self" // #nosec
 
 func TestAPI_TokensHandler(t *testing.T) {
 	var (
-		ctx                                       = context.Background()
-		accessToken, idToken, refreshToken string = "aaaa.bbbb.cccc", "llll.mmmm.nnnn", "zzzz.yyyy.xxxx.wwww.vvvv"
-		expireLength                       int64  = 500
+		ctx                                      = context.Background()
+		accessToken, idToken, refreshToken       = "aaaa.bbbb.cccc", "llll.mmmm.nnnn", "zzzz.yyyy.xxxx.wwww.vvvv"
+		expireLength                       int64 = 500
 	)
 
 	api, w, m := apiSetup()
 
 	// mock call to: AdminUserGlobalSignOut(input *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
-	m.AdminUserGlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+	m.AdminUserGlobalSignOutFunc = func(_ *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 		return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 	}
 	// mock call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-	m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+	m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 		return &cognitoidentityprovider.InitiateAuthOutput{
 			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
 				AccessToken:  &accessToken,
@@ -45,7 +45,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 			},
 		}, nil
 	}
-	m.DescribeUserPoolClientFunc = func(input *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
+	m.DescribeUserPoolClientFunc = func(_ *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
 		tokenValidDays := int64(1)
 		refreshTokenUnits := cognitoidentityprovider.TimeUnitsTypeDays
 
@@ -98,12 +98,10 @@ func TestAPI_TokensHandler(t *testing.T) {
 	})
 
 	Convey("Sign In Cognito internal error: adds an error to the ErrorResponse and sets its Status to 500", t, func() {
-		awsErrCode := "InternalErrorException"
-		awsErrMessage := "Something strange happened"
 		awsOrigErr := errors.New(awsErrCode)
 		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-		m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+		m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			return nil, awsErr
 		}
 
@@ -146,7 +144,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 		for _, tt := range statusTests {
 			awsErr := awserr.New(tt.awsErrCode, tt.awsErrMessage, errors.New(tt.awsErrCode))
 			// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-			m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+			m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 				return nil, awsErr
 			}
 
@@ -172,11 +170,11 @@ func TestAPI_TokensHandler(t *testing.T) {
 	// test Tokens handler's NEW_PASSWORD_REQUIRED challenge response
 	Convey("Handle NEW_PASSWORD_REQUIRED challenge response", t, func() {
 		var (
-			newPasswordStatus, sessionID string = "true", "AYABeBBsY5be-this-is-a-test-session-id-string-123456789iuerhcfdisieo-end"
+			newPasswordStatus, sessionID = "true", "AYABeBBsY5be-this-is-a-test-session-id-string-123456789iuerhcfdisieo-end"
 		)
 
 		// mock call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-		m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+		m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			challengeName := "NEW_PASSWORD_REQUIRED"
 			return &cognitoidentityprovider.InitiateAuthOutput{
 				AuthenticationResult: nil,
@@ -211,12 +209,12 @@ func TestAPI_SignOutHandler(t *testing.T) {
 	api, w, m := apiSetup()
 
 	// mock call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
-	m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+	m.GlobalSignOutFunc = func(_ *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 		return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
 	}
 
 	Convey("Global Sign Out success: no errors added to ErrorResponse Errors list", t, func() {
-		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
 		request.Header.Set(AccessTokenHeaderName, "Bearer zzzz-yyyy-xxxx")
 
 		successResponse, errorResponse := api.SignOutHandler(ctx, w, request)
@@ -227,7 +225,7 @@ func TestAPI_SignOutHandler(t *testing.T) {
 	})
 
 	Convey("Global Sign Out validation error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
-		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
 		request.Header.Set(AccessTokenHeaderName, "")
 
 		successResponse, errorResponse := api.SignOutHandler(ctx, w, request)
@@ -239,16 +237,14 @@ func TestAPI_SignOutHandler(t *testing.T) {
 	})
 
 	Convey("Global Sign Out Cognito internal error: adds an error to the ErrorResponse and sets its Status to 500", t, func() {
-		awsErrCode := "InternalErrorException"
-		awsErrMessage := "Something strange happened"
 		awsOrigErr := errors.New(awsErrCode)
 		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
-		m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+		m.GlobalSignOutFunc = func(_ *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 			return nil, awsErr
 		}
 
-		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
 		request.Header.Set(AccessTokenHeaderName, "Bearer zzzz-yyyy-xxxx")
 
 		successResponse, errorResponse := api.SignOutHandler(ctx, w, request)
@@ -265,11 +261,11 @@ func TestAPI_SignOutHandler(t *testing.T) {
 		awsOrigErr := errors.New(awsErrCode)
 		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
-		m.GlobalSignOutFunc = func(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+		m.GlobalSignOutFunc = func(_ *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 			return nil, awsErr
 		}
 
-		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
 		request.Header.Set(AccessTokenHeaderName, "Bearer zzzz-yyyy-xxxx")
 
 		successResponse, errorResponse := api.SignOutHandler(ctx, w, request)
@@ -283,29 +279,29 @@ func TestAPI_SignOutHandler(t *testing.T) {
 
 func TestAPI_RefreshHandler(t *testing.T) {
 	var (
-		ctx                               = context.Background()
-		accessToken, returnIdToken string = "aaaa.bbbb.cccc", "llll.mmmm.nnnn"
-		expireLength               int64  = 500
+		ctx                              = context.Background()
+		accessToken, returnIDToken       = "aaaa.bbbb.cccc", "llll.mmmm.nnnn"
+		expireLength               int64 = 500
 	)
 
 	api, w, m := apiSetup()
 
 	// mock call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-	m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+	m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 		return &cognitoidentityprovider.InitiateAuthOutput{
 			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
 				AccessToken: &accessToken,
 				ExpiresIn:   &expireLength,
-				IdToken:     &returnIdToken,
+				IdToken:     &returnIDToken,
 			},
 		}, nil
 	}
 
 	Convey("Token refresh success: no errors added to ErrorResponse Errors list", t, func() {
-		request := httptest.NewRequest(http.MethodPut, tokenRefreshEndPoint, nil)
+		request := httptest.NewRequest(http.MethodPut, tokenRefreshEndPoint, http.NoBody)
 		idToken := mock.GenerateMockIDToken("test@ons.gov.uk")
 		So(idToken, ShouldNotEqual, "")
-		request.Header.Set(IdTokenHeaderName, idToken)
+		request.Header.Set(IDTokenHeaderName, idToken)
 		request.Header.Set(RefreshTokenHeaderName, "aaaa.bbbb.cccc.dddd.eeee")
 
 		successResponse, errorResponse := api.RefreshHandler(ctx, w, request)
@@ -319,8 +315,8 @@ func TestAPI_RefreshHandler(t *testing.T) {
 	})
 
 	Convey("Token refresh validation error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
-		request := httptest.NewRequest(http.MethodPut, tokenRefreshEndPoint, nil)
-		request.Header.Set(IdTokenHeaderName, "")
+		request := httptest.NewRequest(http.MethodPut, tokenRefreshEndPoint, http.NoBody)
+		request.Header.Set(IDTokenHeaderName, "")
 		request.Header.Set(RefreshTokenHeaderName, "aaaa.bbbb.cccc.dddd.eeee")
 
 		successResponse, errorResponse := api.RefreshHandler(ctx, w, request)
@@ -332,19 +328,17 @@ func TestAPI_RefreshHandler(t *testing.T) {
 	})
 
 	Convey("Token refresh Cognito internal error: adds an error to the ErrorResponse and sets its Status to 500", t, func() {
-		awsErrCode := "InternalErrorException"
-		awsErrMessage := "Something strange happened"
 		awsOrigErr := errors.New(awsErrCode)
 		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-		m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+		m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			return nil, awsErr
 		}
 
-		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
 		idToken := mock.GenerateMockIDToken("test@ons.gov.uk")
 		So(idToken, ShouldNotEqual, "")
-		request.Header.Set(IdTokenHeaderName, idToken)
+		request.Header.Set(IDTokenHeaderName, idToken)
 		request.Header.Set(RefreshTokenHeaderName, "aaaa.bbbb.cccc.dddd.eeee")
 
 		successResponse, errorResponse := api.RefreshHandler(ctx, w, request)
@@ -361,14 +355,14 @@ func TestAPI_RefreshHandler(t *testing.T) {
 		awsOrigErr := errors.New(awsErrCode)
 		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-		m.InitiateAuthFunc = func(signInInput *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+		m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			return nil, awsErr
 		}
 
-		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, nil)
+		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
 		idToken := mock.GenerateMockIDToken("test@ons.gov.uk")
 		So(idToken, ShouldNotEqual, "")
-		request.Header.Set(IdTokenHeaderName, idToken)
+		request.Header.Set(IDTokenHeaderName, idToken)
 		request.Header.Set(RefreshTokenHeaderName, "aaaa.bbbb.cccc.dddd.eeee")
 
 		successResponse, errorResponse := api.RefreshHandler(ctx, w, request)
@@ -393,12 +387,12 @@ func TestSignOutAllUsersHandlerAccessForProcessing(t *testing.T) {
 		}{
 			{
 				// 200 response from Cognito - 202 from identity api
-				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := mock.BulkGenerateUsers(3, nil)
 					users.PaginationToken = nil
 					return users, nil
 				},
-				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+				func(_ *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 					return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 				},
 				http.StatusAccepted,
@@ -407,7 +401,7 @@ func TestSignOutAllUsersHandlerAccessForProcessing(t *testing.T) {
 		for _, tt := range signOutAllUsersTests {
 			m.ListUsersFunc = tt.listUsersFunction
 			m.AdminUserGlobalSignOutFunc = tt.adminUserGlobalSignOutFunction
-			r := httptest.NewRequest(http.MethodPost, usersEndPoint, nil)
+			r := httptest.NewRequest(http.MethodPost, usersEndPoint, http.NoBody)
 
 			successResponse, errorResponse := api.SignOutAllUsersHandler(ctx, w, r)
 			So(successResponse.Status, ShouldEqual, tt.httpResponse)
@@ -429,14 +423,12 @@ func TestSignOutAllUsersHandlerInternalServerError(t *testing.T) {
 		}{
 			{
 				// 500 response from Cognito's ListUsers API endpoint
-				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
-					awsErrCode := "InternalErrorException"
-					awsErrMessage := "Something strange happened"
+				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					awsOrigErr := errors.New(awsErrCode)
 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					return nil, awsErr
 				},
-				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+				func(_ *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 					return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 				},
 				http.StatusInternalServerError,
@@ -445,7 +437,7 @@ func TestSignOutAllUsersHandlerInternalServerError(t *testing.T) {
 		for _, tt := range signOutAllUsersTests {
 			m.ListUsersFunc = tt.listUsersFunction
 			m.AdminUserGlobalSignOutFunc = tt.adminUserGlobalSignOutFunction
-			r := httptest.NewRequest(http.MethodGet, usersEndPoint, nil)
+			r := httptest.NewRequest(http.MethodGet, usersEndPoint, http.NoBody)
 
 			successResponse, errorResponse := api.SignOutAllUsersHandler(ctx, w, r)
 			So(successResponse, ShouldBeNil)
@@ -478,12 +470,12 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 		}{
 			{
 				// 200 response from Cognito - 202 from identity api
-				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := mock.BulkGenerateUsers(3, nil)
 					users.PaginationToken = nil
 					return users, nil
 				},
-				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+				func(_ *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 					return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 				},
 				models.GlobalSignOut{
@@ -501,21 +493,18 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 			},
 			{
 				// 500 response from Cognito
-				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := mock.BulkGenerateUsers(3, userNamesList)
 					users.PaginationToken = nil
 					return users, nil
 				},
 				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 					if *signOutInput.Username == userNamesList[3] {
-						awsErrCode := "InternalErrorException"
-						awsErrMessage := "Something strange happened"
 						awsOrigErr := errors.New(awsErrCode)
 						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 						return nil, awsErr
-					} else {
-						return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 					}
+					return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 				},
 				models.GlobalSignOut{
 					ResultsChannel: make(chan string, 4),
@@ -532,7 +521,7 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 			},
 			{
 				// 429 response from Cognito
-				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := mock.BulkGenerateUsers(10, userNamesList)
 					users.PaginationToken = nil
 					return users, nil
@@ -544,9 +533,8 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 						awsOrigErr := errors.New(awsErrCode)
 						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 						return nil, awsErr
-					} else {
-						return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 					}
+					return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 				},
 				models.GlobalSignOut{
 					ResultsChannel: make(chan string, 10),
@@ -577,7 +565,6 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 			So(len(tt.globalUserSignOutMod.ResultsChannel), ShouldEqual, tt.expectedResults)
 		}
 	})
-
 }
 
 func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
@@ -587,13 +574,13 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 
 	Convey("Testing users global signout - go routine", t, func() {
 		var (
-			paginationToken, usersFilterString string = "abc-123-xyz-345-xxx", "status=\"Enabled\""
-			backoff                                   = []time.Duration{
+			paginationToken, usersFilterString = "abc-123-xyz-345-xxx", "status=\"Enabled\""
+			backoff                            = []time.Duration{
 				1 * time.Second,
 				2 * time.Second,
 				3 * time.Second,
 			}
-			errCode int = 0
+			errCode int
 		)
 		getAllUsersTests := []struct {
 			listUsersFunction func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
@@ -607,11 +594,10 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 						users := mock.BulkGenerateUsers(3, nil)
 						users.PaginationToken = nil
 						return users, nil
-					} else {
-						users := mock.BulkGenerateUsers(14, nil)
-						users.PaginationToken = &paginationToken
-						return users, nil
 					}
+					users := mock.BulkGenerateUsers(14, nil)
+					users.PaginationToken = &paginationToken
+					return users, nil
 				},
 				backoff,
 				17,
@@ -620,9 +606,7 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 				},
 			},
 			{
-				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
-					awsErrCode := "InternalErrorException"
-					awsErrMessage := "Something strange happened"
+				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					awsOrigErr := errors.New(awsErrCode)
 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					return nil, awsErr
@@ -636,17 +620,14 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 			{
 				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					if userInput.PaginationToken != nil {
-						awsErrCode := "InternalErrorException"
-						awsErrMessage := "Something strange happened"
 						awsOrigErr := errors.New(awsErrCode)
 						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 						// set error code index reference to 1 - expecting a http.StatusInternalServerError here
 						errCode = 1
 						return nil, awsErr
-					} else {
-						users := mock.BulkGenerateUsers(3, nil)
-						return users, nil
 					}
+					users := mock.BulkGenerateUsers(3, nil)
+					return users, nil
 				},
 				backoff,
 				3,
@@ -671,5 +652,4 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 			}
 		}
 	})
-
 }

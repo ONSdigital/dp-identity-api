@@ -15,7 +15,7 @@ import (
 
 const CognitoHealthy = "Cognito Healthy"
 
-func CognitoHealthCheck(ctx context.Context, cognitoClient cognitoclient.Client, userPoolID *string) health.Checker {
+func CognitoHealthCheck(_ context.Context, cognitoClient cognitoclient.Client, userPoolID *string) health.Checker {
 	return func(ctx context.Context, state *health.CheckState) error {
 		_, err := cognitoClient.DescribeUserPool(&cognito.DescribeUserPoolInput{UserPoolId: userPoolID})
 

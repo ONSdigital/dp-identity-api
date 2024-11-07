@@ -17,7 +17,7 @@ type Config struct {
 	HealthCheckCriticalTimeout time.Duration  `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
 	AWSRegion                  string         `envconfig:"AWS_REGION"`
 	AWSCognitoUserPoolID       string         `envconfig:"AWS_COGNITO_USER_POOL_ID" json:"-"`
-	AWSCognitoClientId         string         `envconfig:"AWS_COGNITO_CLIENT_ID" json:"-"`
+	AWSCognitoClientID         string         `envconfig:"AWS_COGNITO_CLIENT_ID" json:"-"`
 	AWSCognitoClientSecret     string         `envconfig:"AWS_COGNITO_CLIENT_SECRET" json:"-"`
 	AWSAuthFlow                string         `envconfig:"AWS_AUTH_FLOW"`
 	AllowedEmailDomains        []string       `envconfig:"ALLOWED_EMAIL_DOMAINS"`
@@ -55,8 +55,8 @@ func Get() (*Config, error) {
 // String is implemented to prevent sensitive fields being logged.
 // The config is returned as JSON with sensitive fields omitted.
 func (config Config) String() string {
-	configJson, _ := json.Marshal(config)
-	return string(configJson)
+	configJSON, _ := json.Marshal(config)
+	return string(configJSON)
 }
 
 func GetMessageAction() string {

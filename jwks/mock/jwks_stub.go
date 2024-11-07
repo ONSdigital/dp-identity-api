@@ -4,14 +4,14 @@ import (
 	"github.com/ONSdigital/dp-identity-api/jwks"
 )
 
-var KeySetOne = jwks.JsonKey{
+var KeySetOne = jwks.JSONKey{
 	E:   "AQAB",
 	Kid: "j+diD4wBP/VZ4+X51XGRdI8Vi0CNV0OpEefKl1ge3A8=",
 	Kty: "RSA",
 	N:   "vBvi--N-F9MQO81xh71jIbkx81w4_sGhbztTJgIdhycV-lMzG6y3dMBWo9eRsFJuRs3MUFElmRrTVxc7EPWNQGQjUyPFW0_CnPPoGBCwgCyWtpNs5EHAkCHXsfryHb6LbJxH9LEbwOQCHR25_Bnqo_NeXSBJtvUabq3cTUgdOPc61Hskq-m19M1u7u1xu7b5DHD308Qyz3OhaEHx3cLL2za-mKxHe0VDe3sa5UfdaliTdBypFWJgNl6TsxF_G83fksgb3bVchzW45pu4dEhtNLqgXejH2-GwU8YRaAguKGW7dO_v-5uwLgDYQG9wgtAwLIMiXsFU7muig2pJEtlG2w",
 }
 
-var KeySetTwo = jwks.JsonKey{
+var KeySetTwo = jwks.JSONKey{
 	E:   "AQAB",
 	Kid: "Oe/15Omy/K78yrUh2EI6xiQSRyeD5f8D/bcI/UphRR8=",
 	Kty: "RSA",
@@ -29,15 +29,15 @@ var JWKSData = map[string]string{
 }
 
 var JWKSStubbed = &JWKSIntMock{
-	JWKSGetKeysetFunc: func(awsRegion string, poolId string) (*jwks.JWKS, error) {
+	JWKSGetKeysetFunc: func(_, _ string) (*jwks.JWKS, error) {
 		return &jwks.JWKS{
-			Keys: []jwks.JsonKey{
+			Keys: []jwks.JSONKey{
 				KeySetOne,
 				KeySetTwo,
 			},
 		}, nil
 	},
-	JWKSToRSAJSONResponseFunc: func(jwksMoqParam *jwks.JWKS) ([]byte, error) {
+	JWKSToRSAJSONResponseFunc: func(_ *jwks.JWKS) ([]byte, error) {
 		return []byte(JWKSResponseData), nil
 	},
 }

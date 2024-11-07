@@ -2,12 +2,13 @@ package confirmation
 
 import (
 	"fmt"
-	"github.com/ONSdigital/dp-identity-api/scripts/import_users/config"
 	"strings"
+
+	"github.com/ONSdigital/dp-identity-api/scripts/import_users/config"
 )
 
 func AskForConfirmation() bool {
-	configs := config.GetConfig()
+	configs, _ := config.GetConfig()
 
 	groupFilename := configs.GroupsFilename
 	userFilename := configs.UserFileName

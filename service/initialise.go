@@ -88,10 +88,10 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 }
 
 // DoGetCognitoClient creates a CognitoClient with the provided region
-func (e *Init) DoGetCognitoClient(AWSRegion string) cognitoclient.Client {
+func (e *Init) DoGetCognitoClient(awsRegion string) cognitoclient.Client {
 	client := cognito.New(session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
-	})), &aws.Config{Region: &AWSRegion})
+	})), &aws.Config{Region: &awsRegion})
 	return client
 }
 

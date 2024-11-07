@@ -24,7 +24,7 @@ func TestGetToken(t *testing.T) {
 
 		headers := http.Header{
 			"Authorization": {defaultAuthorization},
-			"Id":            {defaultId},
+			"Id":            {defaultID},
 			"Refresh":       {defaultRefreshToken},
 		}
 
@@ -46,7 +46,6 @@ func TestGetToken(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			Convey("Then the expected identity token is returned", func() {
-
 				expectedTokenResponse := TokenResponse{
 					Token:                      defaultAuthorization,
 					RefreshToken:               defaultRefreshToken,
@@ -75,7 +74,6 @@ func TestGetToken(t *testing.T) {
 	})
 
 	Convey("Given Get Token is returned with an error", t, func() {
-
 		httpClient := newMockHTTPClient(
 			&http.Response{
 				StatusCode: http.StatusInternalServerError,
@@ -109,7 +107,6 @@ func TestGetToken(t *testing.T) {
 	})
 
 	Convey("Given Get Token is returned with unauthorised", t, func() {
-
 		httpClient := newMockHTTPClient(
 			&http.Response{
 				StatusCode: http.StatusUnauthorized,
@@ -143,7 +140,6 @@ func TestGetToken(t *testing.T) {
 	})
 
 	Convey("Given Get Token is returned with a corrupted repsonse", t, func() {
-
 		body := []byte("{}[")
 
 		httpClient := newMockHTTPClient(

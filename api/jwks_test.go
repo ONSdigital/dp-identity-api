@@ -14,14 +14,14 @@ import (
 	"github.com/ONSdigital/dp-identity-api/models"
 )
 
-const(
+const (
 	jwksEndpoint = "/v1/jwt-keys"
 	errorMessage = "Random Error!"
 )
 
 func TestCognitoPoolJWKSHandler(t *testing.T) {
 	api, w, _ := apiSetup()
-	r := httptest.NewRequest(http.MethodGet, jwksEndpoint, nil)
+	r := httptest.NewRequest(http.MethodGet, jwksEndpoint, http.NoBody)
 
 	resp, err := api.CognitoPoolJWKSHandler(context.Background(), w, r)
 
@@ -38,12 +38,12 @@ func TestCognitoPoolJWKSHandlerErrors404(t *testing.T) {
 
 	// override default jwks handler
 	api.JWKSHandler = &mock.JWKSIntMock{
-		JWKSGetKeysetFunc: func(awsRegion string, poolId string) (*jwks.JWKS, error) {
+		JWKSGetKeysetFunc: func(_ string, _ string) (*jwks.JWKS, error) {
 			return nil, errors.New(errorMessage)
 		},
 	}
 
-	r := httptest.NewRequest(http.MethodGet, jwksEndpoint, nil)
+	r := httptest.NewRequest(http.MethodGet, jwksEndpoint, http.NoBody)
 
 	resp, err := api.CognitoPoolJWKSHandler(context.Background(), w, r)
 
@@ -60,20 +60,20 @@ func TestCognitoPoolJWKSHandlerErrors500(t *testing.T) {
 
 	// override default jwks handler
 	api.JWKSHandler = &mock.JWKSIntMock{
-		JWKSGetKeysetFunc: func(awsRegion string, poolId string) (*jwks.JWKS, error) {
+		JWKSGetKeysetFunc: func(_, _ string) (*jwks.JWKS, error) {
 			return &jwks.JWKS{
-				Keys: []jwks.JsonKey{
+				Keys: []jwks.JSONKey{
 					mock.KeySetOne,
 					mock.KeySetTwo,
 				},
 			}, nil
 		},
-		JWKSToRSAJSONResponseFunc: func(jwksMoqParam *jwks.JWKS) ([]byte, error) {
+		JWKSToRSAJSONResponseFunc: func(_ *jwks.JWKS) ([]byte, error) {
 			return nil, errors.New(errorMessage)
 		},
 	}
 
-	r := httptest.NewRequest(http.MethodGet, jwksEndpoint, nil)
+	r := httptest.NewRequest(http.MethodGet, jwksEndpoint, http.NoBody)
 
 	resp, err := api.CognitoPoolJWKSHandler(context.Background(), w, r)
 

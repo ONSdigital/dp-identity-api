@@ -27,17 +27,17 @@ var (
 
 	defaultExpirationTime        = "2023-09-27 17:30:00.000000000 +0000 UTC"
 	defaultRefreshExpirationTime = "2023-09-28 16:30:00.000000000 +0000 UTC"
-	defaultId                    = "testId1234"
+	defaultID                    = "testId1234"
 	defaultRefreshToken          = "refreshtoken1234"
 	defaultAuthorization         = "Bearer testToken1234"
 )
 
 func newMockHTTPClient(r *http.Response, err error) *dphttp.ClienterMock {
 	return &dphttp.ClienterMock{
-		SetPathsWithNoRetriesFunc: func(paths []string) {
+		SetPathsWithNoRetriesFunc: func(_ []string) {
 			// This gets called by the mock, just don't do anything.
 		},
-		DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
+		DoFunc: func(_ context.Context, _ *http.Request) (*http.Response, error) {
 			return r, err
 		},
 		GetPathsWithNoRetriesFunc: func() []string {

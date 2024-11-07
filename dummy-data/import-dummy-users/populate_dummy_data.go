@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"os"
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/cognito"
@@ -27,7 +26,6 @@ func main() {
 	ctx := context.Background()
 	if err := runUserAndGroupsPopulate(ctx); err != nil {
 		log.Fatal(ctx, "fatal runtime error", err)
-		os.Exit(1)
 	}
 }
 
@@ -59,9 +57,9 @@ func runUserAndGroupsPopulate(ctx context.Context) error {
 	return nil
 }
 
-func checkPoolExistsAndIsLocal(ctx context.Context, client cognito.Client, userPoolId string) error {
+func checkPoolExistsAndIsLocal(ctx context.Context, client cognito.Client, userPoolID string) error {
 	input := cognitoidentityprovider.DescribeUserPoolInput{
-		UserPoolId: aws.String(userPoolId),
+		UserPoolId: aws.String(userPoolID),
 	}
 	userPoolDetails, err := client.DescribeUserPool(&input)
 	if err != nil {
@@ -73,9 +71,9 @@ func checkPoolExistsAndIsLocal(ctx context.Context, client cognito.Client, userP
 	return nil
 }
 
-func createUsers(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
+func createUsers(ctx context.Context, client cognito.Client, userPoolID string, backoffSchedule []time.Duration) {
 	var (
-		baseFirstName, baseLastName, emailDomain string = "test", "user-", "@ons.gov.uk"
+		baseFirstName, baseLastName, emailDomain = "test", "user-", "@ons.gov.uk"
 	)
 	for i := range [UserCount]int{} {
 		for _, backoff := range backoffSchedule {
@@ -85,7 +83,7 @@ func createUsers(ctx context.Context, client cognito.Client, userPoolId string, 
 				break
 			}
 			lastName := baseLastName + fmt.Sprint(i)
-			userId := baseFirstName + "-" + lastName
+			userID := baseFirstName + "-" + lastName
 			userCreationInput := cognitoidentityprovider.AdminCreateUserInput{
 				UserAttributes: []*cognitoidentityprovider.AttributeType{
 					{
@@ -107,8 +105,8 @@ func createUsers(ctx context.Context, client cognito.Client, userPoolId string, 
 				},
 				MessageAction:     aws.String("SUPPRESS"),
 				TemporaryPassword: &user.Password,
-				UserPoolId:        &userPoolId,
-				Username:          &userId,
+				UserPoolId:        &userPoolID,
+				Username:          &userID,
 			}
 			_, awsErr := client.AdminCreateUser(&userCreationInput)
 			if awsErr != nil {
@@ -124,9 +122,9 @@ func createUsers(ctx context.Context, client cognito.Client, userPoolId string, 
 	}
 }
 
-func confirmUsers(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
+func confirmUsers(ctx context.Context, client cognito.Client, userPoolID string, backoffSchedule []time.Duration) {
 	var (
-		baseEmailPrefix, emailDomain string = "test.user-", "@ons.gov.uk"
+		baseEmailPrefix, emailDomain = "test.user-", "@ons.gov.uk"
 	)
 	for i := range [UserCount]int{} {
 		if math.Mod(float64(i), float64(11)) == 0 {
@@ -141,7 +139,7 @@ func confirmUsers(ctx context.Context, client cognito.Client, userPoolId string,
 			userSetPasswordInput := cognitoidentityprovider.AdminSetUserPasswordInput{
 				Password:   &user.Password,
 				Permanent:  aws.Bool(true),
-				UserPoolId: &userPoolId,
+				UserPoolId: &userPoolID,
 				Username:   aws.String(baseEmailPrefix + fmt.Sprint(i) + emailDomain),
 			}
 			_, awsErr := client.AdminSetUserPassword(&userSetPasswordInput)
@@ -158,9 +156,9 @@ func confirmUsers(ctx context.Context, client cognito.Client, userPoolId string,
 	}
 }
 
-func disableUsers(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
+func disableUsers(ctx context.Context, client cognito.Client, userPoolID string, backoffSchedule []time.Duration) {
 	var (
-		baseFirstName, baseLastName, emailDomain string = "test", "user-", "@ons.gov.uk"
+		baseFirstName, baseLastName, emailDomain = "test", "user-", "@ons.gov.uk"
 	)
 	for i := range [UserCount]int{} {
 		if math.Mod(float64(i), float64(51)) != 0 {
@@ -169,7 +167,7 @@ func disableUsers(ctx context.Context, client cognito.Client, userPoolId string,
 		for _, backoff := range backoffSchedule {
 			lastName := baseLastName + fmt.Sprint(i)
 			userDisableInput := cognitoidentityprovider.AdminDisableUserInput{
-				UserPoolId: &userPoolId,
+				UserPoolId: &userPoolID,
 				Username:   aws.String(baseFirstName + "." + lastName + emailDomain),
 			}
 			_, awsErr := client.AdminDisableUser(&userDisableInput)
@@ -186,9 +184,9 @@ func disableUsers(ctx context.Context, client cognito.Client, userPoolId string,
 	}
 }
 
-func createGroups(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
+func createGroups(ctx context.Context, client cognito.Client, userPoolID string, backoffSchedule []time.Duration) {
 	var (
-		baseGroupName, baseDescription string = "test-group-", "Test Group "
+		baseGroupName, baseDescription = "test-group-", "Test Group "
 	)
 	for i := range [GroupCount]int{} {
 		for _, backoff := range backoffSchedule {
@@ -196,7 +194,7 @@ func createGroups(ctx context.Context, client cognito.Client, userPoolId string,
 				Description: aws.String(baseDescription + fmt.Sprint(i)),
 				GroupName:   aws.String(baseGroupName + fmt.Sprint(i)),
 				Precedence:  aws.Int64(3),
-				UserPoolId:  &userPoolId,
+				UserPoolId:  &userPoolID,
 			}
 			_, awsErr := client.CreateGroup(&groupCreationInput)
 			if awsErr != nil {
@@ -212,35 +210,35 @@ func createGroups(ctx context.Context, client cognito.Client, userPoolId string,
 	}
 }
 
-func addUsersToGroups(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
+func addUsersToGroups(ctx context.Context, client cognito.Client, userPoolID string, backoffSchedule []time.Duration) {
 	for userNumber := range [UserCount]int{} {
 		if userNumber > GroupUserCount {
 			break
 		}
 		for groupNumber := range [GroupCount]int{} {
 			if userNumber == groupNumber {
-				addUserToGroup(ctx, fmt.Sprint(userNumber), fmt.Sprint(groupNumber), userPoolId, client, backoffSchedule)
+				addUserToGroup(ctx, fmt.Sprint(userNumber), fmt.Sprint(groupNumber), userPoolID, client, backoffSchedule)
 			}
 			if math.Mod(float64(userNumber), float64(2)) == 0 && math.Mod(float64(groupNumber), float64(2)) == 0 {
-				addUserToGroup(ctx, fmt.Sprint(userNumber), fmt.Sprint(groupNumber), userPoolId, client, backoffSchedule)
+				addUserToGroup(ctx, fmt.Sprint(userNumber), fmt.Sprint(groupNumber), userPoolID, client, backoffSchedule)
 			}
 			if math.Mod(float64(userNumber), float64(3)) == 0 && math.Mod(float64(groupNumber), float64(3)) == 0 {
-				addUserToGroup(ctx, fmt.Sprint(userNumber), fmt.Sprint(groupNumber), userPoolId, client, backoffSchedule)
+				addUserToGroup(ctx, fmt.Sprint(userNumber), fmt.Sprint(groupNumber), userPoolID, client, backoffSchedule)
 			}
 		}
 	}
 }
 
-func addUserToGroup(ctx context.Context, userNumber, groupNumber, userPoolId string, client cognito.Client, backoffSchedule []time.Duration) {
+func addUserToGroup(ctx context.Context, userNumber, groupNumber, userPoolID string, client cognito.Client, backoffSchedule []time.Duration) {
 	var (
-		baseFirstName, baseLastName, emailDomain string = "test", "user-", "@ons.gov.uk"
-		baseGroupName                            string = "test-group-"
+		baseFirstName, baseLastName, emailDomain = "test", "user-", "@ons.gov.uk"
+		baseGroupName                            = "test-group-"
 	)
 	for _, backoff := range backoffSchedule {
 		lastName := baseLastName + userNumber
 		userAddToGroupInput := cognitoidentityprovider.AdminAddUserToGroupInput{
 			GroupName:  aws.String(baseGroupName + groupNumber),
-			UserPoolId: &userPoolId,
+			UserPoolId: &userPoolID,
 			Username:   aws.String(baseFirstName + "." + lastName + emailDomain),
 		}
 		_, awsErr := client.AdminAddUserToGroup(&userAddToGroupInput)

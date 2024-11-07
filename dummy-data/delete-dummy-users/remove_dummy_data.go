@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/cognito"
@@ -25,7 +24,6 @@ func main() {
 	ctx := context.Background()
 	if err := runUserAndGroupsRemove(ctx); err != nil {
 		log.Fatal(ctx, "fatal runtime error", err)
-		os.Exit(1)
 	}
 }
 
@@ -53,9 +51,9 @@ func runUserAndGroupsRemove(ctx context.Context) error {
 	return nil
 }
 
-func checkPoolExistsAndIsLocalForRemove(ctx context.Context, client cognito.Client, userPoolId string) error {
+func checkPoolExistsAndIsLocalForRemove(ctx context.Context, client cognito.Client, userPoolID string) error {
 	input := cognitoidentityprovider.DescribeUserPoolInput{
-		UserPoolId: aws.String(userPoolId),
+		UserPoolId: aws.String(userPoolID),
 	}
 	userPoolDetails, err := client.DescribeUserPool(&input)
 	if err != nil {
@@ -67,13 +65,13 @@ func checkPoolExistsAndIsLocalForRemove(ctx context.Context, client cognito.Clie
 	return nil
 }
 
-func deleteUsers(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
+func deleteUsers(ctx context.Context, client cognito.Client, userPoolID string, backoffSchedule []time.Duration) {
 	baseUsername := "test-user-"
 	for i := range [UserRemovalCount]int{} {
 		for _, backoff := range backoffSchedule {
 			username := baseUsername + fmt.Sprint(i)
 			userDeletionInput := cognitoidentityprovider.AdminDeleteUserInput{
-				UserPoolId: &userPoolId,
+				UserPoolId: &userPoolID,
 				Username:   &username,
 			}
 			_, awsErr := client.AdminDeleteUser(&userDeletionInput)
@@ -90,7 +88,7 @@ func deleteUsers(ctx context.Context, client cognito.Client, userPoolId string, 
 	}
 }
 
-func deleteGroups(ctx context.Context, client cognito.Client, userPoolId string, backoffSchedule []time.Duration) {
+func deleteGroups(ctx context.Context, client cognito.Client, userPoolID string, backoffSchedule []time.Duration) {
 	baseGroupName := "test-group-"
 
 	for i := range [GroupRemovalCount]int{} {
@@ -98,7 +96,7 @@ func deleteGroups(ctx context.Context, client cognito.Client, userPoolId string,
 			groupName := baseGroupName + fmt.Sprint(i)
 			groupDeletionInput := cognitoidentityprovider.DeleteGroupInput{
 				GroupName:  &groupName,
-				UserPoolId: &userPoolId,
+				UserPoolId: &userPoolID,
 			}
 			_, awsErr := client.DeleteGroup(&groupDeletionInput)
 			if awsErr != nil {

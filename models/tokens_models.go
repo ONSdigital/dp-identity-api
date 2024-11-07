@@ -33,7 +33,7 @@ func (t *AccessToken) GenerateSignOutRequest() *cognitoidentityprovider.GlobalSi
 		AccessToken: &t.TokenString}
 }
 
-type IdClaims struct {
+type IDClaims struct {
 	Sub           string `json:"sub"`
 	Aud           string `json:"aud"`
 	EmailVerified bool   `json:"email_verified"`
@@ -48,21 +48,21 @@ type IdClaims struct {
 	jwt.StandardClaims
 }
 
-type IdToken struct {
+type IDToken struct {
 	TokenString string
-	Claims      IdClaims
+	Claims      IDClaims
 }
 
-//ParseWithoutValidating parses the claims in an ID token JWT in to a IdClaims struct without validating the token
-func (t *IdToken) ParseWithoutValidating(ctx context.Context, tokenString string) *Error {
+// ParseWithoutValidating parses the claims in an ID token JWT in to a IdClaims struct without validating the token
+func (t *IDToken) ParseWithoutValidating(ctx context.Context, tokenString string) *Error {
 	parser := new(jwt.Parser)
 
-	idToken, _, parsingErr := parser.ParseUnverified(tokenString, &IdClaims{})
+	idToken, _, parsingErr := parser.ParseUnverified(tokenString, &IDClaims{})
 	if parsingErr != nil {
 		return NewError(ctx, parsingErr, InvalidTokenError, MalformedIDTokenDescription)
 	}
 
-	idClaims, ok := idToken.Claims.(*IdClaims)
+	idClaims, ok := idToken.Claims.(*IDClaims)
 	if !ok {
 		return NewValidationError(ctx, InvalidTokenError, MalformedIDTokenDescription)
 	}
@@ -71,8 +71,8 @@ func (t *IdToken) ParseWithoutValidating(ctx context.Context, tokenString string
 	return nil
 }
 
-//Validate validates the existence of a JWT string and that it is correctly formatting, storing the tokens claims in an IdClaims struct
-func (t *IdToken) Validate(ctx context.Context) *Error {
+// Validate validates the existence of a JWT string and that it is correctly formatting, storing the tokens claims in an IdClaims struct
+func (t *IDToken) Validate(ctx context.Context) *Error {
 	if t.TokenString == "" {
 		return NewValidationError(ctx, InvalidTokenError, MissingIDTokenDescription)
 	}
@@ -87,11 +87,11 @@ type RefreshToken struct {
 	TokenString string
 }
 
-//GenerateRefreshRequest produces a Cognito InitiateAuthInput struct for refreshing a users current session
-func (t *RefreshToken) GenerateRefreshRequest(clientSecret string, username string, clientId string) *cognitoidentityprovider.InitiateAuthInput {
+// GenerateRefreshRequest produces a Cognito InitiateAuthInput struct for refreshing a users current session
+func (t *RefreshToken) GenerateRefreshRequest(clientSecret, username, clientID string) *cognitoidentityprovider.InitiateAuthInput {
 	refreshAuthFlow := "REFRESH_TOKEN_AUTH"
 
-	secretHash := utilities.ComputeSecretHash(clientSecret, username, clientId)
+	secretHash := utilities.ComputeSecretHash(clientSecret, username, clientID)
 
 	authParams := map[string]*string{
 		"REFRESH_TOKEN": &t.TokenString,
@@ -101,12 +101,12 @@ func (t *RefreshToken) GenerateRefreshRequest(clientSecret string, username stri
 	authInput := &cognitoidentityprovider.InitiateAuthInput{
 		AuthFlow:       &refreshAuthFlow,
 		AuthParameters: authParams,
-		ClientId:       &clientId,
+		ClientId:       &clientID,
 	}
 	return authInput
 }
 
-//Validate validates the existence of a JWT string
+// Validate validates the existence of a JWT string
 func (t *RefreshToken) Validate(ctx context.Context) *Error {
 	if t.TokenString != "" {
 		return nil
@@ -114,7 +114,7 @@ func (t *RefreshToken) Validate(ctx context.Context) *Error {
 	return NewValidationError(ctx, InvalidTokenError, MissingRefreshTokenDescription)
 }
 
-func (t *RefreshToken) BuildSuccessfulJsonResponse(ctx context.Context, result *cognitoidentityprovider.InitiateAuthOutput) ([]byte, error) {
+func (t *RefreshToken) BuildSuccessfulJSONResponse(ctx context.Context, result *cognitoidentityprovider.InitiateAuthOutput) ([]byte, error) {
 	if result.AuthenticationResult != nil {
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
 		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
@@ -127,13 +127,12 @@ func (t *RefreshToken) BuildSuccessfulJsonResponse(ctx context.Context, result *
 			return nil, responseErr
 		}
 		return jsonResponse, nil
-	} else {
-		responseErr := NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
-		return nil, responseErr
 	}
+	responseErr := NewValidationError(ctx, InternalError, UnrecognisedCognitoResponseDescription)
+	return nil, responseErr
 }
 
-func BuildSuccessfulSignOutAllUsersJsonResponse(ctx context.Context) ([]byte, error) {
+func BuildSuccessfulSignOutAllUsersJSONResponse(ctx context.Context) ([]byte, error) {
 	postBody := map[string]interface{}{"message": "Request to invalidate all refresh tokens has been accepted and will be processed asynchronously. This can take several minutes to complete."}
 
 	jsonResponse, err := json.Marshal(postBody)

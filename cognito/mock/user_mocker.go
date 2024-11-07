@@ -1,8 +1,10 @@
 package mock
 
 import (
+	"context"
 	"strings"
 
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/google/uuid"
 )
@@ -87,7 +89,7 @@ func (m *CognitoIdentityProviderClientStub) GenerateUser(id, email, password, gi
 func (m *CognitoIdentityProviderClientStub) SetUserActiveState(username, active string) {
 	for _, user := range m.Users {
 		if user.ID == username {
-			user.Active = "true" == active
+			user.Active = active == "true"
 			return
 		}
 	}
@@ -103,34 +105,40 @@ func (m *CognitoIdentityProviderClientStub) ReadUser(username string) *User {
 }
 
 func (m *CognitoIdentityProviderClientStub) MakeUserMember(userName string) {
-
+	ctx := context.Background()
 	user := m.ReadUser(userName)
 	if user != nil {
 		for _, group := range m.Groups {
 			if !strings.HasPrefix(group.Name, "role-") {
-				m.AddUserToGroup(user.ID, group.Name)
+				if err := m.AddUserToGroup(user.ID, group.Name); err != nil {
+					log.Warn(ctx, "error adding user to group", log.Data{
+						"userName":  userName,
+						"groupName": group.Name,
+					})
+				}
 			}
 		}
 	}
 }
 
-//BulkGenerateUsers - bulk generate 'n' users for testing purposes
-//                    if usernames array is nil or length is different, will auto-assign UUIDs
+// BulkGenerateUsers - bulk generate 'n' users for testing purposes
+//
+//	if usernames array is nil or length is different, will auto-assign UUIDs
 func BulkGenerateUsers(userCount int, userNames []string) *cognitoidentityprovider.ListUsersOutput {
 	paginationToken := "abc-123-xyz-345-xxx"
 	usersList := &cognitoidentityprovider.ListUsersOutput{}
 	for i := 0; i < userCount; i++ {
 		var (
-			userId, status string = "", "CONFIRMED"
-			enabled        bool   = true
+			userID, status = "", "CONFIRMED"
+			enabled        = true
 		)
 		if userNames == nil || i > len(userNames)-1 {
-			userId = uuid.NewString()
+			userID = uuid.NewString()
 		} else {
-			userId = userNames[i]
+			userID = userNames[i]
 		}
 		user := &cognitoidentityprovider.UserType{}
-		user.Username = &userId
+		user.Username = &userID
 		user.Enabled = &enabled
 		user.UserStatus = &status
 		usersList.Users = append(usersList.Users, user)

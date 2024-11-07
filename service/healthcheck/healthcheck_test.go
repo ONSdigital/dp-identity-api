@@ -33,7 +33,7 @@ func TestGetHealthCheck(t *testing.T) {
 		awsUserPoolID := "us-west-2_aaaaaaaaa"
 		checkState := health.NewCheckState("dp-identity-api-test")
 
-		m.GetGroupFunc = func(inputData *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+		m.GetGroupFunc = func(_ *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
 			group := &cognitoidentityprovider.GetGroupOutput{
 				Group: &cognitoidentityprovider.GroupType{},
 			}
@@ -52,7 +52,7 @@ func TestGetHealthCheck(t *testing.T) {
 
 	Convey("dp-identity-api healthchecker reports critical", t, func() {
 		Convey("When the user pool can't be found", func() {
-			m.GetGroupFunc = func(inputData *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+			m.GetGroupFunc = func(_ *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
 				group := &cognitoidentityprovider.GetGroupOutput{
 					Group: &cognitoidentityprovider.GroupType{},
 				}

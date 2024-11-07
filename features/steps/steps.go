@@ -37,7 +37,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the AdminUserGlobalSignOut endpoint in cognito returns an internal server error$`, c.theAdminUserGlobalSignOutEndpointInCognitoReturnsAnInternalServerError)
 	ctx.Step(`^the list response should contain "([^"]*)" entries$`, c.listResponseShouldContainCorrectNumberOfEntries)
 	ctx.Step(`^the response code should be (\d+)$`, c.theResponseCodeShouldBe)
-	ctx.Step(`^the response should match the following json for listgroups$`, c.theResponseShouldMatchTheFollowingJsonForListgroups)
+	ctx.Step(`^the response should match the following json for listgroups$`, c.theResponseShouldMatchTheFollowingJSONForListGroups)
 	ctx.Step(`^there are "([^"]*)" active users and "([^"]*)" inactive users in the database$`, c.thereAreRequiredNumberOfActiveUsers)
 	ctx.Step(`^there are "([^"]*)" users in the database$`, c.thereAreRequiredNumberOfUsers)
 	ctx.Step(`^there are (\d+) groups in the database$`, c.thereAreGroupsInTheDatabase)
@@ -89,11 +89,11 @@ func (c *IdentityComponent) iHaveAnActiveSessionWithAccessToken(accessToken stri
 }
 
 func (c *IdentityComponent) iHaveAValidIDHeaderForUser(email string) error {
-	idToken := c.CognitoClient.CreateIdTokenForEmail(email)
+	idToken := c.CognitoClient.CreateIDTokenForEmail(email)
 	if idToken == "" {
 		return errors.New("id token generation failed")
 	}
-	err := c.apiFeature.ISetTheHeaderTo(api.IdTokenHeaderName, idToken)
+	err := c.apiFeature.ISetTheHeaderTo(api.IDTokenHeaderName, idToken)
 	return err
 }
 
@@ -210,7 +210,6 @@ func (c *IdentityComponent) thereAreRequiredNumberOfActiveUsers(requiredNumberOf
 }
 
 func (c *IdentityComponent) thereAreGroupsInTheDatabase(groupCount string) error {
-
 	groupCountInt, err := strconv.Atoi(groupCount)
 	if err != nil {
 		return errors.New("could not convert" + groupCount + "to int")
@@ -219,7 +218,7 @@ func (c *IdentityComponent) thereAreGroupsInTheDatabase(groupCount string) error
 	tmpGroupsList := c.CognitoClient.GroupsList
 	lengroups := 0
 	for _, x := range tmpGroupsList {
-		lengroups = lengroups + len(x.Groups)
+		lengroups += len(x.Groups)
 	}
 
 	assert.Equal(c.apiFeature, groupCountInt, lengroups)
@@ -235,7 +234,7 @@ func (c *IdentityComponent) theResponseCodeShouldBe(code int) error {
 	return nil
 }
 
-func (c *IdentityComponent) theResponseShouldMatchTheFollowingJsonForListgroups(body *godog.DocString) (err error) {
+func (c *IdentityComponent) theResponseShouldMatchTheFollowingJSONForListGroups(body *godog.DocString) (err error) {
 	var expected, actual models.ListUserGroups
 	if err = json.Unmarshal([]byte(body.Content), &expected); err != nil {
 		return
@@ -270,7 +269,7 @@ func (c *IdentityComponent) requestHeaderAcceptIs() error {
 
 func (c *IdentityComponent) theResponseShouldMatchTheFollowingCsv(body *godog.DocString) (err error) {
 	tmpExpected, _ := io.ReadAll(c.apiFeature.HTTPResponse.Body)
-	actual := strings.Replace(strings.TrimSpace(string(tmpExpected[:])), "\t", "", -1)
+	actual := strings.Replace(strings.TrimSpace(string(tmpExpected)), "\t", "", -1)
 	expected := strings.Replace(strings.TrimSpace(body.Content), "\t", "", -1)
 
 	if actual != expected {

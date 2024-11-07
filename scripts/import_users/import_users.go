@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/ONSdigital/dp-identity-api/scripts/import_users/config"
@@ -13,32 +12,31 @@ import (
 )
 
 func main() {
-	confirmation := confirmation.AskForConfirmation()
+	confirmationResponse := confirmation.AskForConfirmation()
 
-	if !confirmation {
+	if !confirmationResponse {
 		os.Exit(0)
 	}
 
 	ctx := context.Background()
-	config := config.GetConfig()
+	cfg, _ := config.GetConfig()
 
-	log.Info(ctx, "print out log", log.Data{"config": config})
+	log.Info(ctx, "print out log", log.Data{"config": cfg})
 
 	var err error
 
-	err = users.ImportUsersFromS3(ctx, config)
+	err = users.ImportUsersFromS3(ctx, cfg)
 	if err != nil {
-		log.Error(ctx, fmt.Sprintf("failed to import group"), err)
+		log.Error(ctx, "failed to import group", err)
 	}
 
-	err = groups.ImportGroupsFromS3(ctx, config)
+	err = groups.ImportGroupsFromS3(ctx, cfg)
 	if err != nil {
-		log.Error(ctx, fmt.Sprintf("failed to import group"), err)
+		log.Error(ctx, "failed to import group", err)
 	}
 
-	err = groups.ImportGroupsMembersFromS3(ctx, config)
+	err = groups.ImportGroupsMembersFromS3(ctx, cfg)
 	if err != nil {
-		log.Error(ctx, fmt.Sprintf("failed to import group"), err)
+		log.Error(ctx, "failed to import group", err)
 	}
-
 }
