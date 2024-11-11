@@ -11,7 +11,7 @@ import (
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

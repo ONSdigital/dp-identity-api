@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 )
 
 // CognitoPoolJWKSHandler handles the retrieval of pool specific web key set

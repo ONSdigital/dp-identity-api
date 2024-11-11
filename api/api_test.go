@@ -11,14 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 
 	authorisation "github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
-	"github.com/ONSdigital/dp-identity-api/cognito/mock"
-	jwksmock "github.com/ONSdigital/dp-identity-api/jwks/mock"
+	"github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
+	jwksmock "github.com/ONSdigital/dp-identity-api/v2/jwks/mock"
 )
 
 const awsErrCode = "InternalErrorException"

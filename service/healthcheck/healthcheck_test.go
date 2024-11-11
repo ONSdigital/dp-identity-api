@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
-	"github.com/ONSdigital/dp-identity-api/cognito/mock"
-	healthcheck "github.com/ONSdigital/dp-identity-api/service/healthcheck"
+	"github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
+	healthcheck "github.com/ONSdigital/dp-identity-api/v2/service/healthcheck"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	. "github.com/smartystreets/goconvey/convey"
 )

@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ONSdigital/dp-identity-api/jwks"
+	"github.com/ONSdigital/dp-identity-api/v2/jwks"
 )
 
 func main() {

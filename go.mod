@@ -1,4 +1,4 @@
-module github.com/ONSdigital/dp-identity-api
+module github.com/ONSdigital/dp-identity-api/v2
 
 go 1.23
 
@@ -24,8 +24,8 @@ require (
 
 require (
 	github.com/ONSdigital/dp-mongodb-in-memory v1.7.0 // indirect
-	github.com/chromedp/cdproto v0.0.0-20241030022559-23c28aebe8cb // indirect
-	github.com/chromedp/chromedp v0.11.1 // indirect
+	github.com/chromedp/cdproto v0.0.0-20241110205750-a72e6703cd9b // indirect
+	github.com/chromedp/chromedp v0.11.2 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/cucumber/gherkin/go/v26 v26.2.0 // indirect
 	github.com/cucumber/messages/go/v21 v21.0.1 // indirect
@@ -62,13 +62,13 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	go.mongodb.org/mongo-driver v1.17.1 // indirect
-	go.opentelemetry.io/otel v1.31.0 // indirect
-	go.opentelemetry.io/otel/metric v1.31.0 // indirect
-	go.opentelemetry.io/otel/trace v1.31.0 // indirect
-	golang.org/x/crypto v0.28.0 // indirect
-	golang.org/x/net v0.30.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.26.0 // indirect
-	golang.org/x/text v0.19.0 // indirect
+	go.opentelemetry.io/otel v1.32.0 // indirect
+	go.opentelemetry.io/otel/metric v1.32.0 // indirect
+	go.opentelemetry.io/otel/trace v1.32.0 // indirect
+	golang.org/x/crypto v0.29.0 // indirect
+	golang.org/x/net v0.31.0 // indirect
+	golang.org/x/sync v0.9.0 // indirect
+	golang.org/x/sys v0.27.0 // indirect
+	golang.org/x/text v0.20.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

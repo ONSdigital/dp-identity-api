@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 )
 
 // LessFunc used by MultiSorter OrderedBy  used to hold the seq of sort

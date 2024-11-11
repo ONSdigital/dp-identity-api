@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ONSdigital/dp-identity-api/scripts/import_users/config"
+	"github.com/ONSdigital/dp-identity-api/v2/scripts/import_users/config"
 )
 
 func AskForConfirmation() bool {

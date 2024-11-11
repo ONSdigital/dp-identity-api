@@ -5,7 +5,7 @@ package mock
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-identity-api/service"
+	"github.com/ONSdigital/dp-identity-api/v2/service"
 	"sync"
 )
 

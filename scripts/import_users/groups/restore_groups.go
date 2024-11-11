@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ONSdigital/dp-identity-api/scripts/import_users/config"
+	"github.com/ONSdigital/dp-identity-api/v2/scripts/import_users/config"
 
-	"github.com/ONSdigital/dp-identity-api/models"
-	"github.com/ONSdigital/dp-identity-api/scripts/utils"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
+	"github.com/ONSdigital/dp-identity-api/v2/scripts/utils"
 	"github.com/ONSdigital/log.go/v2/log"
 	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/pkg/errors"

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

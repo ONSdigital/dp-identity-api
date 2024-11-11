@@ -11,7 +11,7 @@ import (
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 
 	healthcheck "github.com/ONSdigital/dp-api-clients-go/v2/health"
-	apiError "github.com/ONSdigital/dp-identity-api/sdk/errors"
+	apiError "github.com/ONSdigital/dp-identity-api/v2/sdk/errors"
 )
 
 const (

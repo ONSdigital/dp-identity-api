@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/golang-jwt/jwt/v4"
 )
 

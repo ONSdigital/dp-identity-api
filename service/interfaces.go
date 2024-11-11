@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-	cognitoclient "github.com/ONSdigital/dp-identity-api/cognito"
+	cognitoclient "github.com/ONSdigital/dp-identity-api/v2/cognito"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	"github.com/ONSdigital/dp-identity-api/config"
+	"github.com/ONSdigital/dp-identity-api/v2/config"
 )
 
 //go:generate moq -out mock/initialiser.go -pkg mock . Initialiser

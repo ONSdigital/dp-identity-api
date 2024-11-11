@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ONSdigital/dp-identity-api/utilities"
+	"github.com/ONSdigital/dp-identity-api/v2/utilities"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/golang-jwt/jwt/v4"
 )

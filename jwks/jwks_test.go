@@ -3,8 +3,8 @@ package jwks_test
 import (
 	"testing"
 
-	"github.com/ONSdigital/dp-identity-api/jwks"
-	"github.com/ONSdigital/dp-identity-api/jwks/mock"
+	"github.com/ONSdigital/dp-identity-api/v2/jwks"
+	"github.com/ONSdigital/dp-identity-api/v2/jwks/mock"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

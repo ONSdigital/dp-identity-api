@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/ONSdigital/dp-identity-api/models"
-	"github.com/ONSdigital/dp-identity-api/query"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
+	"github.com/ONSdigital/dp-identity-api/v2/query"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"

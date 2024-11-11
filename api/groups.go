@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 	dplogs "github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"

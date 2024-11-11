@@ -4,10 +4,10 @@ import (
 	"context"
 	"os"
 
-	"github.com/ONSdigital/dp-identity-api/scripts/import_users/config"
-	"github.com/ONSdigital/dp-identity-api/scripts/import_users/confirmation"
-	"github.com/ONSdigital/dp-identity-api/scripts/import_users/groups"
-	"github.com/ONSdigital/dp-identity-api/scripts/import_users/users"
+	"github.com/ONSdigital/dp-identity-api/v2/scripts/import_users/config"
+	"github.com/ONSdigital/dp-identity-api/v2/scripts/import_users/confirmation"
+	"github.com/ONSdigital/dp-identity-api/v2/scripts/import_users/groups"
+	"github.com/ONSdigital/dp-identity-api/v2/scripts/import_users/users"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 

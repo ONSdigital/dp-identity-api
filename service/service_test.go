@@ -11,16 +11,16 @@ import (
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	authorisationMock "github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
 
-	"github.com/ONSdigital/dp-identity-api/cognito"
-	cognitoMock "github.com/ONSdigital/dp-identity-api/cognito/mock"
-	jwksMock "github.com/ONSdigital/dp-identity-api/jwks/mock"
+	"github.com/ONSdigital/dp-identity-api/v2/cognito"
+	cognitoMock "github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
+	jwksMock "github.com/ONSdigital/dp-identity-api/v2/jwks/mock"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 
-	"github.com/ONSdigital/dp-identity-api/config"
-	"github.com/ONSdigital/dp-identity-api/service"
+	"github.com/ONSdigital/dp-identity-api/v2/config"
+	"github.com/ONSdigital/dp-identity-api/v2/service"
 
-	serviceMock "github.com/ONSdigital/dp-identity-api/service/mock"
+	serviceMock "github.com/ONSdigital/dp-identity-api/v2/service/mock"
 
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"

@@ -3,8 +3,8 @@ package models_test
 import (
 	"testing"
 
-	"github.com/ONSdigital/dp-identity-api/cognito/mock"
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

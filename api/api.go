@@ -7,12 +7,12 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 
-	"github.com/ONSdigital/dp-identity-api/cognito"
+	"github.com/ONSdigital/dp-identity-api/v2/cognito"
 	"github.com/gorilla/mux"
 
-	"github.com/ONSdigital/dp-identity-api/jwks"
+	"github.com/ONSdigital/dp-identity-api/v2/jwks"
 )
 
 var (

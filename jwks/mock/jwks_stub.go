@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"github.com/ONSdigital/dp-identity-api/jwks"
+	"github.com/ONSdigital/dp-identity-api/v2/jwks"
 )
 
 var KeySetOne = jwks.JSONKey{

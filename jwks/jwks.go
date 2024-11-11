@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
 )
 

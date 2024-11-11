@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ONSdigital/dp-identity-api/models"
-	apiError "github.com/ONSdigital/dp-identity-api/sdk/errors"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
+	apiError "github.com/ONSdigital/dp-identity-api/v2/sdk/errors"
 )
 
 type TokenResponse struct {

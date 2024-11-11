@@ -4,12 +4,12 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/log.go/v2/log"
 
-	cognitoclient "github.com/ONSdigital/dp-identity-api/cognito"
+	cognitoclient "github.com/ONSdigital/dp-identity-api/v2/cognito"
 	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
