@@ -21,10 +21,12 @@ import (
 	jwksmock "github.com/ONSdigital/dp-identity-api/v2/jwks/mock"
 )
 
-const awsErrCode = "InternalErrorException"
-const awsErrMessage = "Something strange happened"
-const awsUNFErrCode = "UserNotFoundException"
-const awsUNFErrMessage = "user could not be found"
+const (
+	awsErrCode       = "InternalErrorException"
+	awsErrMessage    = "Something strange happened"
+	awsUNFErrCode    = "UserNotFoundException"
+	awsUNFErrMessage = "user could not be found"
+)
 
 var jwksHandler = jwksmock.JWKSStubbed
 

@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -120,9 +121,9 @@ func TestEmailDomainValidationCorrectlyValidatesAllowedDomains(t *testing.T) {
 		emailResponse := IsAllowedEmailDomain(email, allowedDomains)
 		So(emailResponse, ShouldBeFalse)
 
-		allowedDomains = append(allowedDomains, "@gmail.com")
+		newAllowedDomains := append(slices.Clone(allowedDomains), "@gmail.com")
 
-		emailResponse = IsAllowedEmailDomain(email, allowedDomains)
+		emailResponse = IsAllowedEmailDomain(email, newAllowedDomains)
 		So(emailResponse, ShouldBeTrue)
 	})
 }

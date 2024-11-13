@@ -12,7 +12,7 @@ type GlobalSignOut struct {
 	RetryAllowed    bool
 }
 
-// buildSignOutUserRequest - standalone request builder - builds a signout request array
+// BuildSignOutUserRequest - standalone request builder - builds a signout request array
 //
 //	this is required for concurrent global signout requests
 func (g GlobalSignOut) BuildSignOutUserRequest(users *[]UserParams, userPoolID *string) []*cognitoidentityprovider.AdminUserGlobalSignOutInput {

@@ -21,19 +21,21 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const usersEndPoint = "http://localhost:25600/v1/users"
-const usersEndPointWithActiveFilterTrue = "http://localhost:25600/v1/users?active=true"
-const usersEndPointWithActiveFilterFalse = "http://localhost:25600/v1/users?active=false"
-const usersEndPointWithActiveFilterError = "http://localhost:25600/v1/user?active=false"
-const usersEndPointWithSortByEmail = "http://localhost:25600/v1/users?sort=email"
-const usersEndPointWithSortByEmailAsc = "http://localhost:25600/v1/users?sort=email:asc"
-const usersEndPointWithSortByEmailDesc = "http://localhost:25600/v1/users?sort=email:desc"
-const usersEndPointWithSortBy2FieldsDesc = "http://localhost:25600/v1/users?sort=forename:desc,lastname:desc"
-const usersEndPointWithSortBy2KnownFieldsAndUnknown = "http://localhost:25600/v1/users?sort=forename:desc,lastname:desc,dog"
-const userEndPoint = "http://localhost:25600/v1/users/abcd1234"
-const changePasswordEndPoint = "http://localhost:25600/v1/users/self/password" // #nosec
-const requestResetEndPoint = "http://localhost:25600/v1/password-reset"
-const userListGroupsEndPoint = "http://localhost:25600/v1/users/abcd1234/groups"
+const (
+	usersEndPoint                                 = "http://localhost:25600/v1/users"
+	usersEndPointWithActiveFilterTrue             = "http://localhost:25600/v1/users?active=true"
+	usersEndPointWithActiveFilterFalse            = "http://localhost:25600/v1/users?active=false"
+	usersEndPointWithActiveFilterError            = "http://localhost:25600/v1/user?active=false"
+	usersEndPointWithSortByEmail                  = "http://localhost:25600/v1/users?sort=email"
+	usersEndPointWithSortByEmailAsc               = "http://localhost:25600/v1/users?sort=email:asc"
+	usersEndPointWithSortByEmailDesc              = "http://localhost:25600/v1/users?sort=email:desc"
+	usersEndPointWithSortBy2FieldsDesc            = "http://localhost:25600/v1/users?sort=forename:desc,lastname:desc"
+	usersEndPointWithSortBy2KnownFieldsAndUnknown = "http://localhost:25600/v1/users?sort=forename:desc,lastname:desc,dog"
+	userEndPoint                                  = "http://localhost:25600/v1/users/abcd1234"
+	changePasswordEndPoint                        = "http://localhost:25600/v1/users/self/password" // #nosec
+	requestResetEndPoint                          = "http://localhost:25600/v1/password-reset"
+	userListGroupsEndPoint                        = "http://localhost:25600/v1/users/abcd1234/groups"
+)
 
 func TestCreateUserHandler(t *testing.T) {
 	var (

@@ -18,13 +18,13 @@ func main() {
 		os.Exit(2)
 	}
 
-	REGION, ok := os.LookupEnv("REGION")
+	region, ok := os.LookupEnv("REGION")
 	if !ok {
 		fmt.Println("ensure the REGION environment variable is set.")
 		os.Exit(2)
 	}
 
-	jwksRSAKeys, err := jwksHandler.GetJWKSRSAKeys(REGION, userPoolID)
+	jwksRSAKeys, err := jwksHandler.GetJWKSRSAKeys(region, userPoolID)
 	if err != nil {
 		log.Fatal("could not retrieve the JWKS RSA public keys", err)
 	}

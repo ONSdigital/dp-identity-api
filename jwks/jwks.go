@@ -17,9 +17,15 @@ import (
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
 )
 
+// JWKSInt defines methods for managing JSON Web Key Sets (JWKS).
+// It provides domain-specific methods to retrieve and format JWKS data.
+//
 //go:generate moq -out mock/jwks.go -pkg mock . JWKSInt
 type JWKSInt interface { //nolint // JWKSInt serves the purpose of maintaining explicit, domain-specific naming that aligns with the rest of the system.
+	// JWKSGetKeyset retrieves the JWKS for the specified AWS region and user pool ID.
 	JWKSGetKeyset(awsRegion, poolID string) (*JWKS, error)
+
+	// JWKSToRSAJSONResponse formats the JWKS as an RSA JSON response.
 	JWKSToRSAJSONResponse(jwks *JWKS) ([]byte, error)
 }
 
@@ -34,15 +40,17 @@ var (
 	jwksURL = "https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json"
 )
 
+// JSONKey represents a single JSON Web Key (JWK) with RSA key parameters.
 type JSONKey struct {
-	E   string `json:"e"`
-	Kid string `json:"kid"`
-	Kty string `json:"kty"`
-	N   string `json:"n"`
+	E   string `json:"e"`   // Exponent of the RSA public key.
+	Kid string `json:"kid"` // Key ID used to match a specific key.
+	Kty string `json:"kty"` // Key type (e.g., "RSA").
+	N   string `json:"n"`   // Modulus of the RSA public key.
 }
 
+// JWKS represents a JSON Web Key Set (JWKS) containing multiple JSONKey entries.
 type JWKS struct {
-	Keys []JSONKey `json:"keys"`
+	Keys []JSONKey `json:"keys"` // List of JSON Web Keys.
 }
 
 // JWKSGetKeyset primary package method which retrives the json web key set for cognito user pool

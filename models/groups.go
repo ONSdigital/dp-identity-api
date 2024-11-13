@@ -167,19 +167,15 @@ func (g *CreateUpdateGroup) ValidateCreateUpdateGroupRequest(ctx context.Context
 
 	if g.Name == nil {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, MissingGroupName))
-	} else {
-		if m, _ := regexp.MatchString("(?i)^role-.*", *g.Name); m {
-			validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, IncorrectPatternInGroupName))
-		}
-
+	} else if m, _ := regexp.MatchString("(?i)^role-.*", *g.Name); m {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidGroupName, IncorrectPatternInGroupName))
+	} else if g.GroupsList != nil {
 		// Ensure group name in description doesn't already exist - creation only
 		// g.GroupsList not set on updates
-		if g.GroupsList != nil {
-			for _, group := range g.GroupsList.Groups {
-				if group.Description != nil && CleanString(*group.Description) == CleanString(*g.Name) {
-					validationErrs = append(validationErrs, NewValidationError(ctx, GroupExistsError, GroupAlreadyExistsDescription))
-					break
-				}
+		for _, group := range g.GroupsList.Groups {
+			if group.Description != nil && CleanString(*group.Description) == CleanString(*g.Name) {
+				validationErrs = append(validationErrs, NewValidationError(ctx, GroupExistsError, GroupAlreadyExistsDescription))
+				break
 			}
 		}
 	}

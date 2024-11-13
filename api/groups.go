@@ -24,10 +24,9 @@ const (
 	GroupsReadPermission   = "groups:read"
 	GroupsEditPermission   = "groups:update"
 	GroupsDeletePermission = "groups:delete"
+	sortOrderAsc           = "asc"
+	sortOrderDesc          = "desc"
 )
-
-const SortOrderAsc = "asc"
-const SortOrderDesc = "desc"
 
 // CreateGroupHandler creates a new group
 func (api *API) CreateGroupHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
@@ -212,13 +211,13 @@ func sortUsers(ctx context.Context, users []models.UserParams, sortBy []string) 
 	switch sortBy[0] {
 	case "forename":
 		switch sortBy[1] {
-		case SortOrderAsc:
+		case sortOrderAsc:
 			sortByUserNameAsc := func(i, j int) bool {
 				return users[i].Forename < users[j].Forename
 			}
 			sort.Slice(users, sortByUserNameAsc)
 			return true
-		case SortOrderDesc:
+		case sortOrderDesc:
 			sortByUserNameDesc := func(i, j int) bool {
 				return users[i].Forename > users[j].Forename
 			}
@@ -625,10 +624,10 @@ func sortGroups(listGroupOutput *cognitoidentityprovider.ListGroupsOutput, sortB
 		return nil
 	case len(sortBy) == 2 && sortBy[0] == "name":
 		switch sortBy[1] {
-		case SortOrderAsc:
+		case sortOrderAsc:
 			sortByGroupName(groups, true)
 			return nil
-		case SortOrderDesc:
+		case sortOrderDesc:
 			sortByGroupName(groups, false)
 			return nil
 		default:

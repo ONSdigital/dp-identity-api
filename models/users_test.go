@@ -14,11 +14,12 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const userID = "abcd1234"
-const userPoolID = "euwest-99-aabbcc"
-
-const clientID = "awsclientid"
-const clientSecret = "awsSecret"
+const (
+	userID       = "abcd1234"
+	userPoolID   = "euwest-99-aabbcc"
+	clientID     = "awsclientid"
+	clientSecret = "awsSecret"
+)
 
 func TestUsersList_BuildListUserRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito ListUsers request body", t, func() {

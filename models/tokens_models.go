@@ -11,11 +11,13 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+// AccessToken represents a token used for authorization.
 type AccessToken struct {
-	AuthHeader  string
-	TokenString string
+	AuthHeader  string // Authorization header containing the token.
+	TokenString string // Actual token string extracted from AuthHeader.
 }
 
+// Validate checks if the AuthHeader is well-formed and extracts the token string.
 func (t *AccessToken) Validate(ctx context.Context) *Error {
 	if t.AuthHeader == "" {
 		return NewValidationError(ctx, InvalidTokenError, MissingAuthorizationTokenDescription)
@@ -28,11 +30,13 @@ func (t *AccessToken) Validate(ctx context.Context) *Error {
 	return nil
 }
 
+// GenerateSignOutRequest creates a sign-out request for AWS Cognito using the access token.
 func (t *AccessToken) GenerateSignOutRequest() *cognitoidentityprovider.GlobalSignOutInput {
 	return &cognitoidentityprovider.GlobalSignOutInput{
 		AccessToken: &t.TokenString}
 }
 
+// IDClaims represents the claims contained in an ID token.
 type IDClaims struct {
 	Sub           string `json:"sub"`
 	Aud           string `json:"aud"`
@@ -48,9 +52,10 @@ type IDClaims struct {
 	jwt.StandardClaims
 }
 
+// IDToken represents a JWT containing ID claims.
 type IDToken struct {
-	TokenString string
-	Claims      IDClaims
+	TokenString string   // JWT string representation.
+	Claims      IDClaims // Parsed claims from the JWT.
 }
 
 // ParseWithoutValidating parses the claims in an ID token JWT in to a IdClaims struct without validating the token
@@ -83,6 +88,7 @@ func (t *IDToken) Validate(ctx context.Context) *Error {
 	return nil
 }
 
+// RefreshToken represents a token used for session refresh.
 type RefreshToken struct {
 	TokenString string
 }
@@ -114,6 +120,7 @@ func (t *RefreshToken) Validate(ctx context.Context) *Error {
 	return NewValidationError(ctx, InvalidTokenError, MissingRefreshTokenDescription)
 }
 
+// BuildSuccessfulJSONResponse creates a JSON response containing the expiration time from the Cognito auth result.
 func (t *RefreshToken) BuildSuccessfulJSONResponse(ctx context.Context, result *cognitoidentityprovider.InitiateAuthOutput) ([]byte, error) {
 	if result.AuthenticationResult != nil {
 		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
@@ -132,6 +139,7 @@ func (t *RefreshToken) BuildSuccessfulJSONResponse(ctx context.Context, result *
 	return nil, responseErr
 }
 
+// BuildSuccessfulSignOutAllUsersJSONResponse creates a JSON response for successful sign-out of all users.
 func BuildSuccessfulSignOutAllUsersJSONResponse(ctx context.Context) ([]byte, error) {
 	postBody := map[string]interface{}{"message": "Request to invalidate all refresh tokens has been accepted and will be processed asynchronously. This can take several minutes to complete."}
 

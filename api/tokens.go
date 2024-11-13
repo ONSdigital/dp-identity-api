@@ -170,7 +170,7 @@ func (api *API) RefreshHandler(ctx context.Context, _ http.ResponseWriter, req *
 // SignOutAllUsersHandler bulk refresh token invalidation for panic sign out handling
 func (api *API) SignOutAllUsersHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	var (
-		userFilterString = "status=\"Enabled\""
+		userFilterString = `status="Enabled"`
 	)
 	usersList, awsErr := api.ListUsersWorker(req.Context(), &userFilterString, DefaultBackOffSchedule)
 	if awsErr != nil {
