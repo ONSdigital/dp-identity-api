@@ -37,7 +37,7 @@ func TestCognitoPoolJWKSHandlerErrors404(t *testing.T) {
 	api, w, _ := apiSetup()
 
 	// override default jwks handler
-	api.JWKSHandler = &mock.JWKSIntMock{
+	api.JWKSManager = &mock.ManagerMock{
 		JWKSGetKeysetFunc: func(_ string, _ string) (*jwks.JWKS, error) {
 			return nil, errors.New(errorMessage)
 		},
@@ -59,7 +59,7 @@ func TestCognitoPoolJWKSHandlerErrors500(t *testing.T) {
 	api, w, _ := apiSetup()
 
 	// override default jwks handler
-	api.JWKSHandler = &mock.JWKSIntMock{
+	api.JWKSManager = &mock.ManagerMock{
 		JWKSGetKeysetFunc: func(_, _ string) (*jwks.JWKS, error) {
 			return &jwks.JWKS{
 				Keys: []jwks.JSONKey{

@@ -46,7 +46,7 @@ var funcDoGetHTTPServerNil = func(_ string, _ http.Handler, _ *config.Config) se
 	return nil
 }
 
-var jwksHandler = &jwksMock.JWKSIntMock{}
+var jwksHandler = &jwksMock.ManagerMock{}
 
 func TestRun(t *testing.T) {
 	Convey("Having a set of mocked dependencies", t, func() {

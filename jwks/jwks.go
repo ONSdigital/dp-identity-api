@@ -17,11 +17,12 @@ import (
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
 )
 
-// JWKSInt defines methods for managing JSON Web Key Sets (JWKS).
-// It provides domain-specific methods to retrieve and format JWKS data.
-//
-//go:generate moq -out mock/jwks.go -pkg mock . JWKSInt
-type JWKSInt interface { //nolint // JWKSInt serves the purpose of maintaining explicit, domain-specific naming that aligns with the rest of the system.
+//go:generate moq -out mock/jwks.go -pkg mock . Manager
+
+// Manager defines methods for managing JSON Web Key Sets (JWKS).
+// It provides domain-specific methods to retrieve and format JWKS data and serves the purpose of maintaining explicit,
+// domain-specific naming that aligns with the rest of the system.
+type Manager interface {
 	// JWKSGetKeyset retrieves the JWKS for the specified AWS region and user pool ID.
 	JWKSGetKeyset(awsRegion, poolID string) (*JWKS, error)
 
@@ -133,7 +134,7 @@ func (j JWKS) JWKToRSAPublicKey(jwk JSONKey) (string, error) {
 }
 
 // DoGetJWKS return package interface
-func (j JWKS) DoGetJWKS(_ context.Context) JWKSInt {
+func (j JWKS) DoGetJWKS(_ context.Context) Manager {
 	return &j
 }
 

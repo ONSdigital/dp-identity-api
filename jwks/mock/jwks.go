@@ -8,17 +8,17 @@ import (
 	"sync"
 )
 
-// Ensure, that JWKSIntMock does implement jwks.JWKSInt.
+// Ensure, that ManagerMock does implement jwks.Manager.
 // If this is not the case, regenerate this file with moq.
-var _ jwks.JWKSInt = &JWKSIntMock{}
+var _ jwks.Manager = &ManagerMock{}
 
-// JWKSIntMock is a mock implementation of jwks.JWKSInt.
+// ManagerMock is a mock implementation of jwks.Manager.
 //
-//	func TestSomethingThatUsesJWKSInt(t *testing.T) {
+//	func TestSomethingThatUsesManager(t *testing.T) {
 //
-//		// make and configure a mocked jwks.JWKSInt
-//		mockedJWKSInt := &JWKSIntMock{
-//			JWKSGetKeysetFunc: func(awsRegion string, poolId string) (*jwks.JWKS, error) {
+//		// make and configure a mocked jwks.Manager
+//		mockedManager := &ManagerMock{
+//			JWKSGetKeysetFunc: func(awsRegion string, poolID string) (*jwks.JWKS, error) {
 //				panic("mock out the JWKSGetKeyset method")
 //			},
 //			JWKSToRSAJSONResponseFunc: func(jwksMoqParam *jwks.JWKS) ([]byte, error) {
@@ -26,13 +26,13 @@ var _ jwks.JWKSInt = &JWKSIntMock{}
 //			},
 //		}
 //
-//		// use mockedJWKSInt in code that requires jwks.JWKSInt
+//		// use mockedManager in code that requires jwks.Manager
 //		// and then make assertions.
 //
 //	}
-type JWKSIntMock struct {
+type ManagerMock struct {
 	// JWKSGetKeysetFunc mocks the JWKSGetKeyset method.
-	JWKSGetKeysetFunc func(awsRegion string, poolId string) (*jwks.JWKS, error)
+	JWKSGetKeysetFunc func(awsRegion string, poolID string) (*jwks.JWKS, error)
 
 	// JWKSToRSAJSONResponseFunc mocks the JWKSToRSAJSONResponse method.
 	JWKSToRSAJSONResponseFunc func(jwksMoqParam *jwks.JWKS) ([]byte, error)
@@ -43,8 +43,8 @@ type JWKSIntMock struct {
 		JWKSGetKeyset []struct {
 			// AwsRegion is the awsRegion argument value.
 			AwsRegion string
-			// PoolId is the poolId argument value.
-			PoolId string
+			// PoolID is the poolID argument value.
+			PoolID string
 		}
 		// JWKSToRSAJSONResponse holds details about calls to the JWKSToRSAJSONResponse method.
 		JWKSToRSAJSONResponse []struct {
@@ -57,34 +57,34 @@ type JWKSIntMock struct {
 }
 
 // JWKSGetKeyset calls JWKSGetKeysetFunc.
-func (mock *JWKSIntMock) JWKSGetKeyset(awsRegion string, poolId string) (*jwks.JWKS, error) {
+func (mock *ManagerMock) JWKSGetKeyset(awsRegion string, poolID string) (*jwks.JWKS, error) {
 	if mock.JWKSGetKeysetFunc == nil {
-		panic("JWKSIntMock.JWKSGetKeysetFunc: method is nil but JWKSInt.JWKSGetKeyset was just called")
+		panic("ManagerMock.JWKSGetKeysetFunc: method is nil but Manager.JWKSGetKeyset was just called")
 	}
 	callInfo := struct {
 		AwsRegion string
-		PoolId    string
+		PoolID    string
 	}{
 		AwsRegion: awsRegion,
-		PoolId:    poolId,
+		PoolID:    poolID,
 	}
 	mock.lockJWKSGetKeyset.Lock()
 	mock.calls.JWKSGetKeyset = append(mock.calls.JWKSGetKeyset, callInfo)
 	mock.lockJWKSGetKeyset.Unlock()
-	return mock.JWKSGetKeysetFunc(awsRegion, poolId)
+	return mock.JWKSGetKeysetFunc(awsRegion, poolID)
 }
 
 // JWKSGetKeysetCalls gets all the calls that were made to JWKSGetKeyset.
 // Check the length with:
 //
-//	len(mockedJWKSInt.JWKSGetKeysetCalls())
-func (mock *JWKSIntMock) JWKSGetKeysetCalls() []struct {
+//	len(mockedManager.JWKSGetKeysetCalls())
+func (mock *ManagerMock) JWKSGetKeysetCalls() []struct {
 	AwsRegion string
-	PoolId    string
+	PoolID    string
 } {
 	var calls []struct {
 		AwsRegion string
-		PoolId    string
+		PoolID    string
 	}
 	mock.lockJWKSGetKeyset.RLock()
 	calls = mock.calls.JWKSGetKeyset
@@ -93,9 +93,9 @@ func (mock *JWKSIntMock) JWKSGetKeysetCalls() []struct {
 }
 
 // JWKSToRSAJSONResponse calls JWKSToRSAJSONResponseFunc.
-func (mock *JWKSIntMock) JWKSToRSAJSONResponse(jwksMoqParam *jwks.JWKS) ([]byte, error) {
+func (mock *ManagerMock) JWKSToRSAJSONResponse(jwksMoqParam *jwks.JWKS) ([]byte, error) {
 	if mock.JWKSToRSAJSONResponseFunc == nil {
-		panic("JWKSIntMock.JWKSToRSAJSONResponseFunc: method is nil but JWKSInt.JWKSToRSAJSONResponse was just called")
+		panic("ManagerMock.JWKSToRSAJSONResponseFunc: method is nil but Manager.JWKSToRSAJSONResponse was just called")
 	}
 	callInfo := struct {
 		JwksMoqParam *jwks.JWKS
@@ -111,8 +111,8 @@ func (mock *JWKSIntMock) JWKSToRSAJSONResponse(jwksMoqParam *jwks.JWKS) ([]byte,
 // JWKSToRSAJSONResponseCalls gets all the calls that were made to JWKSToRSAJSONResponse.
 // Check the length with:
 //
-//	len(mockedJWKSInt.JWKSToRSAJSONResponseCalls())
-func (mock *JWKSIntMock) JWKSToRSAJSONResponseCalls() []struct {
+//	len(mockedManager.JWKSToRSAJSONResponseCalls())
+func (mock *ManagerMock) JWKSToRSAJSONResponseCalls() []struct {
 	JwksMoqParam *jwks.JWKS
 } {
 	var calls []struct {

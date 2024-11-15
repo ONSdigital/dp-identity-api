@@ -51,7 +51,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 }
 
 func (c *IdentityComponent) aResponseToAJWKSSetRequest() error {
-	_, err := c.JWKSHandler.JWKSGetKeysetFunc("eu-west-1234XYZ", "eu-west-1234")
+	_, err := c.JWKSManager.JWKSGetKeysetFunc("eu-west-1234XYZ", "eu-west-1234")
 	return err
 }
 

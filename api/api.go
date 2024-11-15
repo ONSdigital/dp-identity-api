@@ -41,7 +41,7 @@ type API struct {
 	AWSRegion        string
 	AllowedDomains   []string
 	APIRequestFilter map[string]map[string]string
-	JWKSHandler      jwks.JWKSInt
+	JWKSManager      jwks.Manager
 }
 
 type baseHandler func(ctx context.Context, w http.ResponseWriter, r *http.Request) (*models.SuccessResponse, *models.ErrorResponse)
@@ -65,9 +65,9 @@ func Setup(ctx context.Context,
 	userPoolID, clientID, clientSecret, awsRegion, clientAuthFlow string,
 	allowedDomains []string,
 	auth authorisation.Middleware,
-	jwksHandler jwks.JWKSInt) (*API, error) {
+	jwksManager jwks.Manager) (*API, error) {
 	// Return an error if empty required parameter was passed.
-	if userPoolID == "" || clientID == "" || clientSecret == "" || awsRegion == "" || clientAuthFlow == "" || allowedDomains == nil || len(allowedDomains) == 0 || jwksHandler == nil {
+	if userPoolID == "" || clientID == "" || clientSecret == "" || awsRegion == "" || clientAuthFlow == "" || allowedDomains == nil || len(allowedDomains) == 0 || jwksManager == nil {
 		return nil, models.NewError(ctx, nil, models.MissingConfigError, models.MissingConfigDescription)
 	}
 
@@ -90,7 +90,7 @@ func Setup(ctx context.Context,
 				"active=false": "status=\"Disabled\"",
 			},
 		},
-		JWKSHandler: jwksHandler,
+		JWKSManager: jwksManager,
 	}
 
 	r.HandleFunc("/v1/tokens", contextAndErrors(api.TokensHandler)).Methods(http.MethodPost)

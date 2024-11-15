@@ -26,7 +26,7 @@ type Service struct {
 }
 
 // Run the service
-func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceList, jwksHandler jwks.JWKSInt, buildTime, gitCommit, version string, svcErrors chan error) (*Service, error) {
+func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceList, jwksManager jwks.Manager, buildTime, gitCommit, version string, svcErrors chan error) (*Service, error) {
 	log.Info(ctx, "running service")
 	log.Info(ctx, "using service configuration", log.Data{"config": cfg})
 
@@ -42,7 +42,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	a, err := api.Setup(ctx, r, cognitoclient, cfg.AWSCognitoUserPoolID, cfg.AWSCognitoClientID, cfg.AWSCognitoClientSecret, cfg.AWSRegion, cfg.AWSAuthFlow, cfg.AllowedEmailDomains, authorisationMiddleware, jwksHandler)
+	a, err := api.Setup(ctx, r, cognitoclient, cfg.AWSCognitoUserPoolID, cfg.AWSCognitoClientID, cfg.AWSCognitoClientSecret, cfg.AWSRegion, cfg.AWSAuthFlow, cfg.AllowedEmailDomains, authorisationMiddleware, jwksManager)
 	if err != nil {
 		log.Fatal(ctx, "error returned from api setup", err)
 		return nil, err

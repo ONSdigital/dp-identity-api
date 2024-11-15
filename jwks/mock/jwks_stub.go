@@ -28,7 +28,7 @@ var JWKSData = map[string]string{
 	"j+diD4wBP/VZ4+X51XGRdI8Vi0CNV0OpEefKl1ge3A8=": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvBvi++N+F9MQO81xh71jIbkx81w4/sGhbztTJgIdhycV+lMzG6y3dMBWo9eRsFJuRs3MUFElmRrTVxc7EPWNQGQjUyPFW0/CnPPoGBCwgCyWtpNs5EHAkCHXsfryHb6LbJxH9LEbwOQCHR25/Bnqo/NeXSBJtvUabq3cTUgdOPc61Hskq+m19M1u7u1xu7b5DHD308Qyz3OhaEHx3cLL2za+mKxHe0VDe3sa5UfdaliTdBypFWJgNl6TsxF/G83fksgb3bVchzW45pu4dEhtNLqgXejH2+GwU8YRaAguKGW7dO/v+5uwLgDYQG9wgtAwLIMiXsFU7muig2pJEtlG2wIDAQAB",
 }
 
-var JWKSStubbed = &JWKSIntMock{
+var JWKSStubbed = &ManagerMock{
 	JWKSGetKeysetFunc: func(_, _ string) (*jwks.JWKS, error) {
 		return &jwks.JWKS{
 			Keys: []jwks.JSONKey{

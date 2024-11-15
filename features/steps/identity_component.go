@@ -30,7 +30,7 @@ type IdentityComponent struct {
 	apiFeature              *componenttest.APIFeature
 	CognitoClient           *cognitoMock.CognitoIdentityProviderClientStub
 	AuthorisationMiddleware authorisation.Middleware
-	JWKSHandler             *jwksMock.JWKSIntMock
+	JWKSManager             *jwksMock.ManagerMock
 }
 
 func NewIdentityComponent() (*IdentityComponent, error) {
@@ -69,8 +69,8 @@ func NewIdentityComponent() (*IdentityComponent, error) {
 
 	c.svcList = service.NewServiceList(initMock)
 
-	c.JWKSHandler = jwksMock.JWKSStubbed
-	c.svc, err = service.Run(context.Background(), c.Config, c.svcList, c.JWKSHandler, "1", "", "", c.errorChan)
+	c.JWKSManager = jwksMock.JWKSStubbed
+	c.svc, err = service.Run(context.Background(), c.Config, c.svcList, c.JWKSManager, "1", "", "", c.errorChan)
 	if err != nil {
 		return nil, err
 	}
