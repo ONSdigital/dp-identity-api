@@ -6,13 +6,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestNewErrorResponse(t *testing.T) {
 	Convey("successfully constructs an ErrorResponse object", t, func() {
-
 		Convey("with one error", func() {
 			err := models.Error{
 				Cause:       errors.New("TestError"),

@@ -13,13 +13,20 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
 )
 
-//go:generate moq -out mock/jwks.go -pkg mock . JWKSInt
-type JWKSInt interface {
-	JWKSGetKeyset(awsRegion, poolId string) (*JWKS, error)
+//go:generate moq -out mock/jwks.go -pkg mock . Manager
+
+// Manager defines methods for managing JSON Web Key Sets (JWKS).
+// It provides domain-specific methods to retrieve and format JWKS data and serves the purpose of maintaining explicit,
+// domain-specific naming that aligns with the rest of the system.
+type Manager interface {
+	// JWKSGetKeyset retrieves the JWKS for the specified AWS region and user pool ID.
+	JWKSGetKeyset(awsRegion, poolID string) (*JWKS, error)
+
+	// JWKSToRSAJSONResponse formats the JWKS as an RSA JSON response.
 	JWKSToRSAJSONResponse(jwks *JWKS) ([]byte, error)
 }
 
@@ -34,20 +41,22 @@ var (
 	jwksURL = "https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json"
 )
 
-type JsonKey struct {
-	E   string `json:"e"`
-	Kid string `json:"kid"`
-	Kty string `json:"kty"`
-	N   string `json:"n"`
+// JSONKey represents a single JSON Web Key (JWK) with RSA key parameters.
+type JSONKey struct {
+	E   string `json:"e"`   // Exponent of the RSA public key.
+	Kid string `json:"kid"` // Key ID used to match a specific key.
+	Kty string `json:"kty"` // Key type (e.g., "RSA").
+	N   string `json:"n"`   // Modulus of the RSA public key.
 }
 
+// JWKS represents a JSON Web Key Set (JWKS) containing multiple JSONKey entries.
 type JWKS struct {
-	Keys []JsonKey `json:"keys"`
+	Keys []JSONKey `json:"keys"` // List of JSON Web Keys.
 }
 
 // JWKSGetKeyset primary package method which retrives the json web key set for cognito user pool
-func (j JWKS) JWKSGetKeyset(awsRegion, poolId string) (*JWKS, error) {
-	resp, err := http.Get(fmt.Sprintf(jwksURL, awsRegion, poolId))
+func (j JWKS) JWKSGetKeyset(awsRegion, poolID string) (*JWKS, error) {
+	resp, err := http.Get(fmt.Sprintf(jwksURL, awsRegion, poolID))
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +105,7 @@ func (j JWKS) JWKSToRSA(jwks *JWKS) (map[string]string, error) {
 }
 
 // JWKToRSAPublicKey transforms key data to PKIX, ASN.1 DER form
-func (j JWKS) JWKToRSAPublicKey(jwk JsonKey) (string, error) {
+func (j JWKS) JWKToRSAPublicKey(jwk JSONKey) (string, error) {
 	if jwk.Kty != RSAAlgorithm {
 		return "", errors.New(models.JWKSUnsupportedKeyTypeDescription)
 	}
@@ -125,12 +134,12 @@ func (j JWKS) JWKToRSAPublicKey(jwk JsonKey) (string, error) {
 }
 
 // DoGetJWKS return package interface
-func (j JWKS) DoGetJWKS(ctx context.Context) JWKSInt {
+func (j JWKS) DoGetJWKS(_ context.Context) Manager {
 	return &j
 }
 
 // GetJWKSRSAKeys retrieves the JWKS RSA keys which are consumed by the authorisation middleware on startup.
-func (j JWKS) GetJWKSRSAKeys(awsRegion string, poolID string) (map[string]string, error) {
+func (j JWKS) GetJWKSRSAKeys(awsRegion, poolID string) (map[string]string, error) {
 	jwksURL := "https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json"
 	rcClient := &dphttp.Client{
 		MaxRetries: 5,

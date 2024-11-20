@@ -11,14 +11,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 
 	authorisation "github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
-	"github.com/ONSdigital/dp-identity-api/cognito/mock"
-	jwksmock "github.com/ONSdigital/dp-identity-api/jwks/mock"
+	"github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
+	jwksmock "github.com/ONSdigital/dp-identity-api/v2/jwks/mock"
+)
+
+const (
+	awsErrCode       = "InternalErrorException"
+	awsErrMessage    = "Something strange happened"
+	awsUNFErrCode    = "UserNotFoundException"
+	awsUNFErrMessage = "user could not be found"
 )
 
 var jwksHandler = jwksmock.JWKSStubbed
@@ -29,7 +36,7 @@ func TestSetup(t *testing.T) {
 		ctx := context.Background()
 
 		m := &mock.MockCognitoIdentityProviderClient{}
-		m.CreateGroupFunc = func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+		m.CreateGroupFunc = func(_ *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
 			group := &cognitoidentityprovider.CreateGroupOutput{
 				Group: &cognitoidentityprovider.GroupType{},
 			}
@@ -76,16 +83,16 @@ func TestSetup(t *testing.T) {
 		authorisationMiddleware := newAuthorisationMiddlwareMock()
 		paramCheckTests := []struct {
 			testName       string
-			userPoolId     string
-			clientId       string
+			userPoolID     string
+			clientID       string
 			clientSecret   string
 			clientAuthFlow string
 			awsRegion      string
 			allowedDomains []string
 		}{
-			// missing userPoolId
+			// missing userPoolID
 			{
-				"missing userPoolId",
+				"missing userPoolID",
 				"",
 				"client-aaa-bbb",
 				"secret-ccc-ddd",
@@ -93,9 +100,9 @@ func TestSetup(t *testing.T) {
 				"eu-west-1234",
 				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 			},
-			// missing clientId
+			// missing clientID
 			{
-				"missing clientId",
+				"missing clientID",
 				"eu-west-22_bdsjhids2",
 				"",
 				"secret-ccc-ddd",
@@ -138,7 +145,7 @@ func TestSetup(t *testing.T) {
 		for _, tt := range paramCheckTests {
 			r := mux.NewRouter()
 			ctx := context.Background()
-			_, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, tt.userPoolId, tt.clientId, tt.clientSecret, tt.awsRegion, tt.clientAuthFlow, tt.allowedDomains, authorisationMiddleware, jwksHandler)
+			_, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, tt.userPoolID, tt.clientID, tt.clientSecret, tt.awsRegion, tt.clientAuthFlow, tt.allowedDomains, authorisationMiddleware, jwksHandler)
 
 			Convey("Error should not be nil if require parameter is empty: "+tt.testName, func() {
 				So(err.Error(), ShouldEqual, models.MissingConfigError+": "+models.MissingConfigDescription)
@@ -151,28 +158,28 @@ func TestSetup(t *testing.T) {
 }
 
 func hasRoute(r *mux.Router, path, method string) bool {
-	req := httptest.NewRequest(method, path, nil)
+	req := httptest.NewRequest(method, path, http.NoBody)
 	match := &mux.RouteMatch{}
 	return r.Match(req, match)
 }
 
 func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProviderClient) {
 	var (
-		ctx                                                          = context.Background()
-		r                                                            = mux.NewRouter()
-		poolId, clientId, clientSecret, awsRegion, authFlow string   = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "eu-west-1234", "USER_PASSWORD_AUTH"
-		allowedDomains                                      []string = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
+		ctx                                                 = context.Background()
+		r                                                   = mux.NewRouter()
+		poolID, clientID, clientSecret, awsRegion, authFlow = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "eu-west-1234", "USER_PASSWORD_AUTH"
+		allowedDomains                                      = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
-	m.CreateGroupFunc = func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+	m.CreateGroupFunc = func(_ *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
 		group := &cognitoidentityprovider.CreateGroupOutput{
 			Group: &cognitoidentityprovider.GroupType{},
 		}
 		return group, nil
 	}
 
-	api, _ := Setup(ctx, r, m, poolId, clientId, clientSecret, authFlow, awsRegion, allowedDomains, newAuthorisationMiddlwareMock(), jwksHandler)
+	api, _ := Setup(ctx, r, m, poolID, clientID, clientSecret, authFlow, awsRegion, allowedDomains, newAuthorisationMiddlwareMock(), jwksHandler)
 
 	w := httptest.NewRecorder()
 
@@ -183,17 +190,17 @@ func TestWriteErrorResponse(t *testing.T) {
 	Convey("the status code and the list of errors from the ErrorResponse object are written to a http response", t, func() {
 		ctx := context.Background()
 
-		errorResponseBodyExample := `{"errors":[{"code":"TestError","description":"a error generated for testing purposes"},{"code":"TestError","description":"a error generated for testing purposes"}]}`
+		errorResponseBodyExample := `{"errors":[{"code":"TestError","description":"a error generated for testing purposes"},{"code":"TestError","description":"another error generated for testing purposes"}]}`
 		var errorResponse models.ErrorResponse
 
 		errCode := "TestError"
 		errDescription := "a error generated for testing purposes"
+		anotherErrDescription := "another error generated for testing purposes"
 		statusCode := http.StatusBadRequest
 
 		headerMessage := "Test header message."
 
-		errorResponse.Errors = append(errorResponse.Errors, models.NewValidationError(ctx, errCode, errDescription))
-		errorResponse.Errors = append(errorResponse.Errors, models.NewValidationError(ctx, errCode, errDescription))
+		errorResponse.Errors = append(errorResponse.Errors, models.NewValidationError(ctx, errCode, errDescription), models.NewValidationError(ctx, errCode, anotherErrDescription))
 		errorResponse.Status = statusCode
 		errorResponse.Headers = map[string]string{
 			WWWAuthenticateName: headerMessage,
@@ -237,14 +244,14 @@ func TestWriteSuccessResponse(t *testing.T) {
 		So(err, ShouldBeNil)
 		successResponseBodyExample := `{"expirationTime":"12/12/2021T12:00:00Z","refreshTokenExpirationTime":"13/12/2021T11:00:00Z"}`
 		var (
-			accessTokenHeaderMessage, idTokenHeaderMessage, refreshTokenHeaderMessage string = "test-access-token-1", "test-id-token-1", "test-refresh-token-1"
+			accessTokenHeaderMessage, idTokenHeaderMessage, refreshTokenHeaderMessage = "test-access-token-1", "test-id-token-1", "test-refresh-token-1"
 		)
 		successResponse := models.SuccessResponse{
 			Body:   body,
 			Status: http.StatusCreated,
 			Headers: map[string]string{
 				AccessTokenHeaderName:  accessTokenHeaderMessage,
-				IdTokenHeaderName:      idTokenHeaderMessage,
+				IDTokenHeaderName:      idTokenHeaderMessage,
 				RefreshTokenHeaderName: refreshTokenHeaderMessage,
 			},
 		}
@@ -256,7 +263,7 @@ func TestWriteSuccessResponse(t *testing.T) {
 		So(resp.Code, ShouldEqual, http.StatusCreated)
 		So(resp.Body.String(), ShouldResemble, successResponseBodyExample)
 		So(resp.Result().Header.Get(AccessTokenHeaderName), ShouldEqual, accessTokenHeaderMessage)
-		So(resp.Result().Header.Get(IdTokenHeaderName), ShouldEqual, idTokenHeaderMessage)
+		So(resp.Result().Header.Get(IDTokenHeaderName), ShouldEqual, idTokenHeaderMessage)
 		So(resp.Result().Header.Get(RefreshTokenHeaderName), ShouldEqual, refreshTokenHeaderMessage)
 	})
 }
@@ -293,7 +300,7 @@ func TestInitialiseRoleGroups(t *testing.T) {
 
 		ctx := context.Background()
 
-		userPoolId := "us-west-11_bxushuds"
+		userPoolID := "us-west-11_bxushuds"
 
 		adminCreateUsersTests := []struct {
 			createGroupFunction func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error)
@@ -301,7 +308,7 @@ func TestInitialiseRoleGroups(t *testing.T) {
 		}{
 			{
 				// neither group exists
-				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+				func(_ *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
 					group := &cognitoidentityprovider.CreateGroupOutput{
 						Group: &cognitoidentityprovider.GroupType{},
 					}
@@ -318,12 +325,11 @@ func TestInitialiseRoleGroups(t *testing.T) {
 						awsOrigErr := errors.New(awsErrCode)
 						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 						return nil, awsErr
-					} else {
-						group := &cognitoidentityprovider.CreateGroupOutput{
-							Group: &cognitoidentityprovider.GroupType{},
-						}
-						return group, nil
 					}
+					group := &cognitoidentityprovider.CreateGroupOutput{
+						Group: &cognitoidentityprovider.GroupType{},
+					}
+					return group, nil
 				},
 				nil,
 			},
@@ -336,20 +342,17 @@ func TestInitialiseRoleGroups(t *testing.T) {
 						awsOrigErr := errors.New(awsErrCode)
 						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 						return nil, awsErr
-					} else {
-						group := &cognitoidentityprovider.CreateGroupOutput{
-							Group: &cognitoidentityprovider.GroupType{},
-						}
-						return group, nil
 					}
+					group := &cognitoidentityprovider.CreateGroupOutput{
+						Group: &cognitoidentityprovider.GroupType{},
+					}
+					return group, nil
 				},
 				nil,
 			},
 			{
 				// create group internal error
-				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
-					awsErrCode := "InternalErrorException"
-					awsErrMessage := "Something weird happened"
+				func(_ *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
 					awsOrigErr := errors.New(awsErrCode)
 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					return nil, awsErr
@@ -361,7 +364,7 @@ func TestInitialiseRoleGroups(t *testing.T) {
 		for _, tt := range adminCreateUsersTests {
 			m.CreateGroupFunc = tt.createGroupFunction
 
-			err := initialiseRoleGroups(ctx, m, userPoolId)
+			err := initialiseRoleGroups(ctx, m, userPoolID)
 
 			if tt.err == nil {
 				So(err, ShouldBeNil)
@@ -374,7 +377,7 @@ func TestInitialiseRoleGroups(t *testing.T) {
 
 func newAuthorisationMiddlwareMock() *authorisation.MiddlewareMock {
 	return &authorisation.MiddlewareMock{
-		RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+		RequireFunc: func(_ string, handlerFunc http.HandlerFunc) http.HandlerFunc {
 			return handlerFunc
 		},
 	}

@@ -6,25 +6,25 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ONSdigital/dp-identity-api/jwks"
+	"github.com/ONSdigital/dp-identity-api/v2/jwks"
 )
 
 func main() {
 	jwksHandler := &jwks.JWKS{}
 
-	USER_POOL_ID, ok := os.LookupEnv("USER_POOL_ID")
+	userPoolID, ok := os.LookupEnv("USER_POOL_ID")
 	if !ok {
 		fmt.Println("ensure the USER_POOL_ID environment variable is set.")
 		os.Exit(2)
 	}
 
-	REGION, ok := os.LookupEnv("REGION")
+	region, ok := os.LookupEnv("REGION")
 	if !ok {
 		fmt.Println("ensure the REGION environment variable is set.")
 		os.Exit(2)
 	}
 
-	jwksRSAKeys, err := jwksHandler.GetJWKSRSAKeys(REGION, USER_POOL_ID)
+	jwksRSAKeys, err := jwksHandler.GetJWKSRSAKeys(region, userPoolID)
 	if err != nil {
 		log.Fatal("could not retrieve the JWKS RSA public keys", err)
 	}

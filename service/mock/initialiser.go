@@ -6,9 +6,9 @@ package mock
 import (
 	"context"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-	cognitoClient "github.com/ONSdigital/dp-identity-api/cognito"
-	"github.com/ONSdigital/dp-identity-api/config"
-	"github.com/ONSdigital/dp-identity-api/service"
+	cognitoClient "github.com/ONSdigital/dp-identity-api/v2/cognito"
+	"github.com/ONSdigital/dp-identity-api/v2/config"
+	"github.com/ONSdigital/dp-identity-api/v2/service"
 	"net/http"
 	"sync"
 )

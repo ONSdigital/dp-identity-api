@@ -9,12 +9,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
+// Error represents a custom error type with additional context and description.
 type Error struct {
-	Cause       error  `json:"-"`
-	Code        string `json:"code"`
-	Description string `json:"description"`
+	Cause       error  `json:"-"`           // The underlying error, if available.
+	Code        string `json:"code"`        // Error code representing the type of error.
+	Description string `json:"description"` // Detailed description of the error.
 }
 
+// Error returns the error message string for the custom Error type.
 func (e *Error) Error() string {
 	if e.Cause != nil {
 		return e.Cause.Error()
@@ -22,7 +24,8 @@ func (e *Error) Error() string {
 	return e.Code + ": " + e.Description
 }
 
-func NewError(ctx context.Context, cause error, code string, description string) *Error {
+// NewError creates and logs a new Error with the provided context, cause, code, and description.
+func NewError(ctx context.Context, cause error, code, description string) *Error {
 	err := &Error{
 		Cause:       cause,
 		Code:        code,
@@ -32,18 +35,18 @@ func NewError(ctx context.Context, cause error, code string, description string)
 	return err
 }
 
-func NewValidationError(ctx context.Context, code string, description string) *Error {
+// NewValidationError creates a new Error specifically for validation errors with a code and description.
+func NewValidationError(ctx context.Context, code, description string) *Error {
 	err := &Error{
 		Cause:       errors.New(code),
 		Code:        code,
 		Description: description,
 	}
-
 	log.Error(ctx, description, err, log.Data{"code": code})
 	return err
 }
 
-//IsGroupExistsError validates if the err occurred because group already exists
+// IsGroupExistsError checks if the given error is a Cognito GroupExistsException error.
 func IsGroupExistsError(err error) bool {
 	var cognitoErr awserr.Error
 	if errors.As(err, &cognitoErr) && cognitoErr.Code() == cognitoidentityprovider.ErrCodeGroupExistsException {
@@ -52,6 +55,7 @@ func IsGroupExistsError(err error) bool {
 	return false
 }
 
+// NewCognitoError creates a new Error for errors returned from AWS Cognito, mapping it to a local error code.
 func NewCognitoError(ctx context.Context, err error, errContext string) *Error {
 	log.Error(ctx, errContext, err)
 	var cognitoErr awserr.Error
@@ -71,6 +75,7 @@ func NewCognitoError(ctx context.Context, err error, errContext string) *Error {
 	}
 }
 
+// MapCognitoErrorToLocalError maps an AWS Cognito error to a local error code.
 func MapCognitoErrorToLocalError(ctx context.Context, cognitoErr awserr.Error) string {
 	if val, ok := CognitoErrorMapping[cognitoErr.Code()]; ok {
 		return val

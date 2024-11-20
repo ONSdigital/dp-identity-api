@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	apiError "github.com/ONSdigital/dp-identity-api/sdk/errors"
+	apiError "github.com/ONSdigital/dp-identity-api/v2/sdk/errors"
 )
 
 // GroupsReportResponse represents the response structure containing a list of GroupsReportItems.

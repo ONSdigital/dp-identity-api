@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-	"github.com/ONSdigital/dp-identity-api/api"
-	cognitoClient "github.com/ONSdigital/dp-identity-api/cognito"
-	"github.com/ONSdigital/dp-identity-api/config"
-	"github.com/ONSdigital/dp-identity-api/jwks"
-	health "github.com/ONSdigital/dp-identity-api/service/healthcheck"
+	"github.com/ONSdigital/dp-identity-api/v2/api"
+	cognitoClient "github.com/ONSdigital/dp-identity-api/v2/cognito"
+	"github.com/ONSdigital/dp-identity-api/v2/config"
+	"github.com/ONSdigital/dp-identity-api/v2/jwks"
+	health "github.com/ONSdigital/dp-identity-api/v2/service/healthcheck"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -19,17 +19,15 @@ type Service struct {
 	Config                  *config.Config
 	Server                  HTTPServer
 	Router                  *mux.Router
-	Api                     *api.API
+	API                     *api.API
 	ServiceList             *ExternalServiceList
 	HealthCheck             HealthChecker
 	authorisationMiddleware authorisation.Middleware
 }
 
 // Run the service
-func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceList, jwksHandler jwks.JWKSInt, buildTime, gitCommit, version string, svcErrors chan error) (*Service, error) {
-
+func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceList, jwksManager jwks.Manager, buildTime, gitCommit, version string, svcErrors chan error) (*Service, error) {
 	log.Info(ctx, "running service")
-
 	log.Info(ctx, "using service configuration", log.Data{"config": cfg})
 
 	r := mux.NewRouter()
@@ -44,7 +42,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	a, err := api.Setup(ctx, r, cognitoclient, cfg.AWSCognitoUserPoolID, cfg.AWSCognitoClientId, cfg.AWSCognitoClientSecret, cfg.AWSRegion, cfg.AWSAuthFlow, cfg.AllowedEmailDomains, authorisationMiddleware, jwksHandler)
+	a, err := api.Setup(ctx, r, cognitoclient, cfg.AWSCognitoUserPoolID, cfg.AWSCognitoClientID, cfg.AWSCognitoClientSecret, cfg.AWSRegion, cfg.AWSAuthFlow, cfg.AllowedEmailDomains, authorisationMiddleware, jwksManager)
 	if err != nil {
 		log.Fatal(ctx, "error returned from api setup", err)
 		return nil, err
@@ -73,7 +71,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	return &Service{
 		Config:                  cfg,
 		Router:                  r,
-		Api:                     a,
+		API:                     a,
 		HealthCheck:             hc,
 		ServiceList:             serviceList,
 		Server:                  s,

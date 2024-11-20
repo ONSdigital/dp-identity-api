@@ -11,7 +11,7 @@ const (
 	JSONMarshalError             = "JSONMarshalError"
 	JSONUnmarshalError           = "JSONUnmarshalError"
 	WriteResponseError           = "WriteResponseError"
-	InvalidUserIdError           = "InvalidUserId"
+	InvalidUserIDError           = "InvalidUserId"
 	InvalidGroupIDError          = "InvalidGroupID"
 	InvalidForenameError         = "InvalidForename"
 	InvalidSurnameError          = "InvalidSurname"
@@ -51,8 +51,8 @@ const (
 const (
 	MissingAuthorizationTokenDescription   = "no Authorization token was provided"
 	MissingRefreshTokenDescription         = "no Refresh token was provided"
-	MissingIDTokenDescription              = "no ID token was provided"
-	MalformedIDTokenDescription            = "the ID token could not be parsed"
+	MissingIDTokenDescription              = "no ID token was provided"         //nolint:gosec // not a hardcoded secret
+	MalformedIDTokenDescription            = "the ID token could not be parsed" //nolint:gosec // not a hardcoded secret
 	MalformedAuthorizationTokenDescription = "the authorization token does not meet the required format"
 	ErrorMarshalFailedDescription          = "failed to marshal the error"
 	ErrorUnmarshalFailedDescription        = "failed to unmarshal the request body"
@@ -63,7 +63,7 @@ const (
 	InvalidPasswordDescription             = "the submitted password could not be validated"
 	PasswordGenerationErrorDescription     = "failed to generate a valid password"
 	MissingGroupIDErrorDescription         = "the group ID was missing"
-	MissingUserIdErrorDescription          = "the user id was missing"
+	MissingUserIDErrorDescription          = "the user id was missing"
 	InvalidForenameErrorDescription        = "the submitted user's forename could not be validated"
 	InvalidSurnameErrorDescription         = "the submitted user's lastname could not be validated"
 	InvalidEmailDescription                = "the submitted email could not be validated"

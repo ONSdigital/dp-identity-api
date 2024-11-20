@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	apiError "github.com/ONSdigital/dp-identity-api/sdk/errors"
+	apiError "github.com/ONSdigital/dp-identity-api/v2/sdk/errors"
 )
 
 type sortParam string

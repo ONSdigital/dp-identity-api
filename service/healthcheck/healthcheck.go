@@ -4,18 +4,18 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/log.go/v2/log"
 
-	cognitoclient "github.com/ONSdigital/dp-identity-api/cognito"
+	cognitoclient "github.com/ONSdigital/dp-identity-api/v2/cognito"
 	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
 const CognitoHealthy = "Cognito Healthy"
 
-func CognitoHealthCheck(ctx context.Context, cognitoClient cognitoclient.Client, userPoolID *string) health.Checker {
+func CognitoHealthCheck(_ context.Context, cognitoClient cognitoclient.Client, userPoolID *string) health.Checker {
 	return func(ctx context.Context, state *health.CheckState) error {
 		_, err := cognitoClient.DescribeUserPool(&cognito.DescribeUserPoolInput{UserPoolId: userPoolID})
 

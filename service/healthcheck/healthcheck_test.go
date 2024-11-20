@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
-	"github.com/ONSdigital/dp-identity-api/cognito/mock"
-	healthcheck "github.com/ONSdigital/dp-identity-api/service/healthcheck"
+	"github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
+	healthcheck "github.com/ONSdigital/dp-identity-api/v2/service/healthcheck"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -33,7 +33,7 @@ func TestGetHealthCheck(t *testing.T) {
 		awsUserPoolID := "us-west-2_aaaaaaaaa"
 		checkState := health.NewCheckState("dp-identity-api-test")
 
-		m.GetGroupFunc = func(inputData *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+		m.GetGroupFunc = func(_ *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
 			group := &cognitoidentityprovider.GetGroupOutput{
 				Group: &cognitoidentityprovider.GroupType{},
 			}
@@ -52,7 +52,7 @@ func TestGetHealthCheck(t *testing.T) {
 
 	Convey("dp-identity-api healthchecker reports critical", t, func() {
 		Convey("When the user pool can't be found", func() {
-			m.GetGroupFunc = func(inputData *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+			m.GetGroupFunc = func(_ *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
 				group := &cognitoidentityprovider.GetGroupOutput{
 					Group: &cognitoidentityprovider.GroupType{},
 				}

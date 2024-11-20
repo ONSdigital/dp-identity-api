@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
@@ -42,22 +42,22 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		group := models.Group{
 			ID: "test-group",
 		}
-		userId := ""
+		userID := ""
 
-		errs := group.ValidateAddRemoveUser(ctx, userId)
+		errs := group.ValidateAddRemoveUser(ctx, userID)
 
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 1)
 		castErr := errs[0].(*models.Error)
-		So(castErr.Code, ShouldEqual, models.InvalidUserIdError)
-		So(castErr.Description, ShouldEqual, models.MissingUserIdErrorDescription)
+		So(castErr.Code, ShouldEqual, models.InvalidUserIDError)
+		So(castErr.Description, ShouldEqual, models.MissingUserIDErrorDescription)
 	})
 
 	Convey("returns InvalidGroupID error if no group ID is set", t, func() {
 		group := models.Group{}
-		userId := "zzzz-9999"
+		userID := "zzzz-9999"
 
-		errs := group.ValidateAddRemoveUser(ctx, userId)
+		errs := group.ValidateAddRemoveUser(ctx, userID)
 
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 1)
@@ -68,9 +68,9 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 
 	Convey("returns InvalidUserId and InvalidGroupID errors if no user id submitted and group ID are set", t, func() {
 		group := models.Group{}
-		userId := ""
+		userID := ""
 
-		errs := group.ValidateAddRemoveUser(ctx, userId)
+		errs := group.ValidateAddRemoveUser(ctx, userID)
 
 		So(errs, ShouldNotBeNil)
 		So(len(errs), ShouldEqual, 2)
@@ -78,17 +78,17 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 		So(castErr.Code, ShouldEqual, models.InvalidGroupIDError)
 		So(castErr.Description, ShouldEqual, models.MissingGroupIDErrorDescription)
 		castErr = errs[1].(*models.Error)
-		So(castErr.Code, ShouldEqual, models.InvalidUserIdError)
-		So(castErr.Description, ShouldEqual, models.MissingUserIdErrorDescription)
+		So(castErr.Code, ShouldEqual, models.InvalidUserIDError)
+		So(castErr.Description, ShouldEqual, models.MissingUserIDErrorDescription)
 	})
 
 	Convey("returns nil if user id is present", t, func() {
 		group := models.Group{
 			ID: "test-group",
 		}
-		userId := "zzzz-9999"
+		userID := "zzzz-9999"
 
-		errs := group.ValidateAddRemoveUser(ctx, userId)
+		errs := group.ValidateAddRemoveUser(ctx, userID)
 
 		So(errs, ShouldBeNil)
 	})
@@ -96,17 +96,14 @@ func TestGroup_ValidateAddUser(t *testing.T) {
 
 func TestGroup_BuildGetGroupRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito GetGroup request body", t, func() {
-
 		group := models.Group{
 			ID: "role-admin",
 		}
 
-		userPoolId := "euwest-99-aabbcc"
-
-		response := group.BuildGetGroupRequest(userPoolId)
+		response := group.BuildGetGroupRequest(userPoolID)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.GetGroupInput{}))
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserPoolId, ShouldEqual, userPoolID)
 		So(*response.GroupName, ShouldEqual, group.ID)
 	})
 }
@@ -116,15 +113,13 @@ func TestGroup_BuildAddUserToGroupRequest(t *testing.T) {
 		group := models.Group{
 			ID: "role-test",
 		}
-		userPoolId := "euwest-99-aabbcc"
-		userId := "zzzz-9999"
 
-		response := group.BuildAddUserToGroupRequest(userPoolId, userId)
+		response := group.BuildAddUserToGroupRequest(userPoolID, userID)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminAddUserToGroupInput{}))
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserPoolId, ShouldEqual, userPoolID)
 		So(*response.GroupName, ShouldEqual, group.ID)
-		So(*response.Username, ShouldEqual, userId)
+		So(*response.Username, ShouldEqual, userID)
 	})
 }
 
@@ -133,15 +128,13 @@ func TestGroup_BuildRemoveUserFromGroupRequest(t *testing.T) {
 		group := models.Group{
 			ID: "role-test",
 		}
-		userPoolId := "euwest-99-aabbcc"
-		userId := "zzzz-9999"
 
-		response := group.BuildRemoveUserFromGroupRequest(userPoolId, userId)
+		response := group.BuildRemoveUserFromGroupRequest(userPoolID, userID)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminRemoveUserFromGroupInput{}))
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserPoolId, ShouldEqual, userPoolID)
 		So(*response.GroupName, ShouldEqual, group.ID)
-		So(*response.Username, ShouldEqual, userId)
+		So(*response.Username, ShouldEqual, userID)
 	})
 }
 
@@ -150,12 +143,11 @@ func TestGroup_BuildListUsersInGroupRequest(t *testing.T) {
 		group := models.Group{
 			ID: "role-test",
 		}
-		userPoolId := "euwest-99-aabbcc"
 
-		response := group.BuildListUsersInGroupRequest(userPoolId)
+		response := group.BuildListUsersInGroupRequest(userPoolID)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInGroupInput{}))
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserPoolId, ShouldEqual, userPoolID)
 		So(*response.GroupName, ShouldEqual, group.ID)
 	})
 }
@@ -191,16 +183,16 @@ func TestGroup_BuildSuccessfulJsonResponse(t *testing.T) {
 			Precedence: precedence,
 		}
 
-		response, err := group.BuildSuccessfulJsonResponse(ctx)
+		response, err := group.BuildSuccessfulJSONResponse(ctx)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
-		var userJson map[string]interface{}
-		err = json.Unmarshal(response, &userJson)
+		var userJSON map[string]interface{}
+		err = json.Unmarshal(response, &userJSON)
 		So(err, ShouldBeNil)
-		So(userJson["id"], ShouldEqual, id)
-		So(userJson["name"], ShouldEqual, name)
-		So(userJson["precedence"], ShouldEqual, precedence)
+		So(userJSON["id"], ShouldEqual, id)
+		So(userJSON["name"], ShouldEqual, name)
+		So(userJSON["precedence"], ShouldEqual, precedence)
 	})
 }
 
@@ -209,13 +201,12 @@ func TestGroup_BuildListUsersInGroupRequestWithNextToken(t *testing.T) {
 		group := models.Group{
 			ID: "role-test",
 		}
-		userPoolId := "euwest-99-aabbcc"
 		nextToken := ""
 
-		response := group.BuildListUsersInGroupRequestWithNextToken(userPoolId, nextToken)
+		response := group.BuildListUsersInGroupRequestWithNextToken(userPoolID, nextToken)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInGroupInput{}))
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserPoolId, ShouldEqual, userPoolID)
 		So(*response.GroupName, ShouldEqual, group.ID)
 		So(response.NextToken, ShouldBeNil)
 	})
@@ -224,13 +215,12 @@ func TestGroup_BuildListUsersInGroupRequestWithNextToken(t *testing.T) {
 		group := models.Group{
 			ID: "role-test",
 		}
-		userPoolId := "euwest-99-aabbcc"
 		nextToken := "abcd"
 
-		response := group.BuildListUsersInGroupRequestWithNextToken(userPoolId, nextToken)
+		response := group.BuildListUsersInGroupRequestWithNextToken(userPoolID, nextToken)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInGroupInput{}))
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserPoolId, ShouldEqual, userPoolID)
 		So(*response.GroupName, ShouldEqual, group.ID)
 		So(*response.NextToken, ShouldEqual, nextToken)
 	})
@@ -238,37 +228,34 @@ func TestGroup_BuildListUsersInGroupRequestWithNextToken(t *testing.T) {
 func TestGroup_BuildListGroupsRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito ListGroups request body", t, func() {
 		group := models.ListUserGroupType{}
-		userPoolId := "euwest-99-aabbcc"
 		nextToken := "Next-Token"
 
-		response := group.BuildListGroupsRequest(userPoolId, nextToken)
+		response := group.BuildListGroupsRequest(userPoolID, nextToken)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListGroupsInput{}))
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserPoolId, ShouldEqual, userPoolID)
 		So(*response.NextToken, ShouldEqual, nextToken)
 	})
 
 	Convey("builds a correctly populated Cognito ListGroups request body", t, func() {
 		group := models.ListUserGroupType{}
-		userPoolId := "euwest-99-aabbcc"
 		nextToken := ""
 
-		response := group.BuildListGroupsRequest(userPoolId, nextToken)
+		response := group.BuildListGroupsRequest(userPoolID, nextToken)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListGroupsInput{}))
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserPoolId, ShouldEqual, userPoolID)
 		So(response.NextToken, ShouldBeNil)
 	})
 
 	Convey("builds a nill Cognito ListGroups request body", t, func() {
 		group := models.ListUserGroupType{}
-		userPoolId := "euwest-99-aabbcc"
 		nextToken := ""
 
-		response := group.BuildListGroupsRequest(userPoolId, nextToken)
+		response := group.BuildListGroupsRequest(userPoolID, nextToken)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListGroupsInput{}))
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserPoolId, ShouldEqual, userPoolID)
 		So(response.NextToken, ShouldBeNil)
 	})
 }
@@ -293,17 +280,17 @@ func TestGroup_BuildListGroupsSuccessfulJsonResponse(t *testing.T) {
 			NextToken: new(string),
 		}
 
-		response, err := group.BuildListGroupsSuccessfulJsonResponse(ctx, results)
+		response, err := group.BuildListGroupsSuccessfulJSONResponse(ctx, results)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
-		var groupsJson map[string]interface{}
-		err = json.Unmarshal(response, &groupsJson)
+		var groupsJSON map[string]interface{}
+		err = json.Unmarshal(response, &groupsJSON)
 		So(err, ShouldBeNil)
-		So(groupsJson["next_token"], ShouldBeEmpty)
-		So(groupsJson["count"], ShouldEqual, 2)
-		So(groupsJson["groups"], ShouldNotBeNil)
-		jsonGroups := groupsJson["groups"].([]interface{})
+		So(groupsJSON["next_token"], ShouldBeEmpty)
+		So(groupsJSON["count"], ShouldEqual, 2)
+		So(groupsJSON["groups"], ShouldNotBeNil)
+		jsonGroups := groupsJSON["groups"].([]interface{})
 		So(len(jsonGroups), ShouldEqual, 2)
 		for _, testgroup := range jsonGroups {
 			jsonGroup := testgroup.(map[string]interface{})
@@ -311,19 +298,17 @@ func TestGroup_BuildListGroupsSuccessfulJsonResponse(t *testing.T) {
 			So(jsonGroup["precedence"], ShouldEqual, precedence)
 			So(jsonGroup["id"], ShouldEqual, name)
 		}
-
 	})
 
 	Convey("nil result", t, func() {
 		ctx := context.Background()
 		group := models.ListUserGroups{}
-		var results *cognitoidentityprovider.ListGroupsOutput = nil
-		response, err := group.BuildListGroupsSuccessfulJsonResponse(ctx, results)
+		var results *cognitoidentityprovider.ListGroupsOutput
+		response, err := group.BuildListGroupsSuccessfulJSONResponse(ctx, results)
 		So(response, ShouldBeNil)
 		So(err, ShouldNotBeNil)
 	},
 	)
-
 }
 
 func TestGroup_ValidateCreateUpdateGroupRequest(t *testing.T) {
@@ -480,12 +465,11 @@ func TestGroup_BuildCreateUpdateGroupRequest(t *testing.T) {
 			ID:         &groupName,
 		}
 
-		userPoolId := "euwest-99-aabbcc"
-
-		response := group.BuildCreateGroupInput(&userPoolId)
+		userPoolIDVar := userPoolID
+		response := group.BuildCreateGroupInput(&userPoolIDVar)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.CreateGroupInput{}))
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserPoolId, ShouldEqual, userPoolID)
 		So(*response.GroupName, ShouldEqual, *group.ID)
 		So(*response.Description, ShouldEqual, *group.Name)
 		So(*response.Precedence, ShouldEqual, *group.Precedence)
@@ -494,7 +478,6 @@ func TestGroup_BuildCreateUpdateGroupRequest(t *testing.T) {
 
 func TestGroup_BuildCreateUpdateGroupSuccessfulJsonResponse(t *testing.T) {
 	Convey("returns a byte array of the response JSON", t, func() {
-
 		var (
 			ctx        = context.Background()
 			name       = "This^& is a £Tes\t GRoup n%$ame"
@@ -508,21 +491,20 @@ func TestGroup_BuildCreateUpdateGroupSuccessfulJsonResponse(t *testing.T) {
 			Precedence: &precedence,
 		}
 
-		response, err := group.BuildSuccessfulJsonResponse(ctx)
+		response, err := group.BuildSuccessfulJSONResponse(ctx)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
-		var groupJson map[string]interface{}
-		err = json.Unmarshal(response, &groupJson)
+		var groupJSON map[string]interface{}
+		err = json.Unmarshal(response, &groupJSON)
 		So(err, ShouldBeNil)
-		So(groupJson["name"], ShouldEqual, name)
-		So(groupJson["precedence"], ShouldEqual, precedence)
+		So(groupJSON["name"], ShouldEqual, name)
+		So(groupJSON["precedence"], ShouldEqual, precedence)
 	})
 }
 
 func TestGroup_CreateUpdateGroupCleanGroupName(t *testing.T) {
 	Convey("return a cleaned group name from description", t, func() {
-
 		var (
 			name       = "This^& is a £Tes\\t GRoup n%$ame"
 			precedence = int64(100)
@@ -554,7 +536,7 @@ func TestGroup_CreateUpdateGroupNewSuccessResponse(t *testing.T) {
 			Precedence: &precedence,
 		}
 
-		response, _ := group.BuildSuccessfulJsonResponse(ctx)
+		response, _ := group.BuildSuccessfulJSONResponse(ctx)
 		successResponse := group.NewSuccessResponse(response, http.StatusCreated, nil)
 
 		So(reflect.TypeOf(*successResponse), ShouldEqual, reflect.TypeOf(models.SuccessResponse{}))
@@ -564,6 +546,5 @@ func TestGroup_CreateUpdateGroupNewSuccessResponse(t *testing.T) {
 
 		So(CreateUpdateGroupResponse["name"].(string), ShouldEqual, name)
 		So(int64(CreateUpdateGroupResponse["precedence"].(float64)), ShouldEqual, precedence)
-
 	})
 }

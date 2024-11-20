@@ -21,10 +21,12 @@ func (c Config) GetS3UsersFilePath() string {
 	return fmt.Sprintf("%s%s", c.S3BaseDir, c.UserFileName)
 }
 
-func GetConfig() *Config {
+func GetConfig() (*Config, error) {
 	conf := &Config{}
-	envconfig.Process("", conf)
-	return conf
+	if err := envconfig.Process("", conf); err != nil {
+		return nil, err
+	}
+	return conf, nil
 }
 
 func (c Config) GetS3GroupsFilePath() string {

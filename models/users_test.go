@@ -7,19 +7,22 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ONSdigital/dp-identity-api/v2/api"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/aws/aws-sdk-go/aws"
-
-	"github.com/ONSdigital/dp-identity-api/api"
-
-	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/google/uuid"
 	. "github.com/smartystreets/goconvey/convey"
+)
+
+const (
+	userID       = "abcd1234"
+	userPoolID   = "euwest-99-aabbcc"
+	clientID     = "awsclientid"
+	clientSecret = "awsSecret"
 )
 
 func TestUsersList_BuildListUserRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito ListUsers request body", t, func() {
-
 		user := models.UserParams{
 			Email:    "email.email@ons.gov.uk",
 			Forename: "Stan",
@@ -29,12 +32,12 @@ func TestUsersList_BuildListUserRequest(t *testing.T) {
 		filterString := "email = \"" + user.Email + "\""
 		requiredAttribute := "email"
 		limit := int64(1)
-		userPoolId := "euwest-99-aabbcc"
 
-		response := models.UsersList{}.BuildListUserRequest(filterString, requiredAttribute, limit, nil, &userPoolId)
+		userPoolIDVar := userPoolID
+		response := models.UsersList{}.BuildListUserRequest(filterString, requiredAttribute, limit, nil, &userPoolIDVar)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.ListUsersInput{}))
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserPoolId, ShouldEqual, userPoolID)
 		So(*response.Limit, ShouldEqual, limit)
 		So(*response.Filter, ShouldEqual, filterString)
 		So(*response.AttributesToGet[0], ShouldEqual, requiredAttribute)
@@ -110,7 +113,7 @@ func TestUsersList_BuildSuccessfulJsonResponse(t *testing.T) {
 			Count: 1,
 		}
 
-		response, err := userList.BuildSuccessfulJsonResponse(ctx)
+		response, err := userList.BuildSuccessfulJSONResponse(ctx)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
@@ -118,10 +121,10 @@ func TestUsersList_BuildSuccessfulJsonResponse(t *testing.T) {
 		err = json.Unmarshal(response, &body)
 		So(err, ShouldBeNil)
 		So(body["count"], ShouldEqual, 1)
-		usersJson := body["users"].([]interface{})
-		userJson := usersJson[0].(map[string]interface{})
-		So(userJson["id"], ShouldEqual, name)
-		So(userJson["status"], ShouldEqual, status)
+		usersJSON := body["users"].([]interface{})
+		userJSON := usersJSON[0].(map[string]interface{})
+		So(userJSON["id"], ShouldEqual, name)
+		So(userJSON["status"], ShouldEqual, status)
 	})
 }
 
@@ -376,21 +379,17 @@ func TestUserParams_CheckForDuplicateEmail(t *testing.T) {
 
 func TestUserParams_BuildCreateUserRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminUserCreateInput request body", t, func() {
-
 		user := models.UserParams{
 			Email:    "email.email@ons.gov.uk",
 			Forename: "Stan",
 			Lastname: "Smith",
 		}
 
-		userId := uuid.NewString()
-		userPoolId := "euwest-99-aabbcc"
-
-		response := user.BuildCreateUserRequest(userId, userPoolId)
+		response := user.BuildCreateUserRequest(userID, userPoolID)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminCreateUserInput{}))
-		So(*response.Username, ShouldEqual, userId)
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.Username, ShouldEqual, userID)
+		So(*response.UserPoolId, ShouldEqual, userPoolID)
 		So(*response.UserAttributes[0].Value, ShouldEqual, user.Forename)
 		So(*response.UserAttributes[1].Value, ShouldEqual, user.Lastname)
 		So(*response.UserAttributes[2].Value, ShouldEqual, user.Email)
@@ -399,7 +398,6 @@ func TestUserParams_BuildCreateUserRequest(t *testing.T) {
 
 func TestUserParams_BuildUpdateUserRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminUpdateUserAttributeInput request body", t, func() {
-
 		user := models.UserParams{
 			ID:          "abcd1234",
 			Forename:    "Stan",
@@ -407,13 +405,11 @@ func TestUserParams_BuildUpdateUserRequest(t *testing.T) {
 			StatusNotes: "user suspended",
 		}
 
-		userPoolId := "euwest-99-aabbcc"
-
-		response := user.BuildUpdateUserRequest(userPoolId)
+		response := user.BuildUpdateUserRequest(userPoolID)
 
 		So(reflect.TypeOf(*response), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminUpdateUserAttributesInput{}))
 		So(*response.Username, ShouldEqual, user.ID)
-		So(*response.UserPoolId, ShouldEqual, userPoolId)
+		So(*response.UserPoolId, ShouldEqual, userPoolID)
 		So(*response.UserAttributes[0].Value, ShouldEqual, user.Forename)
 		So(*response.UserAttributes[1].Value, ShouldEqual, user.Lastname)
 		So(*response.UserAttributes[2].Value, ShouldEqual, user.StatusNotes)
@@ -429,72 +425,63 @@ func TestUserParams_BuildSuccessfulJsonResponse(t *testing.T) {
 			ID:     name,
 		}
 
-		response, err := createdUser.BuildSuccessfulJsonResponse(ctx)
+		response, err := createdUser.BuildSuccessfulJSONResponse(ctx)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
-		var userJson map[string]interface{}
-		err = json.Unmarshal(response, &userJson)
+		var userJSON map[string]interface{}
+		err = json.Unmarshal(response, &userJSON)
 		So(err, ShouldBeNil)
-		So(userJson["id"], ShouldEqual, name)
-		So(userJson["status"], ShouldEqual, status)
+		So(userJSON["id"], ShouldEqual, name)
+		So(userJSON["status"], ShouldEqual, status)
 	})
 }
 
 func TestUserParams_BuildAdminGetUserRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminGetUserInput request body", t, func() {
-		userId := "abcd1234"
 		user := models.UserParams{
-			ID: userId,
+			ID: userID,
 		}
 
-		userPoolId := "euwest-99-aabbcc"
-
-		request := user.BuildAdminGetUserRequest(userPoolId)
+		request := user.BuildAdminGetUserRequest(userPoolID)
 
 		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminGetUserInput{}))
-		So(*request.Username, ShouldEqual, userId)
-		So(*request.UserPoolId, ShouldEqual, userPoolId)
+		So(*request.Username, ShouldEqual, userID)
+		So(*request.UserPoolId, ShouldEqual, userPoolID)
 	})
 }
 
 func TestUserParams_BuildEnableUserRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminEnableUserInput request body", t, func() {
-		userId := "abcd1234"
 		user := models.UserParams{
-			ID: userId,
+			ID: userID,
 		}
 
-		userPoolId := "euwest-99-aabbcc"
-
-		request := user.BuildEnableUserRequest(userPoolId)
+		request := user.BuildEnableUserRequest(userPoolID)
 
 		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminEnableUserInput{}))
-		So(*request.Username, ShouldEqual, userId)
-		So(*request.UserPoolId, ShouldEqual, userPoolId)
+		So(*request.Username, ShouldEqual, userID)
+		So(*request.UserPoolId, ShouldEqual, userPoolID)
 	})
 }
 
 func TestUserParams_BuildDisableUserRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminDisableUserInput request body", t, func() {
-		userId := "abcd1234"
 		user := models.UserParams{
-			ID: userId,
+			ID: userID,
 		}
 
-		userPoolId := "euwest-99-aabbcc"
-
-		request := user.BuildDisableUserRequest(userPoolId)
+		request := user.BuildDisableUserRequest(userPoolID)
 
 		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminDisableUserInput{}))
-		So(*request.Username, ShouldEqual, userId)
-		So(*request.UserPoolId, ShouldEqual, userPoolId)
+		So(*request.Username, ShouldEqual, userID)
+		So(*request.UserPoolId, ShouldEqual, userPoolID)
 	})
 }
 
 func TestUserParams_MapCognitoDetails(t *testing.T) {
 	Convey("maps the returned user details to the UserParam attributes", t, func() {
-		var forename, surname, email, status, id string = "Bob", "Smith", "email@ons.gov.uk", "CONFIRMED", "user-1"
+		var forename, surname, email, status, id = "Bob", "Smith", "email@ons.gov.uk", "CONFIRMED", "user-1"
 		cognitoUser := cognitoidentityprovider.UserType{
 			Attributes: []*cognitoidentityprovider.AttributeType{
 				{
@@ -526,7 +513,7 @@ func TestUserParams_MapCognitoDetails(t *testing.T) {
 
 func TestUserParams_MapCognitoGetResponse(t *testing.T) {
 	Convey("maps the returned user details to the UserParam attributes", t, func() {
-		var forename, surname, email, status, id string = "Bob", "Smith", "email@ons.gov.uk", "CONFIRMED", "user-1"
+		var forename, surname, email, status, id = "Bob", "Smith", "email@ons.gov.uk", "CONFIRMED", "user-1"
 		cognitoUser := cognitoidentityprovider.AdminGetUserOutput{
 			UserAttributes: []*cognitoidentityprovider.AttributeType{
 				{
@@ -652,17 +639,14 @@ func TestUserSignIn_ValidateCredentials(t *testing.T) {
 
 func TestUserSignIn_BuildCognitoRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito InitiateAuthInput request body", t, func() {
-
 		signIn := models.UserSignIn{
 			Email:    "email.email@ons.gov.uk",
 			Password: "password",
 		}
 
-		clientId := "awsclientid"
-		clientSecret := "awsSectret"
 		clientAuthFlow := "authflow"
 
-		response := signIn.BuildCognitoRequest(clientId, clientSecret, clientAuthFlow)
+		response := signIn.BuildCognitoRequest(clientID, clientSecret, clientAuthFlow)
 
 		So(*response.AuthParameters["USERNAME"], ShouldEqual, signIn.Email)
 		So(*response.AuthParameters["PASSWORD"], ShouldEqual, signIn.Password)
@@ -679,7 +663,7 @@ func TestUserSignIn_BuildSuccessfulJsonResponse(t *testing.T) {
 		signIn := models.UserSignIn{}
 		result := cognitoidentityprovider.InitiateAuthOutput{}
 
-		response, err := signIn.BuildSuccessfulJsonResponse(ctx, &result, 1)
+		response, err := signIn.BuildSuccessfulJSONResponse(ctx, &result, 1)
 
 		So(response, ShouldBeNil)
 		castErr := err.(*models.Error)
@@ -696,7 +680,7 @@ func TestUserSignIn_BuildSuccessfulJsonResponse(t *testing.T) {
 			},
 		}
 
-		response, err := signIn.BuildSuccessfulJsonResponse(ctx, &result, 1)
+		response, err := signIn.BuildSuccessfulJSONResponse(ctx, &result, 1)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
@@ -800,7 +784,6 @@ func TestChangePassword_ValidateNewPasswordRequiredRequest(t *testing.T) {
 
 func TestChangePassword_BuildAuthChallengeResponseRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito RespondToAuthChallengeInput request body", t, func() {
-
 		passwordChangeParams := models.ChangePassword{
 			ChangeType:  models.NewPasswordRequiredType,
 			Session:     "auth-challenge-session",
@@ -808,17 +791,14 @@ func TestChangePassword_BuildAuthChallengeResponseRequest(t *testing.T) {
 			NewPassword: "Password2",
 		}
 
-		clientId := "awsclientid"
-		clientSecret := "awsSectret"
-
-		response := passwordChangeParams.BuildAuthChallengeResponseRequest(clientSecret, clientId, api.NewPasswordChallenge)
+		response := passwordChangeParams.BuildAuthChallengeResponseRequest(clientSecret, clientID, api.NewPasswordChallenge)
 
 		So(*response.ChallengeResponses["USERNAME"], ShouldEqual, passwordChangeParams.Email)
 		So(*response.ChallengeResponses["NEW_PASSWORD"], ShouldEqual, passwordChangeParams.NewPassword)
 		So(*response.ChallengeResponses["SECRET_HASH"], ShouldNotBeEmpty)
 		So(*response.ChallengeName, ShouldEqual, api.NewPasswordChallenge)
 		So(*response.Session, ShouldEqual, passwordChangeParams.Session)
-		So(*response.ClientId, ShouldResemble, clientId)
+		So(*response.ClientId, ShouldResemble, clientID)
 	})
 }
 
@@ -829,7 +809,7 @@ func TestChangePassword_BuildAuthChallengeSuccessfulJsonResponse(t *testing.T) {
 		passwordChangeParams := models.ChangePassword{}
 		result := cognitoidentityprovider.RespondToAuthChallengeOutput{}
 
-		response, err := passwordChangeParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, &result, 1)
+		response, err := passwordChangeParams.BuildAuthChallengeSuccessfulJSONResponse(ctx, &result, 1)
 
 		So(response, ShouldBeNil)
 		castErr := err.(*models.Error)
@@ -846,7 +826,7 @@ func TestChangePassword_BuildAuthChallengeSuccessfulJsonResponse(t *testing.T) {
 			},
 		}
 
-		response, err := passwordChangeParams.BuildAuthChallengeSuccessfulJsonResponse(ctx, &result, 1)
+		response, err := passwordChangeParams.BuildAuthChallengeSuccessfulJSONResponse(ctx, &result, 1)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
@@ -879,7 +859,7 @@ func TestChangePassword_ValidateForgottenPasswordRequest(t *testing.T) {
 				"≈",
 				"",
 				"Password2",
-				[]string{models.InvalidUserIdError},
+				[]string{models.InvalidUserIDError},
 			},
 			{
 				// missing password
@@ -893,7 +873,7 @@ func TestChangePassword_ValidateForgottenPasswordRequest(t *testing.T) {
 				"",
 				"",
 				"Password2",
-				[]string{models.InvalidUserIdError, models.InvalidTokenError},
+				[]string{models.InvalidUserIDError, models.InvalidTokenError},
 			},
 			{
 				// missing VerificationToken and password
@@ -907,14 +887,14 @@ func TestChangePassword_ValidateForgottenPasswordRequest(t *testing.T) {
 				"verification_token",
 				"",
 				"",
-				[]string{models.InvalidPasswordError, models.InvalidUserIdError},
+				[]string{models.InvalidPasswordError, models.InvalidUserIDError},
 			},
 			{
 				// missing VerificationToken, email and password
 				"",
 				"",
 				"",
-				[]string{models.InvalidPasswordError, models.InvalidUserIdError, models.InvalidTokenError},
+				[]string{models.InvalidPasswordError, models.InvalidUserIDError, models.InvalidTokenError},
 			},
 		}
 		for _, tt := range missingParamsTests {
@@ -938,23 +918,21 @@ func TestChangePassword_ValidateForgottenPasswordRequest(t *testing.T) {
 
 func TestForgottenPassword_BuildConfirmForgotPasswordRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito BuildConfirmForgotPasswordRequest request body", t, func() {
-
 		passwordChangeParams := models.ChangePassword{
 			VerificationToken: "verification_token",
 			Email:             "email@gmail.com",
 			NewPassword:       "Password2",
 		}
 
-		clientId := "awsclientid"
+		clientID := "awsclientid"
 		clientSecret := "awsSecret"
 
-		response := passwordChangeParams.BuildConfirmForgotPasswordRequest(clientSecret, clientId)
+		response := passwordChangeParams.BuildConfirmForgotPasswordRequest(clientSecret, clientID)
 
-		So(*response.ClientId, ShouldResemble, clientId)
+		So(*response.ClientId, ShouldResemble, clientID)
 		So(*response.ConfirmationCode, ShouldResemble, passwordChangeParams.VerificationToken)
 		So(*response.Password, ShouldResemble, passwordChangeParams.NewPassword)
 		So(*response.Username, ShouldResemble, passwordChangeParams.Email)
-
 	})
 }
 
@@ -996,51 +974,43 @@ func TestPasswordReset_Validate(t *testing.T) {
 
 func TestPasswordReset_BuildCognitoRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito ForgotPasswordInput request body", t, func() {
-
 		passwordResetParams := models.PasswordReset{
 			Email: "email@gmail.com",
 		}
 
-		clientId := "awsclientid"
-		clientSecret := "awsSectret"
-
-		response := passwordResetParams.BuildCognitoRequest(clientSecret, clientId)
+		response := passwordResetParams.BuildCognitoRequest(clientSecret, clientID)
 
 		So(*response.Username, ShouldEqual, passwordResetParams.Email)
 		So(*response.SecretHash, ShouldNotBeEmpty)
-		So(*response.ClientId, ShouldResemble, clientId)
+		So(*response.ClientId, ShouldResemble, clientID)
 	})
 }
 
 func TestUserParams_BuildListUserGroupsRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminListUserGroupsInput request body with empty nextToken", t, func() {
-		userId := "abcd1234"
 		nextToken := ""
 		user := models.UserParams{
-			ID: userId,
+			ID: userID,
 		}
 
-		userPoolId := "euwest-99-aabbcc"
-		request := user.BuildListUserGroupsRequest(userPoolId, nextToken)
+		request := user.BuildListUserGroupsRequest(userPoolID, nextToken)
 
 		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminListGroupsForUserInput{}))
-		So(*request.Username, ShouldEqual, userId)
-		So(*request.UserPoolId, ShouldEqual, userPoolId)
+		So(*request.Username, ShouldEqual, userID)
+		So(*request.UserPoolId, ShouldEqual, userPoolID)
 	})
 
 	Convey("builds a correctly populated Cognito AdminDisableUserInput request body with nextToken", t, func() {
-		userId := "abcd1234"
 		nextToken := "abc1234"
 		user := models.UserParams{
-			ID: userId,
+			ID: userID,
 		}
 
-		userPoolId := "euwest-99-aabbcc"
-		request := user.BuildListUserGroupsRequest(userPoolId, nextToken)
+		request := user.BuildListUserGroupsRequest(userPoolID, nextToken)
 
 		So(reflect.TypeOf(*request), ShouldEqual, reflect.TypeOf(cognitoidentityprovider.AdminListGroupsForUserInput{}))
-		So(*request.Username, ShouldEqual, userId)
-		So(*request.UserPoolId, ShouldEqual, userPoolId)
+		So(*request.Username, ShouldEqual, userID)
+		So(*request.UserPoolId, ShouldEqual, userPoolID)
 	})
 }
 
@@ -1073,21 +1043,21 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 			},
 		}
 
-		response, error := input.BuildListUserGroupsSuccessfulJsonResponse(ctx, result)
-		So(error, ShouldBeNil)
+		response, err := input.BuildListUserGroupsSuccessfulJSONResponse(ctx, result)
+		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))
 
-		var userGroupsJson models.ListUserGroups
-		err := json.Unmarshal(response, &userGroupsJson)
+		var userGroupsJSON models.ListUserGroups
+		err = json.Unmarshal(response, &userGroupsJSON)
 		So(err, ShouldBeNil)
-		So(len(userGroupsJson.Groups), ShouldEqual, len(result.Groups))
-		So(userGroupsJson.Count, ShouldEqual, len(result.Groups))
-		So(userGroupsJson.NextToken, ShouldBeNil)
+		So(len(userGroupsJSON.Groups), ShouldEqual, len(result.Groups))
+		So(userGroupsJSON.Count, ShouldEqual, len(result.Groups))
+		So(userGroupsJSON.NextToken, ShouldBeNil)
 
-		So(*userGroupsJson.Groups[0].ID, ShouldEqual, *result.Groups[0].GroupName)
-		So(*userGroupsJson.Groups[1].ID, ShouldEqual, *result.Groups[1].GroupName)
-		So(*userGroupsJson.Groups[0].Name, ShouldEqual, *result.Groups[0].Description)
-		So(*userGroupsJson.Groups[1].Name, ShouldEqual, *result.Groups[1].Description)
+		So(*userGroupsJSON.Groups[0].ID, ShouldEqual, *result.Groups[0].GroupName)
+		So(*userGroupsJSON.Groups[1].ID, ShouldEqual, *result.Groups[1].GroupName)
+		So(*userGroupsJSON.Groups[0].Name, ShouldEqual, *result.Groups[0].Description)
+		So(*userGroupsJSON.Groups[1].Name, ShouldEqual, *result.Groups[1].Description)
 	})
 
 	Convey("Check empty response from cognito i.e valid user with no groups", t, func() {
@@ -1096,16 +1066,15 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 
 		result := &cognitoidentityprovider.AdminListGroupsForUserOutput{}
 
-		response, error := input.BuildListUserGroupsSuccessfulJsonResponse(ctx, result)
-		So(error, ShouldBeNil)
-
-		var userGroupsJson models.ListUserGroups
-		err := json.Unmarshal(response, &userGroupsJson)
+		response, err := input.BuildListUserGroupsSuccessfulJSONResponse(ctx, result)
 		So(err, ShouldBeNil)
-		So(len(userGroupsJson.Groups), ShouldEqual, len(result.Groups))
-		So(userGroupsJson.Count, ShouldEqual, 0)
-		So(userGroupsJson.NextToken, ShouldBeNil)
 
+		var userGroupsJSON models.ListUserGroups
+		err = json.Unmarshal(response, &userGroupsJSON)
+		So(err, ShouldBeNil)
+		So(len(userGroupsJSON.Groups), ShouldEqual, len(result.Groups))
+		So(userGroupsJSON.Count, ShouldEqual, 0)
+		So(userGroupsJSON.NextToken, ShouldBeNil)
 	})
 
 	Convey("force nil return for cognitoidentityprovider.AdminListGroupsForUserOutput", t, func() {
@@ -1115,11 +1084,9 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 
 		result = nil
 
-		response, error := input.BuildListUserGroupsSuccessfulJsonResponse(ctx, result)
-		castErr := error.(*models.Error)
+		response, err := input.BuildListUserGroupsSuccessfulJSONResponse(ctx, result)
+		castErr := err.(*models.Error)
 		So(castErr.Code, ShouldEqual, models.InternalError)
 		So(response, ShouldBeNil)
-
 	})
-
 }

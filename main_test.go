@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	componenttest "github.com/ONSdigital/dp-component-test"
-	"github.com/ONSdigital/dp-identity-api/features/steps"
+	"github.com/ONSdigital/dp-identity-api/v2/features/steps"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
@@ -19,27 +19,28 @@ type ComponentTest struct {
 	MongoFeature *componenttest.MongoFeature
 }
 
-func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
+func (f *ComponentTest) InitializeScenario(godogCtx *godog.ScenarioContext) {
 	component, err := steps.NewIdentityComponent()
 	if err != nil {
 		log.Fatal(context.Background(), "fatal error initialising a test scenario", err)
-		os.Exit(1)
 	}
 
-	ctx.BeforeScenario(func(*godog.Scenario) {
+	godogCtx.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 		component.Reset()
+		return ctx, nil
 	})
 
-	ctx.AfterScenario(func(*godog.Scenario, error) {
-		if err = component.Close(); err != nil {
+	godogCtx.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
+		if err := component.Close(); err != nil {
 			log.Warn(context.Background(), "error closing identity component", log.FormatErrors([]error{err}))
 		}
+		return ctx, nil
 	})
 
-	component.RegisterSteps(ctx)
+	component.RegisterSteps(godogCtx)
 }
 
-func (f *ComponentTest) InitializeTestSuite(ctx *godog.TestSuiteContext) {}
+func (f *ComponentTest) InitializeTestSuite(_ *godog.TestSuiteContext) {}
 
 func TestComponent(t *testing.T) {
 	if *componentFlag {

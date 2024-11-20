@@ -2,11 +2,12 @@ package query
 
 import (
 	"errors"
-	"github.com/ONSdigital/dp-identity-api/models"
 	"reflect"
 	"slices"
 	"sort"
 	"strings"
+
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 )
 
 // LessFunc used by MultiSorter OrderedBy  used to hold the seq of sort
@@ -59,17 +60,16 @@ func (ms *MultiSorter) Less(i, j int) bool {
 
 // SortBy from the request query get the sort parameters
 func SortBy(requestSortParameters string, arr []models.UserParams) error {
-
+	inputSplit := strings.Split(requestSortParameters, ",")
 	var (
-		orderFunc []LessFunc
+		orderFunc             = make([]LessFunc, 0, len(inputSplit))
 		v         interface{} = arr[0]
 	)
 
-	inputSplit := strings.Split(requestSortParameters, ",")
 	for _, inputSplitItem := range inputSplit {
 		inputSplitItemSplit := strings.Split(inputSplitItem, ":")
 		IsDesc := slices.Contains(inputSplitItemSplit, "desc")
-		userField, err := GetFieldByJsonTag(strings.ToLower(inputSplitItemSplit[0]), v)
+		userField, err := GetFieldByJSONTag(strings.ToLower(inputSplitItemSplit[0]), v)
 		if err != nil {
 			return err
 		}
@@ -84,8 +84,8 @@ func getType(myVar interface{}) string {
 	return reflect.TypeOf(myVar).Name()
 }
 
-// GetFieldByJsonTag returns the field name as a string from the json value supplied by the request query params
-func GetFieldByJsonTag(jsonTagValue string, s interface{}) (reflect.StructField, error) {
+// GetFieldByJSONTag returns the field name as a string from the json value supplied by the request query params
+func GetFieldByJSONTag(jsonTagValue string, s interface{}) (reflect.StructField, error) {
 	rt := reflect.TypeOf(s)
 	if rt.Kind() != reflect.Struct {
 		return reflect.StructField{}, errors.New("incorrect structure")
@@ -103,28 +103,29 @@ func GetFieldByJsonTag(jsonTagValue string, s interface{}) (reflect.StructField,
 
 // GetLessFunc supplies the output function from the
 func GetLessFunc(name, field string, direction bool) LessFunc {
-
 	if direction {
 		if name == "UserParams" {
-			if field == "Forename" {
+			switch field {
+			case "Forename":
 				return func(c1, c2 *models.UserParams) bool { return c1.Forename > c2.Forename }
-			} else if field == "Lastname" {
+			case "Lastname":
 				return func(c1, c2 *models.UserParams) bool { return c1.Lastname > c2.Lastname }
-			} else if field == "Email" {
+			case "Email":
 				return func(c1, c2 *models.UserParams) bool { return c1.Email > c2.Email }
-			} else {
+			default:
 				return func(c1, c2 *models.UserParams) bool { return c1.ID > c2.ID }
 			}
 		}
 	} else {
 		if name == "UserParams" {
-			if field == "Forename" {
+			switch field {
+			case "Forename":
 				return func(c1, c2 *models.UserParams) bool { return c1.Forename < c2.Forename }
-			} else if field == "Lastname" {
+			case "Lastname":
 				return func(c1, c2 *models.UserParams) bool { return c1.Lastname < c2.Lastname }
-			} else if field == "Email" {
+			case "Email":
 				return func(c1, c2 *models.UserParams) bool { return c1.Email < c2.Email }
-			} else {
+			default:
 				return func(c1, c2 *models.UserParams) bool { return c1.ID < c2.ID }
 			}
 		}

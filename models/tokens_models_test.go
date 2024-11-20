@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ONSdigital/dp-identity-api/cognito/mock"
-	"github.com/ONSdigital/dp-identity-api/models"
-	"github.com/ONSdigital/dp-identity-api/utilities"
+	"github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
+	"github.com/ONSdigital/dp-identity-api/v2/utilities"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -71,7 +71,7 @@ func TestIdToken_ParseWithoutValidating(t *testing.T) {
 		testEmailAddress := "test@ons.gov.uk"
 
 		idTokenString := mock.GenerateMockIDToken(testEmailAddress)
-		idToken := models.IdToken{}
+		idToken := models.IDToken{}
 
 		err := idToken.ParseWithoutValidating(ctx, idTokenString)
 
@@ -81,7 +81,7 @@ func TestIdToken_ParseWithoutValidating(t *testing.T) {
 
 	Convey("error returned when passed an invalid token", t, func() {
 		idTokenString := "aaaa.bbbb.cccc"
-		idToken := models.IdToken{}
+		idToken := models.IDToken{}
 
 		err := idToken.ParseWithoutValidating(ctx, idTokenString)
 		So(err, ShouldNotBeNil)
@@ -92,7 +92,7 @@ func TestIdToken_Validate(t *testing.T) {
 	var ctx = context.Background()
 
 	Convey("returns an InvalidToken error if no token string is set", t, func() {
-		idToken := models.IdToken{}
+		idToken := models.IDToken{}
 
 		err := idToken.Validate(ctx)
 
@@ -102,7 +102,7 @@ func TestIdToken_Validate(t *testing.T) {
 	})
 
 	Convey("returns an InvalidToken error if token string is set as empty string", t, func() {
-		idToken := models.IdToken{TokenString: ""}
+		idToken := models.IDToken{TokenString: ""}
 
 		err := idToken.Validate(ctx)
 
@@ -112,7 +112,7 @@ func TestIdToken_Validate(t *testing.T) {
 	})
 
 	Convey("returns an InvalidToken error if token string is not parsable", t, func() {
-		idToken := models.IdToken{TokenString: "aaaa.bbbb.cccc"}
+		idToken := models.IDToken{TokenString: "aaaa.bbbb.cccc"}
 
 		err := idToken.Validate(ctx)
 
@@ -125,7 +125,7 @@ func TestIdToken_Validate(t *testing.T) {
 		testEmailAddress := "test@ons.gov.uk"
 
 		idTokenString := mock.GenerateMockIDToken(testEmailAddress)
-		idToken := models.IdToken{TokenString: idTokenString}
+		idToken := models.IDToken{TokenString: idTokenString}
 
 		err := idToken.Validate(ctx)
 
@@ -168,17 +168,17 @@ func TestRefreshToken_Validate(t *testing.T) {
 
 func TestRefreshToken_GenerateRefreshRequest(t *testing.T) {
 	Convey("returns a filled InitiateAuthInput object", t, func() {
-		var clientId, clientSecret, username, refreshTokenString string = "abcdefg12345", "hijklmnop67890", "onsTestUser", "zzzz.yyyy.xxxx.wwww.vvvv"
+		var clientID, clientSecret, username, refreshTokenString = "abcdefg12345", "hijklmnop67890", "onsTestUser", "zzzz.yyyy.xxxx.wwww.vvvv"
 		refreshToken := models.RefreshToken{TokenString: refreshTokenString}
 
-		initiateAuthInput := refreshToken.GenerateRefreshRequest(clientSecret, username, clientId)
+		initiateAuthInput := refreshToken.GenerateRefreshRequest(clientSecret, username, clientID)
 
 		expectedAuthFlow := "REFRESH_TOKEN_AUTH"
-		expectedSecretHash := utilities.ComputeSecretHash(clientSecret, username, clientId)
+		expectedSecretHash := utilities.ComputeSecretHash(clientSecret, username, clientID)
 		So(*initiateAuthInput.AuthFlow, ShouldEqual, expectedAuthFlow)
 		So(*initiateAuthInput.AuthParameters["REFRESH_TOKEN"], ShouldEqual, refreshTokenString)
 		So(*initiateAuthInput.AuthParameters["SECRET_HASH"], ShouldEqual, expectedSecretHash)
-		So(*initiateAuthInput.ClientId, ShouldEqual, clientId)
+		So(*initiateAuthInput.ClientId, ShouldEqual, clientID)
 	})
 }
 
@@ -189,7 +189,7 @@ func TestRefreshToken_BuildSuccessfulJsonResponse(t *testing.T) {
 		refreshToken := models.RefreshToken{}
 		result := cognitoidentityprovider.InitiateAuthOutput{}
 
-		response, err := refreshToken.BuildSuccessfulJsonResponse(ctx, &result)
+		response, err := refreshToken.BuildSuccessfulJSONResponse(ctx, &result)
 
 		So(response, ShouldBeNil)
 		castErr := err.(*models.Error)
@@ -206,7 +206,7 @@ func TestRefreshToken_BuildSuccessfulJsonResponse(t *testing.T) {
 			},
 		}
 
-		response, err := refreshToken.BuildSuccessfulJsonResponse(ctx, &result)
+		response, err := refreshToken.BuildSuccessfulJSONResponse(ctx, &result)
 
 		So(err, ShouldBeNil)
 		So(reflect.TypeOf(response), ShouldEqual, reflect.TypeOf([]byte{}))

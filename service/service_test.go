@@ -11,16 +11,16 @@ import (
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	authorisationMock "github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
 
-	"github.com/ONSdigital/dp-identity-api/cognito"
-	cognitoMock "github.com/ONSdigital/dp-identity-api/cognito/mock"
-	jwksMock "github.com/ONSdigital/dp-identity-api/jwks/mock"
+	"github.com/ONSdigital/dp-identity-api/v2/cognito"
+	cognitoMock "github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
+	jwksMock "github.com/ONSdigital/dp-identity-api/v2/jwks/mock"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 
-	"github.com/ONSdigital/dp-identity-api/config"
-	"github.com/ONSdigital/dp-identity-api/service"
+	"github.com/ONSdigital/dp-identity-api/v2/config"
+	"github.com/ONSdigital/dp-identity-api/v2/service"
 
-	serviceMock "github.com/ONSdigital/dp-identity-api/service/mock"
+	serviceMock "github.com/ONSdigital/dp-identity-api/v2/service/mock"
 
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
@@ -38,15 +38,15 @@ var (
 	errHealthcheck = errors.New("healthCheck error")
 )
 
-var funcDoGetHealthcheckErr = func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
+var funcDoGetHealthcheckErr = func(_ *config.Config, _, _, _ string) (service.HealthChecker, error) {
 	return nil, errHealthcheck
 }
 
-var funcDoGetHTTPServerNil = func(bindAddr string, router http.Handler, cfg *config.Config) service.HTTPServer {
+var funcDoGetHTTPServerNil = func(_ string, _ http.Handler, _ *config.Config) service.HTTPServer {
 	return nil
 }
 
-var jwksHandler = &jwksMock.JWKSIntMock{}
+var jwksHandler = &jwksMock.ManagerMock{}
 
 func TestRun(t *testing.T) {
 	Convey("Having a set of mocked dependencies", t, func() {
@@ -55,13 +55,13 @@ func TestRun(t *testing.T) {
 
 		// set dummy config data
 		cfg.AWSCognitoUserPoolID = "eu-west-18_73289nds8w932"
-		cfg.AWSCognitoClientId = "client-aaa-bbb"
+		cfg.AWSCognitoClientID = "client-aaa-bbb"
 		cfg.AWSCognitoClientSecret = "secret-ccc-ddd"
 		cfg.AWSAuthFlow = "authflow"
 
 		hcMock := &serviceMock.HealthCheckerMock{
-			AddCheckFunc: func(name string, checker healthcheck.Checker) error { return nil },
-			StartFunc:    func(ctx context.Context) {},
+			AddCheckFunc: func(_ string, _ healthcheck.Checker) error { return nil },
+			StartFunc:    func(_ context.Context) {},
 		}
 
 		serverWg := &sync.WaitGroup{}
@@ -79,15 +79,15 @@ func TestRun(t *testing.T) {
 			},
 		}
 
-		funcDoGetHealthcheckOk := func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
+		funcDoGetHealthcheckOk := func(_ *config.Config, _, _, _ string) (service.HealthChecker, error) {
 			return hcMock, nil
 		}
 
-		funcDoGetHTTPServer := func(bindAddr string, router http.Handler, cfg *config.Config) service.HTTPServer {
+		funcDoGetHTTPServer := func(_ string, _ http.Handler, _ *config.Config) service.HTTPServer {
 			return serverMock
 		}
 
-		funcDoGetFailingHTTPSerer := func(bindAddr string, router http.Handler, cfg *config.Config) service.HTTPServer {
+		funcDoGetFailingHTTPSerer := func(_ string, _ http.Handler, _ *config.Config) service.HTTPServer {
 			return failingServerMock
 		}
 
@@ -114,7 +114,7 @@ func TestRun(t *testing.T) {
 				DoGetHealthCheckFunc:   funcDoGetHealthcheckOk,
 				DoGetHTTPServerFunc:    funcDoGetFailingHTTPSerer,
 				DoGetCognitoClientFunc: DoGetCognitoClient,
-				DoGetAuthorisationMiddlewareFunc: func(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+				DoGetAuthorisationMiddlewareFunc: func(_ context.Context, _ *authorisation.Config) (authorisation.Middleware, error) {
 					return nil, expectedError
 				},
 			}
@@ -196,7 +196,7 @@ func TestClose(t *testing.T) {
 
 		// set dummy config data
 		cfg.AWSCognitoUserPoolID = "eu-west-18_73289nds8w932"
-		cfg.AWSCognitoClientId = "client-aaa-bbb"
+		cfg.AWSCognitoClientID = "client-aaa-bbb"
 		cfg.AWSCognitoClientSecret = "secret-ccc-ddd"
 		cfg.AWSAuthFlow = "authflow"
 
@@ -206,15 +206,15 @@ func TestClose(t *testing.T) {
 
 		// healthcheck Stop does not depend on any other service being closed/stopped
 		hcMock := &serviceMock.HealthCheckerMock{
-			AddCheckFunc: func(name string, checker healthcheck.Checker) error { return nil },
-			StartFunc:    func(ctx context.Context) {},
+			AddCheckFunc: func(_ string, _ healthcheck.Checker) error { return nil },
+			StartFunc:    func(_ context.Context) {},
 			StopFunc:     func() { hcStopped = true },
 		}
 
 		// server Shutdown will fail if healthcheck is not stopped
 		serverMock := &serviceMock.HTTPServerMock{
 			ListenAndServeFunc: func() error { return nil },
-			ShutdownFunc: func(ctx context.Context) error {
+			ShutdownFunc: func(_ context.Context) error {
 				if !hcStopped {
 					return errors.New("Server stopped before healthcheck")
 				}
@@ -222,22 +222,22 @@ func TestClose(t *testing.T) {
 			},
 		}
 		authorisationMiddleware := &authorisationMock.MiddlewareMock{
-			RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+			RequireFunc: func(_ string, handlerFunc http.HandlerFunc) http.HandlerFunc {
 				return handlerFunc
 			},
-			CloseFunc: func(ctx context.Context) error {
+			CloseFunc: func(_ context.Context) error {
 				return nil
 			},
 		}
 
 		Convey("Closing the service results in all the dependencies being closed in the expected order", func() {
 			initMock := &serviceMock.InitialiserMock{
-				DoGetHTTPServerFunc: func(bindAddr string, router http.Handler, cfg *config.Config) service.HTTPServer { return serverMock },
-				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
+				DoGetHTTPServerFunc: func(_ string, _ http.Handler, _ *config.Config) service.HTTPServer { return serverMock },
+				DoGetHealthCheckFunc: func(_ *config.Config, _, _, _ string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},
 				DoGetCognitoClientFunc: DoGetCognitoClient,
-				DoGetAuthorisationMiddlewareFunc: func(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+				DoGetAuthorisationMiddlewareFunc: func(_ context.Context, _ *authorisation.Config) (authorisation.Middleware, error) {
 					return authorisationMiddleware, nil
 				},
 			}
@@ -257,28 +257,28 @@ func TestClose(t *testing.T) {
 		Convey("If services fail to stop, the Close operation tries to close all dependencies and returns an error", func() {
 			failingserverMock := &serviceMock.HTTPServerMock{
 				ListenAndServeFunc: func() error { return nil },
-				ShutdownFunc: func(ctx context.Context) error {
+				ShutdownFunc: func(_ context.Context) error {
 					return errors.New("Failed to stop http server")
 				},
 			}
 			authorisationMiddleware := &authorisationMock.MiddlewareMock{
-				RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+				RequireFunc: func(_ string, handlerFunc http.HandlerFunc) http.HandlerFunc {
 					return handlerFunc
 				},
-				CloseFunc: func(ctx context.Context) error {
+				CloseFunc: func(_ context.Context) error {
 					return errors.New("failed to close authorisation middleware")
 				},
 			}
 
 			initMock := &serviceMock.InitialiserMock{
-				DoGetHTTPServerFunc: func(bindAddr string, router http.Handler, cfg *config.Config) service.HTTPServer {
+				DoGetHTTPServerFunc: func(_ string, _ http.Handler, _ *config.Config) service.HTTPServer {
 					return failingserverMock
 				},
-				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
+				DoGetHealthCheckFunc: func(_ *config.Config, _, _, _ string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},
 				DoGetCognitoClientFunc: DoGetCognitoClient,
-				DoGetAuthorisationMiddlewareFunc: func(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+				DoGetAuthorisationMiddlewareFunc: func(_ context.Context, _ *authorisation.Config) (authorisation.Middleware, error) {
 					return authorisationMiddleware, nil
 				},
 			}
@@ -299,7 +299,7 @@ func TestClose(t *testing.T) {
 			cfg.GracefulShutdownTimeout = 1 * time.Millisecond
 			timeoutServerMock := &serviceMock.HTTPServerMock{
 				ListenAndServeFunc: func() error { return nil },
-				ShutdownFunc: func(ctx context.Context) error {
+				ShutdownFunc: func(_ context.Context) error {
 					time.Sleep(10 * time.Millisecond)
 					return nil
 				},
@@ -323,13 +323,13 @@ func TestClose(t *testing.T) {
 	})
 }
 
-func DoGetCognitoClient(AWSRegion string) cognito.Client {
+func DoGetCognitoClient(_ string) cognito.Client {
 	return &cognitoMock.CognitoIdentityProviderClientStub{}
 }
 
-func DoGetAuthorisationMiddleware(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+func DoGetAuthorisationMiddleware(_ context.Context, _ *authorisation.Config) (authorisation.Middleware, error) {
 	return &authorisationMock.MiddlewareMock{
-		RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+		RequireFunc: func(_ string, handlerFunc http.HandlerFunc) http.HandlerFunc {
 			return handlerFunc
 		},
 	}, nil

@@ -7,16 +7,16 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 
-	"github.com/ONSdigital/dp-identity-api/cognito"
+	"github.com/ONSdigital/dp-identity-api/v2/cognito"
 	"github.com/gorilla/mux"
 
-	"github.com/ONSdigital/dp-identity-api/jwks"
+	"github.com/ONSdigital/dp-identity-api/v2/jwks"
 )
 
 var (
-	IdTokenHeaderName      = "ID"
+	IDTokenHeaderName      = "ID"
 	AccessTokenHeaderName  = "Authorization"
 	RefreshTokenHeaderName = "Refresh"
 	WWWAuthenticateName    = "WWW-Authenticate"
@@ -34,14 +34,14 @@ var (
 type API struct {
 	Router           *mux.Router
 	CognitoClient    cognito.Client
-	UserPoolId       string
-	ClientId         string
+	UserPoolID       string
+	ClientID         string
 	ClientSecret     string
 	ClientAuthFlow   string
 	AWSRegion        string
 	AllowedDomains   []string
 	APIRequestFilter map[string]map[string]string
-	JWKSHandler      jwks.JWKSInt
+	JWKSManager      jwks.Manager
 }
 
 type baseHandler func(ctx context.Context, w http.ResponseWriter, r *http.Request) (*models.SuccessResponse, *models.ErrorResponse)
@@ -62,25 +62,24 @@ func contextAndErrors(h baseHandler) http.HandlerFunc {
 func Setup(ctx context.Context,
 	r *mux.Router,
 	cognitoClient cognito.Client,
-	userPoolId, clientId, clientSecret, awsRegion, clientAuthFlow string,
+	userPoolID, clientID, clientSecret, awsRegion, clientAuthFlow string,
 	allowedDomains []string,
 	auth authorisation.Middleware,
-	jwksHandler jwks.JWKSInt) (*API, error) {
-
+	jwksManager jwks.Manager) (*API, error) {
 	// Return an error if empty required parameter was passed.
-	if userPoolId == "" || clientId == "" || clientSecret == "" || awsRegion == "" || clientAuthFlow == "" || allowedDomains == nil || len(allowedDomains) == 0 || jwksHandler == nil {
+	if userPoolID == "" || clientID == "" || clientSecret == "" || awsRegion == "" || clientAuthFlow == "" || allowedDomains == nil || len(allowedDomains) == 0 || jwksManager == nil {
 		return nil, models.NewError(ctx, nil, models.MissingConfigError, models.MissingConfigDescription)
 	}
 
-	if err := initialiseRoleGroups(ctx, cognitoClient, userPoolId); err != nil {
+	if err := initialiseRoleGroups(ctx, cognitoClient, userPoolID); err != nil {
 		return nil, err
 	}
 
 	api := &API{
 		Router:         r,
 		CognitoClient:  cognitoClient,
-		UserPoolId:     userPoolId,
-		ClientId:       clientId,
+		UserPoolID:     userPoolID,
+		ClientID:       clientID,
 		ClientSecret:   clientSecret,
 		ClientAuthFlow: clientAuthFlow,
 		AWSRegion:      awsRegion,
@@ -91,7 +90,7 @@ func Setup(ctx context.Context,
 				"active=false": "status=\"Disabled\"",
 			},
 		},
-		JWKSHandler: jwksHandler,
+		JWKSManager: jwksManager,
 	}
 
 	r.HandleFunc("/v1/tokens", contextAndErrors(api.TokensHandler)).Methods(http.MethodPost)
@@ -203,9 +202,9 @@ func handleBodyUnmarshalError(ctx context.Context, err error) *models.ErrorRespo
 	)
 }
 
-func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, userPoolId string) error {
+func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, userPoolID string) error {
 	adminGroup := models.NewAdminRoleGroup()
-	adminGroupCreateInput := adminGroup.BuildCreateGroupRequest(userPoolId)
+	adminGroupCreateInput := adminGroup.BuildCreateGroupRequest(userPoolID)
 	_, err := cognitoClient.CreateGroup(adminGroupCreateInput)
 	if err != nil && !models.IsGroupExistsError(err) {
 		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for admin group from API start up")
@@ -215,7 +214,7 @@ func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, use
 	}
 
 	publisherGroup := models.NewPublisherRoleGroup()
-	publisherGroupCreateInput := publisherGroup.BuildCreateGroupRequest(userPoolId)
+	publisherGroupCreateInput := publisherGroup.BuildCreateGroupRequest(userPoolID)
 	_, err = cognitoClient.CreateGroup(publisherGroupCreateInput)
 	if err != nil && !models.IsGroupExistsError(err) {
 		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for publisher group from API start up")
