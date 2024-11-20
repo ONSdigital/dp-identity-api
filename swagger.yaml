@@ -49,19 +49,15 @@ paths:
           schema:
             $ref: '#/definitions/SignInExpirationTime'
         400:
-          description: "Invalid request. Empty or invalid email or empty password."
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         401:
           $ref: '#/responses/UnauthorizedError'
         403:
           description: "Forbidden. Too many login attempts"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Unexpected internal error"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     delete:
       security:
         - Authorization: []
@@ -76,9 +72,7 @@ paths:
         401:
           $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Unexpected internal error"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /tokens/self:
     put:
       tags:
@@ -114,17 +108,13 @@ paths:
           schema:
             $ref: '#/definitions/ExpirationTime'
         400:
-          description: "Invalid request. Missing or malformed ID token or missing Refresh token provided"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         403:
           description: "Forbidden. Expired or invalid refresh token"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Unexpected internal error"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     delete:
       tags:
         - Tokens
@@ -144,11 +134,9 @@ paths:
         400:
           description: "Invalid request. Missing, malformed or invalid access token provided"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Unexpected internal error"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /users:
     get:
       tags:
@@ -166,7 +154,7 @@ paths:
           name: sort
           type: string
           default: id:asc
-          description:
+          description: |
             If the key or direction are not in the enum list below, sort will default.
             The sort parameter allows multiple keys and direction, which should be supplied in a comma
             separated string.
@@ -191,15 +179,11 @@ paths:
           schema:
             $ref: '#/definitions/UserList'
         400:
-          description: "the query filter was not of expected format"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         401:
           $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     post:
       tags:
         - Users
@@ -238,15 +222,11 @@ paths:
           schema:
             $ref: '#/definitions/User'
         400:
-          description: "Unable to validate the forename, username or email in the request"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         401:
           $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Invalid request body or unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /users/{id}:
     get:
       tags:
@@ -273,11 +253,9 @@ paths:
         404:
           description: "User not found"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     put:
       tags:
         - Users
@@ -318,19 +296,15 @@ paths:
           schema:
             $ref: '#/definitions/User'
         400:
-          description: "User not found"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         401:
           $ref: '#/responses/UnauthorizedError'
         404:
           description: "User not found"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /users/{id}/groups:
     get:
       tags:
@@ -357,11 +331,9 @@ paths:
         404:
           description: "User not found"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /users/self/password:
     put:
       tags:
@@ -419,17 +391,13 @@ paths:
           schema:
             $ref: '#/definitions/PasswordResetExpirationTime'
         400:
-          description: "Unable to validate the body of the request"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         500:
-          description: "Invalid request body or unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
         501:
           description: "Requested unimplemented password change type"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
   /password-reset:
     post:
       tags:
@@ -458,13 +426,9 @@ paths:
         202:
           description: "Request accepted"
         400:
-          description: "Email was not in a valid format"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         500:
-          description: "Invalid request body or unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /groups:
     get:
       tags:
@@ -492,15 +456,11 @@ paths:
           schema:
             $ref: '#/definitions/GroupList'
         400:
-          description: "Incorrect sort query value"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         401:
           $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     post:
       tags:
         - Groups
@@ -535,15 +495,11 @@ paths:
           schema:
             $ref: '#/definitions/NewGroup'
         400:
-          description: "Invalid group name or group precedence provided"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         401:
           $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Invalid request body or unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /groups/{id}:
     get:
       tags:
@@ -566,15 +522,11 @@ paths:
           schema:
             $ref: '#/definitions/Group'
         400:
-          description: "Invalid group ID provided"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         401:
           $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     put:
       tags:
         - Groups
@@ -612,19 +564,15 @@ paths:
           schema:
             $ref: '#/definitions/NewGroup'
         400:
-          description: "Invalid group name or group precedence provided"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         401:
           $ref: '#/responses/UnauthorizedError'
         404:
           description: "Group resource to be updated cannot be found"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Invalid request body or unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     delete:
       tags:
         - Groups
@@ -648,11 +596,9 @@ paths:
         404:
           description: "Group resource to be deleted cannot be found"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /groups/{id}/members:
     get:
       tags:
@@ -689,11 +635,9 @@ paths:
         404:
           description: "Group resource cannot be found"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     post:
       tags:
         - Groups
@@ -727,15 +671,11 @@ paths:
           schema:
             $ref: '#/definitions/Group'
         400:
-          description: "Invalid group ID or user ID provided"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         401:
           $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     put:
       tags:
         - Groups
@@ -770,15 +710,11 @@ paths:
           schema:
             $ref: '#/definitions/UserList'
         400:
-          description: "Invalid group ID or user ID provided"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         401:
           $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Invalid request body or unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /groups/{id}/members/{user_id}:
     delete:
       tags:
@@ -808,30 +744,24 @@ paths:
           schema:
             $ref: '#/definitions/Group'
         400:
-          description: "Invalid group ID or user ID provided"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         401:
           $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Invalid request body or unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /groups-report:
     get:
       tags:
         - Groups
       summary: "List groups and the membership of the groups"
-      description: "To return a list of :-
-          group description
-          group member user email
-          json by default 
-          or if Request Header Accept 'text/csv' then csv format, consisting of preview team description amd user email. 
-        Notable Consideration :- 
-          Included on report
-            groups acting as a role (i.e. publishers, admin)
-          Excluded from Report
-            groups that are empty of users"
+      description: |
+        The list of group memebership with the following fields:
+          * group description
+          * group member user email
+        Format is JSON by default or csv format if Request Header Accept 'text/csv' is specified.
+        
+        Included on report: groups acting as a role (i.e. publishers, admin)
+        Excluded from Report: groups that are empty of users
       security:
         - Authorization: []
       consumes:
@@ -841,15 +771,13 @@ paths:
         - "text/csv"
       parameters:
         - in: header
-          name: Accept:application/json
+          name: Accept
           type: string
+          enum:
+            - "application/json"
+            - "text/csv"
           required: false
-          description: "Groups report as JSON"
-        - in: header
-          name: Accept:text/csv
-          type: string
-          required:  false
-          description: "Groups report as CSV"
+          description: "Whether a JSON or CSV report is requested"
       responses:
         200:
           description: The list of groups and members
@@ -869,9 +797,7 @@ paths:
         401:
           $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /jwt-keys:
     get:
       tags:
@@ -889,15 +815,19 @@ paths:
         404:
           description: "Key set not found or error processing it"
           schema:
-            $ref: '#/definitions/JWKSResponseError'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/JWKSResponseError'
+          $ref: '#/responses/InternalError'
 
 responses:
   InternalError:
     description: "Failed to process the request due to an internal error"
+    schema:
+      $ref: '#/definitions/ErrorList'
+  BadRequestError:
+    description: "Request rejected due to invalid parameters supplied"
+    schema:
+      $ref: '#/definitions/ErrorList'
   UnauthorizedError:
     description: Authentication information is missing or invalid
 
@@ -1060,28 +990,15 @@ definitions:
       GRBevIroJzPBvaGa=:
         type: string
         example: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtvDfudfY9n+8sFJmHGFfgbKqKf8iiEcbvRXNMEi9qd2NGAekhdNJKdeW3sMSwR+sb4Ly6IypowCE2eueYk/GatzYyyolWny/Krdp0EWPT/PnK8Iq1FTIuHxFb08B8iLnH/2nKqgOjVvwEU4eSBh0YHKti2v77a+a4bnx6aOC2YkF2AyIRmbXAHaq4Js9u33X8gGMXZcVsxcSpG8Py/NJ3s+PLKebQFQAB"
-  JWKSResponseError:
+  ErrorList:
     description: "A list of any errors"
     type: object
     properties:
       errors:
         type: array
         items:
-          type: object
-          properties:
-            code: 
-              example: "JWKSParseError"
-            description:
-              example: "error encountered when parsing the json web key set (jwks)"
-  ErrorResponse:
-    description: "A list of any errors"
-    type: object
-    properties:
-      errors:
-        type: array
-        items:
-          $ref: '#/definitions/ErrorObject'
-  ErrorObject:
+          $ref: '#/definitions/Error'
+  Error:
     description: "An individual error details"
     type: object
     properties:
