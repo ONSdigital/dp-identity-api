@@ -44,8 +44,12 @@ acceptance:
 	MONGODB_IMPORTS_DATABASE=test HUMAN_LOG=1 go run $(LDFLAGS) -race main.go
 
 .PHONY: lint
-lint:
+lint: validate-specification
 	golangci-lint run ./...
+
+.PHONY: validate-specification
+validate-specification:
+	redocly lint swagger.yaml
 
 .PHONY: test
 test:
