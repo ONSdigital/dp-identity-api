@@ -15,6 +15,7 @@ paths:
       tags:
         - Tokens
       summary: "Creates tokens for authorisation, ID and refresh for authenticated users"
+      security: []
       consumes:
         - application/json
       parameters:
@@ -24,12 +25,14 @@ paths:
           schema:
             type: object
             required:
-              - user
+              - email
+              - password
             properties:
               email:
                 type: string
               password:
                 type: string
+          required: true
       responses:
         201:
           description: "Created"
@@ -46,23 +49,18 @@ paths:
           schema:
             $ref: '#/definitions/SignInExpirationTime'
         400:
-          description: "Invalid request. Empty or invalid email or empty password."
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         401:
-          description: "Email or password are not authenticated"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/UnauthorizedError'
         403:
           description: "Forbidden. Too many login attempts"
           schema:
-            $ref: '#/definitions/ErrorResponse'
-
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Unexpected internal error"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     delete:
+      security:
+        - Authorization: []
       tags:
         - Tokens
       summary: "Enables functionality to logout all active users"
@@ -71,15 +69,16 @@ paths:
       responses:
         202:
           description: "Request Accepted"
+        401:
+          $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Unexpected internal error"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /tokens/self:
     put:
       tags:
         - Tokens
       summary: "Refreshes a users access token using the refresh and ID tokens"
+      security: []
       consumes:
         - application/json
       parameters:
@@ -87,10 +86,12 @@ paths:
           type: string
           name: ID
           description: "The users ID token"
+          required: true
         - in: header
           type: string
           name: Refresh
           description: "The users refresh token"
+          required: true
       responses:
         201:
           description: "Created"
@@ -107,21 +108,18 @@ paths:
           schema:
             $ref: '#/definitions/ExpirationTime'
         400:
-          description: "Invalid request. Missing or malformed ID token or missing Refresh token provided"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         403:
           description: "Forbidden. Expired or invalid refresh token"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Unexpected internal error"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     delete:
       tags:
         - Tokens
       summary: "Signs out a user, invalidating their access tokens"
+      security: []
       consumes:
         - application/json
       parameters:
@@ -129,19 +127,24 @@ paths:
           type: string
           name: Authorization
           description: "The users access token as bearer token"
+          required: true
       responses:
         204:
           description: "No Content - Successful sign out"
         400:
           description: "Invalid request. Missing, malformed or invalid access token provided"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Unexpected internal error"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /users:
     get:
+      tags:
+        - Users
+      summary: "List users"
+      description: "List all the user in the user pool"
+      security:
+        - Authorization: []
       parameters:
         - in: query
           name: active
@@ -151,9 +154,10 @@ paths:
           name: sort
           type: string
           default: id:asc
-          description:
-            If the key or direction are not in the enum list below, will default.
-            The Request Query sort parameter gives multiple keys and direction key:desc default asc, comma separates multi-field sorts
+          description: |
+            If the key or direction are not in the enum list below, sort will default.
+            The sort parameter allows multiple keys and direction, which should be supplied in a comma
+            separated string.
           enum:
             - forename
             - forename:asc
@@ -167,10 +171,6 @@ paths:
             - id
             - id:asc
             - id:desc
-      tags:
-        - Users
-      summary: "List users"
-      description: "List all the user in the user pool"
       produces:
         - "application/json"
       responses:
@@ -179,16 +179,18 @@ paths:
           schema:
             $ref: '#/definitions/UserList'
         400:
-          description: "the query filter was not of expected format"
+          $ref: '#/responses/BadRequestError'
+        401:
+          $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     post:
       tags:
         - Users
       summary: "Creates a new user"
       description: "Creates a new user in cognito"
+      security:
+        - Authorization: []
       consumes:
         - application/json
       produces:
@@ -198,7 +200,10 @@ paths:
           name: user
           description: "The forename, surname and email for a user."
           schema:
-            required: ["forename","lastname","email"]
+            required: 
+              - "forename"
+              - "lastname"
+              - "email"
             type: object
             properties:
               forename:
@@ -210,25 +215,26 @@ paths:
               email:
                 type: string
                 example: "email@ons.gov.uk"
+          required: true
       responses:
         201:
           description: "The user is created"
           schema:
             $ref: '#/definitions/User'
         400:
-          description: "Unable to validate the forename, username or email in the request"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
+        401:
+          $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Invalid request body or unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /users/{id}:
     get:
       tags:
         - Users
       summary: "Get a user"
       description: "Gets the details of a user from the user pool"
+      security:
+        - Authorization: []
       parameters:
         - in: path
           name: id
@@ -242,47 +248,21 @@ paths:
           description: "The users details"
           schema:
             $ref: '#/definitions/User'
+        401:
+          $ref: '#/responses/UnauthorizedError'
         404:
           description: "User not found"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-  /users/{id}/groups/:
-    get:
-      tags:
-        - Users
-      summary: "Get groups for a user"
-      description: "Gets the details of groups that a given user is a member"
-      parameters:
-        - in: path
-          name: id
-          type: string
-          required: true
-          description: the users id
-      produces:
-        - "application/json"
-      responses:
-        200:
-          description: "The user groups details"
-          schema:
-            $ref: '#/definitions/UserGroups'
-        404:
-          description: "User not found"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-
+          $ref: '#/responses/InternalError'
     put:
       tags:
         - Users
       summary: "Update a user"
       description: "Updates the details of a user in the user pool"
+      security:
+        - Authorization: []
       parameters:
         - in: path
           name: id
@@ -293,7 +273,10 @@ paths:
           name: user
           description: "The forename, surname, active status and status notes for a user."
           schema:
-            required: ["forename","lastname", "active"]
+            required: 
+              - "forename"
+              - "lastname"
+              - "active"
             type: object
             properties:
               forename:
@@ -313,39 +296,73 @@ paths:
           schema:
             $ref: '#/definitions/User'
         400:
-          description: "User not found"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
+        401:
+          $ref: '#/responses/UnauthorizedError'
         404:
           description: "User not found"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Internal error occurred"
+          $ref: '#/responses/InternalError'
+  /users/{id}/groups:
+    get:
+      tags:
+        - Users
+      summary: "Get groups for a user"
+      description: "Gets the details of groups that a given user is a member"
+      security:
+        - Authorization: []
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+          description: the users id
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "The user groups details"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/GroupList'
+        401:
+          $ref: '#/responses/UnauthorizedError'
+        404:
+          description: "User not found"
+          schema:
+            $ref: '#/definitions/ErrorList'
+        500:
+          $ref: '#/responses/InternalError'
   /users/self/password:
     put:
       tags:
         - Users
-      summary: "Changes the users password"
-      description: "Changes the users password in Cognito"
+      summary: "Changes the user's password"
+      description: "Changes the user's password in Cognito"
+      security: []
       consumes:
-        - application/json
+        - "application/json"
       produces:
         - "application/json"
       parameters:
         - in: body
-          name: "Change password params"
+          name: "Change password request"
           description: "The type of change request, email address, new password and session.
                         for type ForgottenPassword email address, new password and verification token"
           schema:
-            required: ["type","email","password"]
+            required: 
+              - "type"
+              - "email"
+              - "password"
             type: object
             properties:
               type:
                 type: string
                 example: "NewPasswordRequired"
+                enum:
+                  - "NewPasswordRequired"
+                  - "ForgottenPassword"
               email:
                 type: string
                 example: "email@ons.gov.uk"
@@ -353,8 +370,11 @@ paths:
                 type: string
               session:
                 type: string
+                description: "Required if type is NewPasswordRequired"
               verification_token:
                 type: string
+                description: "Required if type is ForgottenPassword"
+          required: true
       responses:
         202:
           description: "Password changed"
@@ -371,33 +391,32 @@ paths:
           schema:
             $ref: '#/definitions/PasswordResetExpirationTime'
         400:
-          description: "Unable to validate the type, email, password or session in the request"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         500:
-          description: "Invalid request body or unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
         501:
           description: "Requested unimplemented password change type"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
   /password-reset:
     post:
       tags:
         - Users
       summary: "Sends the user a password reset email"
       description: "Trigger a password reset email from Cognito"
+      security: []
       consumes:
-        - application/json
+        - "application/json"
       produces:
         - "application/json"
       parameters:
         - in: body
-          name: "Password reset params"
+          name: "Password reset request"
           description: "The email address for the user resetting their password"
+          required: true
           schema:
-            required: ["email"]
+            required: 
+              - "email"
             type: object
             properties:
               email:
@@ -407,19 +426,17 @@ paths:
         202:
           description: "Request accepted"
         400:
-          description: "Email was not in a valid format"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
         500:
-          description: "Invalid request body or unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /groups:
     get:
       tags:
         - Groups
       summary: "List groups"
       description: "List all the groups in the user pool"
+      security:
+        - Authorization: []
       produces:
         - "application/json"
       parameters:
@@ -437,30 +454,33 @@ paths:
         200:
           description: "The list of groups"
           schema:
-            $ref: '#/definitions/GroupsList'
+            $ref: '#/definitions/GroupList'
         400:
-          description: "Incorrect sort query value"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
+        401:
+          $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     post:
       tags:
         - Groups
       summary: "Create a new group"
       description: "Creates a new group in Cognito user pool"
+      security:
+        - Authorization: []
       consumes:
-        - application/json
+        - "application/json"
       produces:
         - "application/json"
       parameters:
         - in: body
           name: "Group"
           description: "The details of the group being created"
+          required: true
           schema:
-            required: ["name", "precedence"]
+            required: 
+              - "name"
+              - "precedence"
             type: object
             properties:
               name:
@@ -475,79 +495,19 @@ paths:
           schema:
             $ref: '#/definitions/NewGroup'
         400:
-          description: "Invalid group name or group precedence provided"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
+        401:
+          $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Invalid request body or unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-  /groups-report:
-    get:
-      tags:
-        - Groups
-      summary: "List groups and the membership of the groups"
-      description: " To return a list of :-
-          preview team ( cognito group ) description
-          preview team ( cognito group ) member user email
-          json by default 
-          or if Request Header Accept 'text/csv' then csv format, consisting of preview team description amd user email. 
-        Notable Consideration :- 
-          Included on report
-            preview team ( cognito group ) acting as a role (i.e. publishers, admin)
-          Excluded from Report
-            preview team ( cognito group ) is empty of members(users)"
-      consumes:
-        - "application/json"
-      parameters:
-        - in: header
-          name: Accept:application/json
-          type: string
-          required: false
-          description: "Produce array of json"
-        - in: header
-          name: Accept:text/csv
-          type: string
-          required:  false
-          description: "Produce string of csv list"
-      responses:
-        200:
-          description: OK The list of groups and members
-          schema:
-            $ref: '#/definitions/GroupsUsersList'
-          examples:
-            application/json:
-              header:
-              "Content-type": "application/json"
-              body:
-                [
-                  {
-                    "group": "group description",
-                    "user": "user.email@emaildomain"
-                  }
-                ]
-            text/csv:
-              header:
-                "Content-type": "text/csv"
-              body:
-                "group, user 
-                group description,user.email@emaildomain
-                "
-        403:
-          description: "Forbidden. Incorrect user authorisation"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-
-        500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
   /groups/{id}:
     get:
       tags:
         - Groups
-      summary: "Returns given group details "
-      description: "Returns given group details"
+      summary: "Get a group"
+      description: "Get a group"
+      security:
+        - Authorization: []
       produces:
         - "application/json"
       parameters:
@@ -558,22 +518,22 @@ paths:
           description: the group's ID
       responses:
         200:
-          description: "The list group details"
+          description: "The group details"
           schema:
-            $ref: '#/definitions/GroupsList'
+            $ref: '#/definitions/Group'
         400:
-          description: "Invalid group name provided"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
+        401:
+          $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Internal error occurred"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     put:
       tags:
         - Groups
       summary: "Update an existing group"
       description: "Update an existing group in Cognito user pool"
+      security:
+        - Authorization: []
       consumes:
         - application/json
       produces:
@@ -587,13 +547,11 @@ paths:
         - in: body
           name: "Group"
           description: "The updated details for the group"
+          required: true
           schema:
             required: ["name"]
             type: object
             properties:
-              id:
-                type: string
-                example: "123-abc-456-def-789-ghi-0"
               name:
                 type: string
                 example: "Th&is is a $£test group!~"
@@ -606,22 +564,22 @@ paths:
           schema:
             $ref: '#/definitions/NewGroup'
         400:
-          description: "Invalid group name or group precedence provided"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
+        401:
+          $ref: '#/responses/UnauthorizedError'
         404:
           description: "Group resource to be updated cannot be found"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Invalid request body or unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/InternalError'
     delete:
       tags:
         - Groups
-      summary: "Deletes given group"
-      description: "Deletes given group"
+      summary: "Delete a group"
+      description: "Delete a group"
+      security:
+        - Authorization: []
       produces:
         - "application/json"
       parameters:
@@ -632,91 +590,23 @@ paths:
           description: the group's ID
       responses:
         204:
-          description: "Deleted group "
+          description: "Deleted group"
+        401:
+          $ref: '#/responses/UnauthorizedError'
         404:
-          description: "Invalid group ID provided"
+          description: "Group resource to be deleted cannot be found"
+          schema:
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Internal error occurred"
+          $ref: '#/responses/InternalError'
   /groups/{id}/members:
-    post:
-      tags:
-        - Groups
-      summary: "Add user to group"
-      description: "Adds a user to an existing group in Cognito"
-      consumes:
-        - application/json
-      produces:
-        - "application/json"
-      parameters:
-        - in: path
-          name: id
-          type: string
-          required: true
-          description: the group's ID
-        - in: body
-          name: "User id"
-          description: "The id of the user being added to the group"
-          schema:
-            required: ["user_id"]
-            type: object
-            properties:
-              user_id:
-                type: string
-      responses:
-        200:
-          description: "User added to group"
-          schema:
-            $ref: '#/definitions/Group'
-        400:
-          description: "Invalid group ID or user ID provided"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        500:
-          description: "Invalid request body or unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-    put:
-      tags:
-        - Groups
-      summary: "make list of user ids as group membership"
-      description: "Set group users with list of user ids"
-      consumes:
-        - application/json
-      produces:
-        - "application/json"
-      parameters:
-        - in: path
-          name: id
-          type: string
-          required: true
-          description: the group's ID
-        - in: body
-          name: "List of User ids"
-          description: "The list of user ids being added to the group"
-          schema:
-            required: ["user_id"]
-            type: object
-            properties:
-              user_id:
-                type: string
-      responses:
-        200:
-          description: "Users added to group"
-          schema:
-            $ref: '#/definitions/Group'
-        400:
-          description: "Invalid group ID or user ID in provided list"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        500:
-          description: "Invalid request body or unexpected Cognito response"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
     get:
       tags:
         - Groups
-      summary: "Returns a list of users in a given group"
+      summary: "Get a list of users in a group"
       description: "Returns a list of users in a given group in Cognito"
+      security:
+        - Authorization: []
       produces:
         - "application/json"
       parameters:
@@ -739,23 +629,102 @@ paths:
         200:
           description: "List of users in the group"
           schema:
-            $ref: '#/definitions/Group'
+            $ref: '#/definitions/UserList'
+        401:
+          $ref: '#/responses/UnauthorizedError'
         404:
-          description: "Invalid group ID provided"
+          description: "Group resource cannot be found"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ErrorList'
         500:
-          description: "Unexpected Cognito response"
+          $ref: '#/responses/InternalError'
+    post:
+      tags:
+        - Groups
+      summary: "Add user to group"
+      description: "Adds a user to an existing group in Cognito"
+      security:
+        - Authorization: []
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+          description: the group's ID
+        - in: body
+          name: "User ID"
+          description: "The ID of the user being added to the group"
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            required: 
+              - "user_id"
+            type: object
+            properties:
+              user_id:
+                type: string
+      responses:
+        200:
+          description: "User added to group"
+          schema:
+            $ref: '#/definitions/Group'
+        400:
+          $ref: '#/responses/BadRequestError'
+        401:
+          $ref: '#/responses/UnauthorizedError'
+        500:
+          $ref: '#/responses/InternalError'
+    put:
+      tags:
+        - Groups
+      summary: "Update groups users"
+      description: "Update groups users"
+      security:
+        - Authorization: []
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+          description: the group's ID
+        - in: body
+          name: "List of User ids"
+          description: "The list of user ids being added to the group"
+          required: true
+          schema:
+            required: 
+              - "user_id"
+            type: object
+            properties:
+              user_id:
+                type: string
+      responses:
+        200:
+          description: "List of users in updated group"
+          schema:
+            $ref: '#/definitions/UserList'
+        400:
+          $ref: '#/responses/BadRequestError'
+        401:
+          $ref: '#/responses/UnauthorizedError'
+        500:
+          $ref: '#/responses/InternalError'
   /groups/{id}/members/{user_id}:
     delete:
       tags:
         - Groups
       summary: "Remove user from group"
       description: "Removes a user from an existing group in Cognito"
+      security:
+        - Authorization: []
       consumes:
-        - application/json
+        - "application/json"
       produces:
         - "application/json"
       parameters:
@@ -775,19 +744,67 @@ paths:
           schema:
             $ref: '#/definitions/Group'
         400:
-          description: "Invalid group ID or user ID provided"
-          schema:
-            $ref: '#/definitions/ErrorResponse'
+          $ref: '#/responses/BadRequestError'
+        401:
+          $ref: '#/responses/UnauthorizedError'
         500:
-          description: "Invalid request body or unexpected Cognito response"
+          $ref: '#/responses/InternalError'
+  /groups-report:
+    get:
+      tags:
+        - Groups
+      summary: "List groups and the membership of the groups"
+      description: |
+        The list of group memebership with the following fields:
+          * group description
+          * group member user email
+        Format is JSON by default or csv format if Request Header Accept 'text/csv' is specified.
+        
+        Included on report: groups acting as a role (i.e. publishers, admin)
+        Excluded from Report: groups that are empty of users
+      security:
+        - Authorization: []
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+        - "text/csv"
+      parameters:
+        - in: header
+          name: Accept
+          type: string
+          enum:
+            - "application/json"
+            - "text/csv"
+          required: false
+          description: "Whether a JSON or CSV report is requested"
+      responses:
+        200:
+          description: The list of groups and members
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/GroupUsersList'
+          examples:
+            application/json:
+              [
+                {
+                  "group": "group description",
+                  "user": "user.email@emaildomain"
+                }
+              ]
+            text/csv: |-
+              group,user 
+              group description,user.email@emaildomain
+        401:
+          $ref: '#/responses/UnauthorizedError'
+        500:
+          $ref: '#/responses/InternalError'
   /jwt-keys:
     get:
       tags:
         - JWKS
       summary: "JSON Web Key Set"
       description: "Returns AWS Cognito User Pool's JWT Key IDs and RSA Public Signing Keys"
+      security: []
       produces:
         - "application/json"
       responses:
@@ -797,14 +814,22 @@ paths:
             $ref: '#/definitions/JWKSResponse'
         404:
           description: "Key set not found or error processing it"
-        500:
-          description: "Internal error occurred"
           schema:
-            $ref: '#/definitions/JWKSResponseError'
+            $ref: '#/definitions/ErrorList'
+        500:
+          $ref: '#/responses/InternalError'
 
 responses:
   InternalError:
     description: "Failed to process the request due to an internal error"
+    schema:
+      $ref: '#/definitions/ErrorList'
+  BadRequestError:
+    description: "Request rejected due to invalid parameters supplied"
+    schema:
+      $ref: '#/definitions/ErrorList'
+  UnauthorizedError:
+    description: Authentication information is missing or invalid
 
 definitions:
   ExpirationTime:
@@ -853,11 +878,11 @@ definitions:
         type: integer
         example: 33
   Group:
-    description: "The group model for the response body"
+    description: "A group in the user pool"
     type: object
     properties:
       id:
-        description: "The group id"
+        description: "The group ID"
         type: string
       name:
         description: "The group name"
@@ -868,8 +893,18 @@ definitions:
       created:
         description: "The date the group was created"
         type: string
-  GroupsList:
-    description: "A list of groups for the response body"
+        format: date-time
+        example: "YYYY-MM-DD hh-mm-ssZ"
+      last_modified_date:
+        type: string
+        format: date-time
+        example: "YYYY-MM-DD hh-mm-ssZ"
+      role_arn:
+        type: string
+      user_pool_id:
+        type: string
+  GroupList:
+    description: "A list of groups"
     type: object
     properties:
       groups:
@@ -878,26 +913,23 @@ definitions:
           $ref: '#/definitions/Group'
       count:
         type: integer
-  GroupsUsersList:
-    description: A list of group description and member's email
+  GroupUsersList:
+    description: A list of group descriptions and members emails
     type: array
-    properties:
-      groups:
-        type: array
-        items:
-          $ref: '#/definitions/GroupUser'
+    items:
+      $ref: '#/definitions/GroupUser'
   GroupUser:
-    description: Group description and User email
+    description: Group description and user email
     type: object
     properties:
-        group:
-          type: string
-          description: The group description
-        user:
-          type: string
-          description: The user email.
+      group:
+        type: string
+        description: The group description
+      user:
+        type: string
+        description: The user email
   UserList:
-    description: "A list of users for the response body"
+    description: "A list of users"
     type: object
     properties:
       users:
@@ -906,39 +938,8 @@ definitions:
           $ref: '#/definitions/User'
       count:
         type: integer
-  UserGroup:
-    description: "Model representing the details of a group that a user belongs too."
-    type: object
-    properties:
-      creation_date:
-        type: string
-      description:
-        type: string
-      group_name:
-        type: string
-      last_modified_date:
-        type: string
-      precedence:
-        type: integer
-      role_arn:
-        type: string
-      user_pool_id:
-        type: string
-  UserGroups:
-    description: "A list of groups that the user is a member for the response body"
-    type: object
-    properties:
-      groups:
-        type: array
-        items:
-          $ref: '#/definitions/UserGroup'
-      next_token:
-        type: string
-      count:
-        type: integer
-
   User:
-    description: "The user model for the response body"
+    description: "A user in cognito"
     type: object
     properties:
       id:
@@ -969,9 +970,19 @@ definitions:
       status:
         description: "The current status of the user"
         type: string
-        enum: [UNCONFIRMED, CONFIRMED, ARCHIVED, COMPROMISED, UNKNOWN, RESET_REQUIRED, FORCE_CHANGE_PASSWORD]
+        enum: 
+          - "UNCONFIRMED"
+          - "CONFIRMED"
+          - "ARCHIVED"
+          - "COMPROMISED"
+          - "UNKNOWN"
+          - "RESET_REQUIRED"
+          - "FORCE_CHANGE_PASSWORD"
         example: "CONFIRMED"
   JWKSResponse:
+    description: :-
+      The keys in this object are dynamically generated and so the below should be taken
+      as an example and not definitive.
     properties:
       2a8vXmIK67ZZ3hFZ=:
         type: string
@@ -979,28 +990,15 @@ definitions:
       GRBevIroJzPBvaGa=:
         type: string
         example: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtvDfudfY9n+8sFJmHGFfgbKqKf8iiEcbvRXNMEi9qd2NGAekhdNJKdeW3sMSwR+sb4Ly6IypowCE2eueYk/GatzYyyolWny/Krdp0EWPT/PnK8Iq1FTIuHxFb08B8iLnH/2nKqgOjVvwEU4eSBh0YHKti2v77a+a4bnx6aOC2YkF2AyIRmbXAHaq4Js9u33X8gGMXZcVsxcSpG8Py/NJ3s+PLKebQFQAB"
-  JWKSResponseError:
+  ErrorList:
     description: "A list of any errors"
     type: object
     properties:
       errors:
         type: array
         items:
-          type: object
-          properties:
-            code: 
-              example: "JWKSParseError"
-            description:
-              example: "error encountered when parsing the json web key set (jwks)"
-  ErrorResponse:
-    description: "A list of any errors"
-    type: object
-    properties:
-      errors:
-        type: array
-        items:
-          $ref: '#/definitions/ErrorObject'
-  ErrorObject:
+          $ref: '#/definitions/Error'
+  Error:
     description: "An individual error details"
     type: object
     properties:
@@ -1042,3 +1040,9 @@ definitions:
       description:
         type: string
         description: "Description of the error"
+securityDefinitions:
+  Authorization:
+    name: Authorization
+    description: "Access token used by Auth service in a Bearer format"
+    in: header
+    type: apiKey
