@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"github.com/ONSdigital/log.go/v2/log"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/smithy-go"
 )
 
 // Error represents a custom error type with additional context and description.
@@ -48,8 +48,8 @@ func NewValidationError(ctx context.Context, code, description string) *Error {
 
 // IsGroupExistsError checks if the given error is a Cognito GroupExistsException error.
 func IsGroupExistsError(err error) bool {
-	var cognitoErr awserr.Error
-	if errors.As(err, &cognitoErr) && cognitoErr.Code() == cognitoidentityprovider.ErrCodeGroupExistsException {
+	var cognitoErr smithy.APIError
+	if errors.As(err, &cognitoErr) && cognitoErr.ErrorCode() == cognitoidentityprovider.ErrCodeGroupExistsException {
 		return true
 	}
 	return false
@@ -58,7 +58,7 @@ func IsGroupExistsError(err error) bool {
 // NewCognitoError creates a new Error for errors returned from AWS Cognito, mapping it to a local error code.
 func NewCognitoError(ctx context.Context, err error, errContext string) *Error {
 	log.Error(ctx, errContext, err)
-	var cognitoErr awserr.Error
+	var cognitoErr smithy.APIError
 	if !errors.As(err, &cognitoErr) {
 		log.Error(ctx, CastingAWSErrorFailedDescription, err)
 		return &Error{
@@ -71,13 +71,13 @@ func NewCognitoError(ctx context.Context, err error, errContext string) *Error {
 	return &Error{
 		Cause:       cognitoErr,
 		Code:        code,
-		Description: cognitoErr.Message(),
+		Description: cognitoErr.ErrorMessage(),
 	}
 }
 
 // MapCognitoErrorToLocalError maps an AWS Cognito error to a local error code.
-func MapCognitoErrorToLocalError(ctx context.Context, cognitoErr awserr.Error) string {
-	if val, ok := CognitoErrorMapping[cognitoErr.Code()]; ok {
+func MapCognitoErrorToLocalError(ctx context.Context, cognitoErr smithy.APIError) string {
+	if val, ok := CognitoErrorMapping[cognitoErr.ErrorCode()]; ok {
 		return val
 	}
 	log.Error(ctx, "unknown Cognito error code received", errors.New("unknown Cognito error code received"))
