@@ -10,7 +10,8 @@ require (
 	github.com/ONSdigital/dp-net/v2 v2.12.0
 	github.com/ONSdigital/dp-permissions-api v0.25.0
 	github.com/ONSdigital/log.go/v2 v2.4.3
-	github.com/aws/aws-sdk-go v1.55.5
+	//github.com/aws/aws-sdk-go v1.55.5
+	//github.com/aws/aws-sdk-go-v2
 	github.com/aws/smithy-go v1.22.3
 	github.com/cucumber/godog v0.15.0
 	github.com/golang-jwt/jwt/v4 v4.5.1
@@ -24,7 +25,29 @@ require (
 )
 
 require (
+	github.com/aws/aws-sdk-go v1.55.5
+	github.com/aws/aws-sdk-go-v2 v1.36.3
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.51.3
+)
+
+require (
 	github.com/ONSdigital/dp-mongodb-in-memory v1.7.0 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.10 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.29.10 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.63 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.30 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.34 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.34 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.3 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.34 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.7.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.15 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.15 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.78.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.25.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.29.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.33.17 // indirect
 	github.com/chromedp/cdproto v0.0.0-20241110205750-a72e6703cd9b // indirect
 	github.com/chromedp/chromedp v0.11.2 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect

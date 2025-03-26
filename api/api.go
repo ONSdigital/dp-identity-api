@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"net/http"
 	"time"
 
@@ -22,7 +23,7 @@ var (
 	WWWAuthenticateName    = "WWW-Authenticate"
 	ONSRealm               = "Florence publishing platform"
 	Charset                = "UTF-8"
-	NewPasswordChallenge   = "NEW_PASSWORD_REQUIRED"
+	NewPasswordChallenge   = types.ChallengeNameTypeNewPasswordRequired
 	DefaultBackOffSchedule = []time.Duration{
 		1 * time.Second,
 		3 * time.Second,
@@ -37,7 +38,7 @@ type API struct {
 	UserPoolID       string
 	ClientID         string
 	ClientSecret     string
-	ClientAuthFlow   string
+	ClientAuthFlow   types.AuthFlowType
 	AWSRegion        string
 	AllowedDomains   []string
 	APIRequestFilter map[string]map[string]string
@@ -62,7 +63,8 @@ func contextAndErrors(h baseHandler) http.HandlerFunc {
 func Setup(ctx context.Context,
 	r *mux.Router,
 	cognitoClient cognito.Client,
-	userPoolID, clientID, clientSecret, awsRegion, clientAuthFlow string,
+	userPoolID, clientID, clientSecret, awsRegion string,
+	clientAuthFlow types.AuthFlowType,
 	allowedDomains []string,
 	auth authorisation.Middleware,
 	jwksManager jwks.Manager) (*API, error) {

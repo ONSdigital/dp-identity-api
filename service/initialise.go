@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
+	"github.com/ONSdigital/log.go/v2/log"
+	sdkcfg "github.com/aws/aws-sdk-go-v2/config"
 	"net/http"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	cognitoclient "github.com/ONSdigital/dp-identity-api/v2/cognito"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	cognito "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 
 	"github.com/ONSdigital/dp-identity-api/v2/config"
 
@@ -88,10 +88,17 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 }
 
 // DoGetCognitoClient creates a CognitoClient with the provided region
-func (e *Init) DoGetCognitoClient(awsRegion string) cognitoclient.Client {
-	client := cognito.New(session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	})), &aws.Config{Region: &awsRegion})
+func (e *Init) DoGetCognitoClient(ctx context.Context, awsRegion string) *cognito.Client {
+	cfg, err := sdkcfg.LoadDefaultConfig(context.TODO(),
+		sdkcfg.WithRegion(awsRegion),
+	)
+
+	if err != nil {
+		log.Fatal(ctx, "unable to load the SDK", err)
+	}
+
+	client := cognito.NewFromConfig(cfg)
+
 	return client
 }
 

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/aws/smithy-go"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -98,8 +99,14 @@ func TestAPI_TokensHandler(t *testing.T) {
 	})
 
 	Convey("Sign In Cognito internal error: adds an error to the ErrorResponse and sets its Status to 500", t, func() {
-		awsOrigErr := errors.New(awsErrCode)
-		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		//awsOrigErr := errors.New(awsErrCode)
+		//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		awsOrigErr := smithy.ErrorFault(1) //server error
+		awsErr := &smithy.GenericAPIError{
+			Code:    awsErrCode,
+			Message: awsErrMessage,
+			Fault:   awsOrigErr,
+		}
 		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
 		m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			return nil, awsErr
@@ -142,7 +149,12 @@ func TestAPI_TokensHandler(t *testing.T) {
 		}
 
 		for _, tt := range statusTests {
-			awsErr := awserr.New(tt.awsErrCode, tt.awsErrMessage, errors.New(tt.awsErrCode))
+			//awsErr := awserr.New(tt.awsErrCode, tt.awsErrMessage, errors.New(tt.awsErrCode))
+			awsErr := &smithy.GenericAPIError{
+				Code:    awsErrCode,
+				Message: awsErrMessage,
+				Fault:   smithy.ErrorFault(1),
+			}
 			// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
 			m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 				return nil, awsErr
@@ -258,8 +270,14 @@ func TestAPI_SignOutHandler(t *testing.T) {
 	Convey("Global Sign Out Cognito request error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
 		awsErrCode := "NotAuthorizedException"
 		awsErrMessage := "User is not authorized"
-		awsOrigErr := errors.New(awsErrCode)
-		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		//awsOrigErr := errors.New(awsErrCode)
+		//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		awsOrigErr := smithy.ErrorFault(1) //server error
+		awsErr := &smithy.GenericAPIError{
+			Code:    awsErrCode,
+			Message: awsErrMessage,
+			Fault:   awsOrigErr,
+		}
 		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
 		m.GlobalSignOutFunc = func(_ *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 			return nil, awsErr
@@ -352,8 +370,14 @@ func TestAPI_RefreshHandler(t *testing.T) {
 	Convey("Token refresh Cognito request error: adds an error to the ErrorResponse and sets its Status to 403", t, func() {
 		awsErrCode := "NotAuthorizedException"
 		awsErrMessage := "User is not authorized"
-		awsOrigErr := errors.New(awsErrCode)
-		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		//awsOrigErr := errors.New(awsErrCode)
+		//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		awsOrigErr := smithy.ErrorFault(1) //server error
+		awsErr := &smithy.GenericAPIError{
+			Code:    awsErrCode,
+			Message: awsErrMessage,
+			Fault:   awsOrigErr,
+		}
 		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
 		m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			return nil, awsErr

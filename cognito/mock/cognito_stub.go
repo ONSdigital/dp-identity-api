@@ -2,15 +2,16 @@ package mock
 
 import (
 	"errors"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/cognitoidentityprovideriface"
 )
 
 const internalError = "internal-error"
@@ -43,8 +44,8 @@ func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidenti
 	if *input.UserAttributes[0].Value == "smileons" { // 201 - created successfully
 		user := &models.CreateUserOutput{
 			UserOutput: &cognitoidentityprovider.AdminCreateUserOutput{
-				User: &cognitoidentityprovider.UserType{
-					Attributes: []*cognitoidentityprovider.AttributeType{
+				User: types.UserType{
+					Attributes: []types.AttributeType{
 						{
 							Name:  &subjectAttrName,
 							Value: &subUUID,

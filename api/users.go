@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"io"
 	"net/http"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/ONSdigital/dp-identity-api/v2/query"
 	"github.com/ONSdigital/log.go/v2/log"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -48,7 +49,7 @@ func (api *API) CreateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 
 	validationErrs := user.ValidateRegistration(ctx, api.AllowedDomains)
 
-	listUserInput := models.UsersList{}.BuildListUserRequest("email = \""+user.Email+"\"", "email", int64(1), nil, &api.UserPoolID)
+	listUserInput := models.UsersList{}.BuildListUserRequest("email = \""+user.Email+"\"", "email", int32(1), nil, &api.UserPoolID)
 	listUserResp, err := api.CognitoClient.ListUsers(listUserInput)
 	if err != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint"))
@@ -72,8 +73,8 @@ func (api *API) CreateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 		}
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, responseErr)
 	}
-	resultUser.User.Enabled = aws.Bool(true)
-	createdUser := models.UserParams{}.MapCognitoDetails(resultUser.User)
+	resultUser.User.Enabled = true
+	createdUser := models.UserParams{}.MapCognitoDetails(*resultUser.User)
 	jsonResponse, responseErr := createdUser.BuildSuccessfulJSONResponse(ctx)
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
@@ -271,7 +272,7 @@ func (api *API) ChangePasswordHandler(ctx context.Context, _ http.ResponseWriter
 			}
 
 			clientTokenValidityUnits := *userPoolClient.UserPoolClient.TokenValidityUnits
-			refreshTokenTTL := calculateTokenTTLInSeconds(*clientTokenValidityUnits.RefreshToken, int(*userPoolClient.UserPoolClient.RefreshTokenValidity))
+			refreshTokenTTL := calculateTokenTTLInSeconds(clientTokenValidityUnits.RefreshToken, int(userPoolClient.UserPoolClient.RefreshTokenValidity))
 
 			jsonResponse, responseErr = changePasswordParams.BuildAuthChallengeSuccessfulJSONResponse(ctx, result, refreshTokenTTL)
 			if responseErr == nil {
@@ -362,7 +363,7 @@ func (api *API) PasswordResetHandler(ctx context.Context, _ http.ResponseWriter,
 }
 
 // List Groups for user pagination allows first call and then any other call if nextToken is not ""
-func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupType, userID models.UserParams) ([]*cognitoidentityprovider.GroupType, error) {
+func (api *API) getGroupsForUser(listOfGroups []types.GroupType, userID models.UserParams) ([]types.GroupType, error) {
 	firstTimeCheck := false
 	var nextToken string
 	for {
@@ -390,7 +391,7 @@ func (api *API) getGroupsForUser(listOfGroups []*cognitoidentityprovider.GroupTy
 func (api *API) ListUserGroupsHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	userID := models.UserParams{ID: vars["id"]}
-	listofgroupsInput := []*cognitoidentityprovider.GroupType{}
+	var listofgroupsInput []types.GroupType
 	finalUserResponse := cognitoidentityprovider.AdminListGroupsForUserOutput{}
 	listusergroups := models.ListUserGroups{}
 

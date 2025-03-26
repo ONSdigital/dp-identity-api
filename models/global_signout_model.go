@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 )
 
 type GlobalSignOut struct {

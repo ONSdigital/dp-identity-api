@@ -1,7 +1,7 @@
 package cognito
 
 import (
-	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	cognito "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 )
 
 // Client defines an interface for interaction with aws cognitoidentityprovider.
@@ -24,7 +24,7 @@ type Client interface {
 	DescribeUserPool(*cognito.DescribeUserPoolInput) (*cognito.DescribeUserPoolOutput, error)
 	DescribeUserPoolClient(input *cognito.DescribeUserPoolClientInput) (*cognito.DescribeUserPoolClientOutput, error)
 	ForgotPassword(input *cognito.ForgotPasswordInput) (*cognito.ForgotPasswordOutput, error)
-	GetGroup(input *cognito.GetGroupInput) (*cognito.GetGroupOutput, error)
+	GetGroup(input *cognito.GetGroupInput) (cognito.GetGroupOutput, error)
 	GlobalSignOut(input *cognito.GlobalSignOutInput) (*cognito.GlobalSignOutOutput, error)
 	InitiateAuth(input *cognito.InitiateAuthInput) (*cognito.InitiateAuthOutput, error)
 	ListGroups(input *cognito.ListGroupsInput) (*cognito.ListGroupsOutput, error)

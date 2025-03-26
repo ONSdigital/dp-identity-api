@@ -3,11 +3,12 @@ package models
 import (
 	"context"
 	"encoding/json"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 )
 
 const (
@@ -21,8 +22,8 @@ const (
 
 var (
 	groupNameSpecialChars = `]£\s^\\\$\*\.\]\[\}\(\)\?\"\!\@\#\%\&\/\,\>\<\'\:\;\|\_\~\-`
-	groupPrecedenceMin    = int64(10)
-	groupPrecedenceMax    = int64(100)
+	groupPrecedenceMin    = int32(10)
+	groupPrecedenceMax    = int32(100)
 )
 
 // ListGroupUsersType list of groups and the membership for user report group-report
@@ -35,7 +36,7 @@ type ListGroupUsersType struct {
 type Group struct {
 	ID         string    `json:"id"`
 	Name       string    `json:"name"`
-	Precedence int64     `json:"precedence"`
+	Precedence int32     `json:"precedence"`
 	Created    time.Time `json:"created"`
 }
 
@@ -138,7 +139,7 @@ func (g *Group) BuildListUsersInGroupRequestWithNextToken(userPoolID, nextToken 
 }
 
 // MapCognitoDetails maps the group details returned from GetGroup requests
-func (g *Group) MapCognitoDetails(groupDetails *cognitoidentityprovider.GroupType) {
+func (g *Group) MapCognitoDetails(groupDetails types.GroupType) {
 	g.ID = *groupDetails.GroupName
 	g.Precedence = *groupDetails.Precedence
 	g.Name = *groupDetails.Description
@@ -156,7 +157,7 @@ func (g *Group) BuildSuccessfulJSONResponse(ctx context.Context) ([]byte, error)
 
 type CreateUpdateGroup struct {
 	Name       *string `json:"name"`
-	Precedence *int64  `json:"precedence"`
+	Precedence *int32  `json:"precedence"`
 	ID         *string `json:"id"`
 	GroupsList *cognitoidentityprovider.ListGroupsOutput
 }

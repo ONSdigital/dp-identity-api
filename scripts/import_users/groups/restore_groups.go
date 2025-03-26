@@ -13,7 +13,7 @@ import (
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/ONSdigital/dp-identity-api/v2/scripts/utils"
 	"github.com/ONSdigital/log.go/v2/log"
-	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	cognito "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/pkg/errors"
 )
 
@@ -24,7 +24,7 @@ func ImportGroupsFromS3(ctx context.Context, cfg *config.Config) error {
 	responseBody := s3FileReader.GetS3Reader(ctx, cfg.AWSProfile, cfg.S3Region, cfg.S3Bucket, cfg.GetS3GroupsFilePath())
 	defer responseBody.Close()
 	reader := csv.NewReader(responseBody)
-	client := utils.GetCognitoClient(cfg.AWSProfile, cfg.S3Region)
+	client := utils.GetCognitoClient(ctx, cfg.AWSProfile, cfg.S3Region)
 
 	// Extract column indexes from header line
 	cols, err := reader.Read()
@@ -63,7 +63,7 @@ func ImportGroupsMembersFromS3(ctx context.Context, cfg *config.Config) error {
 	responseBody := s3FileReader.GetS3Reader(ctx, cfg.AWSProfile, cfg.S3Region, cfg.S3Bucket, cfg.GetS3GroupUsersFilePath())
 	defer responseBody.Close()
 	reader := csv.NewReader(responseBody)
-	client := utils.GetCognitoClient(cfg.AWSProfile, cfg.S3Region)
+	client := utils.GetCognitoClient(ctx, cfg.AWSProfile, cfg.S3Region)
 
 	// Extract column indexes from header line
 	cols, err := reader.Read()
@@ -95,29 +95,29 @@ func ImportGroupsMembersFromS3(ctx context.Context, cfg *config.Config) error {
 	return nil
 }
 
-func createGroup(ctx context.Context, lineNumber int, line []string, client *cognito.CognitoIdentityProvider, userPoolID string, colsMap map[string]int) {
+func createGroup(ctx context.Context, lineNumber int, line []string, client *cognito.Client, userPoolID string, colsMap map[string]int) {
 	createGroup := models.CreateUpdateGroup{}
 	createGroup.ID = &line[colsMap["groupname"]]
 	precedence, _ := strconv.Atoi(line[colsMap["precedence"]])
-	precedence1 := int64(precedence)
+	precedence1 := int32(precedence)
 	createGroup.Precedence = &precedence1
 	createGroup.Name = &line[colsMap["description"]]
 	input := createGroup.BuildCreateGroupInput(&userPoolID)
 
-	_, err := client.CreateGroup(input)
+	_, err := client.CreateGroup(ctx, input)
 	if err != nil {
 		log.Error(ctx, fmt.Sprintf("failed to process line: %d (incl. header) with name:%q group: %+v", lineNumber+1, *createGroup.Name, createGroup), err)
 	}
 }
 
-func adduserToGroup(ctx context.Context, client *cognito.CognitoIdentityProvider, line []string, lineNumber int, userPoolID string, colsMap map[string]int) {
+func adduserToGroup(ctx context.Context, client *cognito.Client, line []string, lineNumber int, userPoolID string, colsMap map[string]int) {
 	userID := line[colsMap["user_name"]]
 	groups := strings.Split(line[colsMap["groups"]], ", ")
 	for _, group := range groups {
 		if group == "" {
 			continue
 		}
-		_, err := client.AdminAddUserToGroup(&cognito.AdminAddUserToGroupInput{GroupName: &group, UserPoolId: &userPoolID, Username: &userID})
+		_, err := client.AdminAddUserToGroup(ctx, &cognito.AdminAddUserToGroupInput{GroupName: &group, UserPoolId: &userPoolID, Username: &userID})
 		if err != nil {
 			log.Error(ctx, fmt.Sprintf("failed to process line: %d (incl. header) - user %v group: %v", lineNumber+1, userID, group), err)
 		}

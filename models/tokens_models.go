@@ -3,11 +3,12 @@ package models
 import (
 	"context"
 	"encoding/json"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"strings"
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/v2/utilities"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -95,17 +96,17 @@ type RefreshToken struct {
 
 // GenerateRefreshRequest produces a Cognito InitiateAuthInput struct for refreshing a users current session
 func (t *RefreshToken) GenerateRefreshRequest(clientSecret, username, clientID string) *cognitoidentityprovider.InitiateAuthInput {
-	refreshAuthFlow := "REFRESH_TOKEN_AUTH"
+	refreshAuthFlow := types.AuthFlowTypeRefreshTokenAuth
 
 	secretHash := utilities.ComputeSecretHash(clientSecret, username, clientID)
 
-	authParams := map[string]*string{
-		"REFRESH_TOKEN": &t.TokenString,
-		"SECRET_HASH":   &secretHash,
+	authParams := map[string]string{
+		"REFRESH_TOKEN": t.TokenString,
+		"SECRET_HASH":   secretHash,
 	}
 
 	authInput := &cognitoidentityprovider.InitiateAuthInput{
-		AuthFlow:       &refreshAuthFlow,
+		AuthFlow:       refreshAuthFlow,
 		AuthParameters: authParams,
 		ClientId:       &clientID,
 	}
@@ -123,7 +124,7 @@ func (t *RefreshToken) Validate(ctx context.Context) *Error {
 // BuildSuccessfulJSONResponse creates a JSON response containing the expiration time from the Cognito auth result.
 func (t *RefreshToken) BuildSuccessfulJSONResponse(ctx context.Context, result *cognitoidentityprovider.InitiateAuthOutput) ([]byte, error) {
 	if result.AuthenticationResult != nil {
-		tokenDuration := time.Duration(*result.AuthenticationResult.ExpiresIn)
+		tokenDuration := time.Duration(result.AuthenticationResult.ExpiresIn)
 		expirationTime := time.Now().UTC().Add(time.Second * tokenDuration).String()
 
 		postBody := map[string]interface{}{"expirationTime": expirationTime}

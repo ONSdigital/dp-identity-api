@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"io"
 	"net/http"
 	"sort"
@@ -13,8 +14,8 @@ import (
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	dplogs "github.com/ONSdigital/log.go/v2/log"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -175,7 +176,7 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, _ http.ResponseWrit
 	vars := mux.Vars(req)
 	group := models.Group{ID: vars["id"]}
 
-	listOfUsersInput := []*cognitoidentityprovider.UserType{}
+	var listOfUsersInput []types.UserType
 
 	listUsers, err := api.getUsersInAGroup(listOfUsersInput, group)
 	if err != nil {
@@ -233,7 +234,7 @@ func sortUsers(ctx context.Context, users []models.UserParams, sortBy []string) 
 	}
 }
 
-func (api *API) getUsersInAGroup(listOfUsers []*cognitoidentityprovider.UserType, group models.Group) ([]*cognitoidentityprovider.UserType, error) {
+func (api *API) getUsersInAGroup(listOfUsers []types.UserType, group models.Group) ([]types.UserType, error) {
 	firstTimeCheck := false
 	var nextToken string
 	for {
@@ -372,7 +373,7 @@ func (api *API) GetGroupHandler(ctx context.Context, _ http.ResponseWriter, req 
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
 
-	group.MapCognitoDetails(groupGetResponse.Group)
+	group.MapCognitoDetails(*groupGetResponse.Group)
 
 	jsonResponse, responseErr := group.BuildSuccessfulJSONResponse(ctx)
 	if responseErr != nil {
@@ -425,19 +426,19 @@ func (api *API) SetGroupUsersHandler(ctx context.Context, _ http.ResponseWriter,
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
 	}
 	listOfUsers := models.UsersList{}
-	userType := cognitoidentityprovider.UserType{}
+	userType := types.UserType{}
 
 	for _, s1 := range bodyJSON {
 		validationErrs := group.ValidateAddRemoveUser(ctx, s1["user_id"])
 		if len(validationErrs) != 0 {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 		}
-		userType = cognitoidentityprovider.UserType{
+		userType = types.UserType{
 			Username:   aws.String(s1["user_id"]),
-			Enabled:    aws.Bool(true),
-			UserStatus: aws.String("CONFIRMED"),
+			Enabled:    true,
+			UserStatus: types.UserStatusTypeConfirmed,
 		}
-		listOfUsers.Users = append(listOfUsers.Users, models.UserParams{}.MapCognitoDetails(&userType))
+		listOfUsers.Users = append(listOfUsers.Users, models.UserParams{}.MapCognitoDetails(userType))
 	}
 
 	setResponse, setErr := api.SetGroupUsers(ctx, group, listOfUsers)
@@ -456,7 +457,7 @@ func (api *API) SetGroupUsers(ctx context.Context, group models.Group, users mod
 	keep := false
 	successResponse := &models.UsersList{}
 
-	listOfUsersInput := []*cognitoidentityprovider.UserType{}
+	var listOfUsersInput []types.UserType
 	listUsers, err := api.getUsersInAGroup(listOfUsersInput, group)
 	if err != nil {
 		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from set group membership endpoint")
@@ -502,7 +503,7 @@ func (api *API) AddUserToGroup(_ context.Context, group models.Group, userID str
 	if err != nil {
 		return nil, err
 	}
-	listOfUsersInput := []*cognitoidentityprovider.UserType{}
+	var listOfUsersInput []types.UserType
 
 	listUsers, err := api.getUsersInAGroup(listOfUsersInput, group)
 	if err != nil {
@@ -521,7 +522,7 @@ func (api *API) RemoveUserFromGroup(_ context.Context, group models.Group, userI
 	if err != nil {
 		return nil, err
 	}
-	listOfUsersInput := []*cognitoidentityprovider.UserType{}
+	var listOfUsersInput []types.UserType
 
 	listUsers, err := api.getUsersInAGroup(listOfUsersInput, group)
 	if err != nil {
@@ -590,7 +591,7 @@ func (api *API) GetTeamsReportLines(listOfGroups *cognitoidentityprovider.ListGr
 	var GroupsUsersList []models.ListGroupUsersType
 	for _, ListGroup := range listOfGroups.Groups {
 		inputGroup := models.Group{ID: *ListGroup.GroupName}
-		var listOfUsersInput []*cognitoidentityprovider.UserType
+		var listOfUsersInput []types.UserType
 		listUsers, err := api.getUsersInAGroup(listOfUsersInput, inputGroup)
 		if err != nil {
 			return nil, err
@@ -639,7 +640,7 @@ func sortGroups(listGroupOutput *cognitoidentityprovider.ListGroupsOutput, sortB
 }
 
 // sortByGroupName determines the sorting criteria and sorts groups in either ascending or descending order
-func sortByGroupName(groups []*cognitoidentityprovider.GroupType, ascending bool) {
+func sortByGroupName(groups []types.GroupType, ascending bool) {
 	sort.Slice(groups, func(i, j int) bool {
 		if ascending {
 			return strings.ToLower(*groups[i].Description) < strings.ToLower(*groups[j].Description)

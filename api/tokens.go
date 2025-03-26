@@ -3,12 +3,13 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"io"
 	"net/http"
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 )
 
 // TokensHandler uses submitted email address and password to sign a user in against Cognito and returns a http handler interface
@@ -74,7 +75,7 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 	}
 
 	clientTokenValidityUnits := *userPoolClient.UserPoolClient.TokenValidityUnits
-	refreshTokenTTL := calculateTokenTTLInSeconds(*clientTokenValidityUnits.RefreshToken, int(*userPoolClient.UserPoolClient.RefreshTokenValidity))
+	refreshTokenTTL := calculateTokenTTLInSeconds(clientTokenValidityUnits.RefreshToken, int(userPoolClient.UserPoolClient.RefreshTokenValidity))
 
 	jsonResponse, responseErr := userSignIn.BuildSuccessfulJSONResponse(ctx, result, refreshTokenTTL)
 	if responseErr != nil {
@@ -95,7 +96,7 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 
 	// response - http.StatusCreated by default
 	httpStatus := http.StatusCreated
-	if result.ChallengeName != nil && *result.ChallengeName == NewPasswordChallenge {
+	if result.ChallengeName == NewPasswordChallenge {
 		httpStatus = http.StatusAccepted
 	}
 
@@ -201,7 +202,7 @@ func (api *API) ListUsersWorker(ctx context.Context, userFilterString *string, b
 		listUserInput         = usersList.BuildListUserRequest(
 			*userFilterString,
 			"",
-			int64(0),
+			int32(0),
 			nil,
 			&api.UserPoolID,
 		)
@@ -316,15 +317,15 @@ func (api *API) generateListUsersRequest(input *cognitoidentityprovider.ListUser
 
 // calculateTokenTTLInSeconds takes a token unit and a number as received from Cognito and
 // returns the number of seconds.
-func calculateTokenTTLInSeconds(unit string, number int) int {
+func calculateTokenTTLInSeconds(unit types.TimeUnitsType, number int) int {
 	switch unit {
-	case cognitoidentityprovider.TimeUnitsTypeDays:
+	case types.TimeUnitsTypeDays:
 		return number * models.SecondsInDay
-	case cognitoidentityprovider.TimeUnitsTypeHours:
+	case types.TimeUnitsTypeHours:
 		return number * 3600
-	case cognitoidentityprovider.TimeUnitsTypeMinutes:
+	case types.TimeUnitsTypeMinutes:
 		return number * 60
-	case cognitoidentityprovider.TimeUnitsTypeSeconds:
+	case types.TimeUnitsTypeSeconds:
 		return number
 	}
 	return 0

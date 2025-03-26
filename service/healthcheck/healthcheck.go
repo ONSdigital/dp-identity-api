@@ -10,7 +10,7 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 
 	cognitoclient "github.com/ONSdigital/dp-identity-api/v2/cognito"
-	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	cognito "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 )
 
 const CognitoHealthy = "Cognito Healthy"
