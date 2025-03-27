@@ -2,22 +2,35 @@ package mock
 
 import (
 	"errors"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/smithy-go"
+
 	"regexp"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/cognitoidentityprovideriface"
 )
 
-const internalError = "internal-error"
+const (
+	internalError           = "internal-error"
+	errCodeNotAuthorized    = "NotAuthorizedException"
+	errCodeInternalError    = "InternalErrorException"
+	errCodeInvalidParam     = "InvalidParameterException"
+	errCodeInvalidPassword  = "InvalidPasswordException"
+	errCodeUserNotFound     = "UserNotFoundException"
+	errCodeCodeMismatch     = "CodeMismatchException"
+	errCodeExpiredCode      = "ExpiredCodeException"
+	errCodeTooManyRequests  = "TooManyRequestsException"
+	errCodeGroupExists      = "GroupExistsException"
+	errCodeResourceNotFound = "ResourceNotFoundException"
+)
 
 type CognitoIdentityProviderClientStub struct {
-	cognitoidentityprovideriface.CognitoIdentityProviderAPI
+	//cognitoidentityprovideriface.CognitoIdentityProviderAPI	//TODO Find out how to replace this for aws-sdk-go-v2
 	UserPools  []string
 	Users      []*User
 	Sessions   []Session
@@ -38,13 +51,14 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cogn
 func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (
 	*cognitoidentityprovider.AdminCreateUserOutput, error) {
 	var (
-		status, subjectAttrName, forenameAttrName, surnameAttrName, emailAttrName, username, subUUID, forename, surname, email = "FORCE_CHANGE_PASSWORD", "sub", "given_name", "family_name", "email", "123e4567-e89b-12d3-a456-426614174000", "f0cf8dd9-755c-4caf-884d-b0c56e7d0704", "smileons", "bobbings", "emailx@ons.gov.uk"
+		subjectAttrName, forenameAttrName, surnameAttrName, emailAttrName, username, subUUID, forename, surname, email = "sub", "given_name", "family_name", "email", "123e4567-e89b-12d3-a456-426614174000", "f0cf8dd9-755c-4caf-884d-b0c56e7d0704", "smileons", "bobbings", "emailx@ons.gov.uk"
+		status                                                                                                         = types.UserStatusTypeUnconfirmed //TODO Check that this is the correct replacement for "FORCE_CHANGE_PASSWORD" status string
 	)
 
 	if *input.UserAttributes[0].Value == "smileons" { // 201 - created successfully
 		user := &models.CreateUserOutput{
 			UserOutput: &cognitoidentityprovider.AdminCreateUserOutput{
-				User: types.UserType{
+				User: &types.UserType{
 					Attributes: []types.AttributeType{
 						{
 							Name:  &subjectAttrName,
@@ -64,27 +78,31 @@ func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidenti
 						},
 					},
 					Username:   &username,
-					UserStatus: &status,
+					UserStatus: status,
 				},
 			},
 		}
 		return user.UserOutput, nil
 	}
-	return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Failed to create new user in user pool", nil) // 500 - internal exception error
+	return nil, &smithy.GenericAPIError{
+		Code:    errCodeInternalError,
+		Message: "Failed to create new user in user pool",
+	}
 }
 
 func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (
 	*cognitoidentityprovider.InitiateAuthOutput, error) {
-	var expiration int64 = 123
+	var expiration int32 = 123
 
-	if *input.AuthFlow == "USER_PASSWORD_AUTH" {
+	if input.AuthFlow == types.AuthFlowTypeUserPasswordAuth {
 		// non-verified response - ChallengName = "NEW_PASSWORD_REQUIRED"
 		var (
-			challengeName, sessionID = "NEW_PASSWORD_REQUIRED", "AYABeBBsY5be-this-is-a-test-session-id-string-123456789iuerhcfdisieo-end"
+			challengeName = types.ChallengeNameTypeNewPasswordRequired
+			sessionID     = "AYABeBBsY5be-this-is-a-test-session-id-string-123456789iuerhcfdisieo-end"
 		)
 		initiateAuthOutputChallenge := &cognitoidentityprovider.InitiateAuthOutput{
 			AuthenticationResult: nil,
-			ChallengeName:        &challengeName,
+			ChallengeName:        challengeName,
 			Session:              &sessionID,
 		}
 
@@ -93,44 +111,62 @@ func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityp
 		idToken := "idToken"
 		refreshToken := "refreshToken"
 		initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{
-			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
+			AuthenticationResult: &types.AuthenticationResultType{
 				AccessToken:  &accessToken,
-				ExpiresIn:    &expiration,
+				ExpiresIn:    expiration,
 				IdToken:      &idToken,
 				RefreshToken: &refreshToken,
 			},
 		}
 
 		for _, user := range m.Users {
-			if (user.Email == *input.AuthParameters["USERNAME"]) && (user.Password == *input.AuthParameters["PASSWORD"]) {
+			if (user.Email == input.AuthParameters["USERNAME"]) && (user.Password == input.AuthParameters["PASSWORD"]) {
 				// non-challenge response
 				if user.Status == "CONFIRMED" {
 					return initiateAuthOutput, nil
 				}
 				return initiateAuthOutputChallenge, nil
-			} else if user.Email != *input.AuthParameters["USERNAME"] {
-				return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Incorrect username or password.", nil)
-			} else if user.Password != *input.AuthParameters["PASSWORD"] {
-				return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Password attempts exceeded", nil)
+			} else if user.Email != input.AuthParameters["USERNAME"] {
+				return nil, &smithy.GenericAPIError{
+					Code:    errCodeNotAuthorized,
+					Message: "Incorrect username or password",
+				}
+			} else if user.Password != input.AuthParameters["PASSWORD"] {
+				return nil, &smithy.GenericAPIError{
+					Code:    errCodeNotAuthorized,
+					Message: "Password attempts exceeded",
+				}
 			}
 		}
 
-		if *input.AuthParameters["PASSWORD"] == "internalerrorException" {
-			return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		if input.AuthParameters["PASSWORD"] == "internalerrorException" {
+			return nil, &smithy.GenericAPIError{
+				Code:    errCodeInternalError,
+				Message: "Something went wrong",
+			}
 		}
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInvalidParameterException, "A parameter was invalid", nil)
-	} else if *input.AuthFlow == "REFRESH_TOKEN_AUTH" {
-		if *input.AuthParameters["REFRESH_TOKEN"] == "InternalError" {
-			return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
-		} else if *input.AuthParameters["REFRESH_TOKEN"] == "ExpiredToken" {
-			return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Refresh Token has expired", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInvalidParam,
+			Message: "A parameter was invalid",
+		}
+	} else if input.AuthFlow == "REFRESH_TOKEN_AUTH" {
+		if input.AuthParameters["REFRESH_TOKEN"] == "InternalError" {
+			return nil, &smithy.GenericAPIError{
+				Code:    errCodeInternalError,
+				Message: "Something went wrong",
+			}
+		} else if input.AuthParameters["REFRESH_TOKEN"] == "ExpiredToken" {
+			return nil, &smithy.GenericAPIError{
+				Code:    errCodeNotAuthorized,
+				Message: "Refresh Token has expired",
+			}
 		}
 		accessToken := "llll.mmmm.nnnn"
 		idToken := "zzzz.yyyy.xxxx"
 		initiateAuthOutput := &cognitoidentityprovider.InitiateAuthOutput{
-			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
+			AuthenticationResult: &types.AuthenticationResultType{
 				AccessToken: &accessToken,
-				ExpiresIn:   &expiration,
+				ExpiresIn:   expiration,
 				IdToken:     &idToken,
 			},
 		}
@@ -142,23 +178,35 @@ func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityp
 func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (
 	*cognitoidentityprovider.GlobalSignOutOutput, error) {
 	if *signOutInput.AccessToken == "InternalError" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInternalError,
+			Message: "Something went wrong",
+		}
 	}
 	for _, session := range m.Sessions {
 		if session.AccessToken == *signOutInput.AccessToken {
 			return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
 		}
 	}
-	return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Access Token has been revoked", nil)
+	return nil, &smithy.GenericAPIError{
+		Code:    errCodeNotAuthorized,
+		Message: "Access Token has been revoked",
+	}
 }
 
 func (m *CognitoIdentityProviderClientStub) AdminUserGlobalSignOut(
 	adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (
 	*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 	if *adminUserGlobalSignOutInput.Username == "internalservererror@ons.gov.uk" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInternalError,
+			Message: "something went wrong",
+		}
 	} else if *adminUserGlobalSignOutInput.Username == "clienterror@ons.gov.uk" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeNotAuthorizedException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeNotAuthorized,
+			Message: "something went wrong",
+		}
 	}
 	return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 }
@@ -171,10 +219,13 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 		enabled                                  = true
 	)
 
-	var usersList []*cognitoidentityprovider.UserType
+	var usersList []types.UserType
 
 	if len(m.Users) > 0 && m.Users[0].Email == "internal.error@ons.gov.uk" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInternalError,
+			Message: "Something went wrong",
+		}
 	}
 
 	if input.Filter != nil {
@@ -183,8 +234,8 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 
 		var emailRegex = regexp.MustCompile(`^\"email(\d)?@(ext\.)?ons.gov.uk\"`)
 		if emailRegex.MatchString(email) {
-			usersList = append(usersList, &cognitoidentityprovider.UserType{
-				Attributes: []*cognitoidentityprovider.AttributeType{
+			usersList = append(usersList, types.UserType{
+				Attributes: []types.AttributeType{
 					{
 						Name:  &emailVerifiedAttr,
 						Value: &emailVerifiedValue,
@@ -195,8 +246,8 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 		}
 	} else {
 		for _, user := range m.Users {
-			userDetails := cognitoidentityprovider.UserType{
-				Attributes: []*cognitoidentityprovider.AttributeType{
+			userDetails := types.UserType{
+				Attributes: []types.AttributeType{
 					{
 						Name:  &emailVerifiedAttr,
 						Value: &emailVerifiedValue,
@@ -214,11 +265,11 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 						Value: aws.String(user.Email),
 					},
 				},
-				Enabled:    &enabled,
-				UserStatus: aws.String(user.Status),
+				Enabled:    enabled,
+				UserStatus: user.Status,
 				Username:   aws.String(user.ID),
 			}
-			usersList = append(usersList, &userDetails)
+			usersList = append(usersList, userDetails)
 		}
 	}
 	users := &models.ListUsersOutput{
@@ -231,33 +282,42 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 
 func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(input *cognitoidentityprovider.RespondToAuthChallengeInput) (
 	*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
-	var expiration int64 = 123
+	var expiration int32 = 123
 
-	if *input.ChallengeName == "NEW_PASSWORD_REQUIRED" {
+	if input.ChallengeName == types.ChallengeNameTypeNewPasswordRequired {
 		accessToken := "accessToken"
 		idToken := "idToken"
 		refreshToken := "refreshToken"
 		challengeResponseOutput := &cognitoidentityprovider.RespondToAuthChallengeOutput{
-			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
+			AuthenticationResult: &types.AuthenticationResultType{
 				AccessToken:  &accessToken,
-				ExpiresIn:    &expiration,
+				ExpiresIn:    expiration,
 				IdToken:      &idToken,
 				RefreshToken: &refreshToken,
 			},
 		}
 
-		if *input.ChallengeResponses["NEW_PASSWORD"] == "internalerrorException" {
-			return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
-		} else if *input.ChallengeResponses["NEW_PASSWORD"] == "invalidpassword" {
-			return nil, awserr.New(cognitoidentityprovider.ErrCodeInvalidPasswordException, "password does not meet requirements", nil)
+		if input.ChallengeResponses["NEW_PASSWORD"] == "internalerrorException" {
+			return nil, &smithy.GenericAPIError{
+				Code:    errCodeInternalError,
+				Message: "Something went wrong",
+			}
+		} else if input.ChallengeResponses["NEW_PASSWORD"] == "invalidpassword" {
+			return nil, &smithy.GenericAPIError{
+				Code:    errCodeInvalidPassword,
+				Message: "password does not meet requirements",
+			}
 		}
 
 		for _, user := range m.Users {
-			if user.Email == *input.ChallengeResponses["USERNAME"] {
+			if user.Email == input.ChallengeResponses["USERNAME"] {
 				return challengeResponseOutput, nil
 			}
 		}
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "user not found", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeUserNotFound,
+			Message: "user not found",
+		}
 	}
 	return nil, errors.New("InvalidParameterException: Unknown Auth Flow")
 }
@@ -267,13 +327,25 @@ func (m *CognitoIdentityProviderClientStub) ConfirmForgotPassword(input *cognito
 	challengeResponseOutput := &cognitoidentityprovider.ConfirmForgotPasswordOutput{}
 
 	if *input.Password == "internalerrorException" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInternalError,
+			Message: "Something went wrong",
+		}
 	} else if *input.Password == "invalidpassword" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInvalidPasswordException, "password does not meet requirements", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInvalidPassword,
+			Message: "password does not meet requirements",
+		}
 	} else if *input.ConfirmationCode == "invalid-token" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeCodeMismatchException, "verification token does not meet requirements", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeCodeMismatch,
+			Message: "verification token does not meet requirements",
+		}
 	} else if *input.ConfirmationCode == "expired-token" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeExpiredCodeException, "verification token has expired", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeExpiredCode,
+			Message: "verification token has expired",
+		}
 	}
 
 	for _, user := range m.Users {
@@ -281,20 +353,29 @@ func (m *CognitoIdentityProviderClientStub) ConfirmForgotPassword(input *cognito
 			return challengeResponseOutput, nil
 		}
 	}
-	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "user not found", nil)
+	return nil, &smithy.GenericAPIError{
+		Code:    errCodeUserNotFound,
+		Message: "user not found",
+	}
 }
 
 func (m *CognitoIdentityProviderClientStub) ForgotPassword(input *cognitoidentityprovider.ForgotPasswordInput) (
 	*cognitoidentityprovider.ForgotPasswordOutput, error) {
 	forgotPasswordOutput := &cognitoidentityprovider.ForgotPasswordOutput{
-		CodeDeliveryDetails: &cognitoidentityprovider.CodeDeliveryDetailsType{},
+		CodeDeliveryDetails: &types.CodeDeliveryDetailsType{},
 	}
 
 	if *input.Username == "internal.error@ons.gov.uk" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInternalError,
+			Message: "Something went wrong",
+		}
 	}
 	if *input.Username == "too.many@ons.gov.uk" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeTooManyRequestsException, "Slow down", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeTooManyRequests,
+			Message: "Slow down",
+		}
 	}
 
 	for _, user := range m.Users {
@@ -302,7 +383,10 @@ func (m *CognitoIdentityProviderClientStub) ForgotPassword(input *cognitoidentit
 			return forgotPasswordOutput, nil
 		}
 	}
-	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "user not found", nil)
+	return nil, &smithy.GenericAPIError{
+		Code:    errCodeUserNotFound,
+		Message: "user not found",
+	}
 }
 
 func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityprovider.AdminGetUserInput) (
@@ -314,10 +398,13 @@ func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityp
 	for _, user := range m.Users {
 		if user.ID == *input.Username {
 			if user.Email == "internal.error@ons.gov.uk" {
-				return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+				return nil, &smithy.GenericAPIError{
+					Code:    errCodeInternalError,
+					Message: "Something went wrong",
+				}
 			}
 			return &cognitoidentityprovider.AdminGetUserOutput{
-				UserAttributes: []*cognitoidentityprovider.AttributeType{
+				UserAttributes: []types.AttributeType{
 					{
 						Name:  &emailVerifiedAttr,
 						Value: &emailVerifiedValue,
@@ -335,13 +422,16 @@ func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityp
 						Value: aws.String(user.Email),
 					},
 				},
-				Enabled:    aws.Bool(user.Active),
-				UserStatus: aws.String(user.Status),
+				Enabled:    user.Active,
+				UserStatus: user.Status,
 				Username:   aws.String(user.ID),
 			}, nil
 		}
 	}
-	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+	return nil, &smithy.GenericAPIError{
+		Code:    errCodeUserNotFound,
+		Message: "the user could not be found",
+	}
 }
 
 func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentityprovider.CreateGroupInput) (
@@ -357,23 +447,32 @@ func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentitypr
 
 	if nonFeatureTesting { // non feature test functionality
 		if *input.GroupName == "internalError" {
-			return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "something went wrong", nil)
+			return nil, &smithy.GenericAPIError{
+				Code:    errCodeInternalError,
+				Message: "Something went wrong",
+			}
 		}
 
 		for _, group := range m.Groups {
 			if group.Name == *input.GroupName {
-				return nil, awserr.New(cognitoidentityprovider.ErrCodeGroupExistsException, "this group already exists", nil)
+				return nil, &smithy.GenericAPIError{
+					Code:    errCodeGroupExists,
+					Message: "this group already exists",
+				}
 			}
 		}
 
 		newGroup, err := m.GenerateGroup(*input.GroupName, *input.Description, *input.Precedence)
 		if err != nil {
-			return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, err.Error(), nil)
+			return nil, &smithy.GenericAPIError{
+				Code:    errCodeInternalError,
+				Message: err.Error(),
+			}
 		}
 		m.Groups = append(m.Groups, newGroup)
 
 		createGroupOutput = &cognitoidentityprovider.CreateGroupOutput{
-			Group: &cognitoidentityprovider.GroupType{
+			Group: &types.GroupType{
 				Description:  input.Description,
 				GroupName:    input.GroupName,
 				Precedence:   input.Precedence,
@@ -388,7 +487,7 @@ func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentitypr
 			createdTime, _ := time.Parse("2006-Jan-1", "2010-Jan-1")
 			if *input.Description == response201 {
 				createGroupOutput = &cognitoidentityprovider.CreateGroupOutput{
-					Group: &cognitoidentityprovider.GroupType{
+					Group: &types.GroupType{
 						Description:  input.Description,
 						GroupName:    input.GroupName,
 						Precedence:   input.Precedence,
@@ -399,7 +498,10 @@ func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentitypr
 			}
 		} else {
 			// 500 response - internal server error
-			return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+			return nil, &smithy.GenericAPIError{
+				Code:    errCodeInternalError,
+				Message: "Something went wrong",
+			}
 		}
 	}
 	return createGroupOutput, nil
@@ -410,7 +512,10 @@ func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(input *cog
 	for _, user := range m.Users {
 		if user.ID == *input.Username {
 			if user.Email == "update.internalerror@ons.gov.uk" {
-				return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+				return nil, &smithy.GenericAPIError{
+					Code:    errCodeInternalError,
+					Message: "Something went wrong",
+				}
 			}
 			for _, attr := range input.UserAttributes {
 				if *attr.Name == "given_name" {
@@ -424,7 +529,10 @@ func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(input *cog
 			return &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}, nil
 		}
 	}
-	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+	return nil, &smithy.GenericAPIError{
+		Code:    errCodeUserNotFound,
+		Message: "the user could not be found",
+	}
 }
 
 func (m *CognitoIdentityProviderClientStub) AdminEnableUser(input *cognitoidentityprovider.AdminEnableUserInput) (
@@ -432,13 +540,19 @@ func (m *CognitoIdentityProviderClientStub) AdminEnableUser(input *cognitoidenti
 	for _, user := range m.Users {
 		if user.ID == *input.Username {
 			if user.Email == "enable.internalerror@ons.gov.uk" {
-				return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong whilst enabling", nil)
+				return nil, &smithy.GenericAPIError{
+					Code:    errCodeInternalError,
+					Message: "Something went wrong whilst enabling",
+				}
 			}
 			user.Active = true
 			return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
 		}
 	}
-	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+	return nil, &smithy.GenericAPIError{
+		Code:    errCodeUserNotFound,
+		Message: "the user could not be found",
+	}
 }
 
 func (m *CognitoIdentityProviderClientStub) AdminDisableUser(input *cognitoidentityprovider.AdminDisableUserInput) (
@@ -446,29 +560,44 @@ func (m *CognitoIdentityProviderClientStub) AdminDisableUser(input *cognitoident
 	for _, user := range m.Users {
 		if user.ID == *input.Username {
 			if user.Email == "disable.internalerror@ons.gov.uk" {
-				return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong whilst disabling", nil)
+				return nil, &smithy.GenericAPIError{
+					Code:    errCodeInternalError,
+					Message: "Something went wrong whilst disabling",
+				}
 			}
 			user.Active = false
 			return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
 		}
 	}
-	return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+	return nil, &smithy.GenericAPIError{
+		Code:    errCodeUserNotFound,
+		Message: "the user could not be found",
+	}
 }
 
 func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(input *cognitoidentityprovider.AdminAddUserToGroupInput) (
 	*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 	if *input.GroupName == internalError {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInternalError,
+			Message: "Something went wrong",
+		}
 	}
 
 	group := m.ReadGroup(*input.GroupName)
 	if group == nil {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "the group could not be found", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeResourceNotFound,
+			Message: "the group could not be found",
+		}
 	}
 
 	user := m.ReadUser(*input.Username)
 	if user == nil {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeUserNotFound,
+			Message: "the user could not be found",
+		}
 	}
 
 	user.Groups = append(user.Groups, group)
@@ -480,19 +609,28 @@ func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(input *cognitoid
 func (m *CognitoIdentityProviderClientStub) GetGroup(input *cognitoidentityprovider.GetGroupInput) (
 	*cognitoidentityprovider.GetGroupOutput, error) {
 	if *input.GroupName == internalError || *input.GroupName == "get-group-internal-error" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInternalError,
+			Message: "Something went wrong",
+		}
 	}
 	if *input.GroupName == "get-group-not-found" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "get group - group not found", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeResourceNotFound,
+			Message: "get group - group not found",
+		}
 	}
 
 	group := m.ReadGroup(*input.GroupName)
 	if group == nil {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "the group could not be found", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeResourceNotFound,
+			Message: "the group could not be found",
+		}
 	}
 	timestamp := time.Now()
 	return &cognitoidentityprovider.GetGroupOutput{
-		Group: &cognitoidentityprovider.GroupType{
+		Group: &types.GroupType{
 			CreationDate:     &group.Created,
 			Description:      &group.Description,
 			GroupName:        &group.Name,
@@ -511,22 +649,30 @@ func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoident
 	)
 
 	if *input.GroupName == internalError || *input.GroupName == "list-group-users-internal-error" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInternalError,
+			Message: "Something went wrong",
+		}
 	}
 	if *input.GroupName == "list-group-users-not-found" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException,
-			"list members - group not found", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeResourceNotFound,
+			Message: "list members - group not found",
+		}
 	}
 
 	group := m.ReadGroup(*input.GroupName)
 	if group == nil {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "the group could not be found", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeResourceNotFound,
+			Message: "the group could not be found",
+		}
 	}
-	userList := make([]*cognitoidentityprovider.UserType, 0, len(group.Members))
+	userList := make([]types.UserType, 0, len(group.Members))
 
 	for _, user := range group.Members {
-		userDetails := cognitoidentityprovider.UserType{
-			Attributes: []*cognitoidentityprovider.AttributeType{
+		userDetails := types.UserType{
+			Attributes: []types.AttributeType{
 				{
 					Name:  &emailVerifiedAttr,
 					Value: &emailVerifiedValue,
@@ -544,11 +690,11 @@ func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoident
 					Value: aws.String(user.Email),
 				},
 			},
-			Enabled:    &user.Active,
-			UserStatus: aws.String(user.Status),
+			Enabled:    user.Active,
+			UserStatus: user.Status,
 			Username:   aws.String(user.ID),
 		}
-		userList = append(userList, &userDetails)
+		userList = append(userList, userDetails)
 	}
 	return &cognitoidentityprovider.ListUsersInGroupOutput{
 		Users: userList,
@@ -559,17 +705,26 @@ func (m *CognitoIdentityProviderClientStub) AdminRemoveUserFromGroup(
 	input *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (
 	*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error) {
 	if *input.GroupName == internalError {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInternalError,
+			Message: "Something went wrong",
+		}
 	}
 
 	group := m.ReadGroup(*input.GroupName)
 	if group == nil {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "the group could not be found", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeResourceNotFound,
+			Message: "the group could not be found",
+		}
 	}
 
 	user := m.ReadUser(*input.Username)
 	if user == nil {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeUserNotFound,
+			Message: "the user could not be found",
+		}
 	}
 
 	var newGroupMembersList []*User
@@ -591,31 +746,37 @@ func (m *CognitoIdentityProviderClientStub) AdminRemoveUserFromGroup(
 	return &cognitoidentityprovider.AdminRemoveUserFromGroupOutput{}, nil
 }
 
-// Added to fully implement interface but only used in the local dummy data builder
+// AdminConfirmSignUp - Added to fully implement interface but only used in the local dummy data builder
 func (m *CognitoIdentityProviderClientStub) AdminConfirmSignUp(_ *cognitoidentityprovider.AdminConfirmSignUpInput) (
 	*cognitoidentityprovider.AdminConfirmSignUpOutput, error) {
 	return nil, nil
 }
 
-// Added to fully implement interface but only used in the local dummy data builder
+// AdminDeleteUser - Added to fully implement interface but only used in the local dummy data builder
 func (m *CognitoIdentityProviderClientStub) AdminDeleteUser(_ *cognitoidentityprovider.AdminDeleteUserInput) (
 	*cognitoidentityprovider.AdminDeleteUserOutput, error) {
 	return nil, nil
 }
 
-// Added to fully implement interface but only used in the local dummy data builder
+// DeleteGroup was added to fully implement interface but is only used in the local dummy data builder
 func (m *CognitoIdentityProviderClientStub) DeleteGroup(input *cognitoidentityprovider.DeleteGroupInput) (
 	*cognitoidentityprovider.DeleteGroupOutput, error) {
 	if *input.GroupName == internalError || *input.GroupName == "get-group-internal-error" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInternalError,
+			Message: "Something went wrong",
+		}
 	}
 	if *input.GroupName == "delete-group-not-found" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "get group - group not found", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeResourceNotFound,
+			Message: "get group - group not found",
+		}
 	}
 	return nil, nil
 }
 
-// Added to fully implement interface but only used in the local dummy data builder
+// AdminSetUserPassword - Added to fully implement interface but only used in the local dummy data builder
 func (m *CognitoIdentityProviderClientStub) AdminSetUserPassword(_ *cognitoidentityprovider.AdminSetUserPasswordInput) (
 	*cognitoidentityprovider.AdminSetUserPasswordOutput, error) {
 	return nil, nil
@@ -627,28 +788,43 @@ func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
 	nextToken := "nextToken"
 	nextTokenNil := ""
 	if *input.Username == internalError || *input.Username == "get-group-internal-error" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInternalError,
+			Message: "Something went wrong",
+		}
 	}
 	if *input.Username == "get-user-not-found" {
-		println(cognitoidentityprovider.ErrCodeUserNotFoundException)
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "get user - user not found", nil)
+		println(errCodeUserNotFound)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeUserNotFound,
+			Message: "get user - user not found",
+		}
 	}
 	if *input.UserPoolId == "get-user-pool-not-found" {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "get userpool  - userpool not found", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeResourceNotFound,
+			Message: "get userpool  - userpool not found",
+		}
 	}
 	user := m.ReadUser(*input.Username)
 	if user == nil {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeUserNotFoundException, "the user could not be found", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeUserNotFound,
+			Message: "the user could not be found",
+		}
 	}
 
-	newGroups := make([]*cognitoidentityprovider.GroupType, 0, len(user.Groups))
+	newGroups := make([]types.GroupType, 0, len(user.Groups))
 
 	if user.Groups == nil {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInternalError,
+			Message: "Something went wrong",
+		}
 	}
 
 	for _, group := range user.Groups {
-		newGroups = append(newGroups, &cognitoidentityprovider.GroupType{
+		newGroups = append(newGroups, types.GroupType{
 			Description: &group.Description,
 			GroupName:   &group.Name,
 			Precedence:  &group.Precedence,
@@ -677,7 +853,10 @@ func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
 func (m *CognitoIdentityProviderClientStub) ListGroups(input *cognitoidentityprovider.ListGroupsInput) (
 	*cognitoidentityprovider.ListGroupsOutput, error) {
 	if *input.UserPoolId == internalError {
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInternalError,
+			Message: "Something went wrong",
+		}
 	}
 
 	output := cognitoidentityprovider.ListGroupsOutput{}
@@ -690,13 +869,13 @@ func (m *CognitoIdentityProviderClientStub) ListGroups(input *cognitoidentitypro
 
 func (m *CognitoIdentityProviderClientStub) DescribeUserPoolClient(_ *cognitoidentityprovider.DescribeUserPoolClientInput) (
 	*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
-	tokenValidDays := int64(1)
-	refreshTokenUnits := cognitoidentityprovider.TimeUnitsTypeDays
+	tokenValidDays := int32(1)
+	refreshTokenUnits := types.TimeUnitsTypeDays
 	userPoolClient := &cognitoidentityprovider.DescribeUserPoolClientOutput{
-		UserPoolClient: &cognitoidentityprovider.UserPoolClientType{
-			RefreshTokenValidity: &tokenValidDays,
-			TokenValidityUnits: &cognitoidentityprovider.TokenValidityUnitsType{
-				RefreshToken: &refreshTokenUnits,
+		UserPoolClient: &types.UserPoolClientType{
+			RefreshTokenValidity: tokenValidDays,
+			TokenValidityUnits: &types.TokenValidityUnitsType{
+				RefreshToken: refreshTokenUnits,
 			},
 		},
 	}
@@ -717,7 +896,7 @@ func (m *CognitoIdentityProviderClientStub) UpdateGroup(input *cognitoidentitypr
 		createdTime, _ := time.Parse("2006-Jan-1", "2010-Jan-1")
 		groupName := "123e4567-e89b-12d3-a456-426614174000"
 		updateGroupOutput = &cognitoidentityprovider.UpdateGroupOutput{
-			Group: &cognitoidentityprovider.GroupType{
+			Group: &types.GroupType{
 				Description:  &response200,
 				GroupName:    &groupName,
 				CreationDate: &createdTime,
@@ -732,7 +911,7 @@ func (m *CognitoIdentityProviderClientStub) UpdateGroup(input *cognitoidentitypr
 		createdTime, _ := time.Parse("2006-Jan-1", "2010-Jan-1")
 		groupName := "123e4567-e89b-12d3-a456-426614174000"
 		updateGroupOutput = &cognitoidentityprovider.UpdateGroupOutput{
-			Group: &cognitoidentityprovider.GroupType{
+			Group: &types.GroupType{
 				Description:  &response200Up,
 				GroupName:    &groupName,
 				CreationDate: &createdTime,
@@ -744,10 +923,16 @@ func (m *CognitoIdentityProviderClientStub) UpdateGroup(input *cognitoidentitypr
 		}
 	} else if *input.Description == response500 {
 		// 500 response - internal server error
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeInternalErrorException, "Something went wrong", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeInternalError,
+			Message: "Something went wrong",
+		}
 	} else {
 		// 404 response - resource not found error
-		return nil, awserr.New(cognitoidentityprovider.ErrCodeResourceNotFoundException, "Resource not found", nil)
+		return nil, &smithy.GenericAPIError{
+			Code:    errCodeResourceNotFound,
+			Message: "Resource not found",
+		}
 	}
 	return updateGroupOutput, nil
 }
