@@ -6,7 +6,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 )
 
 func (m *CognitoIdentityProviderClientStub) AddGroupWithNameAndDescription(name, description string) error {
@@ -16,8 +17,8 @@ func (m *CognitoIdentityProviderClientStub) AddGroupWithNameAndDescription(name,
 	}
 	m.Groups = append(m.Groups, newGroup)
 
-	pres := int64(0)
-	newGroupType := cognitoidentityprovider.GroupType{
+	pres := int32(0)
+	newGroupType := types.GroupType{
 		CreationDate:     nil,
 		Description:      &description,
 		GroupName:        &name,
@@ -26,8 +27,8 @@ func (m *CognitoIdentityProviderClientStub) AddGroupWithNameAndDescription(name,
 		RoleArn:          nil,
 		UserPoolId:       nil,
 	}
-	newGroupTypeList := []*cognitoidentityprovider.GroupType{}
-	newGroupTypeList = append(newGroupTypeList, &newGroupType)
+	var newGroupTypeList []types.GroupType
+	newGroupTypeList = append(newGroupTypeList, newGroupType)
 	groupsListOutput := cognitoidentityprovider.ListGroupsOutput{
 		Groups:    newGroupTypeList,
 		NextToken: nil,
@@ -58,14 +59,15 @@ func (m *CognitoIdentityProviderClientStub) BulkGenerateGroupsList(groupCount in
 			fmt.Println("Error generating random number:", err)
 			return
 		}
+		precedence := int32(P)
 
-		group := cognitoidentityprovider.GroupType{
+		group := types.GroupType{
 			Description: &D,
 			GroupName:   &G,
-			Precedence:  &P,
+			Precedence:  &precedence,
 		}
 
-		groupsList.Groups = append(groupsList.Groups, &group)
+		groupsList.Groups = append(groupsList.Groups, group)
 
 		if i%60 == 0 {
 			groupsList.NextToken = &nextToken
@@ -87,7 +89,7 @@ func secureRandomInt(minValue, maxValue int64) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return n.Int64() + minValue, nil
+	return n.Int64() + big.NewInt(minValue).Int64(), nil
 }
 
 func (m *CognitoIdentityProviderClientStub) AddListGroupWithName(name string) error {
@@ -102,10 +104,10 @@ func (m *CognitoIdentityProviderClientStub) AddListGroupWithName(name string) er
 func (m *CognitoIdentityProviderClientStub) GenerateListGroup(description string) (cognitoidentityprovider.ListGroupsOutput, error) {
 	parsedTime, _ := time.Parse("2006-Jan-1", "2010-Jan-1")
 	emptyString := ""
-	num := int64(1)
+	num := int32(1)
 
 	return cognitoidentityprovider.ListGroupsOutput{
-		Groups: []*cognitoidentityprovider.GroupType{
+		Groups: []types.GroupType{
 			{
 				Description:      &description,
 				CreationDate:     &parsedTime,

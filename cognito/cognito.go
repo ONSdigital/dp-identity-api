@@ -32,9 +32,9 @@ type Client interface {
 	ConfirmForgotPassword(ctx context.Context, params *cognito.ConfirmForgotPasswordInput, optFns ...func(*cognito.Options)) (*cognito.ConfirmForgotPasswordOutput, error)
 	ForgotPassword(ctx context.Context, params *cognito.ForgotPasswordInput, optFns ...func(*cognito.Options)) (*cognito.ForgotPasswordOutput, error)
 	AdminListGroupsForUser(ctx context.Context, params *cognito.AdminListGroupsForUserInput, optFns ...func(*cognito.Options)) (*cognito.AdminListGroupsForUserOutput, error)
+	AdminDeleteUser(ctx context.Context, params *cognito.AdminDeleteUserInput, optFns ...func(*cognito.Options)) (*cognito.AdminDeleteUserOutput, error)
+	AdminSetUserPassword(ctx context.Context, params *cognito.AdminSetUserPasswordInput, optFns ...func(*cognito.Options)) (*cognito.AdminSetUserPasswordOutput, error)
 	//AdminConfirmSignUp(input *cognito.AdminConfirmSignUpInput) (*cognito.AdminConfirmSignUpOutput, error)
-	//AdminDeleteUser(input *cognito.AdminDeleteUserInput) (*cognito.AdminDeleteUserOutput, error)
-	//AdminSetUserPassword(input *cognito.AdminSetUserPasswordInput) (*cognito.AdminSetUserPasswordOutput, error)
 	//DescribeUserPool(*cognito.DescribeUserPoolInput) (*cognito.DescribeUserPoolOutput, error)
 	//GetGroup(input *cognito.GetGroupInput) (cognito.GetGroupOutput, error)
 }

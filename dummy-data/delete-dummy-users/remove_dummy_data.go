@@ -55,7 +55,7 @@ func checkPoolExistsAndIsLocalForRemove(ctx context.Context, client cognito.Clie
 	input := cognitoidentityprovider.DescribeUserPoolInput{
 		UserPoolId: aws.String(userPoolID),
 	}
-	userPoolDetails, err := client.DescribeUserPool(&input)
+	userPoolDetails, err := client.DescribeUserPool(ctx, &input)
 	if err != nil {
 		return models.NewCognitoError(ctx, err, "loading User Pool details for dummy data population")
 	}
@@ -74,7 +74,7 @@ func deleteUsers(ctx context.Context, client cognito.Client, userPoolID string, 
 				UserPoolId: &userPoolID,
 				Username:   &username,
 			}
-			_, awsErr := client.AdminDeleteUser(&userDeletionInput)
+			_, awsErr := client.AdminDeleteUser(ctx, &userDeletionInput)
 			if awsErr != nil {
 				err := models.NewCognitoError(ctx, awsErr, "AdminDeleteUser during dummy data creation")
 				if err.Code != models.TooManyRequestsError {
@@ -98,7 +98,7 @@ func deleteGroups(ctx context.Context, client cognito.Client, userPoolID string,
 				GroupName:  &groupName,
 				UserPoolId: &userPoolID,
 			}
-			_, awsErr := client.DeleteGroup(&groupDeletionInput)
+			_, awsErr := client.DeleteGroup(ctx, &groupDeletionInput)
 			if awsErr != nil {
 				err := models.NewCognitoError(ctx, awsErr, "AdminDeleteUser during dummy data creation")
 				if err.Code != models.TooManyRequestsError {

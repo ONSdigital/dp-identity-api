@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"math"
 	"time"
 
@@ -11,8 +12,8 @@ import (
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/ONSdigital/dp-identity-api/v2/service"
 	"github.com/ONSdigital/log.go/v2/log"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/pkg/errors"
 )
 
@@ -35,7 +36,7 @@ func runUserAndGroupsPopulate(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "error getting configuration")
 	}
-	cognitoClient := svcList.GetCognitoClient(cfg.AWSRegion)
+	cognitoClient := svcList.GetCognitoClient(ctx, cfg.AWSRegion)
 
 	err = checkPoolExistsAndIsLocal(ctx, cognitoClient, cfg.AWSCognitoUserPoolID)
 	if err != nil {
@@ -61,7 +62,7 @@ func checkPoolExistsAndIsLocal(ctx context.Context, client cognito.Client, userP
 	input := cognitoidentityprovider.DescribeUserPoolInput{
 		UserPoolId: aws.String(userPoolID),
 	}
-	userPoolDetails, err := client.DescribeUserPool(&input)
+	userPoolDetails, err := client.DescribeUserPool(ctx, &input)
 	if err != nil {
 		return models.NewCognitoError(ctx, err, "loading User Pool details for dummy data population")
 	}
@@ -85,7 +86,7 @@ func createUsers(ctx context.Context, client cognito.Client, userPoolID string, 
 			lastName := baseLastName + fmt.Sprint(i)
 			userID := baseFirstName + "-" + lastName
 			userCreationInput := cognitoidentityprovider.AdminCreateUserInput{
-				UserAttributes: []*cognitoidentityprovider.AttributeType{
+				UserAttributes: []types.AttributeType{
 					{
 						Name:  aws.String("given_name"),
 						Value: &baseFirstName,
@@ -103,12 +104,12 @@ func createUsers(ctx context.Context, client cognito.Client, userPoolID string, 
 						Value: aws.String("true"),
 					},
 				},
-				MessageAction:     aws.String("SUPPRESS"),
+				MessageAction:     types.MessageActionTypeSuppress,
 				TemporaryPassword: &user.Password,
 				UserPoolId:        &userPoolID,
 				Username:          &userID,
 			}
-			_, awsErr := client.AdminCreateUser(&userCreationInput)
+			_, awsErr := client.AdminCreateUser(ctx, &userCreationInput)
 			if awsErr != nil {
 				err := models.NewCognitoError(ctx, awsErr, "AdminCreateUser during dummy data creation")
 				if err.Code != models.TooManyRequestsError {
@@ -138,11 +139,11 @@ func confirmUsers(ctx context.Context, client cognito.Client, userPoolID string,
 			}
 			userSetPasswordInput := cognitoidentityprovider.AdminSetUserPasswordInput{
 				Password:   &user.Password,
-				Permanent:  aws.Bool(true),
+				Permanent:  true,
 				UserPoolId: &userPoolID,
 				Username:   aws.String(baseEmailPrefix + fmt.Sprint(i) + emailDomain),
 			}
-			_, awsErr := client.AdminSetUserPassword(&userSetPasswordInput)
+			_, awsErr := client.AdminSetUserPassword(ctx, &userSetPasswordInput)
 			if awsErr != nil {
 				err := models.NewCognitoError(ctx, awsErr, "AdminSetUserPassword during dummy data creation")
 				if err.Code != models.TooManyRequestsError {
@@ -170,7 +171,7 @@ func disableUsers(ctx context.Context, client cognito.Client, userPoolID string,
 				UserPoolId: &userPoolID,
 				Username:   aws.String(baseFirstName + "." + lastName + emailDomain),
 			}
-			_, awsErr := client.AdminDisableUser(&userDisableInput)
+			_, awsErr := client.AdminDisableUser(ctx, &userDisableInput)
 			if awsErr != nil {
 				err := models.NewCognitoError(ctx, awsErr, "AdminDisableUser during dummy data creation")
 				if err.Code != models.TooManyRequestsError {
@@ -193,10 +194,10 @@ func createGroups(ctx context.Context, client cognito.Client, userPoolID string,
 			groupCreationInput := cognitoidentityprovider.CreateGroupInput{
 				Description: aws.String(baseDescription + fmt.Sprint(i)),
 				GroupName:   aws.String(baseGroupName + fmt.Sprint(i)),
-				Precedence:  aws.Int64(3),
+				Precedence:  aws.Int32(3),
 				UserPoolId:  &userPoolID,
 			}
-			_, awsErr := client.CreateGroup(&groupCreationInput)
+			_, awsErr := client.CreateGroup(ctx, &groupCreationInput)
 			if awsErr != nil {
 				err := models.NewCognitoError(ctx, awsErr, "CreateGroup during dummy data creation")
 				if err.Code != models.TooManyRequestsError {
@@ -241,7 +242,7 @@ func addUserToGroup(ctx context.Context, userNumber, groupNumber, userPoolID str
 			UserPoolId: &userPoolID,
 			Username:   aws.String(baseFirstName + "." + lastName + emailDomain),
 		}
-		_, awsErr := client.AdminAddUserToGroup(&userAddToGroupInput)
+		_, awsErr := client.AdminAddUserToGroup(ctx, &userAddToGroupInput)
 		if awsErr != nil {
 			err := models.NewCognitoError(ctx, awsErr, "AdminAddUserToGroup during dummy data creation")
 			if err.Code != models.TooManyRequestsError {

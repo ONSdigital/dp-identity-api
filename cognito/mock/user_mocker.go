@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/ONSdigital/log.go/v2/log"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/google/uuid"
 )
 
@@ -37,14 +37,14 @@ func (m *CognitoIdentityProviderClientStub) AddUserWithForename(username, email,
 	m.Users = append(m.Users, m.GenerateUser(username, email, "", forename, "", isConfirmed))
 }
 
-// Generates the required number of users in the system
+// AddMultipleUsers generates the required number of users in the system
 func (m *CognitoIdentityProviderClientStub) AddMultipleUsers(usersCount int) {
 	for len(m.Users) < usersCount {
 		m.Users = append(m.Users, m.GenerateUser("", "", "", "", "", true))
 	}
 }
 
-// Generates the required number of users in the system
+// AddMultipleActiveUsers generates the required number of users in the system
 func (m *CognitoIdentityProviderClientStub) AddMultipleActiveUsers(activeusersCount, inactiveusersCount int) {
 	for len(m.Users) < activeusersCount {
 		m.Users = append(m.Users, m.GenerateUser("", "", "", "", "", true))
@@ -55,9 +55,9 @@ func (m *CognitoIdentityProviderClientStub) AddMultipleActiveUsers(activeusersCo
 }
 
 func (m *CognitoIdentityProviderClientStub) GenerateUser(id, email, password, givenName, familyName string, isConfirmed bool) *User {
-	statusString := "FORCE_CHANGE_PASSWORD"
+	statusString := types.UserStatusTypeUnconfirmed
 	if isConfirmed {
-		statusString = "CONFIRMED"
+		statusString = types.UserStatusTypeConfirmed
 	}
 	if id == "" {
 		id = "aaaabbbbcccc"
@@ -130,18 +130,18 @@ func BulkGenerateUsers(userCount int, userNames []string) *cognitoidentityprovid
 	usersList := &cognitoidentityprovider.ListUsersOutput{}
 	for i := 0; i < userCount; i++ {
 		var (
-			userID, status = "", "CONFIRMED"
-			enabled        = true
+			userID = ""
+			status = types.UserStatusTypeConfirmed
 		)
 		if userNames == nil || i > len(userNames)-1 {
 			userID = uuid.NewString()
 		} else {
 			userID = userNames[i]
 		}
-		user := &cognitoidentityprovider.UserType{}
+		user := types.UserType{}
 		user.Username = &userID
-		user.Enabled = &enabled
-		user.UserStatus = &status
+		user.Enabled = true
+		user.UserStatus = status
 		usersList.Users = append(usersList.Users, user)
 		usersList.PaginationToken = &paginationToken
 	}
