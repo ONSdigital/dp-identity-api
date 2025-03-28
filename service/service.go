@@ -34,7 +34,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	s := serviceList.GetHTTPServer(cfg.BindAddr, r, cfg)
 
-	cognitoclient := serviceList.GetCognitoClient(cfg.AWSRegion)
+	cognitoclient := serviceList.GetCognitoClient(ctx, cfg.AWSRegion)
 
 	authorisationMiddleware, err := serviceList.GetAuthorisationMiddleware(ctx, cfg.AuthorisationConfig)
 	if err != nil {

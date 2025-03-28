@@ -37,7 +37,7 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 	}
 
 	input := userSignIn.BuildCognitoRequest(api.ClientID, api.ClientSecret, api.ClientAuthFlow)
-	result, authErr := api.CognitoClient.InitiateAuth(input)
+	result, authErr := api.CognitoClient.InitiateAuth(ctx, input)
 
 	if authErr != nil {
 		responseErr := models.NewCognitoError(ctx, authErr, "Cognito InitiateAuth request from sign in handler")
@@ -63,7 +63,7 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 	}
 
 	// Determine the refresh token TTL (DescribeUserPoolClient)
-	userPoolClient, err := api.CognitoClient.DescribeUserPoolClient(
+	userPoolClient, err := api.CognitoClient.DescribeUserPoolClient(ctx,
 		&cognitoidentityprovider.DescribeUserPoolClientInput{
 			UserPoolId: &api.UserPoolID,
 			ClientId:   &api.ClientID,
@@ -113,7 +113,7 @@ func (api *API) SignOutHandler(ctx context.Context, _ http.ResponseWriter, req *
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErr)
 	}
 
-	_, err := api.CognitoClient.GlobalSignOut(accessToken.GenerateSignOutRequest())
+	_, err := api.CognitoClient.GlobalSignOut(ctx, accessToken.GenerateSignOutRequest())
 
 	if err != nil {
 		responseErr := models.NewCognitoError(ctx, err, "Cognito GlobalSignOut request for sign out")
@@ -145,7 +145,7 @@ func (api *API) RefreshHandler(ctx context.Context, _ http.ResponseWriter, req *
 	}
 
 	authInput := refreshToken.GenerateRefreshRequest(api.ClientSecret, idToken.Claims.CognitoUser, api.ClientID)
-	result, authErr := api.CognitoClient.InitiateAuth(authInput)
+	result, authErr := api.CognitoClient.InitiateAuth(ctx, authInput)
 
 	if authErr != nil {
 		responseErr := models.NewCognitoError(ctx, authErr, "Cognito InitiateAuth request for token refresh")
@@ -208,7 +208,7 @@ func (api *API) ListUsersWorker(ctx context.Context, userFilterString *string, b
 		)
 		usersListError *models.ErrorResponse
 	)
-	listUsersResp, awsErr = api.generateListUsersRequest(listUserInput)
+	listUsersResp, awsErr = api.generateListUsersRequest(ctx, listUserInput)
 	if awsErr != nil {
 		err := models.NewCognitoError(ctx, awsErr, "Cognito ListUsers request from signout all users from group endpoint")
 		usersListError = models.NewErrorResponse(http.StatusInternalServerError, nil, err)
@@ -218,7 +218,7 @@ func (api *API) ListUsersWorker(ctx context.Context, userFilterString *string, b
 		loadingInProgress := true
 		for loadingInProgress {
 			for _, backoff := range backoffSchedule {
-				result, awsErr = api.generateListUsersRequest(listUserInput)
+				result, awsErr = api.generateListUsersRequest(ctx, listUserInput)
 				if awsErr == nil {
 					listUsersResp.Users = append(listUsersResp.Users, result.Users...)
 					if result.PaginationToken != nil {
@@ -251,7 +251,7 @@ func (api *API) SignOutUsersWorker(ctx context.Context, g *models.GlobalSignOut,
 
 	for _, userSignoutRequest := range userSignOutRequestData {
 		for _, backoff := range g.BackoffSchedule {
-			_, err := api.generateGlobalSignOutRequest(userSignoutRequest)
+			_, err := api.generateGlobalSignOutRequest(ctx, userSignoutRequest)
 
 			// no errors returned - add username to results channel and break to next user in list
 			if err == nil {
@@ -270,7 +270,7 @@ func (api *API) SignOutUsersWorker(ctx context.Context, g *models.GlobalSignOut,
 				if g.RetryAllowed {
 					// attempt one more request to api
 					g.RetryAllowed = false // 3. Set GlobalSignOut.RetryAllowed to false and request AdminUserGlobalSignOut
-					_, retryErr := api.generateGlobalSignOutRequest(userSignoutRequest)
+					_, retryErr := api.generateGlobalSignOutRequest(ctx, userSignoutRequest)
 
 					if retryErr != nil {
 						// if error response from request received again, process it
@@ -306,13 +306,13 @@ func (api *API) SignOutUsersWorker(ctx context.Context, g *models.GlobalSignOut,
 }
 
 // generateGlobalSignOutRequest - local routine to generete the global signout request per user
-func (api *API) generateGlobalSignOutRequest(user *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
-	return api.CognitoClient.AdminUserGlobalSignOut(user)
+func (api *API) generateGlobalSignOutRequest(ctx context.Context, user *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+	return api.CognitoClient.AdminUserGlobalSignOut(ctx, user)
 }
 
 // generateListUsersRequest - local routine to generate a list users request
-func (api *API) generateListUsersRequest(input *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
-	return api.CognitoClient.ListUsers(input)
+func (api *API) generateListUsersRequest(ctx context.Context, input *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+	return api.CognitoClient.ListUsers(ctx, input)
 }
 
 // calculateTokenTTLInSeconds takes a token unit and a number as received from Cognito and

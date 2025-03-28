@@ -52,8 +52,8 @@ func (e *ExternalServiceList) GetHealthCheck(cfg *config.Config, buildTime, gitC
 }
 
 // GetCognitoClient creates a cognito client
-func (e *ExternalServiceList) GetCognitoClient(region string) cognitoclient.Client {
-	client := e.Init.DoGetCognitoClient(region)
+func (e *ExternalServiceList) GetCognitoClient(ctx context.Context, region string) cognitoclient.Client {
+	client := e.Init.DoGetCognitoClient(ctx, region)
 	return client
 }
 
@@ -88,7 +88,7 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 }
 
 // DoGetCognitoClient creates a CognitoClient with the provided region
-func (e *Init) DoGetCognitoClient(ctx context.Context, awsRegion string) *cognito.Client {
+func (e *Init) DoGetCognitoClient(ctx context.Context, awsRegion string) cognitoclient.Client {
 	cfg, err := sdkcfg.LoadDefaultConfig(context.TODO(),
 		sdkcfg.WithRegion(awsRegion),
 	)

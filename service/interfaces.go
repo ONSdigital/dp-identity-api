@@ -2,10 +2,11 @@ package service
 
 import (
 	"context"
+	cognitoclient "github.com/ONSdigital/dp-identity-api/v2/cognito"
 	"net/http"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-	cognitoclient "github.com/ONSdigital/dp-identity-api/v2/cognito"
+	//cognito "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-identity-api/v2/config"
@@ -19,7 +20,7 @@ import (
 type Initialiser interface {
 	DoGetHTTPServer(bindAddr string, router http.Handler, cfg *config.Config) HTTPServer
 	DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error)
-	DoGetCognitoClient(region string) cognitoclient.Client
+	DoGetCognitoClient(ctx context.Context, awsRegion string) cognitoclient.Client
 	DoGetAuthorisationMiddleware(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error)
 }
 

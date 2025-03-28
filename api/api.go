@@ -207,7 +207,7 @@ func handleBodyUnmarshalError(ctx context.Context, err error) *models.ErrorRespo
 func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, userPoolID string) error {
 	adminGroup := models.NewAdminRoleGroup()
 	adminGroupCreateInput := adminGroup.BuildCreateGroupRequest(userPoolID)
-	_, err := cognitoClient.CreateGroup(adminGroupCreateInput)
+	_, err := cognitoClient.CreateGroup(ctx, adminGroupCreateInput)
 	if err != nil && !models.IsGroupExistsError(err) {
 		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for admin group from API start up")
 		if cognitoErr.Code != models.GroupExistsError {
@@ -217,7 +217,7 @@ func initialiseRoleGroups(ctx context.Context, cognitoClient cognito.Client, use
 
 	publisherGroup := models.NewPublisherRoleGroup()
 	publisherGroupCreateInput := publisherGroup.BuildCreateGroupRequest(userPoolID)
-	_, err = cognitoClient.CreateGroup(publisherGroupCreateInput)
+	_, err = cognitoClient.CreateGroup(ctx, publisherGroupCreateInput)
 	if err != nil && !models.IsGroupExistsError(err) {
 		cognitoErr := models.NewCognitoError(ctx, err, "CreateGroup request for publisher group from API start up")
 		if cognitoErr.Code != models.GroupExistsError {

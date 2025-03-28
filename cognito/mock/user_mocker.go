@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"strings"
 
 	"github.com/ONSdigital/log.go/v2/log"
@@ -16,7 +17,7 @@ type User struct {
 	GivenName   string
 	FamilyName  string
 	Groups      []*Group
-	Status      string
+	Status      types.UserStatusType
 	Active      bool
 	StatusNotes string
 }

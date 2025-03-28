@@ -20,7 +20,7 @@ type Config struct {
 	AWSCognitoUserPoolID       string                  `envconfig:"AWS_COGNITO_USER_POOL_ID" json:"-"`
 	AWSCognitoClientID         string                  `envconfig:"AWS_COGNITO_CLIENT_ID" json:"-"`
 	AWSCognitoClientSecret     string                  `envconfig:"AWS_COGNITO_CLIENT_SECRET" json:"-"`
-	AWSAuthFlow                string                  `envconfig:"AWS_AUTH_FLOW"`
+	AWSAuthFlow                types.AuthFlowType      `envconfig:"AWS_AUTH_FLOW"`
 	AllowedEmailDomains        []string                `envconfig:"ALLOWED_EMAIL_DOMAINS"`
 	MessageAction              types.MessageActionType `envconfig:"MESSAGE_ACTION"`
 	HTTPWriteTimeout           *time.Duration          `envconfig:"HTTP_WRITE_TIMEOUT"`

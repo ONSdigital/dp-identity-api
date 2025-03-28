@@ -17,7 +17,7 @@ const CognitoHealthy = "Cognito Healthy"
 
 func CognitoHealthCheck(_ context.Context, cognitoClient cognitoclient.Client, userPoolID *string) health.Checker {
 	return func(ctx context.Context, state *health.CheckState) error {
-		_, err := cognitoClient.DescribeUserPool(&cognito.DescribeUserPoolInput{UserPoolId: userPoolID})
+		_, err := cognitoClient.DescribeUserPool(ctx, &cognito.DescribeUserPoolInput{UserPoolId: userPoolID})
 
 		if err != nil {
 			if stateErr := state.Update(health.StatusCritical, err.Error(), http.StatusTooManyRequests); stateErr != nil {
@@ -30,7 +30,7 @@ func CognitoHealthCheck(_ context.Context, cognitoClient cognitoclient.Client, u
 
 		adminGroupDetails := models.NewAdminRoleGroup()
 		adminGroupRequest := adminGroupDetails.BuildGetGroupRequest(*userPoolID)
-		_, err = cognitoClient.GetGroup(adminGroupRequest)
+		_, err = cognitoClient.GetGroup(ctx, adminGroupRequest)
 
 		if err != nil {
 			if stateErr := state.Update(health.StatusCritical, err.Error(), http.StatusTooManyRequests); stateErr != nil {
@@ -43,7 +43,7 @@ func CognitoHealthCheck(_ context.Context, cognitoClient cognitoclient.Client, u
 
 		publisherGroupDetails := models.NewPublisherRoleGroup()
 		publisherGroupRequest := publisherGroupDetails.BuildGetGroupRequest(*userPoolID)
-		_, err = cognitoClient.GetGroup(publisherGroupRequest)
+		_, err = cognitoClient.GetGroup(ctx, publisherGroupRequest)
 
 		if err != nil {
 			if stateErr := state.Update(health.StatusCritical, err.Error(), http.StatusTooManyRequests); stateErr != nil {

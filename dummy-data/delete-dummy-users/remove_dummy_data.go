@@ -10,8 +10,8 @@ import (
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/ONSdigital/dp-identity-api/v2/service"
 	"github.com/ONSdigital/log.go/v2/log"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/pkg/errors"
 )
 
@@ -33,7 +33,7 @@ func runUserAndGroupsRemove(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "error getting configuration")
 	}
-	cognitoClient := svcList.GetCognitoClient(cfg.AWSRegion)
+	cognitoClient := svcList.GetCognitoClient(ctx, cfg.AWSRegion)
 
 	err = checkPoolExistsAndIsLocalForRemove(ctx, cognitoClient, cfg.AWSCognitoUserPoolID)
 	if err != nil {

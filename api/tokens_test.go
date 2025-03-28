@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/smithy-go"
 	"net/http"
 	"net/http/httptest"
@@ -13,8 +14,7 @@ import (
 
 	"github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/v2/models"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

@@ -9,7 +9,7 @@ import (
 type Group struct {
 	Name        string
 	Description string
-	Precedence  int64
+	Precedence  int32
 	Created     time.Time
 	Members     []*User
 }
@@ -23,7 +23,7 @@ func (m *CognitoIdentityProviderClientStub) AddGroupWithName(name string) error 
 	return nil
 }
 
-func (m *CognitoIdentityProviderClientStub) AddGroupWithNameAndPrecedence(name string, precedence int64) error {
+func (m *CognitoIdentityProviderClientStub) AddGroupWithNameAndPrecedence(name string, precedence int32) error {
 	newGroup, err := m.GenerateGroup(name, "", precedence)
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func (m *CognitoIdentityProviderClientStub) AddGroupWithNameAndPrecedence(name s
 	return nil
 }
 
-func (m *CognitoIdentityProviderClientStub) GenerateGroup(name, description string, precedence int64) (*Group, error) {
+func (m *CognitoIdentityProviderClientStub) GenerateGroup(name, description string, precedence int32) (*Group, error) {
 	if name == "" {
 		name = "TestGroup"
 	}
@@ -89,7 +89,7 @@ func (m *CognitoIdentityProviderClientStub) BulkGenerateGroups(groupCount int) {
 	for i := 0; i < groupCount; i++ {
 		D := "group name description " + fmt.Sprint(i)
 		G := "group_name_" + fmt.Sprint(i)
-		P := int64(i + 13)
+		P := int32(i + 13)
 
 		group := Group{
 			Name:        G,
