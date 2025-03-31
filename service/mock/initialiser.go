@@ -19,34 +19,34 @@ var _ service.Initialiser = &InitialiserMock{}
 
 // InitialiserMock is a mock implementation of service.Initialiser.
 //
-//	func TestSomethingThatUsesInitialiser(t *testing.T) {
+// 	func TestSomethingThatUsesInitialiser(t *testing.T) {
 //
-//		// make and configure a mocked service.Initialiser
-//		mockedInitialiser := &InitialiserMock{
-//			DoGetAuthorisationMiddlewareFunc: func(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
-//				panic("mock out the DoGetAuthorisationMiddleware method")
-//			},
-//			DoGetCognitoClientFunc: func(region string) cognitoClient.Client {
-//				panic("mock out the DoGetCognitoClient method")
-//			},
-//			DoGetHTTPServerFunc: func(bindAddr string, router http.Handler, cfg *config.Config) service.HTTPServer {
-//				panic("mock out the DoGetHTTPServer method")
-//			},
-//			DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
-//				panic("mock out the DoGetHealthCheck method")
-//			},
-//		}
+// 		// make and configure a mocked service.Initialiser
+// 		mockedInitialiser := &InitialiserMock{
+// 			DoGetAuthorisationMiddlewareFunc: func(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+// 				panic("mock out the DoGetAuthorisationMiddleware method")
+// 			},
+// 			DoGetCognitoClientFunc: func(ctx context.Context, awsRegion string) cognitoClient.Client {
+// 				panic("mock out the DoGetCognitoClient method")
+// 			},
+// 			DoGetHTTPServerFunc: func(bindAddr string, router http.Handler, cfg *config.Config) service.HTTPServer {
+// 				panic("mock out the DoGetHTTPServer method")
+// 			},
+// 			DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
+// 				panic("mock out the DoGetHealthCheck method")
+// 			},
+// 		}
 //
-//		// use mockedInitialiser in code that requires service.Initialiser
-//		// and then make assertions.
+// 		// use mockedInitialiser in code that requires service.Initialiser
+// 		// and then make assertions.
 //
-//	}
+// 	}
 type InitialiserMock struct {
 	// DoGetAuthorisationMiddlewareFunc mocks the DoGetAuthorisationMiddleware method.
 	DoGetAuthorisationMiddlewareFunc func(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error)
 
 	// DoGetCognitoClientFunc mocks the DoGetCognitoClient method.
-	DoGetCognitoClientFunc func(region string) cognitoClient.Client
+	DoGetCognitoClientFunc func(ctx context.Context, awsRegion string) cognitoClient.Client
 
 	// DoGetHTTPServerFunc mocks the DoGetHTTPServer method.
 	DoGetHTTPServerFunc func(bindAddr string, router http.Handler, cfg *config.Config) service.HTTPServer
@@ -65,8 +65,10 @@ type InitialiserMock struct {
 		}
 		// DoGetCognitoClient holds details about calls to the DoGetCognitoClient method.
 		DoGetCognitoClient []struct {
-			// Region is the region argument value.
-			Region string
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// AwsRegion is the awsRegion argument value.
+			AwsRegion string
 		}
 		// DoGetHTTPServer holds details about calls to the DoGetHTTPServer method.
 		DoGetHTTPServer []struct {
@@ -115,8 +117,7 @@ func (mock *InitialiserMock) DoGetAuthorisationMiddleware(ctx context.Context, a
 
 // DoGetAuthorisationMiddlewareCalls gets all the calls that were made to DoGetAuthorisationMiddleware.
 // Check the length with:
-//
-//	len(mockedInitialiser.DoGetAuthorisationMiddlewareCalls())
+//     len(mockedInitialiser.DoGetAuthorisationMiddlewareCalls())
 func (mock *InitialiserMock) DoGetAuthorisationMiddlewareCalls() []struct {
 	Ctx                 context.Context
 	AuthorisationConfig *authorisation.Config
@@ -132,30 +133,33 @@ func (mock *InitialiserMock) DoGetAuthorisationMiddlewareCalls() []struct {
 }
 
 // DoGetCognitoClient calls DoGetCognitoClientFunc.
-func (mock *InitialiserMock) DoGetCognitoClient(region string) cognitoClient.Client {
+func (mock *InitialiserMock) DoGetCognitoClient(ctx context.Context, awsRegion string) cognitoClient.Client {
 	if mock.DoGetCognitoClientFunc == nil {
 		panic("InitialiserMock.DoGetCognitoClientFunc: method is nil but Initialiser.DoGetCognitoClient was just called")
 	}
 	callInfo := struct {
-		Region string
+		Ctx       context.Context
+		AwsRegion string
 	}{
-		Region: region,
+		Ctx:       ctx,
+		AwsRegion: awsRegion,
 	}
 	mock.lockDoGetCognitoClient.Lock()
 	mock.calls.DoGetCognitoClient = append(mock.calls.DoGetCognitoClient, callInfo)
 	mock.lockDoGetCognitoClient.Unlock()
-	return mock.DoGetCognitoClientFunc(region)
+	return mock.DoGetCognitoClientFunc(ctx, awsRegion)
 }
 
 // DoGetCognitoClientCalls gets all the calls that were made to DoGetCognitoClient.
 // Check the length with:
-//
-//	len(mockedInitialiser.DoGetCognitoClientCalls())
+//     len(mockedInitialiser.DoGetCognitoClientCalls())
 func (mock *InitialiserMock) DoGetCognitoClientCalls() []struct {
-	Region string
+	Ctx       context.Context
+	AwsRegion string
 } {
 	var calls []struct {
-		Region string
+		Ctx       context.Context
+		AwsRegion string
 	}
 	mock.lockDoGetCognitoClient.RLock()
 	calls = mock.calls.DoGetCognitoClient
@@ -185,8 +189,7 @@ func (mock *InitialiserMock) DoGetHTTPServer(bindAddr string, router http.Handle
 
 // DoGetHTTPServerCalls gets all the calls that were made to DoGetHTTPServer.
 // Check the length with:
-//
-//	len(mockedInitialiser.DoGetHTTPServerCalls())
+//     len(mockedInitialiser.DoGetHTTPServerCalls())
 func (mock *InitialiserMock) DoGetHTTPServerCalls() []struct {
 	BindAddr string
 	Router   http.Handler
@@ -227,8 +230,7 @@ func (mock *InitialiserMock) DoGetHealthCheck(cfg *config.Config, buildTime stri
 
 // DoGetHealthCheckCalls gets all the calls that were made to DoGetHealthCheck.
 // Check the length with:
-//
-//	len(mockedInitialiser.DoGetHealthCheckCalls())
+//     len(mockedInitialiser.DoGetHealthCheckCalls())
 func (mock *InitialiserMock) DoGetHealthCheckCalls() []struct {
 	Cfg       *config.Config
 	BuildTime string

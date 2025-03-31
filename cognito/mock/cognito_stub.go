@@ -1,7 +1,9 @@
 package mock
 
 import (
+	"context"
 	"errors"
+	//"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
 	"github.com/aws/smithy-go"
 
 	"regexp"
@@ -30,7 +32,7 @@ const (
 )
 
 type CognitoIdentityProviderClientStub struct {
-	//cognitoidentityprovideriface.CognitoIdentityProviderAPI	//TODO Find out how to replace this for aws-sdk-go-v2
+	cognitoidentityprovider.Client
 	UserPools  []string
 	Users      []*User
 	Sessions   []Session
@@ -38,8 +40,7 @@ type CognitoIdentityProviderClientStub struct {
 	GroupsList []cognitoidentityprovider.ListGroupsOutput
 }
 
-func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (
-	*cognitoidentityprovider.DescribeUserPoolOutput, error) {
+func (m *CognitoIdentityProviderClientStub) DescribeUserPool(_ context.Context, poolInputData *cognitoidentityprovider.DescribeUserPoolInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
 	for _, v := range m.UserPools {
 		if v == *poolInputData.UserPoolId {
 			return nil, nil
@@ -48,8 +49,7 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(poolInputData *cogn
 	return nil, errors.New("failed to load user pool data")
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (
-	*cognitoidentityprovider.AdminCreateUserOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminCreateUser(_ context.Context, input *cognitoidentityprovider.AdminCreateUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
 	var (
 		subjectAttrName, forenameAttrName, surnameAttrName, emailAttrName, username, subUUID, forename, surname, email = "sub", "given_name", "family_name", "email", "123e4567-e89b-12d3-a456-426614174000", "f0cf8dd9-755c-4caf-884d-b0c56e7d0704", "smileons", "bobbings", "emailx@ons.gov.uk"
 		status                                                                                                         = types.UserStatusTypeUnconfirmed //TODO Check that this is the correct replacement for "FORCE_CHANGE_PASSWORD" status string
@@ -90,8 +90,7 @@ func (m *CognitoIdentityProviderClientStub) AdminCreateUser(input *cognitoidenti
 	}
 }
 
-func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (
-	*cognitoidentityprovider.InitiateAuthOutput, error) {
+func (m *CognitoIdentityProviderClientStub) InitiateAuth(_ context.Context, input *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 	var expiration int32 = 123
 
 	if input.AuthFlow == types.AuthFlowTypeUserPasswordAuth {
@@ -175,8 +174,7 @@ func (m *CognitoIdentityProviderClientStub) InitiateAuth(input *cognitoidentityp
 	return nil, errors.New("InvalidParameterException: Unknown Auth Flow")
 }
 
-func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoidentityprovider.GlobalSignOutInput) (
-	*cognitoidentityprovider.GlobalSignOutOutput, error) {
+func (m *CognitoIdentityProviderClientStub) GlobalSignOut(_ context.Context, signOutInput *cognitoidentityprovider.GlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 	if *signOutInput.AccessToken == "InternalError" {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
@@ -194,9 +192,7 @@ func (m *CognitoIdentityProviderClientStub) GlobalSignOut(signOutInput *cognitoi
 	}
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminUserGlobalSignOut(
-	adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (
-	*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminUserGlobalSignOut(_ context.Context, adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 	if *adminUserGlobalSignOutInput.Username == "internalservererror@ons.gov.uk" {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
@@ -211,12 +207,10 @@ func (m *CognitoIdentityProviderClientStub) AdminUserGlobalSignOut(
 	return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprovider.ListUsersInput) (
-	*cognitoidentityprovider.ListUsersOutput, error) {
+func (m *CognitoIdentityProviderClientStub) ListUsers(_ context.Context, input *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 	var (
 		emailVerifiedAttr, emailVerifiedValue    = "email_verified", "true"
 		givenNameAttr, familyNameAttr, emailAttr = "given_name", "family_name", "email"
-		enabled                                  = true
 	)
 
 	var usersList []types.UserType
@@ -265,7 +259,7 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 						Value: aws.String(user.Email),
 					},
 				},
-				Enabled:    enabled,
+				Enabled:    true,
 				UserStatus: user.Status,
 				Username:   aws.String(user.ID),
 			}
@@ -280,8 +274,7 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(input *cognitoidentityprov
 	return users.ListUsersOutput, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(input *cognitoidentityprovider.RespondToAuthChallengeInput) (
-	*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
+func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(_ context.Context, input *cognitoidentityprovider.RespondToAuthChallengeInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
 	var expiration int32 = 123
 
 	if input.ChallengeName == types.ChallengeNameTypeNewPasswordRequired {
@@ -322,8 +315,7 @@ func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(input *cognit
 	return nil, errors.New("InvalidParameterException: Unknown Auth Flow")
 }
 
-func (m *CognitoIdentityProviderClientStub) ConfirmForgotPassword(input *cognitoidentityprovider.ConfirmForgotPasswordInput) (
-	*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+func (m *CognitoIdentityProviderClientStub) ConfirmForgotPassword(_ context.Context, input *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 	challengeResponseOutput := &cognitoidentityprovider.ConfirmForgotPasswordOutput{}
 
 	if *input.Password == "internalerrorException" {
@@ -359,8 +351,7 @@ func (m *CognitoIdentityProviderClientStub) ConfirmForgotPassword(input *cognito
 	}
 }
 
-func (m *CognitoIdentityProviderClientStub) ForgotPassword(input *cognitoidentityprovider.ForgotPasswordInput) (
-	*cognitoidentityprovider.ForgotPasswordOutput, error) {
+func (m *CognitoIdentityProviderClientStub) ForgotPassword(_ context.Context, input *cognitoidentityprovider.ForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
 	forgotPasswordOutput := &cognitoidentityprovider.ForgotPasswordOutput{
 		CodeDeliveryDetails: &types.CodeDeliveryDetailsType{},
 	}
@@ -389,8 +380,7 @@ func (m *CognitoIdentityProviderClientStub) ForgotPassword(input *cognitoidentit
 	}
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityprovider.AdminGetUserInput) (
-	*cognitoidentityprovider.AdminGetUserOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminGetUser(_ context.Context, input *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 	var (
 		emailVerifiedAttr, emailVerifiedValue    = "email_verified", "true"
 		givenNameAttr, familyNameAttr, emailAttr = "given_name", "family_name", "email"
@@ -434,8 +424,7 @@ func (m *CognitoIdentityProviderClientStub) AdminGetUser(input *cognitoidentityp
 	}
 }
 
-func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentityprovider.CreateGroupInput) (
-	*cognitoidentityprovider.CreateGroupOutput, error) {
+func (m *CognitoIdentityProviderClientStub) CreateGroup(_ context.Context, input *cognitoidentityprovider.CreateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.CreateGroupOutput, error) {
 	userPoolID := "aaaa-bbbb-ccc-dddd"
 	// non feature test functionality - input.GroupName starts with `test-group-` pattern
 	// feature test functionality by default
@@ -507,8 +496,7 @@ func (m *CognitoIdentityProviderClientStub) CreateGroup(input *cognitoidentitypr
 	return createGroupOutput, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(input *cognitoidentityprovider.AdminUpdateUserAttributesInput) (
-	*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(_ context.Context, input *cognitoidentityprovider.AdminUpdateUserAttributesInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 	for _, user := range m.Users {
 		if user.ID == *input.Username {
 			if user.Email == "update.internalerror@ons.gov.uk" {
@@ -535,8 +523,7 @@ func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(input *cog
 	}
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminEnableUser(input *cognitoidentityprovider.AdminEnableUserInput) (
-	*cognitoidentityprovider.AdminEnableUserOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminEnableUser(_ context.Context, input *cognitoidentityprovider.AdminEnableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
 	for _, user := range m.Users {
 		if user.ID == *input.Username {
 			if user.Email == "enable.internalerror@ons.gov.uk" {
@@ -555,8 +542,7 @@ func (m *CognitoIdentityProviderClientStub) AdminEnableUser(input *cognitoidenti
 	}
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminDisableUser(input *cognitoidentityprovider.AdminDisableUserInput) (
-	*cognitoidentityprovider.AdminDisableUserOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminDisableUser(_ context.Context, input *cognitoidentityprovider.AdminDisableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
 	for _, user := range m.Users {
 		if user.ID == *input.Username {
 			if user.Email == "disable.internalerror@ons.gov.uk" {
@@ -575,8 +561,9 @@ func (m *CognitoIdentityProviderClientStub) AdminDisableUser(input *cognitoident
 	}
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(input *cognitoidentityprovider.AdminAddUserToGroupInput) (
-	*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+//func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(_ context.Context, input *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+
+func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(_ context.Context, input *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 	if *input.GroupName == internalError {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
@@ -606,8 +593,7 @@ func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(input *cognitoid
 	return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) GetGroup(input *cognitoidentityprovider.GetGroupInput) (
-	*cognitoidentityprovider.GetGroupOutput, error) {
+func (m *CognitoIdentityProviderClientStub) GetGroup(_ context.Context, input *cognitoidentityprovider.GetGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GetGroupOutput, error) {
 	if *input.GroupName == internalError || *input.GroupName == "get-group-internal-error" {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
@@ -641,8 +627,7 @@ func (m *CognitoIdentityProviderClientStub) GetGroup(input *cognitoidentityprovi
 	}, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoidentityprovider.ListUsersInGroupInput) (
-	*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(_ context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 	var (
 		emailVerifiedAttr, emailVerifiedValue    = "email_verified", "true"
 		givenNameAttr, familyNameAttr, emailAttr = "given_name", "family_name", "email"
@@ -701,9 +686,7 @@ func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(input *cognitoident
 	}, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminRemoveUserFromGroup(
-	input *cognitoidentityprovider.AdminRemoveUserFromGroupInput) (
-	*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminRemoveUserFromGroup(_ context.Context, input *cognitoidentityprovider.AdminRemoveUserFromGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminRemoveUserFromGroupOutput, error) {
 	if *input.GroupName == internalError {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
@@ -753,14 +736,12 @@ func (m *CognitoIdentityProviderClientStub) AdminConfirmSignUp(_ *cognitoidentit
 }
 
 // AdminDeleteUser - Added to fully implement interface but only used in the local dummy data builder
-func (m *CognitoIdentityProviderClientStub) AdminDeleteUser(_ *cognitoidentityprovider.AdminDeleteUserInput) (
-	*cognitoidentityprovider.AdminDeleteUserOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminDeleteUser(_ context.Context, _ *cognitoidentityprovider.AdminDeleteUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDeleteUserOutput, error) {
 	return nil, nil
 }
 
 // DeleteGroup was added to fully implement interface but is only used in the local dummy data builder
-func (m *CognitoIdentityProviderClientStub) DeleteGroup(input *cognitoidentityprovider.DeleteGroupInput) (
-	*cognitoidentityprovider.DeleteGroupOutput, error) {
+func (m *CognitoIdentityProviderClientStub) DeleteGroup(_ context.Context, input *cognitoidentityprovider.DeleteGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.DeleteGroupOutput, error) {
 	if *input.GroupName == internalError || *input.GroupName == "get-group-internal-error" {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
@@ -777,14 +758,11 @@ func (m *CognitoIdentityProviderClientStub) DeleteGroup(input *cognitoidentitypr
 }
 
 // AdminSetUserPassword - Added to fully implement interface but only used in the local dummy data builder
-func (m *CognitoIdentityProviderClientStub) AdminSetUserPassword(_ *cognitoidentityprovider.AdminSetUserPasswordInput) (
-	*cognitoidentityprovider.AdminSetUserPasswordOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminSetUserPassword(_ context.Context, _ *cognitoidentityprovider.AdminSetUserPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminSetUserPasswordOutput, error) {
 	return nil, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
-	input *cognitoidentityprovider.AdminListGroupsForUserInput) (
-	*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
+func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(_ context.Context, input *cognitoidentityprovider.AdminListGroupsForUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 	nextToken := "nextToken"
 	nextTokenNil := ""
 	if *input.Username == internalError || *input.Username == "get-group-internal-error" {
@@ -850,8 +828,7 @@ func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(
 	}, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) ListGroups(input *cognitoidentityprovider.ListGroupsInput) (
-	*cognitoidentityprovider.ListGroupsOutput, error) {
+func (m *CognitoIdentityProviderClientStub) ListGroups(_ context.Context, input *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
 	if *input.UserPoolId == internalError {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
@@ -867,8 +844,7 @@ func (m *CognitoIdentityProviderClientStub) ListGroups(input *cognitoidentitypro
 	return &output, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) DescribeUserPoolClient(_ *cognitoidentityprovider.DescribeUserPoolClientInput) (
-	*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
+func (m *CognitoIdentityProviderClientStub) DescribeUserPoolClient(_ context.Context, _ *cognitoidentityprovider.DescribeUserPoolClientInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
 	tokenValidDays := int32(1)
 	refreshTokenUnits := types.TimeUnitsTypeDays
 	userPoolClient := &cognitoidentityprovider.DescribeUserPoolClientOutput{
@@ -882,8 +858,7 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPoolClient(_ *cognitoide
 	return userPoolClient, nil
 }
 
-func (m *CognitoIdentityProviderClientStub) UpdateGroup(input *cognitoidentityprovider.UpdateGroupInput) (
-	*cognitoidentityprovider.UpdateGroupOutput, error) {
+func (m *CognitoIdentityProviderClientStub) UpdateGroup(_ context.Context, input *cognitoidentityprovider.UpdateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.UpdateGroupOutput, error) {
 	var (
 		updateGroupOutput *cognitoidentityprovider.UpdateGroupOutput
 		response200       = `Thi$s is a te||st des$%£@^c ription for  existing group  $`

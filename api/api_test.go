@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	//"github.com/aws/aws-sdk-go-v2/aws/awserr"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 
@@ -36,9 +38,10 @@ func TestSetup(t *testing.T) {
 		ctx := context.Background()
 
 		m := &mock.MockCognitoIdentityProviderClient{}
-		m.CreateGroupFunc = func(_ *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+		//m.CreateGroupFunc = func(ctx context.Context, *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
+		m.CreateGroupFunc = func(ctx context.Context, input *cognitoidentityprovider.CreateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.CreateGroupOutput, error) {
 			group := &cognitoidentityprovider.CreateGroupOutput{
-				Group: &cognitoidentityprovider.GroupType{},
+				Group: &types.GroupType{},
 			}
 			return group, nil
 		}
@@ -174,7 +177,7 @@ func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProv
 	m := &mock.MockCognitoIdentityProviderClient{}
 	m.CreateGroupFunc = func(_ *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
 		group := &cognitoidentityprovider.CreateGroupOutput{
-			Group: &cognitoidentityprovider.GroupType{},
+			Group: &types.GroupType{},
 		}
 		return group, nil
 	}
@@ -310,7 +313,7 @@ func TestInitialiseRoleGroups(t *testing.T) {
 				// neither group exists
 				func(_ *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
 					group := &cognitoidentityprovider.CreateGroupOutput{
-						Group: &cognitoidentityprovider.GroupType{},
+						Group: &types.GroupType{},
 					}
 					return group, nil
 				},
@@ -320,6 +323,11 @@ func TestInitialiseRoleGroups(t *testing.T) {
 				// admin group exists
 				func(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
 					if *input.GroupName == models.AdminRoleGroup {
+						//awsErrCode := "GroupExistsException"
+						//awsErrMessage := "This group exists"
+						//awsOrigErr := errors.New(awsErrCode)
+						//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						//return nil, awsErr
 						awsErrCode := "GroupExistsException"
 						awsErrMessage := "This group exists"
 						awsOrigErr := errors.New(awsErrCode)
@@ -327,7 +335,7 @@ func TestInitialiseRoleGroups(t *testing.T) {
 						return nil, awsErr
 					}
 					group := &cognitoidentityprovider.CreateGroupOutput{
-						Group: &cognitoidentityprovider.GroupType{},
+						Group: &types.GroupType{},
 					}
 					return group, nil
 				},
@@ -344,7 +352,7 @@ func TestInitialiseRoleGroups(t *testing.T) {
 						return nil, awsErr
 					}
 					group := &cognitoidentityprovider.CreateGroupOutput{
-						Group: &cognitoidentityprovider.GroupType{},
+						Group: &types.GroupType{},
 					}
 					return group, nil
 				},

@@ -65,14 +65,14 @@ func TestCreateUserHandler(t *testing.T) {
 				// 201 response - user created
 				func(_ cognitoidentityprovider.AdminCreateUserInput) (cognitoidentityprovider.AdminCreateUserOutput, error) {
 					user := models.CreateUserOutput{
-						UserOutput: cognitoidentityprovider.AdminCreateUserOutput{
+						UserOutput: &cognitoidentityprovider.AdminCreateUserOutput{
 							User: &types.UserType{
 								Username:   &name,
 								UserStatus: userStatusType,
 							},
 						},
 					}
-					return user.UserOutput, nil
+					return *user.UserOutput, nil
 				},
 				http.StatusCreated,
 			},
@@ -87,12 +87,12 @@ func TestCreateUserHandler(t *testing.T) {
 					return users.ListUsersOutput, nil
 				},
 				// 400 response - user already exists
-				func(_ *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
+				func(_ cognitoidentityprovider.AdminCreateUserInput) (cognitoidentityprovider.AdminCreateUserOutput, error) {
 					var userExistsException types.UsernameExistsException
 					userExistsException.Message = &userException
 					//userExistsException.RespMetadata.StatusCode = http.StatusBadRequest	//TODO find out how to replace this for aws-sdk-go-v2
 
-					return nil, &userExistsException
+					return cognitoidentityprovider.AdminCreateUserOutput{}, &userExistsException
 				},
 				http.StatusBadRequest,
 			},
@@ -124,12 +124,12 @@ func TestCreateUserHandler(t *testing.T) {
 					return users.ListUsersOutput, nil
 				},
 				// 500 response - internal error exception
-				func(_ *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
+				func(_ cognitoidentityprovider.AdminCreateUserInput) (cognitoidentityprovider.AdminCreateUserOutput, error) {
 					var internalErrorException types.InternalErrorException
 					internalErrorException.Message = &userException
 					//internalErrorException.RespMetadata.StatusCode = http.StatusInternalServerError	//TODO find out how to replace this for aws-sdk-go-v2
 
-					return nil, &internalErrorException
+					return cognitoidentityprovider.AdminCreateUserOutput{}, &internalErrorException
 				},
 				http.StatusInternalServerError,
 			},
@@ -258,7 +258,7 @@ func TestListUserHandler(t *testing.T) {
 				// 200 response from Cognito
 				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := &cognitoidentityprovider.ListUsersOutput{
-						Users: []*cognitoidentityprovider.UserType{},
+						Users: []types.UserType{},
 					}
 					return users, nil
 				},
@@ -315,7 +315,7 @@ func TestListUserHandlerWithFilter(t *testing.T) {
 				httptest.NewRequest(http.MethodGet, usersEndPointWithActiveFilterTrue, http.NoBody),
 				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := &cognitoidentityprovider.ListUsersOutput{
-						Users: []*cognitoidentityprovider.UserType{},
+						Users: []types.UserType{},
 					}
 					return users, nil
 				},
@@ -329,7 +329,7 @@ func TestListUserHandlerWithFilter(t *testing.T) {
 				httptest.NewRequest(http.MethodGet, usersEndPointWithActiveFilterFalse, http.NoBody),
 				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := &cognitoidentityprovider.ListUsersOutput{
-						Users: []*cognitoidentityprovider.UserType{},
+						Users: []types.UserType{},
 					}
 					return users, nil
 				},
@@ -344,7 +344,7 @@ func TestListUserHandlerWithFilter(t *testing.T) {
 				httptest.NewRequest(http.MethodGet, usersEndPoint, http.NoBody),
 				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := &cognitoidentityprovider.ListUsersOutput{
-						Users: []*cognitoidentityprovider.UserType{},
+						Users: []types.UserType{},
 					}
 					return users, nil
 				},
@@ -360,7 +360,7 @@ func TestListUserHandlerWithFilter(t *testing.T) {
 				httptest.NewRequest(http.MethodGet, usersEndPointWithActiveFilterError, http.NoBody),
 				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := &cognitoidentityprovider.ListUsersOutput{
-						Users: []*cognitoidentityprovider.UserType{},
+						Users: []types.UserType{},
 					}
 					return users, nil
 				},
@@ -403,7 +403,7 @@ func TestListUserHandlerWithSort(t *testing.T) {
 				description: "200 response from Cognito sort asc by Email ",
 				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortByEmail, http.NoBody),
 				listUsersFunction: func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
-					var cognitoUsersList = []*cognitoidentityprovider.UserType{}
+					var cognitoUsersList = []types.UserType{}
 					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
@@ -423,7 +423,7 @@ func TestListUserHandlerWithSort(t *testing.T) {
 				description: "200 response from Cognito sort EmailAsc  ",
 				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortByEmailAsc, http.NoBody),
 				listUsersFunction: func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
-					var cognitoUsersList = []*cognitoidentityprovider.UserType{}
+					var cognitoUsersList = []types.UserType{}
 					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
@@ -443,7 +443,7 @@ func TestListUserHandlerWithSort(t *testing.T) {
 				description: "200 response from Cognito sort EmailDesc  ",
 				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortByEmailDesc, http.NoBody),
 				listUsersFunction: func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
-					var cognitoUsersList = []*cognitoidentityprovider.UserType{}
+					var cognitoUsersList = []types.UserType{}
 					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
@@ -463,7 +463,7 @@ func TestListUserHandlerWithSort(t *testing.T) {
 				description: "200 response from Cognito sort forename:desc, lastname:desc  ",
 				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortBy2FieldsDesc, http.NoBody),
 				listUsersFunction: func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
-					var cognitoUsersList = []*cognitoidentityprovider.UserType{}
+					var cognitoUsersList = []types.UserType{}
 					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
@@ -483,7 +483,7 @@ func TestListUserHandlerWithSort(t *testing.T) {
 				description: "200 response from Cognito sort forename:desc, lastname:desc, dog  ",
 				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortBy2KnownFieldsAndUnknown, http.NoBody),
 				listUsersFunction: func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
-					var cognitoUsersList = []*cognitoidentityprovider.UserType{}
+					var cognitoUsersList = []types.UserType{}
 					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
@@ -514,10 +514,10 @@ func TestListUserHandlerWithSort(t *testing.T) {
 	})
 }
 
-func listUserOutput(forename, surname, email, id string, cognitoUsersList []*cognitoidentityprovider.UserType) []*cognitoidentityprovider.UserType {
-	var status = "CONFIRMED"
-	cognitoUser := cognitoidentityprovider.UserType{
-		Attributes: []*cognitoidentityprovider.AttributeType{
+func listUserOutput(forename, surname, email, id string, cognitoUsersList []types.UserType) []types.UserType {
+	var status = types.UserStatusTypeConfirmed
+	cognitoUser := types.UserType{
+		Attributes: []types.AttributeType{
 			{
 				Name:  aws.String("given_name"),
 				Value: &forename,
@@ -531,20 +531,21 @@ func listUserOutput(forename, surname, email, id string, cognitoUsersList []*cog
 				Value: &email,
 			},
 		},
-		UserStatus: &status,
+		UserStatus: status,
 		Username:   &id,
-		Enabled:    aws.Bool(true),
+		Enabled:    true,
 	}
 
-	cognitoUsersList = append(cognitoUsersList, &cognitoUser)
+	cognitoUsersList = append(cognitoUsersList, cognitoUser)
 	return cognitoUsersList
 }
 
 func TestGetUserHandler(t *testing.T) {
 	var (
-		ctx                                       = context.Background()
-		forename, lastname, status, email, userID = "bob", "bobbings", "UNCONFIRMED", "foo_bar123@ext.ons.gov.uk", "abcd1234"
-		givenNameAttr, familyNameAttr, emailAttr  = "given_name", "family_name", "email"
+		ctx                                      = context.Background()
+		forename, lastname, email, userID        = "bob", "bobbings", "foo_bar123@ext.ons.gov.uk", "abcd1234"
+		givenNameAttr, familyNameAttr, emailAttr = "given_name", "family_name", "email"
+		status                                   = types.UserStatusTypeUnconfirmed
 	)
 
 	api, w, m := apiSetup()
@@ -558,7 +559,7 @@ func TestGetUserHandler(t *testing.T) {
 				// 200 response from Cognito
 				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
-						UserAttributes: []*cognitoidentityprovider.AttributeType{
+						UserAttributes: []types.AttributeType{
 							{
 								Name:  &givenNameAttr,
 								Value: &forename,
@@ -572,9 +573,9 @@ func TestGetUserHandler(t *testing.T) {
 								Value: &email,
 							},
 						},
-						UserStatus: &status,
+						UserStatus: status,
 						Username:   &userID,
-						Enabled:    aws.Bool(true),
+						Enabled:    true,
 					}
 					return user, nil
 				},
@@ -633,14 +634,15 @@ func TestGetUserHandler(t *testing.T) {
 
 func TestUpdateUserHandler(t *testing.T) {
 	var (
-		ctx                                       = context.Background()
-		forename, lastname, email, userID, status = "bob", "bobbings", "foo_bar123@ext.ons.gov.uk", "abcd1234", "CONFIRMED"
-		givenNameAttr, familyNameAttr, emailAttr  = "given_name", "family_name", "email"
+		ctx                                      = context.Background()
+		forename, lastname, email, userID        = "bob", "bobbings", "foo_bar123@ext.ons.gov.uk", "abcd1234"
+		givenNameAttr, familyNameAttr, emailAttr = "given_name", "family_name", "email"
+		status                                   = types.UserStatusTypeConfirmed
 	)
 
 	api, w, m := apiSetup()
 
-	successfullyGetUser := []*cognitoidentityprovider.AttributeType{
+	successfullyGetUser := []types.AttributeType{
 		{
 			Name:  &givenNameAttr,
 			Value: &forename,
@@ -674,9 +676,9 @@ func TestUpdateUserHandler(t *testing.T) {
 				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
-						UserStatus:     &status,
+						UserStatus:     status,
 						Username:       &userID,
-						Enabled:        aws.Bool(true),
+						Enabled:        true,
 					}
 					return user, nil
 				},
@@ -703,9 +705,9 @@ func TestUpdateUserHandler(t *testing.T) {
 				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
-						UserStatus:     &status,
+						UserStatus:     status,
 						Username:       &userID,
-						Enabled:        aws.Bool(true),
+						Enabled:        true,
 					}
 					return user, nil
 				},
@@ -731,9 +733,9 @@ func TestUpdateUserHandler(t *testing.T) {
 				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
-						UserStatus:     &status,
+						UserStatus:     status,
 						Username:       &userID,
-						Enabled:        aws.Bool(true),
+						Enabled:        true,
 					}
 					return user, nil
 				},
@@ -767,9 +769,9 @@ func TestUpdateUserHandler(t *testing.T) {
 				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
-						UserStatus:     &status,
+						UserStatus:     status,
 						Username:       &userID,
-						Enabled:        aws.Bool(true),
+						Enabled:        true,
 					}
 					return user, nil
 				},
@@ -803,9 +805,9 @@ func TestUpdateUserHandler(t *testing.T) {
 				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
-						UserStatus:     &status,
+						UserStatus:     status,
 						Username:       &userID,
-						Enabled:        aws.Bool(true),
+						Enabled:        true,
 					}
 					return user, nil
 				},
@@ -839,9 +841,9 @@ func TestUpdateUserHandler(t *testing.T) {
 				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
-						UserStatus:     &status,
+						UserStatus:     status,
 						Username:       &userID,
-						Enabled:        aws.Bool(true),
+						Enabled:        true,
 					}
 					return user, nil
 				},
@@ -882,9 +884,9 @@ func TestUpdateUserHandler(t *testing.T) {
 				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
-						UserStatus:     &status,
+						UserStatus:     status,
 						Username:       &userID,
-						Enabled:        aws.Bool(true),
+						Enabled:        true,
 					}
 					return user, nil
 				},
@@ -917,9 +919,9 @@ func TestUpdateUserHandler(t *testing.T) {
 				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
-						UserStatus:     &status,
+						UserStatus:     status,
 						Username:       &userID,
-						Enabled:        aws.Bool(true),
+						Enabled:        true,
 					}
 					return user, nil
 				},
@@ -1049,20 +1051,20 @@ func TestChangePasswordHandler(t *testing.T) {
 		ctx                                      = context.Background()
 		email, password, session                 = "foo_bar123@ext.ons.gov.uk", "Password2", "auth-challenge-session"
 		accessToken, idToken, refreshToken       = "aaaa.bbbb.cccc", "llll.mmmm.nnnn", "zzzz.yyyy.xxxx.wwww.vvvv"
-		expireLength                       int64 = 500
+		expireLength                       int32 = 500
 	)
 
 	api, w, m := apiSetup()
 
 	m.DescribeUserPoolClientFunc = func(_ *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
-		tokenValidDays := int64(1)
-		refreshTokenUnits := cognitoidentityprovider.TimeUnitsTypeDays
+		tokenValidDays := int32(1)
+		refreshTokenUnits := types.TimeUnitsTypeDays
 
 		userPoolClient := &cognitoidentityprovider.DescribeUserPoolClientOutput{
-			UserPoolClient: &cognitoidentityprovider.UserPoolClientType{
-				RefreshTokenValidity: &tokenValidDays,
-				TokenValidityUnits: &cognitoidentityprovider.TokenValidityUnitsType{
-					RefreshToken: &refreshTokenUnits,
+			UserPoolClient: &types.UserPoolClientType{
+				RefreshTokenValidity: tokenValidDays,
+				TokenValidityUnits: &types.TokenValidityUnitsType{
+					RefreshToken: refreshTokenUnits,
 				},
 			},
 		}
@@ -1078,9 +1080,9 @@ func TestChangePasswordHandler(t *testing.T) {
 				// Cognito successful password change
 				func(_ *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
 					return &cognitoidentityprovider.RespondToAuthChallengeOutput{
-						AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
+						AuthenticationResult: &types.AuthenticationResultType{
 							AccessToken:  &accessToken,
-							ExpiresIn:    &expireLength,
+							ExpiresIn:    expireLength,
 							IdToken:      &idToken,
 							RefreshToken: &refreshToken,
 						},
@@ -1377,7 +1379,7 @@ func TestPasswordResetHandler(t *testing.T) {
 				// Cognito successful password change
 				func(_ *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
 					return &cognitoidentityprovider.ForgotPasswordOutput{
-						CodeDeliveryDetails: &cognitoidentityprovider.CodeDeliveryDetailsType{},
+						CodeDeliveryDetails: &types.CodeDeliveryDetailsType{},
 					}, nil
 				},
 				http.StatusAccepted,
@@ -1626,7 +1628,7 @@ func TestGetGroupsforUser(t *testing.T) {
 			return nil, &userNotFoundException
 		}
 
-		listGroupsforUserResponse, errorResponse := api.getGroupsForUser(nil, userID)
+		listGroupsforUserResponse, errorResponse := api.getGroupsForUser(ctx, nil, userID)
 
 		So(listGroupsforUserResponse, ShouldBeNil)
 		So(errorResponse.Error(), ShouldResemble, "ResourceNotFoundException: User not found")
@@ -1650,7 +1652,7 @@ func TestGetGroupsforUser(t *testing.T) {
 			return listGroupsForUser, nil
 		}
 
-		listOfUsersResponse, errorResponse := api.getGroupsForUser(nil, userID)
+		listOfUsersResponse, errorResponse := api.getGroupsForUser(ctx, nil, userID)
 
 		So(listOfUsersResponse, ShouldResemble, listOfGroupsForUser)
 
@@ -1695,7 +1697,7 @@ func TestGetGroupsforUser(t *testing.T) {
 			return listGroupsForUser, nil
 		}
 
-		listGroupsForUserResponse, errorResponse := api.getGroupsForUser(listOfGroups, userID)
+		listGroupsForUserResponse, errorResponse := api.getGroupsForUser(ctx, listOfGroups, userID)
 
 		So(listGroupsForUserResponse, ShouldResemble, listOfGroupsForUser)
 		So(errorResponse, ShouldBeNil)
@@ -1728,7 +1730,7 @@ func TestGetGroupsforUser(t *testing.T) {
 			return listGroupsForUser, nil
 		}
 
-		listGroupsForUseResponse, errorResponse := api.getGroupsForUser(listOfGroups, userID)
+		listGroupsForUseResponse, errorResponse := api.getGroupsForUser(ctx, listOfGroups, userID)
 
 		So(listGroupsForUseResponse, ShouldResemble, returnedlistOfGroups)
 		So(errorResponse, ShouldBeNil)
