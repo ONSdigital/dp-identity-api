@@ -48,13 +48,13 @@ func TestCreateUserHandler(t *testing.T) {
 
 	Convey("Admin create user - check expected responses", t, func() {
 		adminCreateUsersTests := []struct {
-			listUsersFunction   func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
-			createUsersFunction func(userInput cognitoidentityprovider.AdminCreateUserInput) (cognitoidentityprovider.AdminCreateUserOutput, error)
+			listUsersFunction   func(_ context.Context, userInput *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error)
+			createUsersFunction func(_ context.Context, userInput *cognitoidentityprovider.AdminCreateUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminCreateUserOutput, error)
 			httpResponse        int
 		}{
 			{
 				// 200 response - no duplicate emails found
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := &models.ListUsersOutput{
 						ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
 							Users: []types.UserType{},
@@ -63,7 +63,7 @@ func TestCreateUserHandler(t *testing.T) {
 					return users.ListUsersOutput, nil
 				},
 				// 201 response - user created
-				func(_ cognitoidentityprovider.AdminCreateUserInput) (cognitoidentityprovider.AdminCreateUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminCreateUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
 					user := models.CreateUserOutput{
 						UserOutput: &cognitoidentityprovider.AdminCreateUserOutput{
 							User: &types.UserType{
@@ -72,13 +72,13 @@ func TestCreateUserHandler(t *testing.T) {
 							},
 						},
 					}
-					return *user.UserOutput, nil
+					return user.UserOutput, nil
 				},
 				http.StatusCreated,
 			},
 			{
 				// 200 response - no duplicate emails found
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := &models.ListUsersOutput{
 						ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
 							Users: []types.UserType{},
@@ -87,18 +87,18 @@ func TestCreateUserHandler(t *testing.T) {
 					return users.ListUsersOutput, nil
 				},
 				// 400 response - user already exists
-				func(_ cognitoidentityprovider.AdminCreateUserInput) (cognitoidentityprovider.AdminCreateUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminCreateUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
 					var userExistsException types.UsernameExistsException
 					userExistsException.Message = &userException
 					//userExistsException.RespMetadata.StatusCode = http.StatusBadRequest	//TODO find out how to replace this for aws-sdk-go-v2
 
-					return cognitoidentityprovider.AdminCreateUserOutput{}, &userExistsException
+					return &cognitoidentityprovider.AdminCreateUserOutput{}, &userExistsException
 				},
 				http.StatusBadRequest,
 			},
 			{
 				// 400 response - duplicate email found
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := &models.ListUsersOutput{
 						ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
 							Users: []types.UserType{
@@ -115,7 +115,7 @@ func TestCreateUserHandler(t *testing.T) {
 			},
 			{
 				// 200 response - no users found
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := &models.ListUsersOutput{
 						ListUsersOutput: &cognitoidentityprovider.ListUsersOutput{
 							Users: []types.UserType{},
@@ -124,12 +124,12 @@ func TestCreateUserHandler(t *testing.T) {
 					return users.ListUsersOutput, nil
 				},
 				// 500 response - internal error exception
-				func(_ cognitoidentityprovider.AdminCreateUserInput) (cognitoidentityprovider.AdminCreateUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminCreateUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
 					var internalErrorException types.InternalErrorException
 					internalErrorException.Message = &userException
 					//internalErrorException.RespMetadata.StatusCode = http.StatusInternalServerError	//TODO find out how to replace this for aws-sdk-go-v2
 
-					return cognitoidentityprovider.AdminCreateUserOutput{}, &internalErrorException
+					return &cognitoidentityprovider.AdminCreateUserOutput{}, &internalErrorException
 				},
 				http.StatusInternalServerError,
 			},
@@ -251,12 +251,12 @@ func TestListUserHandler(t *testing.T) {
 
 	Convey("List user - check expected responses", t, func() {
 		adminCreateUsersTests := []struct {
-			listUsersFunction func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
+			listUsersFunction func(_ context.Context, userInput *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error)
 			httpResponse      int
 		}{
 			{
 				// 200 response from Cognito
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := &cognitoidentityprovider.ListUsersOutput{
 						Users: []types.UserType{},
 					}
@@ -266,7 +266,7 @@ func TestListUserHandler(t *testing.T) {
 			},
 			{
 				// 500 response from Cognito
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					//awsOrigErr := errors.New(awsErrCode)
 					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) //server error
@@ -307,13 +307,13 @@ func TestListUserHandlerWithFilter(t *testing.T) {
 		listUsersTest := []struct {
 			description       string
 			endpoint          *http.Request
-			listUsersFunction func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
+			listUsersFunction func(_ context.Context, userInput *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error)
 			assertions        func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{
 			{
 				"200 response from Cognito active filter true",
 				httptest.NewRequest(http.MethodGet, usersEndPointWithActiveFilterTrue, http.NoBody),
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := &cognitoidentityprovider.ListUsersOutput{
 						Users: []types.UserType{},
 					}
@@ -327,7 +327,7 @@ func TestListUserHandlerWithFilter(t *testing.T) {
 			{
 				"200 response from Cognito active filter false",
 				httptest.NewRequest(http.MethodGet, usersEndPointWithActiveFilterFalse, http.NoBody),
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := &cognitoidentityprovider.ListUsersOutput{
 						Users: []types.UserType{},
 					}
@@ -342,7 +342,7 @@ func TestListUserHandlerWithFilter(t *testing.T) {
 			{
 				"200 response from Cognito no active filter",
 				httptest.NewRequest(http.MethodGet, usersEndPoint, http.NoBody),
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := &cognitoidentityprovider.ListUsersOutput{
 						Users: []types.UserType{},
 					}
@@ -358,7 +358,7 @@ func TestListUserHandlerWithFilter(t *testing.T) {
 			{
 				"400 response from Cognito active filter incorrect",
 				httptest.NewRequest(http.MethodGet, usersEndPointWithActiveFilterError, http.NoBody),
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := &cognitoidentityprovider.ListUsersOutput{
 						Users: []types.UserType{},
 					}
@@ -396,14 +396,14 @@ func TestListUserHandlerWithSort(t *testing.T) {
 		listUsersTest := []struct {
 			description       string
 			endpoint          *http.Request
-			listUsersFunction func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
+			listUsersFunction func(_ context.Context, userInput *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error)
 			assertions        func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{
 			{
 				description: "200 response from Cognito sort asc by Email ",
 				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortByEmail, http.NoBody),
-				listUsersFunction: func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
-					var cognitoUsersList = []types.UserType{}
+				listUsersFunction: func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
+					var cognitoUsersList []types.UserType
 					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
@@ -422,8 +422,8 @@ func TestListUserHandlerWithSort(t *testing.T) {
 			{
 				description: "200 response from Cognito sort EmailAsc  ",
 				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortByEmailAsc, http.NoBody),
-				listUsersFunction: func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
-					var cognitoUsersList = []types.UserType{}
+				listUsersFunction: func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
+					var cognitoUsersList []types.UserType
 					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
@@ -442,8 +442,8 @@ func TestListUserHandlerWithSort(t *testing.T) {
 			{
 				description: "200 response from Cognito sort EmailDesc  ",
 				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortByEmailDesc, http.NoBody),
-				listUsersFunction: func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
-					var cognitoUsersList = []types.UserType{}
+				listUsersFunction: func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
+					var cognitoUsersList []types.UserType
 					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
@@ -462,8 +462,8 @@ func TestListUserHandlerWithSort(t *testing.T) {
 			{
 				description: "200 response from Cognito sort forename:desc, lastname:desc  ",
 				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortBy2FieldsDesc, http.NoBody),
-				listUsersFunction: func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
-					var cognitoUsersList = []types.UserType{}
+				listUsersFunction: func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
+					var cognitoUsersList []types.UserType
 					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
@@ -482,8 +482,8 @@ func TestListUserHandlerWithSort(t *testing.T) {
 			{
 				description: "200 response from Cognito sort forename:desc, lastname:desc, dog  ",
 				endpoint:    httptest.NewRequest(http.MethodGet, usersEndPointWithSortBy2KnownFieldsAndUnknown, http.NoBody),
-				listUsersFunction: func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
-					var cognitoUsersList = []types.UserType{}
+				listUsersFunction: func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
+					var cognitoUsersList []types.UserType
 					cognitoUsersList = listUserOutput("Adam", "Zee", "email1@ons.gov.uk", "user-1", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Bob", "Yellow", "email2@ons.gov.uk", "user-2", cognitoUsersList)
 					cognitoUsersList = listUserOutput("Colin", "White", "email3@ons.gov.uk", "user-3", cognitoUsersList)
@@ -552,12 +552,12 @@ func TestGetUserHandler(t *testing.T) {
 
 	Convey("Get user - check expected responses", t, func() {
 		adminGetUsersTests := []struct {
-			getUserFunction func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
+			getUserFunction func(_ context.Context, userInput *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error)
 			httpResponse    int
 		}{
 			{
 				// 200 response from Cognito
-				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: []types.AttributeType{
 							{
@@ -583,7 +583,7 @@ func TestGetUserHandler(t *testing.T) {
 			},
 			{
 				// 500 response from Cognito
-				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					//awsOrigErr := errors.New(awsErrCode)
 					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) //server error
@@ -598,7 +598,7 @@ func TestGetUserHandler(t *testing.T) {
 			},
 			{
 				// 404 response from Cognito
-				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					//awsOrigErr := errors.New(awsUNFErrCode)
 					//awsErr := awserr.New(awsUNFErrCode, awsUNFErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) //client error
@@ -659,21 +659,21 @@ func TestUpdateUserHandler(t *testing.T) {
 
 	Convey("Update user - check expected responses", t, func() {
 		adminCreateUsersTests := []struct {
-			updateUserFunction  func(userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error)
-			getUserFunction     func(userInput *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
-			enableUserFunction  func(userInput *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error)
-			disableUserFunction func(userInput *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error)
+			updateUserFunction  func(_ context.Context, userInput *cognitoidentityprovider.AdminUpdateUserAttributesInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error)
+			getUserFunction     func(_ context.Context, userInput *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error)
+			enableUserFunction  func(_ context.Context, userInput *cognitoidentityprovider.AdminEnableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error)
+			disableUserFunction func(_ context.Context, userInput *cognitoidentityprovider.AdminDisableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error)
 			userForename        string
 			userActive          bool
 			assertions          func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{
 			// 200 response from Cognito
 			{
-				func(_ *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminUpdateUserAttributesInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
 						UserStatus:     status,
@@ -682,10 +682,10 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminEnableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
 					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
 				},
-				func(_ *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminDisableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
 					return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
 				},
 				forename,
@@ -698,11 +698,11 @@ func TestUpdateUserHandler(t *testing.T) {
 			},
 			// local validation failure
 			{
-				func(_ *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminUpdateUserAttributesInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
 						UserStatus:     status,
@@ -711,10 +711,10 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminEnableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
 					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
 				},
-				func(_ *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminDisableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
 					return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
 				},
 				"",
@@ -726,11 +726,11 @@ func TestUpdateUserHandler(t *testing.T) {
 			},
 			// 404 response from Cognito enable user
 			{
-				func(_ *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminUpdateUserAttributesInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
 						UserStatus:     status,
@@ -739,7 +739,7 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminEnableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
 					//awsOrigErr := errors.New(awsUNFErrCode)
 					//awsErr := awserr.New(awsUNFErrCode, awsUNFErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) //client error
@@ -750,7 +750,7 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return nil, awsErr
 				},
-				func(_ *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminDisableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
 					return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
 				},
 				forename,
@@ -762,11 +762,11 @@ func TestUpdateUserHandler(t *testing.T) {
 			},
 			// 500 response from Cognito enable user
 			{
-				func(_ *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminUpdateUserAttributesInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
 						UserStatus:     status,
@@ -775,7 +775,7 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminEnableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
 					//awsOrigErr := errors.New(awsErrCode)
 					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
@@ -786,7 +786,7 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return nil, awsErr
 				},
-				func(_ *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminDisableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
 					return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
 				},
 				forename,
@@ -798,11 +798,11 @@ func TestUpdateUserHandler(t *testing.T) {
 			},
 			// 404 response from Cognito disable user
 			{
-				func(_ *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminUpdateUserAttributesInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
 						UserStatus:     status,
@@ -811,10 +811,10 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminEnableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
 					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
 				},
-				func(_ *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminDisableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
 					//awsOrigErr := errors.New(awsUNFErrCode)
 					//awsErr := awserr.New(awsUNFErrCode, awsUNFErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) // client error
@@ -834,11 +834,11 @@ func TestUpdateUserHandler(t *testing.T) {
 			},
 			// 500 response from Cognito disable user
 			{
-				func(_ *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminUpdateUserAttributesInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
 						UserStatus:     status,
@@ -847,10 +847,10 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminEnableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
 					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
 				},
-				func(_ *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminDisableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
 					//awsOrigErr := errors.New(awsErrCode)
 					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
@@ -870,7 +870,7 @@ func TestUpdateUserHandler(t *testing.T) {
 			},
 			// 404 response from Cognito user update
 			{
-				func(_ *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminUpdateUserAttributesInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 					//awsOrigErr := errors.New(awsUNFErrCode)
 					//awsErr := awserr.New(awsUNFErrCode, awsUNFErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) // client error
@@ -881,7 +881,7 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return nil, awsErr
 				},
-				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
 						UserStatus:     status,
@@ -890,10 +890,10 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminEnableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
 					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
 				},
-				func(_ *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminDisableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
 					return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
 				},
 				forename,
@@ -905,7 +905,7 @@ func TestUpdateUserHandler(t *testing.T) {
 			},
 			// 500 response from Cognito user update
 			{
-				func(_ *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminUpdateUserAttributesInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 					//awsOrigErr := errors.New(awsErrCode)
 					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
@@ -916,7 +916,7 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return nil, awsErr
 				},
-				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					user := &cognitoidentityprovider.AdminGetUserOutput{
 						UserAttributes: successfullyGetUser,
 						UserStatus:     status,
@@ -925,10 +925,10 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminEnableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
 					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
 				},
-				func(_ *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminDisableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
 					return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
 				},
 				forename,
@@ -940,11 +940,11 @@ func TestUpdateUserHandler(t *testing.T) {
 			},
 			// reload user details failure
 			{
-				func(_ *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminUpdateUserAttributesInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
 					user := &cognitoidentityprovider.AdminUpdateUserAttributesOutput{}
 					return user, nil
 				},
-				func(_ *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 					//awsOrigErr := errors.New(awsUNFErrCode)
 					//awsErr := awserr.New(awsUNFErrCode, awsUNFErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) // client error
@@ -955,10 +955,10 @@ func TestUpdateUserHandler(t *testing.T) {
 					}
 					return nil, awsErr
 				},
-				func(_ *cognitoidentityprovider.AdminEnableUserInput) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminEnableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
 					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
 				},
-				func(_ *cognitoidentityprovider.AdminDisableUserInput) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminDisableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
 					return &cognitoidentityprovider.AdminDisableUserOutput{}, nil
 				},
 				forename,
@@ -1056,7 +1056,7 @@ func TestChangePasswordHandler(t *testing.T) {
 
 	api, w, m := apiSetup()
 
-	m.DescribeUserPoolClientFunc = func(_ *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
+	m.DescribeUserPoolClientFunc = func(_ context.Context, _ *cognitoidentityprovider.DescribeUserPoolClientInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
 		tokenValidDays := int32(1)
 		refreshTokenUnits := types.TimeUnitsTypeDays
 
@@ -1073,12 +1073,12 @@ func TestChangePasswordHandler(t *testing.T) {
 
 	Convey("RespondToAuthChallenge - check expected responses", t, func() {
 		respondToAuthChallengeTests := []struct {
-			respondToAuthChallengeFunction func(input *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error)
+			respondToAuthChallengeFunction func(_ context.Context, input *cognitoidentityprovider.RespondToAuthChallengeInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error)
 			assertions                     func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse)
 		}{
 			{
 				// Cognito successful password change
-				func(_ *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.RespondToAuthChallengeInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
 					return &cognitoidentityprovider.RespondToAuthChallengeOutput{
 						AuthenticationResult: &types.AuthenticationResultType{
 							AccessToken:  &accessToken,
@@ -1100,7 +1100,7 @@ func TestChangePasswordHandler(t *testing.T) {
 			},
 			{
 				// Cognito internal error
-				func(_ *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.RespondToAuthChallengeInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
 					//awsOrigErr := errors.New(awsErrCode)
 					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
@@ -1118,7 +1118,7 @@ func TestChangePasswordHandler(t *testing.T) {
 			},
 			{
 				// Cognito invalid session
-				func(_ *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.RespondToAuthChallengeInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
 					awsErrCode := "CodeMismatchException"
 					awsErrMessage := "session invalid"
 					//awsOrigErr := errors.New(awsErrCode)
@@ -1138,7 +1138,7 @@ func TestChangePasswordHandler(t *testing.T) {
 			},
 			{
 				// Cognito invalid password
-				func(_ *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.RespondToAuthChallengeInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
 					awsErrCode := "InvalidPasswordException"
 					awsErrMessage := "password invalid"
 					//awsOrigErr := errors.New(awsErrCode)
@@ -1158,7 +1158,7 @@ func TestChangePasswordHandler(t *testing.T) {
 			},
 			{
 				// Cognito invalid user
-				func(_ *cognitoidentityprovider.RespondToAuthChallengeInput) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.RespondToAuthChallengeInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
 					awsErrCode := "UserNotFoundException"
 					awsErrMessage := "user not found"
 					//awsOrigErr := errors.New(awsErrCode)
@@ -1200,12 +1200,12 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 	api, w, m := apiSetup()
 	Convey("ConfirmForgotPassword - check expected responses", t, func() {
 		confirmForgotPasswordTests := []struct {
-			confirmForgotPasswordFunction func(_ *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error)
+			confirmForgotPasswordFunction func(_ context.Context, _ *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error)
 			httpResponse                  int
 		}{
 			// Cognito successful password change
 			{
-				func(_ *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					tst := cognitoidentityprovider.ConfirmForgotPasswordOutput{}
 					return &tst, nil
 				},
@@ -1213,7 +1213,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 			},
 			// Cognito internal error
 			{
-				func(_ *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					//awsOrigErr := errors.New(awsErrCode)
 					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
@@ -1228,7 +1228,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 			},
 			// Cognito invalid token
 			{
-				func(_ *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					awsErrCode := "CodeMismatchException"
 					awsErrMessage := "session invalid"
 					//awsOrigErr := errors.New(awsErrCode)
@@ -1245,7 +1245,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 			},
 			// Cognito expired token
 			{
-				func(_ *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					awsErrCode := "ExpiredCodeException"
 					awsErrMessage := "token expired"
 					//awsOrigErr := errors.New(awsErrCode)
@@ -1262,7 +1262,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 			},
 			// Cognito invalid password
 			{
-				func(_ *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					awsErrCode := "InvalidPasswordException"
 					awsErrMessage := "password invalid"
 					//awsOrigErr := errors.New(awsErrCode)
@@ -1279,7 +1279,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 			},
 			// Cognito invalid user
 			{
-				func(_ *cognitoidentityprovider.ConfirmForgotPasswordInput) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					awsErrCode := "UserNotFoundException"
 					awsErrMessage := "user not found"
 					//awsOrigErr := errors.New(awsErrCode)
@@ -1372,12 +1372,12 @@ func TestPasswordResetHandler(t *testing.T) {
 
 	Convey("ForgotPassword - check expected responses", t, func() {
 		respondToAuthChallengeTests := []struct {
-			forgotPasswordFunction func(input *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error)
+			forgotPasswordFunction func(_ context.Context, input *cognitoidentityprovider.ForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ForgotPasswordOutput, error)
 			httpResponse           int
 		}{
 			{
 				// Cognito successful password change
-				func(_ *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
 					return &cognitoidentityprovider.ForgotPasswordOutput{
 						CodeDeliveryDetails: &types.CodeDeliveryDetailsType{},
 					}, nil
@@ -1386,7 +1386,7 @@ func TestPasswordResetHandler(t *testing.T) {
 			},
 			{
 				// Cognito internal error
-				func(_ *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
 					//awsOrigErr := errors.New(awsErrCode)
 					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
@@ -1401,7 +1401,7 @@ func TestPasswordResetHandler(t *testing.T) {
 			},
 			{
 				// Cognito too many requests
-				func(_ *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
 					awsErrCode := "TooManyRequestsException"
 					awsErrMessage := "slow down"
 					//awsOrigErr := errors.New(awsErrCode)
@@ -1418,7 +1418,7 @@ func TestPasswordResetHandler(t *testing.T) {
 			},
 			{
 				// Cognito invalid user
-				func(_ *cognitoidentityprovider.ForgotPasswordInput) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
 					awsErrCode := "UserNotFoundException"
 					awsErrMessage := "user not found in user pool"
 					//awsOrigErr := errors.New(awsErrCode)
@@ -1525,12 +1525,12 @@ func TestListUserGroupsHandler(t *testing.T) {
 
 	Convey("List groups for user -check expected responses", t, func() {
 		listusergroups := []struct {
-			getUserGroupsFunction func(input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error)
+			getUserGroupsFunction func(_ context.Context, input *cognitoidentityprovider.AdminListGroupsForUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error)
 			httpResponse          int
 		}{
 			{
 				// 200 response from Cognito with empty NextToken
-				func(_ *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminListGroupsForUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 					return &cognitoidentityprovider.AdminListGroupsForUserOutput{
 						Groups:    groups,
 						NextToken: nil,
@@ -1540,7 +1540,7 @@ func TestListUserGroupsHandler(t *testing.T) {
 			},
 			{
 				// 200 response from Cognito with empty NextToken
-				func(_ *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminListGroupsForUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 					return &cognitoidentityprovider.AdminListGroupsForUserOutput{
 						Groups:    []types.GroupType{},
 						NextToken: nil,
@@ -1550,7 +1550,7 @@ func TestListUserGroupsHandler(t *testing.T) {
 			},
 			{
 				// 500 response from Cognito
-				func(_ *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminListGroupsForUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 					//awsOrigErr := errors.New(awsErrCode)
 					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
@@ -1565,7 +1565,7 @@ func TestListUserGroupsHandler(t *testing.T) {
 			},
 			{
 				// 404 response from Cognito
-				func(_ *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminListGroupsForUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 					//awsOrigErr := errors.New(awsUNFErrCode)
 					//awsErr := awserr.New(awsUNFErrCode, awsUNFErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) // client error
@@ -1622,7 +1622,7 @@ func TestGetGroupsforUser(t *testing.T) {
 
 	api, _, m := apiSetup()
 	Convey("error is returned when list groups for a user returns an error", t, func() {
-		m.ListGroupsForUserFunc = func(_ *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
+		m.ListGroupsForUserFunc = func(_ context.Context, _ *cognitoidentityprovider.AdminListGroupsForUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 			var userNotFoundException types.ResourceNotFoundException
 			userNotFoundException.Message = &userNotFoundDescription
 			return nil, &userNotFoundException
@@ -1641,7 +1641,7 @@ func TestGetGroupsforUser(t *testing.T) {
 			},
 		}
 
-		m.ListGroupsForUserFunc = func(_ *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
+		m.ListGroupsForUserFunc = func(_ context.Context, _ *cognitoidentityprovider.AdminListGroupsForUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 			listGroupsForUser := &cognitoidentityprovider.AdminListGroupsForUserOutput{
 				Groups: []types.GroupType{
 					{
@@ -1672,7 +1672,7 @@ func TestGetGroupsforUser(t *testing.T) {
 			},
 		}
 
-		m.ListGroupsForUserFunc = func(input *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
+		m.ListGroupsForUserFunc = func(_ context.Context, input *cognitoidentityprovider.AdminListGroupsForUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 			nextToken := "nextToken"
 
 			if input.NextToken != nil {
@@ -1719,7 +1719,7 @@ func TestGetGroupsforUser(t *testing.T) {
 			},
 		}
 
-		m.ListGroupsForUserFunc = func(_ *cognitoidentityprovider.AdminListGroupsForUserInput) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
+		m.ListGroupsForUserFunc = func(_ context.Context, _ *cognitoidentityprovider.AdminListGroupsForUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 			listGroupsForUser := &cognitoidentityprovider.AdminListGroupsForUserOutput{
 				Groups: []types.GroupType{
 					{
