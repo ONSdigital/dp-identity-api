@@ -12,8 +12,9 @@ type MockCognitoIdentityProviderClient struct { //nolint:revive // Mock here is 
 	//AddUserToGroupfunc            func(ctx context.Context, group models.Group, userId string) (*models.UsersList, *models.ErrorResponse)
 
 	AdminAddUserToGroupFunc func(ctx context.Context, input *cognito.AdminAddUserToGroupInput, optFns ...func(*cognito.Options)) (*cognito.AdminAddUserToGroupOutput, error)
-	AdminConfirmSignUpFunc  func(ctx context.Context, input *cognito.AdminConfirmSignUpInput, optFns ...func(*cognito.Options)) (*cognito.AdminConfirmSignUpOutput, error)
-	AdminCreateUserFunc     func(ctx context.Context, userInput *cognito.AdminCreateUserInput, optFns ...func(*cognito.Options)) (*cognito.AdminCreateUserOutput, error)
+
+	AdminConfirmSignUpFunc func(ctx context.Context, input *cognito.AdminConfirmSignUpInput, optFns ...func(*cognito.Options)) (*cognito.AdminConfirmSignUpOutput, error)
+	AdminCreateUserFunc    func(ctx context.Context, userInput *cognito.AdminCreateUserInput, optFns ...func(*cognito.Options)) (*cognito.AdminCreateUserOutput, error)
 	//AdminDeleteUserFunc           func(input *cognito.AdminDeleteUserInput) (*cognito.AdminDeleteUserOutput, error)
 	AdminDeleteUserFunc func(ctx context.Context, input *cognito.AdminDeleteUserInput, optFns ...func(*cognito.Options)) (*cognito.AdminDeleteUserOutput, error)
 	//AdminDisableUserFunc          func(input *cognito.AdminDisableUserInput) (*cognito.AdminDisableUserOutput, error)
@@ -64,112 +65,112 @@ type MockCognitoIdentityProviderClient struct { //nolint:revive // Mock here is 
 	//ValidateAddRemoveUserFunc  func(ctx context.Context, userId string) error
 }
 
-func (m *MockCognitoIdentityProviderClient) DescribeUserPool(ctx context.Context, poolInputData *cognito.DescribeUserPoolInput) (*cognito.DescribeUserPoolOutput, error) {
-	return m.DescribeUserPoolFunc(ctx, poolInputData)
+func (m *MockCognitoIdentityProviderClient) DescribeUserPool(ctx context.Context, poolInputData *cognito.DescribeUserPoolInput, _ ...func(*cognito.Options)) (*cognito.DescribeUserPoolOutput, error) {
+	return m.DescribeUserPoolFunc(ctx, poolInputData, nil)
 }
 
 // AdminCreateUser function
-func (m *MockCognitoIdentityProviderClient) AdminCreateUser(ctx context.Context, userInput *cognito.AdminCreateUserInput) (*cognito.AdminCreateUserOutput, error) {
-	return m.AdminCreateUserFunc(ctx, userInput)
+func (m *MockCognitoIdentityProviderClient) AdminCreateUser(ctx context.Context, userInput *cognito.AdminCreateUserInput, _ ...func(*cognito.Options)) (*cognito.AdminCreateUserOutput, error) {
+	return m.AdminCreateUserFunc(ctx, userInput, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) GlobalSignOut(ctx context.Context, signOutInput *cognito.GlobalSignOutInput) (*cognito.GlobalSignOutOutput, error) {
-	return m.GlobalSignOutFunc(ctx, signOutInput)
+func (m *MockCognitoIdentityProviderClient) GlobalSignOut(ctx context.Context, signOutInput *cognito.GlobalSignOutInput, _ ...func(*cognito.Options)) (*cognito.GlobalSignOutOutput, error) {
+	return m.GlobalSignOutFunc(ctx, signOutInput, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) ListUsers(ctx context.Context, usersInput *cognito.ListUsersInput) (*cognito.ListUsersOutput, error) {
-	return m.ListUsersFunc(ctx, usersInput)
+func (m *MockCognitoIdentityProviderClient) ListUsers(ctx context.Context, usersInput *cognito.ListUsersInput, _ ...func(*cognito.Options)) (*cognito.ListUsersOutput, error) {
+	return m.ListUsersFunc(ctx, usersInput, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) InitiateAuth(ctx context.Context, authInput *cognito.InitiateAuthInput) (*cognito.InitiateAuthOutput, error) {
-	return m.InitiateAuthFunc(ctx, authInput)
+func (m *MockCognitoIdentityProviderClient) InitiateAuth(ctx context.Context, authInput *cognito.InitiateAuthInput, _ ...func(*cognito.Options)) (*cognito.InitiateAuthOutput, error) {
+	return m.InitiateAuthFunc(ctx, authInput, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) AdminUserGlobalSignOut(ctx context.Context, adminUserGlobalSignOutInput *cognito.AdminUserGlobalSignOutInput) (*cognito.AdminUserGlobalSignOutOutput, error) {
-	return m.AdminUserGlobalSignOutFunc(ctx, adminUserGlobalSignOutInput)
+func (m *MockCognitoIdentityProviderClient) AdminUserGlobalSignOut(ctx context.Context, adminUserGlobalSignOutInput *cognito.AdminUserGlobalSignOutInput, _ ...func(*cognito.Options)) (*cognito.AdminUserGlobalSignOutOutput, error) {
+	return m.AdminUserGlobalSignOutFunc(ctx, adminUserGlobalSignOutInput, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) RespondToAuthChallenge(ctx context.Context, input *cognito.RespondToAuthChallengeInput) (*cognito.RespondToAuthChallengeOutput, error) {
-	return m.RespondToAuthChallengeFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) RespondToAuthChallenge(ctx context.Context, input *cognito.RespondToAuthChallengeInput, _ ...func(*cognito.Options)) (*cognito.RespondToAuthChallengeOutput, error) {
+	return m.RespondToAuthChallengeFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) ConfirmForgotPassword(ctx context.Context, input *cognito.ConfirmForgotPasswordInput) (*cognito.ConfirmForgotPasswordOutput, error) {
-	return m.ConfirmForgotPasswordFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) ConfirmForgotPassword(ctx context.Context, input *cognito.ConfirmForgotPasswordInput, _ ...func(*cognito.Options)) (*cognito.ConfirmForgotPasswordOutput, error) {
+	return m.ConfirmForgotPasswordFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) ForgotPassword(ctx context.Context, input *cognito.ForgotPasswordInput) (*cognito.ForgotPasswordOutput, error) {
-	return m.ForgotPasswordFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) ForgotPassword(ctx context.Context, input *cognito.ForgotPasswordInput, _ ...func(*cognito.Options)) (*cognito.ForgotPasswordOutput, error) {
+	return m.ForgotPasswordFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) AdminGetUser(ctx context.Context, input *cognito.AdminGetUserInput) (*cognito.AdminGetUserOutput, error) {
-	return m.AdminGetUserFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) AdminGetUser(ctx context.Context, input *cognito.AdminGetUserInput, _ ...func(*cognito.Options)) (*cognito.AdminGetUserOutput, error) {
+	return m.AdminGetUserFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) CreateGroup(ctx context.Context, input *cognito.CreateGroupInput) (*cognito.CreateGroupOutput, error) {
-	return m.CreateGroupFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) CreateGroup(ctx context.Context, input *cognito.CreateGroupInput, _ ...func(*cognito.Options)) (*cognito.CreateGroupOutput, error) {
+	return m.CreateGroupFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) GetGroup(ctx context.Context, input *cognito.GetGroupInput) (*cognito.GetGroupOutput, error) {
-	return m.GetGroupFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) GetGroup(ctx context.Context, input *cognito.GetGroupInput, _ ...func(*cognito.Options)) (*cognito.GetGroupOutput, error) {
+	return m.GetGroupFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) AdminUpdateUserAttributes(ctx context.Context, input *cognito.AdminUpdateUserAttributesInput) (*cognito.AdminUpdateUserAttributesOutput, error) {
-	return m.AdminUpdateUserAttributesFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) AdminUpdateUserAttributes(ctx context.Context, input *cognito.AdminUpdateUserAttributesInput, _ ...func(*cognito.Options)) (*cognito.AdminUpdateUserAttributesOutput, error) {
+	return m.AdminUpdateUserAttributesFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) AdminEnableUser(ctx context.Context, input *cognito.AdminEnableUserInput) (*cognito.AdminEnableUserOutput, error) {
-	return m.AdminEnableUserFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) AdminEnableUser(ctx context.Context, input *cognito.AdminEnableUserInput, _ ...func(*cognito.Options)) (*cognito.AdminEnableUserOutput, error) {
+	return m.AdminEnableUserFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) AdminDisableUser(ctx context.Context, input *cognito.AdminDisableUserInput) (*cognito.AdminDisableUserOutput, error) {
-	return m.AdminDisableUserFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) AdminDisableUser(ctx context.Context, input *cognito.AdminDisableUserInput, _ ...func(*cognito.Options)) (*cognito.AdminDisableUserOutput, error) {
+	return m.AdminDisableUserFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) AdminAddUserToGroup(ctx context.Context, input *cognito.AdminAddUserToGroupInput) (*cognito.AdminAddUserToGroupOutput, error) {
-	return m.AdminAddUserToGroupFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) AdminAddUserToGroup(ctx context.Context, input *cognito.AdminAddUserToGroupInput, _ ...func(*cognito.Options)) (*cognito.AdminAddUserToGroupOutput, error) {
+	return m.AdminAddUserToGroupFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) ListUsersInGroup(ctx context.Context, input *cognito.ListUsersInGroupInput) (*cognito.ListUsersInGroupOutput, error) {
-	return m.ListUsersInGroupFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) ListUsersInGroup(ctx context.Context, input *cognito.ListUsersInGroupInput, _ ...func(*cognito.Options)) (*cognito.ListUsersInGroupOutput, error) {
+	return m.ListUsersInGroupFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) AdminRemoveUserFromGroup(ctx context.Context, input *cognito.AdminRemoveUserFromGroupInput) (*cognito.AdminRemoveUserFromGroupOutput, error) {
-	return m.AdminRemoveUserFromGroupFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) AdminRemoveUserFromGroup(ctx context.Context, input *cognito.AdminRemoveUserFromGroupInput, _ ...func(*cognito.Options)) (*cognito.AdminRemoveUserFromGroupOutput, error) {
+	return m.AdminRemoveUserFromGroupFunc(ctx, input, nil)
 }
 
 func (m *MockCognitoIdentityProviderClient) AdminConfirmSignUp(ctx context.Context, input *cognito.AdminConfirmSignUpInput) (*cognito.AdminConfirmSignUpOutput, error) {
 	return m.AdminConfirmSignUpFunc(ctx, input)
 }
 
-func (m *MockCognitoIdentityProviderClient) AdminDeleteUser(ctx context.Context, input *cognito.AdminDeleteUserInput) (*cognito.AdminDeleteUserOutput, error) {
+func (m *MockCognitoIdentityProviderClient) AdminDeleteUser(ctx context.Context, input *cognito.AdminDeleteUserInput, _ ...func(*cognito.Options)) (*cognito.AdminDeleteUserOutput, error) {
 	return m.AdminDeleteUserFunc(ctx, input)
 }
 
-func (m *MockCognitoIdentityProviderClient) DeleteGroup(ctx context.Context, input *cognito.DeleteGroupInput) (*cognito.DeleteGroupOutput, error) {
-	return m.DeleteGroupFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) DeleteGroup(ctx context.Context, input *cognito.DeleteGroupInput, _ ...func(*cognito.Options)) (*cognito.DeleteGroupOutput, error) {
+	return m.DeleteGroupFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) AdminSetUserPassword(ctx context.Context, input *cognito.AdminSetUserPasswordInput) (*cognito.AdminSetUserPasswordOutput, error) {
-	return m.AdminSetUserPasswordFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) AdminSetUserPassword(ctx context.Context, input *cognito.AdminSetUserPasswordInput, _ ...func(*cognito.Options)) (*cognito.AdminSetUserPasswordOutput, error) {
+	return m.AdminSetUserPasswordFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) AdminListGroupsForUser(ctx context.Context, input *cognito.AdminListGroupsForUserInput) (*cognito.AdminListGroupsForUserOutput, error) {
-	return m.ListGroupsForUserFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) AdminListGroupsForUser(ctx context.Context, input *cognito.AdminListGroupsForUserInput, _ ...func(*cognito.Options)) (*cognito.AdminListGroupsForUserOutput, error) {
+	return m.ListGroupsForUserFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) DescribeUserPoolClient(ctx context.Context, input *cognito.DescribeUserPoolClientInput) (*cognito.DescribeUserPoolClientOutput, error) {
-	return m.DescribeUserPoolClientFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) DescribeUserPoolClient(ctx context.Context, input *cognito.DescribeUserPoolClientInput, _ ...func(*cognito.Options)) (*cognito.DescribeUserPoolClientOutput, error) {
+	return m.DescribeUserPoolClientFunc(ctx, input, nil)
 }
 
 //	func (m *MockCognitoIdentityProviderClient) ListGroupsUsers(input *cognito.ListGroupsOutput) (*[]models.ListGroupUsersType, error) {
 //		return m.ListGroupsUsersFunc(input)
 //	}
-func (m *MockCognitoIdentityProviderClient) ListGroups(ctx context.Context, input *cognito.ListGroupsInput) (*cognito.ListGroupsOutput, error) {
-	return m.ListGroupsFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) ListGroups(ctx context.Context, input *cognito.ListGroupsInput, _ ...func(*cognito.Options)) (*cognito.ListGroupsOutput, error) {
+	return m.ListGroupsFunc(ctx, input, nil)
 }
 
-func (m *MockCognitoIdentityProviderClient) UpdateGroup(ctx context.Context, input *cognito.UpdateGroupInput) (*cognito.UpdateGroupOutput, error) {
-	return m.UpdateGroupFunc(ctx, input)
+func (m *MockCognitoIdentityProviderClient) UpdateGroup(ctx context.Context, input *cognito.UpdateGroupInput, _ ...func(*cognito.Options)) (*cognito.UpdateGroupOutput, error) {
+	return m.UpdateGroupFunc(ctx, input, nil)
 }
 
 //func (m *MockCognitoIdentityProviderClient) SetGroupUsers(ctx context.Context, group models.Group, users models.UsersList) (*models.UsersList, *models.ErrorResponse) {

@@ -9,7 +9,6 @@ import (
 // NB. For a full list of the Client interface functions go to https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider#Client
 type Client interface {
 	AdminAddUserToGroup(ctx context.Context, params *cognito.AdminAddUserToGroupInput, optFns ...func(*cognito.Options)) (*cognito.AdminAddUserToGroupOutput, error)
-	//AdminConfirmSignUp(ctx context.Context, params *cognito.AdminConfirmSignUpInput, optFns ...func(*cognito.Options)) (*cognito.AdminConfirmSignUpOutput, error)
 	DescribeUserPool(ctx context.Context, params *cognito.DescribeUserPoolInput, optFns ...func(*cognito.Options)) (*cognito.DescribeUserPoolOutput, error)
 	GetGroup(ctx context.Context, params *cognito.GetGroupInput, optFns ...func(*cognito.Options)) (*cognito.GetGroupOutput, error)
 	CreateGroup(ctx context.Context, params *cognito.CreateGroupInput, optFns ...func(*cognito.Options)) (*cognito.CreateGroupOutput, error)
