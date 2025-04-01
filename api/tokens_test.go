@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/smithy-go"
 	"net/http"
@@ -26,35 +27,35 @@ func TestAPI_TokensHandler(t *testing.T) {
 	var (
 		ctx                                      = context.Background()
 		accessToken, idToken, refreshToken       = "aaaa.bbbb.cccc", "llll.mmmm.nnnn", "zzzz.yyyy.xxxx.wwww.vvvv"
-		expireLength                       int64 = 500
+		expireLength                       int32 = 500
 	)
 
 	api, w, m := apiSetup()
 
 	// mock call to: AdminUserGlobalSignOut(input *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
-	m.AdminUserGlobalSignOutFunc = func(_ *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+	m.AdminUserGlobalSignOutFunc = func(_ context.Context, _ *cognitoidentityprovider.AdminUserGlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 		return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 	}
 	// mock call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-	m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+	m.InitiateAuthFunc = func(_ context.Context, _ *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 		return &cognitoidentityprovider.InitiateAuthOutput{
-			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
+			AuthenticationResult: &types.AuthenticationResultType{
 				AccessToken:  &accessToken,
-				ExpiresIn:    &expireLength,
+				ExpiresIn:    expireLength,
 				IdToken:      &idToken,
 				RefreshToken: &refreshToken,
 			},
 		}, nil
 	}
-	m.DescribeUserPoolClientFunc = func(_ *cognitoidentityprovider.DescribeUserPoolClientInput) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
-		tokenValidDays := int64(1)
-		refreshTokenUnits := cognitoidentityprovider.TimeUnitsTypeDays
+	m.DescribeUserPoolClientFunc = func(_ context.Context, _ *cognitoidentityprovider.DescribeUserPoolClientInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
+		tokenValidDays := int32(1)
+		refreshTokenUnits := types.TimeUnitsTypeDays
 
 		userPoolClient := &cognitoidentityprovider.DescribeUserPoolClientOutput{
-			UserPoolClient: &cognitoidentityprovider.UserPoolClientType{
-				RefreshTokenValidity: &tokenValidDays,
-				TokenValidityUnits: &cognitoidentityprovider.TokenValidityUnitsType{
-					RefreshToken: &refreshTokenUnits,
+			UserPoolClient: &types.UserPoolClientType{
+				RefreshTokenValidity: tokenValidDays,
+				TokenValidityUnits: &types.TokenValidityUnitsType{
+					RefreshToken: refreshTokenUnits,
 				},
 			},
 		}
@@ -108,7 +109,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 			Fault:   awsOrigErr,
 		}
 		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-		m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+		m.InitiateAuthFunc = func(_ context.Context, _ *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			return nil, awsErr
 		}
 
@@ -156,7 +157,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 				Fault:   smithy.ErrorFault(1),
 			}
 			// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-			m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+			m.InitiateAuthFunc = func(_ context.Context, _ *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 				return nil, awsErr
 			}
 
@@ -186,11 +187,11 @@ func TestAPI_TokensHandler(t *testing.T) {
 		)
 
 		// mock call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-		m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
-			challengeName := "NEW_PASSWORD_REQUIRED"
+		m.InitiateAuthFunc = func(_ context.Context, _ *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+			challengeName := types.ChallengeNameTypeNewPasswordRequired
 			return &cognitoidentityprovider.InitiateAuthOutput{
 				AuthenticationResult: nil,
-				ChallengeName:        &challengeName,
+				ChallengeName:        challengeName,
 				Session:              &sessionID,
 			}, nil
 		}
@@ -221,7 +222,7 @@ func TestAPI_SignOutHandler(t *testing.T) {
 	api, w, m := apiSetup()
 
 	// mock call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
-	m.GlobalSignOutFunc = func(_ *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+	m.GlobalSignOutFunc = func(_ context.Context, _ *cognitoidentityprovider.GlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 		return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
 	}
 
@@ -252,7 +253,7 @@ func TestAPI_SignOutHandler(t *testing.T) {
 		awsOrigErr := errors.New(awsErrCode)
 		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
-		m.GlobalSignOutFunc = func(_ *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+		m.GlobalSignOutFunc = func(_ context.Context, _ *cognitoidentityprovider.GlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 			return nil, awsErr
 		}
 
@@ -279,7 +280,7 @@ func TestAPI_SignOutHandler(t *testing.T) {
 			Fault:   awsOrigErr,
 		}
 		// mock failed call to: GlobalSignOut(input *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error)
-		m.GlobalSignOutFunc = func(_ *cognitoidentityprovider.GlobalSignOutInput) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
+		m.GlobalSignOutFunc = func(_ context.Context, _ *cognitoidentityprovider.GlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 			return nil, awsErr
 		}
 
@@ -299,17 +300,17 @@ func TestAPI_RefreshHandler(t *testing.T) {
 	var (
 		ctx                              = context.Background()
 		accessToken, returnIDToken       = "aaaa.bbbb.cccc", "llll.mmmm.nnnn"
-		expireLength               int64 = 500
+		expireLength               int32 = 500
 	)
 
 	api, w, m := apiSetup()
 
 	// mock call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-	m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+	m.InitiateAuthFunc = func(_ context.Context, _ *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 		return &cognitoidentityprovider.InitiateAuthOutput{
-			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
+			AuthenticationResult: &types.AuthenticationResultType{
 				AccessToken: &accessToken,
-				ExpiresIn:   &expireLength,
+				ExpiresIn:   expireLength,
 				IdToken:     &returnIDToken,
 			},
 		}, nil
@@ -349,7 +350,7 @@ func TestAPI_RefreshHandler(t *testing.T) {
 		awsOrigErr := errors.New(awsErrCode)
 		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-		m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+		m.InitiateAuthFunc = func(_ context.Context, _ *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			return nil, awsErr
 		}
 
@@ -379,7 +380,7 @@ func TestAPI_RefreshHandler(t *testing.T) {
 			Fault:   awsOrigErr,
 		}
 		// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
-		m.InitiateAuthFunc = func(_ *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error) {
+		m.InitiateAuthFunc = func(_ context.Context, _ *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			return nil, awsErr
 		}
 
@@ -405,18 +406,18 @@ func TestSignOutAllUsersHandlerAccessForProcessing(t *testing.T) {
 
 	Convey("Testing users global signout - handler", t, func() {
 		signOutAllUsersTests := []struct {
-			listUsersFunction              func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
-			adminUserGlobalSignOutFunction func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
+			listUsersFunction              func(_ context.Context, userInput *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error)
+			adminUserGlobalSignOutFunction func(_ context.Context, signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
 			httpResponse                   int
 		}{
 			{
 				// 200 response from Cognito - 202 from identity api
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := mock.BulkGenerateUsers(3, nil)
 					users.PaginationToken = nil
 					return users, nil
 				},
-				func(_ *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminUserGlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 					return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 				},
 				http.StatusAccepted,
@@ -441,18 +442,18 @@ func TestSignOutAllUsersHandlerInternalServerError(t *testing.T) {
 
 	Convey("Testing users global signout - handler", t, func() {
 		signOutAllUsersTests := []struct {
-			listUsersFunction              func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
-			adminUserGlobalSignOutFunction func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
+			listUsersFunction              func(_ context.Context, userInput *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error)
+			adminUserGlobalSignOutFunction func(_ context.Context, signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
 			httpResponse                   int
 		}{
 			{
 				// 500 response from Cognito's ListUsers API endpoint
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					awsOrigErr := errors.New(awsErrCode)
 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					return nil, awsErr
 				},
-				func(_ *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminUserGlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 					return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 				},
 				http.StatusInternalServerError,
@@ -485,8 +486,8 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 
 	Convey("Testing users global signout - go routine", t, func() {
 		signOutAllUsersTests := []struct {
-			listUsersFunction              func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
-			adminUserGlobalSignOutFunction func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
+			listUsersFunction              func(_ context.Context, userInput *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error)
+			adminUserGlobalSignOutFunction func(_ context.Context, signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
 			globalUserSignOutMod           models.GlobalSignOut
 			numberOfUsers                  int
 			expectedResults                int
@@ -494,12 +495,12 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 		}{
 			{
 				// 200 response from Cognito - 202 from identity api
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := mock.BulkGenerateUsers(3, nil)
 					users.PaginationToken = nil
 					return users, nil
 				},
-				func(_ *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminUserGlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 					return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 				},
 				models.GlobalSignOut{
@@ -517,12 +518,12 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 			},
 			{
 				// 500 response from Cognito
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := mock.BulkGenerateUsers(3, userNamesList)
 					users.PaginationToken = nil
 					return users, nil
 				},
-				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+				func(_ context.Context, signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 					if *signOutInput.Username == userNamesList[3] {
 						awsOrigErr := errors.New(awsErrCode)
 						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
@@ -545,12 +546,12 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 			},
 			{
 				// 429 response from Cognito
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					users := mock.BulkGenerateUsers(10, userNamesList)
 					users.PaginationToken = nil
 					return users, nil
 				},
-				func(signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
+				func(_ context.Context, signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 					if *signOutInput.Username == userNamesList[3] {
 						awsErrCode := "TooManyRequestsException"
 						awsErrMessage := "Too many requets received"
@@ -607,13 +608,13 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 			errCode int
 		)
 		getAllUsersTests := []struct {
-			listUsersFunction func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
+			listUsersFunction func(_ context.Context, userInput *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error)
 			BackoffSchedule   []time.Duration
 			expectedUserNumb  int
 			httpResponse      []int
 		}{
 			{
-				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, userInput *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					if userInput.PaginationToken != nil {
 						users := mock.BulkGenerateUsers(3, nil)
 						users.PaginationToken = nil
@@ -630,7 +631,7 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 				},
 			},
 			{
-				func(_ *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					awsOrigErr := errors.New(awsErrCode)
 					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					return nil, awsErr
@@ -642,7 +643,7 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 				},
 			},
 			{
-				func(userInput *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error) {
+				func(_ context.Context, userInput *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					if userInput.PaginationToken != nil {
 						awsOrigErr := errors.New(awsErrCode)
 						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
