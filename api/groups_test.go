@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/aws/smithy-go"
+
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -17,7 +18,7 @@ import (
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	//"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -705,8 +706,7 @@ func TestGetUsersFromGroupHandler(t *testing.T) {
 			},
 		}
 		listOfUsers := models.UsersList{}
-		listOfUsers.MapCognitoUsers(&cognitoResponse.Users)
-
+		listOfUsers.Users, listOfUsers.Count = listOfUsers.MapCognitoUsers(&cognitoResponse.Users)
 		So(len(listOfUsers.Users), ShouldEqual, len(cognitoResponse.Users))
 		So(listOfUsers.Count, ShouldEqual, len(cognitoResponse.Users))
 	})
@@ -1421,8 +1421,14 @@ func TestListGroupsHandler(t *testing.T) {
 				func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					awsErrCode := "InternalErrorException"
 					awsErrMessage := internalErrorDescription
-					awsOrigErr := errors.New(awsErrCode)
-					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					//awsOrigErr := errors.New(awsErrCode)
+					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					awsOrigErr := smithy.ErrorFault(1) //server error
+					awsErr := &smithy.GenericAPIError{
+						Code:    awsErrCode,
+						Message: awsErrMessage,
+						Fault:   awsOrigErr,
+					}
 					return nil, awsErr
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -1798,8 +1804,14 @@ func TestSetGroupUsersHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					awsErrCode := "InternalErrorException"
 					awsErrMessage := internalErrorDescription
-					awsOrigErr := errors.New(awsErrCode)
-					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					//awsOrigErr := errors.New(awsErrCode)
+					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					awsOrigErr := smithy.ErrorFault(1) //server error
+					awsErr := &smithy.GenericAPIError{
+						Code:    awsErrCode,
+						Message: awsErrMessage,
+						Fault:   awsOrigErr,
+					}
 					return nil, awsErr
 				},
 				func(_ context.Context, _ models.Group, _ models.UsersList) (*models.UsersList, *models.ErrorResponse) {
@@ -2040,8 +2052,14 @@ func TestSetGroupUsers(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					awsErrCode := "InternalErrorException"
 					awsErrMessage := internalErrorDescription
-					awsOrigErr := errors.New(awsErrCode)
-					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					//awsOrigErr := errors.New(awsErrCode)
+					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					awsOrigErr := smithy.ErrorFault(1) //server error
+					awsErr := &smithy.GenericAPIError{
+						Code:    awsErrCode,
+						Message: awsErrMessage,
+						Fault:   awsOrigErr,
+					}
 					return nil, awsErr
 				},
 				models.Group{

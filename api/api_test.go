@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	//"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/smithy-go"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -38,7 +39,6 @@ func TestSetup(t *testing.T) {
 		ctx := context.Background()
 
 		m := &mock.MockCognitoIdentityProviderClient{}
-		//m.CreateGroupFunc = func(ctx context.Context, *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error) {
 		m.CreateGroupFunc = func(ctx context.Context, input *cognitoidentityprovider.CreateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.CreateGroupOutput, error) {
 			group := &cognitoidentityprovider.CreateGroupOutput{
 				Group: &types.GroupType{},
@@ -324,15 +324,16 @@ func TestInitialiseRoleGroups(t *testing.T) {
 				// admin group exists
 				func(ctx context.Context, input *cognitoidentityprovider.CreateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.CreateGroupOutput, error) {
 					if *input.GroupName == models.AdminRoleGroup {
-						//awsErrCode := "GroupExistsException"
-						//awsErrMessage := "This group exists"
 						//awsOrigErr := errors.New(awsErrCode)
 						//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
-						//return nil, awsErr
 						awsErrCode := "GroupExistsException"
 						awsErrMessage := "This group exists"
-						awsOrigErr := errors.New(awsErrCode)
-						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						awsOrigErr := smithy.ErrorFault(2) //client error
+						awsErr := &smithy.GenericAPIError{
+							Code:    awsErrCode,
+							Message: awsErrMessage,
+							Fault:   awsOrigErr,
+						}
 						return nil, awsErr
 					}
 					group := &cognitoidentityprovider.CreateGroupOutput{
@@ -348,8 +349,14 @@ func TestInitialiseRoleGroups(t *testing.T) {
 					if *input.GroupName == models.PublisherRoleGroup {
 						awsErrCode := "GroupExistsException"
 						awsErrMessage := "This group exists"
-						awsOrigErr := errors.New(awsErrCode)
-						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						//awsOrigErr := errors.New(awsErrCode)
+						//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						awsOrigErr := smithy.ErrorFault(2) //client error
+						awsErr := &smithy.GenericAPIError{
+							Code:    awsErrCode,
+							Message: awsErrMessage,
+							Fault:   awsOrigErr,
+						}
 						return nil, awsErr
 					}
 					group := &cognitoidentityprovider.CreateGroupOutput{
@@ -362,8 +369,14 @@ func TestInitialiseRoleGroups(t *testing.T) {
 			{
 				// create group internal error
 				func(ctx context.Context, _ *cognitoidentityprovider.CreateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.CreateGroupOutput, error) {
-					awsOrigErr := errors.New(awsErrCode)
-					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					//awsOrigErr := errors.New(awsErrCode)
+					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					awsOrigErr := smithy.ErrorFault(1) //server error
+					awsErr := &smithy.GenericAPIError{
+						Code:    awsErrCode,
+						Message: awsErrMessage,
+						Fault:   awsOrigErr,
+					}
 					return nil, awsErr
 				},
 				models.NewError(ctx, nil, models.InternalError, "Something weird happened"),

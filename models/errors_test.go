@@ -3,6 +3,7 @@ package models_test
 import (
 	"context"
 	"errors"
+	"github.com/aws/smithy-go"
 	"testing"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
@@ -110,8 +111,12 @@ func TestMapCognitoErrorToLocalError(t *testing.T) {
 	Convey("correctly maps the Cognito error code to the ONS error code", t, func() {
 		for cognitoCode, expectedONSCode := range models.CognitoErrorMapping {
 			awsErrMessage := "an error occurred"
-			awsOrigErr := errors.New(cognitoCode)
-			awsErr := awserr.New(cognitoCode, awsErrMessage, awsOrigErr)
+			//awsOrigErr := errors.New(cognitoCode)
+			//awsErr := awserr.New(cognitoCode, awsErrMessage, awsOrigErr)
+			awsErr := &smithy.GenericAPIError{
+				Code:    cognitoCode,
+				Message: awsErrMessage,
+			}
 			actualONSCode := models.MapCognitoErrorToLocalError(ctx, awsErr)
 
 			So(actualONSCode, ShouldEqual, expectedONSCode)
@@ -121,8 +126,12 @@ func TestMapCognitoErrorToLocalError(t *testing.T) {
 	Convey("returns internal error code when unmapped Cognito code provided", t, func() {
 		cognitoCode := "EverythingIsOK"
 		awsErrMessage := "an error occurred"
-		awsOrigErr := errors.New(cognitoCode)
-		awsErr := awserr.New(cognitoCode, awsErrMessage, awsOrigErr)
+		//awsOrigErr := errors.New(cognitoCode)
+		//awsErr := awserr.New(cognitoCode, awsErrMessage, awsOrigErr)
+		awsErr := &smithy.GenericAPIError{
+			Code:    cognitoCode,
+			Message: awsErrMessage,
+		}
 		actualONSCode := models.MapCognitoErrorToLocalError(ctx, awsErr)
 
 		So(actualONSCode, ShouldEqual, models.InternalError)

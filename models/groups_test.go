@@ -3,14 +3,15 @@ package models_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"net/http"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -157,10 +158,10 @@ func TestGroup_MapCognitoDetails(t *testing.T) {
 		group := models.Group{}
 
 		timestamp := time.Now()
-		response := &cognitoidentityprovider.GroupType{
+		response := types.GroupType{
 			Description:  aws.String("A test group"),
 			GroupName:    aws.String("test-group"),
-			Precedence:   aws.Int64(1),
+			Precedence:   aws.Int32(1),
 			CreationDate: &timestamp,
 		}
 
@@ -176,7 +177,7 @@ func TestGroup_BuildSuccessfulJsonResponse(t *testing.T) {
 	Convey("returns a byte array of the response JSON", t, func() {
 		ctx := context.Background()
 		id, name := "test-group", "a test group"
-		precedence := int64(100)
+		precedence := int32(100)
 		group := models.Group{
 			ID:         id,
 			Name:       name,
@@ -264,10 +265,10 @@ func TestGroup_BuildListGroupsSuccessfulJsonResponse(t *testing.T) {
 	Convey("returns a byte array of the response JSON", t, func() {
 		ctx := context.Background()
 		name, description := "test-group", "a test group"
-		precedence := int64(100)
+		precedence := int32(100)
 		group := models.ListUserGroups{}
 		results := &cognitoidentityprovider.ListGroupsOutput{
-			Groups: []*cognitoidentityprovider.GroupType{
+			Groups: []types.GroupType{
 				{
 					GroupName:   &name,
 					Description: &description,
@@ -316,11 +317,11 @@ func TestGroup_ValidateCreateUpdateGroupRequest(t *testing.T) {
 		ctx           = context.Background()
 		name          = "This^& is a £Tes\\t GRoup n%$ame"
 		nameWithRole  = "role-This^& is a £Tes\t GRoup n%$ame"
-		precedence    = int64(100)
-		lowPrecedence = int64(1)
+		precedence    = int32(100)
+		lowPrecedence = int32(1)
 		d             = "thisisatestgroupname"
 		g             = "123e4567-e89b-12d3-a456-426614174000"
-		p             = int64(12)
+		p             = int32(12)
 	)
 
 	Convey("No errors generated", t, func() {
@@ -418,7 +419,7 @@ func TestGroup_ValidateCreateUpdateGroupRequest(t *testing.T) {
 					Precedence: &precedence,
 					GroupsList: &cognitoidentityprovider.ListGroupsOutput{
 						NextToken: nil,
-						Groups: []*cognitoidentityprovider.GroupType{
+						Groups: []types.GroupType{
 							{
 								Description: &d,
 								GroupName:   &g,
@@ -455,7 +456,7 @@ func TestGroup_BuildCreateUpdateGroupRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito CreateUpdateGroup request body", t, func() {
 		var (
 			name       = "This^& is a £Tes\t GRoup n%$ame"
-			precedence = int64(100)
+			precedence = int32(100)
 			groupName  = "123e4567-e89b-12d3-a456-426614174000"
 		)
 
@@ -481,7 +482,7 @@ func TestGroup_BuildCreateUpdateGroupSuccessfulJsonResponse(t *testing.T) {
 		var (
 			ctx        = context.Background()
 			name       = "This^& is a £Tes\t GRoup n%$ame"
-			precedence = int64(100)
+			precedence = int32(100)
 			groupName  = "123e4567-e89b-12d3-a456-426614174000"
 		)
 
@@ -507,7 +508,7 @@ func TestGroup_CreateUpdateGroupCleanGroupName(t *testing.T) {
 	Convey("return a cleaned group name from description", t, func() {
 		var (
 			name       = "This^& is a £Tes\\t GRoup n%$ame"
-			precedence = int64(100)
+			precedence = int32(100)
 			groupName  = "123e4567-e89b-12d3-a456-426614174000"
 		)
 
@@ -526,7 +527,7 @@ func TestGroup_CreateUpdateGroupNewSuccessResponse(t *testing.T) {
 		var (
 			ctx        = context.Background()
 			name       = "thisisatestgroupname"
-			precedence = int64(100)
+			precedence = int32(100)
 			groupName  = "123e4567-e89b-12d3-a456-426614174000"
 		)
 

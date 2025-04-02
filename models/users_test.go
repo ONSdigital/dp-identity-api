@@ -3,14 +3,15 @@ package models_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/v2/api"
 	"github.com/ONSdigital/dp-identity-api/v2/models"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -31,7 +32,7 @@ func TestUsersList_BuildListUserRequest(t *testing.T) {
 
 		filterString := "email = \"" + user.Email + "\""
 		requiredAttribute := "email"
-		limit := int64(1)
+		limit := int32(1)
 
 		userPoolIDVar := userPoolID
 		response := models.UsersList{}.BuildListUserRequest(filterString, requiredAttribute, limit, nil, &userPoolIDVar)
@@ -40,28 +41,28 @@ func TestUsersList_BuildListUserRequest(t *testing.T) {
 		So(*response.UserPoolId, ShouldEqual, userPoolID)
 		So(*response.Limit, ShouldEqual, limit)
 		So(*response.Filter, ShouldEqual, filterString)
-		So(*response.AttributesToGet[0], ShouldEqual, requiredAttribute)
+		So(response.AttributesToGet[0], ShouldEqual, requiredAttribute)
 	})
 }
 
 func TestUsersList_MapCognitoUsers(t *testing.T) {
 	Convey("adds the returned users to the users attribute and sets the count", t, func() {
 		cognitoResponse := cognitoidentityprovider.ListUsersOutput{
-			Users: []*cognitoidentityprovider.UserType{
+			Users: []types.UserType{
 				{
-					Enabled:    aws.Bool(true),
-					UserStatus: aws.String("CONFIRMED"),
+					Enabled:    true,
+					UserStatus: types.UserStatusTypeConfirmed,
 					Username:   aws.String("user-1"),
 				},
 				{
-					Enabled:    aws.Bool(true),
-					UserStatus: aws.String("CONFIRMED"),
+					Enabled:    true,
+					UserStatus: types.UserStatusTypeConfirmed,
 					Username:   aws.String("user-2"),
 				},
 			},
 		}
 		userList := models.UsersList{}
-		userList.MapCognitoUsers(&cognitoResponse.Users)
+		userList.Users, userList.Count = userList.MapCognitoUsers(&cognitoResponse.Users)
 
 		So(len(userList.Users), ShouldEqual, len(cognitoResponse.Users))
 		So(userList.Count, ShouldEqual, len(cognitoResponse.Users))
@@ -101,7 +102,8 @@ func TestUsersList_SetUsers(t *testing.T) {
 func TestUsersList_BuildSuccessfulJsonResponse(t *testing.T) {
 	Convey("returns a byte array of the response JSON", t, func() {
 		ctx := context.Background()
-		name, status := "abcd-efgh-ijkl-mnop", "UNCONFIRMED"
+		name := "abcd-efgh-ijkl-mnop"
+		status := types.UserStatusTypeUnconfirmed
 		user := models.UserParams{
 			Status: status,
 			ID:     name,
@@ -344,7 +346,7 @@ func TestUserParams_CheckForDuplicateEmail(t *testing.T) {
 		}
 
 		listUserResponse := cognitoidentityprovider.ListUsersOutput{
-			Users: []*cognitoidentityprovider.UserType{},
+			Users: []types.UserType{},
 		}
 
 		err := user.CheckForDuplicateEmail(ctx, &listUserResponse)
@@ -359,12 +361,13 @@ func TestUserParams_CheckForDuplicateEmail(t *testing.T) {
 			Lastname: "Smith",
 		}
 
-		name, status := "abcd-efgh-ijkl-mnop", "UNCONFIRMED"
+		name := "abcd-efgh-ijkl-mnop"
+		status := types.UserStatusTypeUnconfirmed
 		listUserResponse := cognitoidentityprovider.ListUsersOutput{
-			Users: []*cognitoidentityprovider.UserType{
+			Users: []types.UserType{
 				{
 					Username:   &name,
-					UserStatus: &status,
+					UserStatus: status,
 				},
 			},
 		}
@@ -419,7 +422,8 @@ func TestUserParams_BuildUpdateUserRequest(t *testing.T) {
 func TestUserParams_BuildSuccessfulJsonResponse(t *testing.T) {
 	Convey("returns a byte array of the response JSON", t, func() {
 		ctx := context.Background()
-		name, status := "abcd-efgh-ijkl-mnop", "UNCONFIRMED"
+		name := "abcd-efgh-ijkl-mnop"
+		status := types.UserStatusTypeUnconfirmed
 		createdUser := models.UserParams{
 			Status: status,
 			ID:     name,
@@ -481,9 +485,10 @@ func TestUserParams_BuildDisableUserRequest(t *testing.T) {
 
 func TestUserParams_MapCognitoDetails(t *testing.T) {
 	Convey("maps the returned user details to the UserParam attributes", t, func() {
-		var forename, surname, email, status, id = "Bob", "Smith", "email@ons.gov.uk", "CONFIRMED", "user-1"
-		cognitoUser := cognitoidentityprovider.UserType{
-			Attributes: []*cognitoidentityprovider.AttributeType{
+		var forename, surname, email, id = "Bob", "Smith", "email@ons.gov.uk", "user-1"
+		status := types.UserStatusTypeConfirmed
+		cognitoUser := types.UserType{
+			Attributes: []types.AttributeType{
 				{
 					Name:  aws.String("given_name"),
 					Value: &forename,
@@ -497,11 +502,11 @@ func TestUserParams_MapCognitoDetails(t *testing.T) {
 					Value: &email,
 				},
 			},
-			UserStatus: &status,
+			UserStatus: status,
 			Username:   &id,
-			Enabled:    aws.Bool(true),
+			Enabled:    true,
 		}
-		user := models.UserParams{}.MapCognitoDetails(&cognitoUser)
+		user := models.UserParams{}.MapCognitoDetails(cognitoUser)
 
 		So(user.Forename, ShouldEqual, forename)
 		So(user.Lastname, ShouldEqual, surname)
@@ -513,9 +518,10 @@ func TestUserParams_MapCognitoDetails(t *testing.T) {
 
 func TestUserParams_MapCognitoGetResponse(t *testing.T) {
 	Convey("maps the returned user details to the UserParam attributes", t, func() {
-		var forename, surname, email, status, id = "Bob", "Smith", "email@ons.gov.uk", "CONFIRMED", "user-1"
+		var forename, surname, email, id = "Bob", "Smith", "email@ons.gov.uk", "user-1"
+		status := types.UserStatusTypeConfirmed
 		cognitoUser := cognitoidentityprovider.AdminGetUserOutput{
-			UserAttributes: []*cognitoidentityprovider.AttributeType{
+			UserAttributes: []types.AttributeType{
 				{
 					Name:  aws.String("given_name"),
 					Value: &forename,
@@ -529,9 +535,9 @@ func TestUserParams_MapCognitoGetResponse(t *testing.T) {
 					Value: &email,
 				},
 			},
-			UserStatus: &status,
+			UserStatus: status,
 			Username:   &id,
-			Enabled:    aws.Bool(true),
+			Enabled:    true,
 		}
 		user := models.UserParams{ID: id}
 		user.MapCognitoGetResponse(&cognitoUser)
@@ -644,14 +650,14 @@ func TestUserSignIn_BuildCognitoRequest(t *testing.T) {
 			Password: "password",
 		}
 
-		clientAuthFlow := "authflow"
+		clientAuthFlow := types.AuthFlowTypeUserAuth //"authflow"
 
 		response := signIn.BuildCognitoRequest(clientID, clientSecret, clientAuthFlow)
 
-		So(*response.AuthParameters["USERNAME"], ShouldEqual, signIn.Email)
-		So(*response.AuthParameters["PASSWORD"], ShouldEqual, signIn.Password)
-		So(*response.AuthParameters["SECRET_HASH"], ShouldNotBeEmpty)
-		So(*response.AuthFlow, ShouldResemble, "authflow")
+		So(response.AuthParameters["USERNAME"], ShouldEqual, signIn.Email)
+		So(response.AuthParameters["PASSWORD"], ShouldEqual, signIn.Password)
+		So(response.AuthParameters["SECRET_HASH"], ShouldNotBeEmpty)
+		So(response.AuthFlow, ShouldResemble, "authflow")
 		So(*response.ClientId, ShouldResemble, "awsclientid")
 	})
 }
@@ -672,11 +678,11 @@ func TestUserSignIn_BuildSuccessfulJsonResponse(t *testing.T) {
 	})
 
 	Convey("returns a byte array of the response JSON", t, func() {
-		var expirationLength int64 = 300
+		var expirationLength int32 = 300
 		signIn := models.UserSignIn{}
 		result := cognitoidentityprovider.InitiateAuthOutput{
-			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
-				ExpiresIn: &expirationLength,
+			AuthenticationResult: &types.AuthenticationResultType{
+				ExpiresIn: expirationLength,
 			},
 		}
 
@@ -793,10 +799,10 @@ func TestChangePassword_BuildAuthChallengeResponseRequest(t *testing.T) {
 
 		response := passwordChangeParams.BuildAuthChallengeResponseRequest(clientSecret, clientID, api.NewPasswordChallenge)
 
-		So(*response.ChallengeResponses["USERNAME"], ShouldEqual, passwordChangeParams.Email)
-		So(*response.ChallengeResponses["NEW_PASSWORD"], ShouldEqual, passwordChangeParams.NewPassword)
-		So(*response.ChallengeResponses["SECRET_HASH"], ShouldNotBeEmpty)
-		So(*response.ChallengeName, ShouldEqual, api.NewPasswordChallenge)
+		So(response.ChallengeResponses["USERNAME"], ShouldEqual, passwordChangeParams.Email)
+		So(response.ChallengeResponses["NEW_PASSWORD"], ShouldEqual, passwordChangeParams.NewPassword)
+		So(response.ChallengeResponses["SECRET_HASH"], ShouldNotBeEmpty)
+		So(response.ChallengeName, ShouldEqual, api.NewPasswordChallenge)
 		So(*response.Session, ShouldEqual, passwordChangeParams.Session)
 		So(*response.ClientId, ShouldResemble, clientID)
 	})
@@ -818,11 +824,11 @@ func TestChangePassword_BuildAuthChallengeSuccessfulJsonResponse(t *testing.T) {
 	})
 
 	Convey("returns a byte array of the response JSON", t, func() {
-		var expirationLength int64 = 300
+		var expirationLength int32 = 300
 		passwordChangeParams := models.ChangePassword{}
 		result := cognitoidentityprovider.RespondToAuthChallengeOutput{
-			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
-				ExpiresIn: &expirationLength,
+			AuthenticationResult: &types.AuthenticationResultType{
+				ExpiresIn: expirationLength,
 			},
 		}
 
@@ -1021,13 +1027,13 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 
 		timestamp := time.Now()
 		result := &cognitoidentityprovider.AdminListGroupsForUserOutput{
-			Groups: []*cognitoidentityprovider.GroupType{
+			Groups: []types.GroupType{
 				{
 					CreationDate:     &timestamp,
 					Description:      aws.String("A test group1"),
 					GroupName:        aws.String("test-group1"),
 					LastModifiedDate: &timestamp,
-					Precedence:       aws.Int64(4),
+					Precedence:       aws.Int32(4),
 					RoleArn:          aws.String(""),
 					UserPoolId:       aws.String(""),
 				},
@@ -1036,7 +1042,7 @@ func TestListUserGroups_BuildListUserGroupsSuccessfulJsonResponse(t *testing.T) 
 					Description:      aws.String("A test group1"),
 					GroupName:        aws.String("test-group1"),
 					LastModifiedDate: &timestamp,
-					Precedence:       aws.Int64(4),
+					Precedence:       aws.Int32(4),
 					RoleArn:          aws.String(""),
 					UserPoolId:       aws.String(""),
 				},
