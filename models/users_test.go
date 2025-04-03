@@ -92,7 +92,7 @@ func TestUsersList_SetUsers(t *testing.T) {
 			},
 		}
 		userList := models.UsersList{}
-		userList.SetUsers(&listOfUsers)
+		userList.Users, userList.Count = userList.SetUsers(&listOfUsers)
 
 		So(len(userList.Users), ShouldEqual, len(listOfUsers))
 		So(userList.Count, ShouldEqual, len(listOfUsers))
@@ -126,7 +126,7 @@ func TestUsersList_BuildSuccessfulJsonResponse(t *testing.T) {
 		usersJSON := body["users"].([]interface{})
 		userJSON := usersJSON[0].(map[string]interface{})
 		So(userJSON["id"], ShouldEqual, name)
-		So(userJSON["status"], ShouldEqual, status)
+		So(userJSON["status"], ShouldEqual, "UNCONFIRMED")
 	})
 }
 
@@ -136,7 +136,8 @@ func TestUserParams_GeneratePassword(t *testing.T) {
 
 		user := models.UserParams{}
 
-		err := user.GeneratePassword(ctx)
+		var err error
+		user.Password, err = user.GeneratePassword(ctx)
 
 		So(err, ShouldBeNil)
 		So(user.Password, ShouldNotBeNil)
@@ -437,7 +438,7 @@ func TestUserParams_BuildSuccessfulJsonResponse(t *testing.T) {
 		err = json.Unmarshal(response, &userJSON)
 		So(err, ShouldBeNil)
 		So(userJSON["id"], ShouldEqual, name)
-		So(userJSON["status"], ShouldEqual, status)
+		So(userJSON["status"], ShouldEqual, "UNCONFIRMED")
 	})
 }
 
@@ -540,7 +541,7 @@ func TestUserParams_MapCognitoGetResponse(t *testing.T) {
 			Enabled:    true,
 		}
 		user := models.UserParams{ID: id}
-		user.MapCognitoGetResponse(&cognitoUser)
+		user = user.MapCognitoGetResponse(&cognitoUser)
 
 		So(user.Forename, ShouldEqual, forename)
 		So(user.Lastname, ShouldEqual, surname)
@@ -650,14 +651,14 @@ func TestUserSignIn_BuildCognitoRequest(t *testing.T) {
 			Password: "password",
 		}
 
-		clientAuthFlow := types.AuthFlowTypeUserAuth //"authflow"
+		clientAuthFlow := types.AuthFlowTypeUserAuth
 
 		response := signIn.BuildCognitoRequest(clientID, clientSecret, clientAuthFlow)
 
 		So(response.AuthParameters["USERNAME"], ShouldEqual, signIn.Email)
 		So(response.AuthParameters["PASSWORD"], ShouldEqual, signIn.Password)
 		So(response.AuthParameters["SECRET_HASH"], ShouldNotBeEmpty)
-		So(response.AuthFlow, ShouldResemble, "authflow")
+		So(response.AuthFlow, ShouldResemble, types.AuthFlowTypeUserAuth)
 		So(*response.ClientId, ShouldResemble, "awsclientid")
 	})
 }

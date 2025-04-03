@@ -82,9 +82,10 @@ func (p UsersList) MapCognitoUsers(cognitoResults *[]types.UserType) ([]UserPara
 }
 
 // SetUsers sets the UsersList Users attribute and sets the Count attribute
-func (p UsersList) SetUsers(usersList *[]UserParams) {
+func (p UsersList) SetUsers(usersList *[]UserParams) ([]UserParams, int) {
 	p.Users = *usersList
 	p.Count = len(p.Users)
+	return p.Users, p.Count
 }
 
 // BuildSuccessfulJSONResponse builds the UsersList response json for client responses
@@ -110,13 +111,13 @@ type UserParams struct {
 }
 
 // GeneratePassword creates a password for the user and assigns it to the struct
-func (p UserParams) GeneratePassword(ctx context.Context) error {
+func (p UserParams) GeneratePassword(ctx context.Context) (string, error) {
 	tempPassword, err := password.Generate(14, 1, 1, false, false)
 	if err != nil {
-		return NewError(ctx, err, InternalError, PasswordGenerationErrorDescription)
+		return "", NewError(ctx, err, InternalError, PasswordGenerationErrorDescription)
 	}
 	p.Password = tempPassword
-	return nil
+	return p.Password, nil
 }
 
 // ValidateRegistration validates the required fields for user creation, returning validation errors for any failures
@@ -292,7 +293,7 @@ func (p UserParams) MapCognitoDetails(userDetails types.UserType) UserParams {
 }
 
 // MapCognitoGetResponse maps the details from the Cognito GetUser User model to the UserParams model
-func (p UserParams) MapCognitoGetResponse(userDetails *cognitoidentityprovider.AdminGetUserOutput) {
+func (p UserParams) MapCognitoGetResponse(userDetails *cognitoidentityprovider.AdminGetUserOutput) UserParams {
 	for _, attr := range userDetails.UserAttributes {
 		if *attr.Name == "given_name" {
 			p.Forename = *attr.Value
@@ -307,6 +308,7 @@ func (p UserParams) MapCognitoGetResponse(userDetails *cognitoidentityprovider.A
 	p.Status = userDetails.UserStatus
 	p.Groups = []string{}
 	p.Active = userDetails.Enabled
+	return p
 }
 
 type CreateUserInput struct {

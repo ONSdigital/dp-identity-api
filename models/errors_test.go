@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -78,8 +77,13 @@ func TestNewCognitoError(t *testing.T) {
 	Convey("successfully constructs a CognitoError object", t, func() {
 		awsErrCode := "InternalErrorException"
 		awsErrMessage := "Something strange happened"
-		awsOrigErr := errors.New(awsErrCode)
-		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		//awsOrigErr := errors.New(awsErrCode)
+		//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		awsErr := &smithy.GenericAPIError{
+			Code:    awsErrCode,
+			Message: awsErrMessage,
+			Fault:   smithy.ErrorFault(1),
+		}
 		errorContext := "dp-identity-api calling AWS Cognito"
 
 		err := models.NewCognitoError(ctx, awsErr, errorContext)

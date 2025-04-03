@@ -174,12 +174,12 @@ func TestRefreshToken_GenerateRefreshRequest(t *testing.T) {
 
 		initiateAuthInput := refreshToken.GenerateRefreshRequest(clientSecret, username, clientID)
 
-		expectedAuthFlow := "REFRESH_TOKEN_AUTH"
+		expectedAuthFlow := types.AuthFlowTypeRefreshTokenAuth
 		expectedSecretHash := utilities.ComputeSecretHash(clientSecret, username, clientID)
 		So(initiateAuthInput.AuthFlow, ShouldEqual, expectedAuthFlow)
 		So(initiateAuthInput.AuthParameters["REFRESH_TOKEN"], ShouldEqual, refreshTokenString)
 		So(initiateAuthInput.AuthParameters["SECRET_HASH"], ShouldEqual, expectedSecretHash)
-		So(initiateAuthInput.ClientId, ShouldEqual, clientID)
+		So(initiateAuthInput.ClientId, ShouldEqual, &clientID)
 	})
 }
 

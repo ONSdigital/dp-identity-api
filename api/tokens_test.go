@@ -152,8 +152,8 @@ func TestAPI_TokensHandler(t *testing.T) {
 		for _, tt := range statusTests {
 			//awsErr := awserr.New(tt.awsErrCode, tt.awsErrMessage, errors.New(tt.awsErrCode))
 			awsErr := &smithy.GenericAPIError{
-				Code:    awsErrCode,
-				Message: awsErrMessage,
+				Code:    tt.awsErrCode,
+				Message: tt.awsErrMessage,
 				Fault:   smithy.ErrorFault(1),
 			}
 			// mock failed call to: InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
@@ -170,7 +170,8 @@ func TestAPI_TokensHandler(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
 
 			successResponse, errorResponse := api.TokensHandler(ctx, w, request)
-
+			//println("The errorResponse.status value is: " + strconv.Itoa(errorResponse.Status))
+			//println("The successResponse.status value is: " + strconv.Itoa(successResponse.Status))
 			request.Header.Get(WWWAuthenticateName)
 
 			So(successResponse, ShouldBeNil)

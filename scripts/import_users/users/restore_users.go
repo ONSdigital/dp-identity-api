@@ -61,14 +61,16 @@ func createUser(ctx context.Context, client *cognitoidentityprovider.Client, lin
 		ID:       line[colsMap["cognito:username"]],
 	}
 
-	if err := userInfo.GeneratePassword(ctx); err != nil {
+	var err error
+	_, err = userInfo.GeneratePassword(ctx)
+	if err != nil {
 		log.Error(ctx, "failed to generate password", err)
 	}
 
 	createUserRequest := userInfo.BuildCreateUserRequest(userInfo.ID, cfg.AWSCognitoUserPoolID)
-	_, err := client.AdminCreateUser(ctx, createUserRequest)
-	if err != nil {
-		log.Error(ctx, fmt.Sprintf("failed to processline %v user: %+v", lineNumber, userInfo), err)
+	_, errCreateUser := client.AdminCreateUser(ctx, createUserRequest)
+	if errCreateUser != nil {
+		log.Error(ctx, fmt.Sprintf("failed to process line %v user: %+v", lineNumber, userInfo), err)
 	}
 
 	// Disable user if it's 'enabled' column is not TRUE

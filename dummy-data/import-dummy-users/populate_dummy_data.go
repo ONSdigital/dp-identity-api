@@ -79,7 +79,8 @@ func createUsers(ctx context.Context, client cognito.Client, userPoolID string, 
 	for i := range [UserCount]int{} {
 		for _, backoff := range backoffSchedule {
 			user := models.UserParams{}
-			passwordError := user.GeneratePassword(ctx)
+			var passwordError error
+			user.Password, passwordError = user.GeneratePassword(ctx)
 			if passwordError != nil {
 				break
 			}
@@ -133,7 +134,8 @@ func confirmUsers(ctx context.Context, client cognito.Client, userPoolID string,
 		}
 		for _, backoff := range backoffSchedule {
 			user := models.UserParams{}
-			passwordError := user.GeneratePassword(ctx)
+			var passwordError error
+			user.Password, passwordError = user.GeneratePassword(ctx)
 			if passwordError != nil {
 				break
 			}

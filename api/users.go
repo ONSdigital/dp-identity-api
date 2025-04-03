@@ -42,7 +42,7 @@ func (api *API) CreateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
 
-	err = user.GeneratePassword(ctx)
+	user.Password, err = user.GeneratePassword(ctx)
 	if err != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
 	}
@@ -105,7 +105,7 @@ func (api *API) ListUsersHandler(ctx context.Context, _ http.ResponseWriter, req
 		return nil, errResponse
 	}
 
-	usersList.SetUsers(listUserResp)
+	usersList.Users, usersList.Count = usersList.SetUsers(listUserResp)
 
 	if req.URL.Query().Get("sort") != "" {
 		requestSortQueryErrs := query.SortBy(req.URL.Query().Get("sort"), usersList.Users)

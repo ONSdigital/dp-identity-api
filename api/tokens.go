@@ -19,32 +19,36 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 			_ = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
 		}
 	}()
-
+	println("here 1")
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
+		println("Returning a handleBodyReadError")
 		return nil, handleBodyReadError(ctx, err)
 	}
-
+	println("here 2")
 	var userSignIn models.UserSignIn
 	err = json.Unmarshal(body, &userSignIn)
 	if err != nil {
+		println("Returning a handleBodyUnmarshallError")
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
-
+	println("here 3")
 	validationErrs := userSignIn.ValidateCredentials(ctx)
 	if validationErrs != nil {
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, *validationErrs...)
 	}
-
+	println("here 4")
 	input := userSignIn.BuildCognitoRequest(api.ClientID, api.ClientSecret, api.ClientAuthFlow)
 	result, authErr := api.CognitoClient.InitiateAuth(ctx, input)
+	//println("The authErr returned is: " + authErr.Error())
 
 	if authErr != nil {
+		println("I guess authErr is not nil after all")
 		responseErr := models.NewCognitoError(ctx, authErr, "Cognito InitiateAuth request from sign in handler")
 		if responseErr.Code == models.InternalError {
 			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 		}
-
+		println("here 5")
 		switch responseErr.Description {
 		case models.SignInFailedDescription:
 			// Returning `WWW-Authenticate` in header as part of http.StatusUnauthorized response
@@ -61,7 +65,7 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, responseErr)
 		}
 	}
-
+	println("here 6")
 	// Determine the refresh token TTL (DescribeUserPoolClient)
 	userPoolClient, err := api.CognitoClient.DescribeUserPoolClient(ctx,
 		&cognitoidentityprovider.DescribeUserPoolClientInput{
@@ -73,6 +77,7 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 		awsErr := models.NewCognitoError(ctx, err, "Describing user pool for refresh token TTL")
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, awsErr)
 	}
+	println("here 7")
 
 	clientTokenValidityUnits := *userPoolClient.UserPoolClient.TokenValidityUnits
 	refreshTokenTTL := calculateTokenTTLInSeconds(clientTokenValidityUnits.RefreshToken, int(userPoolClient.UserPoolClient.RefreshTokenValidity))
@@ -93,12 +98,14 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 	} else {
 		headers = nil
 	}
+	println("here 8")
 
 	// response - http.StatusCreated by default
 	httpStatus := http.StatusCreated
 	if result.ChallengeName == NewPasswordChallenge {
 		httpStatus = http.StatusAccepted
 	}
+	println("here 9")
 
 	return models.NewSuccessResponse(jsonResponse, httpStatus, headers), nil
 }
