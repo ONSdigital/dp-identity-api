@@ -3,9 +3,10 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"net/http"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-identity-api/v2/models"

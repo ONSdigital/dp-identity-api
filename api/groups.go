@@ -6,11 +6,12 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"io"
 	"net/http"
 	"sort"
 	"strings"
+
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	dplogs "github.com/ONSdigital/log.go/v2/log"

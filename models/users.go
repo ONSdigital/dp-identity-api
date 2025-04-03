@@ -3,9 +3,10 @@ package models
 import (
 	"context"
 	"encoding/json"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"strconv"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 
 	"github.com/ONSdigital/dp-identity-api/v2/config"
 	"github.com/ONSdigital/dp-identity-api/v2/utilities"
@@ -71,7 +72,7 @@ func (p UsersList) BuildListUserRequest(filterString, requiredAttribute string, 
 }
 
 // MapCognitoUsers maps the users from the cognito response into the UsersList Users attribute and sets the Count attribute
-func (p UsersList) MapCognitoUsers(cognitoResults *[]types.UserType) ([]UserParams, int) {
+func (p UsersList) MapCognitoUsers(cognitoResults *[]types.UserType) (users []UserParams, count int) {
 	p.Users = []UserParams{}
 	for _, user := range *cognitoResults {
 		p.Users = append(p.Users, UserParams{}.MapCognitoDetails(user))
@@ -82,7 +83,7 @@ func (p UsersList) MapCognitoUsers(cognitoResults *[]types.UserType) ([]UserPara
 }
 
 // SetUsers sets the UsersList Users attribute and sets the Count attribute
-func (p UsersList) SetUsers(usersList *[]UserParams) ([]UserParams, int) {
+func (p UsersList) SetUsers(usersList *[]UserParams) (users []UserParams, count int) {
 	p.Users = *usersList
 	p.Count = len(p.Users)
 	return p.Users, p.Count

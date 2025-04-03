@@ -3,11 +3,12 @@ package models_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"net/http"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/aws/aws-sdk-go-v2/aws"

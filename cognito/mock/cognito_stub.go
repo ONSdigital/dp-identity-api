@@ -3,7 +3,7 @@ package mock
 import (
 	"context"
 	"errors"
-	//"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
+
 	"github.com/aws/smithy-go"
 
 	"regexp"
@@ -52,7 +52,7 @@ func (m *CognitoIdentityProviderClientStub) DescribeUserPool(_ context.Context, 
 func (m *CognitoIdentityProviderClientStub) AdminCreateUser(_ context.Context, input *cognitoidentityprovider.AdminCreateUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
 	var (
 		subjectAttrName, forenameAttrName, surnameAttrName, emailAttrName, username, subUUID, forename, surname, email = "sub", "given_name", "family_name", "email", "123e4567-e89b-12d3-a456-426614174000", "f0cf8dd9-755c-4caf-884d-b0c56e7d0704", "smileons", "bobbings", "emailx@ons.gov.uk"
-		status                                                                                                         = types.UserStatusTypeUnconfirmed //TODO Check that this is the correct replacement for "FORCE_CHANGE_PASSWORD" status string
+		status                                                                                                         = types.UserStatusTypeUnconfirmed // TODO Check that this is the correct replacement for "FORCE_CHANGE_PASSWORD" status string
 	)
 
 	if *input.UserAttributes[0].Value == "smileons" { // 201 - created successfully
@@ -560,8 +560,6 @@ func (m *CognitoIdentityProviderClientStub) AdminDisableUser(_ context.Context, 
 		Message: "the user could not be found",
 	}
 }
-
-//func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(_ context.Context, input *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 
 func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(_ context.Context, input *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 	if *input.GroupName == internalError {

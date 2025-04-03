@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/aws/smithy-go"
 
@@ -18,7 +19,7 @@ import (
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
-	//"github.com/aws/aws-sdk-go/aws/awserr"
+
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -171,16 +172,16 @@ func TestAddUserToGroupHandler(t *testing.T) {
 
 			{
 				"200 response - user added to group",
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 				},
-				func(ctx context.Context, _ *cognitoidentityprovider.GetGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GetGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.GetGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GetGroupOutput, error) {
 					group := &cognitoidentityprovider.GetGroupOutput{
 						Group: getGroupData,
 					}
 					return group, nil
 				},
-				func(ctx context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					return &cognitoidentityprovider.ListUsersInGroupOutput{}, nil
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -199,7 +200,7 @@ func TestAddUserToGroupHandler(t *testing.T) {
 					groupNotFoundException.Message = &groupNotFoundDescription
 					return nil, &groupNotFoundException
 				},
-				func(ctx context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					return &cognitoidentityprovider.ListUsersInGroupOutput{}, nil
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -789,7 +790,7 @@ func TestGetUsersInAGroup(t *testing.T) {
 
 	api, _, m := apiSetup()
 	Convey("error is returned when list users in group returns an error", t, func() {
-		m.ListUsersInGroupFunc = func(ctx context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+		m.ListUsersInGroupFunc = func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 			var groupNotFoundException types.ResourceNotFoundException
 			groupNotFoundException.Message = &groupNotFoundDescription
 			return nil, &groupNotFoundException
@@ -808,7 +809,7 @@ func TestGetUsersInAGroup(t *testing.T) {
 			},
 		}
 
-		m.ListUsersInGroupFunc = func(ctx context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+		m.ListUsersInGroupFunc = func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 			listUsersInGroup := &cognitoidentityprovider.ListUsersInGroupOutput{
 				Users: []types.UserType{
 					{
@@ -835,7 +836,7 @@ func TestGetUsersInAGroup(t *testing.T) {
 			},
 		}
 
-		m.ListUsersInGroupFunc = func(ctx context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+		m.ListUsersInGroupFunc = func(_ context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 			nextToken := "nextToken"
 
 			if input.NextToken != nil {
@@ -882,7 +883,7 @@ func TestGetUsersInAGroup(t *testing.T) {
 			},
 		}
 
-		m.ListUsersInGroupFunc = func(ctx context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+		m.ListUsersInGroupFunc = func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 			listUsersInGroup := &cognitoidentityprovider.ListUsersInGroupOutput{
 				Users: []types.UserType{
 					{
@@ -908,7 +909,7 @@ func TestCreateNewGroup(t *testing.T) {
 	api, w, m := apiSetup()
 
 	// ListGroupsFunction template - success
-	listGroupsFuncSuccess := func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
+	listGroupsFuncSuccess := func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
 		d := "thisisamocktestname"
 		g := "123e4567-e89b-12d3-a456-426614174000"
 		p := int32(12)
@@ -1027,7 +1028,7 @@ func TestCreateNewGroup(t *testing.T) {
 			// 400 response - group name already exists
 			{
 				nil,
-				func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					var internalError types.InternalErrorException
 					internalError.Message = &internalErrorDescription
 					return nil, &internalError
@@ -1099,7 +1100,7 @@ func TestUpdateGroup(t *testing.T) {
 		}{
 			// 200 response - group updated
 			{
-				func(ctx context.Context, _ *cognitoidentityprovider.UpdateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.UpdateGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.UpdateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.UpdateGroupOutput, error) {
 					return &cognitoidentityprovider.UpdateGroupOutput{}, nil
 				},
 				map[string]interface{}{
@@ -1118,7 +1119,7 @@ func TestUpdateGroup(t *testing.T) {
 			},
 			// 200 response - group updated, no precedence
 			{
-				func(ctx context.Context, _ *cognitoidentityprovider.UpdateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.UpdateGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.UpdateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.UpdateGroupOutput, error) {
 					return &cognitoidentityprovider.UpdateGroupOutput{}, nil
 				},
 				map[string]interface{}{
@@ -1185,7 +1186,7 @@ func TestUpdateGroup(t *testing.T) {
 			},
 			// 500 response - internal server error from Cognito
 			{
-				func(ctx context.Context, _ *cognitoidentityprovider.UpdateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.UpdateGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.UpdateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.UpdateGroupOutput, error) {
 					var internalError types.InternalErrorException
 					internalError.Message = &internalErrorDescription
 					return nil, &internalError
@@ -1206,7 +1207,7 @@ func TestUpdateGroup(t *testing.T) {
 			},
 			// 404 response - resource not found from Cognito
 			{
-				func(ctx context.Context, _ *cognitoidentityprovider.UpdateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.UpdateGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.UpdateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.UpdateGroupOutput, error) {
 					var notFoundError types.ResourceNotFoundException
 					notFoundError.Message = &notFoundErrorDescription
 					return nil, &notFoundError
@@ -1247,7 +1248,7 @@ func TestGetListGroups(t *testing.T) {
 			{},
 		}
 		var count = 0
-		m.ListGroupsFunc = func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
+		m.ListGroupsFunc = func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
 			count++
 			listGroups := &cognitoidentityprovider.ListGroupsOutput{
 				NextToken: nil,
@@ -1282,7 +1283,7 @@ func TestGetListGroups(t *testing.T) {
 			},
 		}
 
-		m.ListGroupsFunc = func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
+		m.ListGroupsFunc = func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
 			count++
 			listGroups := &cognitoidentityprovider.ListGroupsOutput{
 
@@ -1347,7 +1348,7 @@ func TestListGroupsHandler(t *testing.T) {
 			{
 				"200 response from Cognito with empty NextToken",
 				"",
-				func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					return &cognitoidentityprovider.ListGroupsOutput{
 						Groups:    groups,
 						NextToken: nil,
@@ -1371,7 +1372,7 @@ func TestListGroupsHandler(t *testing.T) {
 			{
 				"200 response from Cognito with no groups",
 				"",
-				func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					return &cognitoidentityprovider.ListGroupsOutput{
 						Groups:    []types.GroupType{},
 						NextToken: nil,
@@ -1394,7 +1395,7 @@ func TestListGroupsHandler(t *testing.T) {
 			{
 				"200 response from Cognito with populated NextToken",
 				"next_token",
-				func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					return &cognitoidentityprovider.ListGroupsOutput{
 						Groups:    groups,
 						NextToken: nil,
@@ -1418,12 +1419,10 @@ func TestListGroupsHandler(t *testing.T) {
 			{
 				"500 response from Cognito",
 				"",
-				func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					awsErrCode := "InternalErrorException"
 					awsErrMessage := internalErrorDescription
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
-					awsOrigErr := smithy.ErrorFault(1) //server error
+					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
 						Message: awsErrMessage,
@@ -1572,7 +1571,7 @@ func TestDeleteGroupHandler(t *testing.T) {
 		},
 			{
 				"404 response from Cognito ",
-				func(ctx context.Context, _ *cognitoidentityprovider.DeleteGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.DeleteGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.DeleteGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.DeleteGroupOutput, error) {
 					var groupNotFoundException types.ResourceNotFoundException
 					groupNotFoundException.Message = &groupNotFoundDescription
 					return nil, &groupNotFoundException
@@ -1586,7 +1585,7 @@ func TestDeleteGroupHandler(t *testing.T) {
 			},
 			{
 				"500 response from Cognito ",
-				func(ctx context.Context, _ *cognitoidentityprovider.DeleteGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.DeleteGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.DeleteGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.DeleteGroupOutput, error) {
 					var internalError types.InternalErrorException
 					internalError.Message = &internalErrorDescription
 					return nil, &internalError
@@ -1690,7 +1689,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 						},
 						nil
 				},
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 				},
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
@@ -1729,7 +1728,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
 					return &models.UsersList{}, nil
 				},
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 				},
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
@@ -1775,7 +1774,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
 					return &models.UsersList{}, nil
 				},
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 				},
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
@@ -1804,9 +1803,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					awsErrCode := "InternalErrorException"
 					awsErrMessage := internalErrorDescription
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
-					awsOrigErr := smithy.ErrorFault(1) //server error
+					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
 						Message: awsErrMessage,
@@ -1820,7 +1817,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
 					return &models.UsersList{}, nil
 				},
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 				},
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
@@ -1857,7 +1854,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
 					return &models.UsersList{}, nil
 				},
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 				},
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
@@ -1891,7 +1888,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
 					return &models.UsersList{}, nil
 				},
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 				},
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
@@ -1912,10 +1909,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 			Convey(tt.description, func() {
 				m.GetGroupFunc = tt.mockGetGroupfunc
 				m.ListUsersInGroupFunc = tt.mockListUsersInGroupfunc
-				//m.SetGroupUsersfunc = tt.mockSetGroupUsersfunc
-				//m.AddUserToGroupfunc = tt.mockAddUserToGroupFunction
 				m.AdminAddUserToGroupFunc = tt.mockAddUserToGroupfunc
-				//m.RemoveUserFromGroupfunc = tt.mockRemoveUserToGroupFunction
 				m.AdminRemoveUserFromGroupFunc = tt.mockRemoveUserToGroupFunc
 				postBody := tt.postbody
 				body, err := json.Marshal(postBody)
@@ -1956,7 +1950,7 @@ func TestSetGroupUsers(t *testing.T) {
 						},
 						nil
 				},
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 				},
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
@@ -2001,7 +1995,7 @@ func TestSetGroupUsers(t *testing.T) {
 						},
 						nil
 				},
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 				},
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
@@ -2040,7 +2034,7 @@ func TestSetGroupUsers(t *testing.T) {
 						},
 						nil
 				},
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 				},
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
@@ -2052,9 +2046,7 @@ func TestSetGroupUsers(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					awsErrCode := "InternalErrorException"
 					awsErrMessage := internalErrorDescription
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
-					awsOrigErr := smithy.ErrorFault(1) //server error
+					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
 						Message: awsErrMessage,
@@ -2082,9 +2074,7 @@ func TestSetGroupUsers(t *testing.T) {
 
 		for _, tt := range GetGroupTest {
 			Convey(tt.description, func() {
-				//m.AddUserToGroupfunc = tt.mockAddUserToGroupFunction
 				m.AdminAddUserToGroupFunc = tt.mockAddUserToGroupfunc
-				//m.RemoveUserFromGroupfunc = tt.mockRemoveUserToGroupFunction
 				m.AdminRemoveUserFromGroupFunc = tt.mockRemoveUserToGroupFunc
 				m.ListUsersInGroupFunc = tt.mockListUsersInGroupfunc
 				successResponse, errorResponse := api.SetGroupUsers(ctx, tt.group, tt.users)
@@ -2285,7 +2275,7 @@ func TestAddUserToGroup(t *testing.T) {
 		}{
 			{
 				"200 response - user removed from group",
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 				},
 				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
@@ -2311,7 +2301,7 @@ func TestAddUserToGroup(t *testing.T) {
 			},
 			{
 				"Cognito 400 response - user not found",
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					var userNotFoundException types.UserNotFoundException
 					userNotFoundException.Message = &userNotFoundDescription
 					return nil, &userNotFoundException
@@ -2338,7 +2328,7 @@ func TestAddUserToGroup(t *testing.T) {
 			},
 			{
 				"Cognito 404 response - group not found",
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					var groupNotFoundException types.ResourceNotFoundException
 					groupNotFoundException.Message = &groupNotFoundDescription
 					return nil, &groupNotFoundException
@@ -2367,7 +2357,7 @@ func TestAddUserToGroup(t *testing.T) {
 			},
 			{
 				"Cognito 500 response - internal error",
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					var internalError types.InternalErrorException
 					internalError.Message = &internalErrorDescription
 					return nil, &internalError
@@ -2396,7 +2386,7 @@ func TestAddUserToGroup(t *testing.T) {
 			},
 			{
 				"Cognito 404 response - listUsers group not found",
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 				},
 				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
@@ -2412,7 +2402,7 @@ func TestAddUserToGroup(t *testing.T) {
 			},
 			{
 				"Cognito 500 response - listUsers internal error",
-				func(ctx context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
+				func(_ context.Context, _ *cognitoidentityprovider.AdminAddUserToGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error) {
 					return &cognitoidentityprovider.AdminAddUserToGroupOutput{}, nil
 				},
 				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
@@ -2452,12 +2442,12 @@ func TestListGroupsUsersHandler(t *testing.T) {
 		}{
 			{
 				description: "empty group",
-				listUsersInGroupFunc: func(ctx context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listUsersInGroupFunc: func(_ context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi((*input.GroupName)[len(*input.GroupName)-1:])
 					return listGroupsUsers(l), nil
 				},
-				listGroupsFunc: func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listGroupsFunc: func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(0)
 					return &output, nil
@@ -2473,12 +2463,12 @@ func TestListGroupsUsersHandler(t *testing.T) {
 			},
 			{
 				description: "empty group no users",
-				listUsersInGroupFunc: func(ctx context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listUsersInGroupFunc: func(_ context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi((*input.GroupName)[len(*input.GroupName)-1:])
 					return listGroupsUsers(l), nil
 				},
-				listGroupsFunc: func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listGroupsFunc: func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(1)
 					return &output, nil
@@ -2498,7 +2488,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					return listGroupsUsers(1), nil
 				},
-				listGroupsFunc: func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listGroupsFunc: func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(1)
 					return &output, nil
@@ -2518,7 +2508,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					return listGroupsUsers(3), nil
 				},
-				listGroupsFunc: func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listGroupsFunc: func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(3)
 					return &output, nil
@@ -2540,7 +2530,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					exception.Message = &internalErrorDescription
 					return nil, &exception
 				},
-				listGroupsFunc: func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listGroupsFunc: func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(3)
 					return &output, nil
@@ -2557,7 +2547,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					return listGroupsUsers(3), nil
 				},
-				listGroupsFunc: func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listGroupsFunc: func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
 					var exception types.InternalErrorException
 					exception.Message = &internalErrorDescription
@@ -2595,12 +2585,12 @@ func TestListGroupsUsersHandler(t *testing.T) {
 		}{
 			{
 				description: "empty group",
-				listUsersInGroupFunc: func(ctx context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listUsersInGroupFunc: func(_ context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi((*input.GroupName)[len(*input.GroupName)-1:])
 					return listGroupsUsers(l), nil
 				},
-				listGroupsFunc: func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listGroupsFunc: func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(0)
 					return &output, nil
@@ -2622,7 +2612,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					l, _ := strconv.Atoi((*input.GroupName)[len(*input.GroupName)-1:])
 					return listGroupsUsers(l), nil
 				},
-				listGroupsFunc: func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listGroupsFunc: func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(1)
 					return &output, nil
@@ -2643,7 +2633,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					return listGroupsUsers(1), nil
 				},
-				listGroupsFunc: func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listGroupsFunc: func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(1)
 					return &output, nil
@@ -2664,7 +2654,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					return listGroupsUsers(3), nil
 				},
-				listGroupsFunc: func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
+				listGroupsFunc: func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(3)
 					return &output, nil
 				},
@@ -2705,12 +2695,12 @@ func TestListGroupsUsersHandler(t *testing.T) {
 		}{
 			{
 				description: "empty group",
-				listUsersInGroupFunc: func(ctx context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listUsersInGroupFunc: func(_ context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi((*input.GroupName)[len(*input.GroupName)-1:])
 					return listGroupsUsers(l), nil
 				},
-				listGroupsFunc: func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listGroupsFunc: func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(0)
 					return &output, nil
@@ -2725,12 +2715,12 @@ func TestListGroupsUsersHandler(t *testing.T) {
 			},
 			{
 				description: "1 group no users",
-				listUsersInGroupFunc: func(ctx context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listUsersInGroupFunc: func(_ context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi((*input.GroupName)[len(*input.GroupName)-1:])
 					return listGroupsUsers(l), nil
 				},
-				listGroupsFunc: func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listGroupsFunc: func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(1)
 					return &output, nil
@@ -2749,7 +2739,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					return listGroupsUsers(1), nil
 				},
-				listGroupsFunc: func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listGroupsFunc: func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(1)
 					return &output, nil
@@ -2768,7 +2758,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 					*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					return listGroupsUsers(3), nil
 				},
-				listGroupsFunc: func(ctx context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
+				listGroupsFunc: func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (
 					*cognitoidentityprovider.ListGroupsOutput, error) {
 					output := listGroups(3)
 					return &output, nil
@@ -2945,7 +2935,7 @@ func TestGetTeamsReportLines(t *testing.T) {
 			{
 				"200 response - 1 groups",
 				listGroups(1),
-				func(ctx context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
+				func(_ context.Context, input *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					l, _ := strconv.Atoi((*input.GroupName)[len(*input.GroupName)-1:])
 					return listGroupsUsers(l + 1), nil
 				},

@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"io"
+
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/ONSdigital/dp-identity-api/v2/scripts/import_users/config"

@@ -3,10 +3,11 @@ package healthcheck_test
 import (
 	"context"
 	"errors"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
-	"github.com/aws/smithy-go"
 	"net/http"
 	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/aws/smithy-go"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -23,7 +24,6 @@ func TestGetHealthCheck(t *testing.T) {
 
 	m := &mock.MockCognitoIdentityProviderClient{}
 
-	//m.DescribeUserPoolFunc = func(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
 	m.DescribeUserPoolFunc = func(_ context.Context, poolInputData *cognitoidentityprovider.DescribeUserPoolInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
 		exsitingPoolID := "us-west-2_aaaaaaaaa"
 		if *poolInputData.UserPoolId != exsitingPoolID {
@@ -81,12 +81,10 @@ func TestGetHealthCheck(t *testing.T) {
 			awsUserPoolID := "us-west-2_aaaaaaaaa"
 
 			Convey("the admin role group is missing", func() {
-				m.GetGroupFunc = func(ctx context.Context, inputData *cognitoidentityprovider.GetGroupInput, optFns ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GetGroupOutput, error) {
+				m.GetGroupFunc = func(_ context.Context, inputData *cognitoidentityprovider.GetGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GetGroupOutput, error) {
 					if *inputData.GroupName == models.AdminRoleGroup {
 						awsErrCode := "ResourceNotFoundException"
 						awsErrMessage := "Group not found."
-						//awsOrigErr := errors.New(awsErrCode)
-						//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 						awsErr := &smithy.GenericAPIError{
 							Code:    awsErrCode,
 							Message: awsErrMessage,

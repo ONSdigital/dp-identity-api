@@ -59,7 +59,6 @@ linters:
     - gofmt
     - goimports
     - revive
-    - gosec
     - gosimple
     - govet
     - ineffassign
@@ -80,5 +79,6 @@ issues:
       text: "dot-imports"
       linters:
         - revive
+        - gosec
       source: "github.com/smartystreets/goconvey/convey"
   new: false

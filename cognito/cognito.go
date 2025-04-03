@@ -2,6 +2,7 @@ package cognito
 
 import (
 	"context"
+
 	cognito "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 )
 
@@ -33,7 +34,4 @@ type Client interface {
 	AdminListGroupsForUser(ctx context.Context, params *cognito.AdminListGroupsForUserInput, optFns ...func(*cognito.Options)) (*cognito.AdminListGroupsForUserOutput, error)
 	AdminDeleteUser(ctx context.Context, params *cognito.AdminDeleteUserInput, optFns ...func(*cognito.Options)) (*cognito.AdminDeleteUserOutput, error)
 	AdminSetUserPassword(ctx context.Context, params *cognito.AdminSetUserPasswordInput, optFns ...func(*cognito.Options)) (*cognito.AdminSetUserPasswordOutput, error)
-	//AdminConfirmSignUp(input *cognito.AdminConfirmSignUpInput) (*cognito.AdminConfirmSignUpOutput, error)
-	//DescribeUserPool(*cognito.DescribeUserPoolInput) (*cognito.DescribeUserPoolOutput, error)
-	//GetGroup(input *cognito.GetGroupInput) (cognito.GetGroupOutput, error)
 }

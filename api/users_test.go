@@ -5,9 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/aws/smithy-go"
-	"time"
 
 	"net/http"
 	"net/http/httptest"
@@ -90,7 +91,7 @@ func TestCreateUserHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.AdminCreateUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
 					var userExistsException types.UsernameExistsException
 					userExistsException.Message = &userException
-					//userExistsException.RespMetadata.StatusCode = http.StatusBadRequest	//TODO find out how to replace this for aws-sdk-go-v2
+					// userExistsException.RespMetadata.StatusCode = http.StatusBadRequest	// TODO find out how to replace this for aws-sdk-go-v2
 
 					return &cognitoidentityprovider.AdminCreateUserOutput{}, &userExistsException
 				},
@@ -127,7 +128,7 @@ func TestCreateUserHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.AdminCreateUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
 					var internalErrorException types.InternalErrorException
 					internalErrorException.Message = &userException
-					//internalErrorException.RespMetadata.StatusCode = http.StatusInternalServerError	//TODO find out how to replace this for aws-sdk-go-v2
+					//internalErrorException.RespMetadata.StatusCode = http.StatusInternalServerError	// TODO find out how to replace this for aws-sdk-go-v2
 
 					return &cognitoidentityprovider.AdminCreateUserOutput{}, &internalErrorException
 				},

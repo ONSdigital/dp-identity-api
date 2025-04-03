@@ -11,7 +11,9 @@ require (
 	github.com/ONSdigital/dp-permissions-api v0.25.0
 	github.com/ONSdigital/log.go/v2 v2.4.3
 	github.com/aws/aws-sdk-go v1.55.5
+	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/config v1.29.10
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.51.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.78.2
 	github.com/aws/smithy-go v1.22.3
 	github.com/cucumber/godog v0.15.0
@@ -23,12 +25,6 @@ require (
 	github.com/sethvargo/go-password v0.3.1
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/stretchr/testify v1.9.0
-)
-
-require (
-	//github.com/aws/aws-sdk-go v1.55.5
-	github.com/aws/aws-sdk-go-v2 v1.36.3
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.51.3
 )
 
 require (

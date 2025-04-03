@@ -4,8 +4,9 @@
 package mock
 
 import (
-	"github.com/ONSdigital/dp-identity-api/v2/jwks"
 	"sync"
+
+	"github.com/ONSdigital/dp-identity-api/v2/jwks"
 )
 
 // Ensure, that ManagerMock does implement jwks.Manager.

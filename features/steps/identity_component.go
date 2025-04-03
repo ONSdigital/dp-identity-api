@@ -176,7 +176,7 @@ func (c *IdentityComponent) DoGetHTTPServer(bindAddr string, router http.Handler
 	return c.HTTPServer
 }
 
-func (c *IdentityComponent) DoGetCognitoClient(ctx context.Context, _ string) cognito.Client {
+func (c *IdentityComponent) DoGetCognitoClient(_ context.Context, _ string) cognito.Client {
 	c.CognitoClient = &cognitoMock.CognitoIdentityProviderClientStub{}
 	return c.CognitoClient
 }

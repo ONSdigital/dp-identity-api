@@ -2,8 +2,9 @@ package mock
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"strings"
+
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"

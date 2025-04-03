@@ -2,11 +2,13 @@ package utils
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	"io"
 	"os"
+
+	"github.com/aws/aws-sdk-go-v2/config"
 
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go-v2/aws"

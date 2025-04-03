@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"math"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 
 	"github.com/ONSdigital/dp-identity-api/v2/cognito"
 	"github.com/ONSdigital/dp-identity-api/v2/config"

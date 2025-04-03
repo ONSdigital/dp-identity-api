@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"io"
 	"net/http"
+
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/ONSdigital/dp-identity-api/v2/query"
