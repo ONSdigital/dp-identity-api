@@ -3,6 +3,8 @@ package healthcheck_test
 import (
 	"context"
 	"errors"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/aws/smithy-go"
 	"net/http"
 	"testing"
 
@@ -11,8 +13,8 @@ import (
 
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
-	healthcheck "github.com/ONSdigital/dp-identity-api/v2/service/healthcheck"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/ONSdigital/dp-identity-api/v2/service/healthcheck"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -21,7 +23,8 @@ func TestGetHealthCheck(t *testing.T) {
 
 	m := &mock.MockCognitoIdentityProviderClient{}
 
-	m.DescribeUserPoolFunc = func(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
+	//m.DescribeUserPoolFunc = func(poolInputData *cognitoidentityprovider.DescribeUserPoolInput) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
+	m.DescribeUserPoolFunc = func(_ context.Context, poolInputData *cognitoidentityprovider.DescribeUserPoolInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.DescribeUserPoolOutput, error) {
 		exsitingPoolID := "us-west-2_aaaaaaaaa"
 		if *poolInputData.UserPoolId != exsitingPoolID {
 			return nil, errors.New("Failed to load user pool data")
@@ -33,9 +36,9 @@ func TestGetHealthCheck(t *testing.T) {
 		awsUserPoolID := "us-west-2_aaaaaaaaa"
 		checkState := health.NewCheckState("dp-identity-api-test")
 
-		m.GetGroupFunc = func(_ *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+		m.GetGroupFunc = func(_ context.Context, _ *cognitoidentityprovider.GetGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GetGroupOutput, error) {
 			group := &cognitoidentityprovider.GetGroupOutput{
-				Group: &cognitoidentityprovider.GroupType{},
+				Group: &types.GroupType{},
 			}
 			return group, nil
 		}
@@ -52,9 +55,9 @@ func TestGetHealthCheck(t *testing.T) {
 
 	Convey("dp-identity-api healthchecker reports critical", t, func() {
 		Convey("When the user pool can't be found", func() {
-			m.GetGroupFunc = func(_ *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+			m.GetGroupFunc = func(_ context.Context, _ *cognitoidentityprovider.GetGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GetGroupOutput, error) {
 				group := &cognitoidentityprovider.GetGroupOutput{
-					Group: &cognitoidentityprovider.GroupType{},
+					Group: &types.GroupType{},
 				}
 				return group, nil
 			}
@@ -78,16 +81,20 @@ func TestGetHealthCheck(t *testing.T) {
 			awsUserPoolID := "us-west-2_aaaaaaaaa"
 
 			Convey("the admin role group is missing", func() {
-				m.GetGroupFunc = func(inputData *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+				m.GetGroupFunc = func(ctx context.Context, inputData *cognitoidentityprovider.GetGroupInput, optFns ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GetGroupOutput, error) {
 					if *inputData.GroupName == models.AdminRoleGroup {
 						awsErrCode := "ResourceNotFoundException"
 						awsErrMessage := "Group not found."
-						awsOrigErr := errors.New(awsErrCode)
-						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						//awsOrigErr := errors.New(awsErrCode)
+						//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						awsErr := &smithy.GenericAPIError{
+							Code:    awsErrCode,
+							Message: awsErrMessage,
+						}
 						return nil, awsErr
 					}
 					group := &cognitoidentityprovider.GetGroupOutput{
-						Group: &cognitoidentityprovider.GroupType{},
+						Group: &types.GroupType{},
 					}
 					return group, nil
 				}
@@ -106,7 +113,7 @@ func TestGetHealthCheck(t *testing.T) {
 			})
 
 			Convey("the publisher role group is missing", func() {
-				m.GetGroupFunc = func(inputData *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error) {
+				m.GetGroupFunc = func(_ context.Context, inputData *cognitoidentityprovider.GetGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GetGroupOutput, error) {
 					if *inputData.GroupName == models.PublisherRoleGroup {
 						awsErrCode := "ResourceNotFoundException"
 						awsErrMessage := "Group not found."
@@ -115,7 +122,7 @@ func TestGetHealthCheck(t *testing.T) {
 						return nil, awsErr
 					}
 					group := &cognitoidentityprovider.GetGroupOutput{
-						Group: &cognitoidentityprovider.GroupType{},
+						Group: &types.GroupType{},
 					}
 					return group, nil
 				}

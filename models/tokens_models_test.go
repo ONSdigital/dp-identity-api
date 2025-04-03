@@ -3,13 +3,14 @@ package models_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"reflect"
 	"testing"
 
 	"github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/ONSdigital/dp-identity-api/v2/utilities"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -175,10 +176,10 @@ func TestRefreshToken_GenerateRefreshRequest(t *testing.T) {
 
 		expectedAuthFlow := "REFRESH_TOKEN_AUTH"
 		expectedSecretHash := utilities.ComputeSecretHash(clientSecret, username, clientID)
-		So(*initiateAuthInput.AuthFlow, ShouldEqual, expectedAuthFlow)
-		So(*initiateAuthInput.AuthParameters["REFRESH_TOKEN"], ShouldEqual, refreshTokenString)
-		So(*initiateAuthInput.AuthParameters["SECRET_HASH"], ShouldEqual, expectedSecretHash)
-		So(*initiateAuthInput.ClientId, ShouldEqual, clientID)
+		So(initiateAuthInput.AuthFlow, ShouldEqual, expectedAuthFlow)
+		So(initiateAuthInput.AuthParameters["REFRESH_TOKEN"], ShouldEqual, refreshTokenString)
+		So(initiateAuthInput.AuthParameters["SECRET_HASH"], ShouldEqual, expectedSecretHash)
+		So(initiateAuthInput.ClientId, ShouldEqual, clientID)
 	})
 }
 
@@ -198,11 +199,11 @@ func TestRefreshToken_BuildSuccessfulJsonResponse(t *testing.T) {
 	})
 
 	Convey("returns a byte array of the response JSON", t, func() {
-		var expirationLength int64 = 300
+		var expirationLength int32 = 300
 		refreshToken := models.RefreshToken{}
 		result := cognitoidentityprovider.InitiateAuthOutput{
-			AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
-				ExpiresIn: &expirationLength,
+			AuthenticationResult: &types.AuthenticationResultType{
+				ExpiresIn: expirationLength,
 			},
 		}
 

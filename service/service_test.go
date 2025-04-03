@@ -323,7 +323,7 @@ func TestClose(t *testing.T) {
 	})
 }
 
-func DoGetCognitoClient(_ string) cognito.Client {
+func DoGetCognitoClient(_ context.Context, _ string) cognito.Client {
 	return &cognitoMock.CognitoIdentityProviderClientStub{}
 }
 
