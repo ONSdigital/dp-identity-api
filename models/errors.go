@@ -3,10 +3,10 @@ package models
 import (
 	"context"
 	"errors"
-	"github.com/aws/smithy-go"
 
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/aws/smithy-go"
 )
 
 // Error represents a custom error type with additional context and description.
@@ -48,11 +48,6 @@ func NewValidationError(ctx context.Context, code, description string) *Error {
 
 // IsGroupExistsError checks if the given error is a Cognito GroupExistsException error.
 func IsGroupExistsError(err error) bool {
-	//var cognitoErr smithy.APIError
-	//if errors.As(err, &cognitoErr) && cognitoErr.ErrorCode() == cognitoidentityprovider.ErrCodeGroupExistsException {
-	//	return true
-	//}
-	//return false
 	var groupExistsErr *types.GroupExistsException
 	return errors.As(err, &groupExistsErr)
 }
