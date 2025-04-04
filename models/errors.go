@@ -3,9 +3,9 @@ package models
 import (
 	"context"
 	"errors"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 
 	"github.com/ONSdigital/log.go/v2/log"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/smithy-go"
 )
 
@@ -48,8 +48,12 @@ func NewValidationError(ctx context.Context, code, description string) *Error {
 
 // IsGroupExistsError checks if the given error is a Cognito GroupExistsException error.
 func IsGroupExistsError(err error) bool {
-	var cognitoErr smithy.APIError
-	if errors.As(err, &cognitoErr) && cognitoErr.ErrorCode() == cognitoidentityprovider.ErrCodeGroupExistsException {
+	//var cognitoErr smithy.APIError
+	//if errors.As(err, &cognitoErr) && cognitoErr.ErrorCode() == cognitoidentityprovider.ErrCodeGroupExistsException {
+	//	return true
+	//}
+	var groupExistsErr *types.GroupExistsException
+	if errors.As(err, &groupExistsErr) {
 		return true
 	}
 	return false
