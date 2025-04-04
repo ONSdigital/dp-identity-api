@@ -4,14 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
+
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/smithy-go"
 
 	"github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
@@ -243,8 +242,11 @@ func TestAPI_SignOutHandler(t *testing.T) {
 	})
 
 	Convey("Global Sign Out Cognito internal error: adds an error to the ErrorResponse and sets its Status to 500", t, func() {
-		awsOrigErr := errors.New(awsErrCode)
-		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		awsErr := &smithy.GenericAPIError{
+			Code:    awsErrCode,
+			Message: awsErrMessage,
+			Fault:   smithy.ErrorFault(1), // server error
+		}
 		m.GlobalSignOutFunc = func(_ context.Context, _ *cognitoidentityprovider.GlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 			return nil, awsErr
 		}
@@ -335,8 +337,11 @@ func TestAPI_RefreshHandler(t *testing.T) {
 	})
 
 	Convey("Token refresh Cognito internal error: adds an error to the ErrorResponse and sets its Status to 500", t, func() {
-		awsOrigErr := errors.New(awsErrCode)
-		awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+		awsErr := &smithy.GenericAPIError{
+			Code:    awsErrCode,
+			Message: awsErrMessage,
+			Fault:   smithy.ErrorFault(1), // server error
+		}
 		m.InitiateAuthFunc = func(_ context.Context, _ *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			return nil, awsErr
 		}
@@ -433,8 +438,11 @@ func TestSignOutAllUsersHandlerInternalServerError(t *testing.T) {
 			{
 				// 500 response from Cognito's ListUsers API endpoint
 				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
-					awsOrigErr := errors.New(awsErrCode)
-					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					awsErr := &smithy.GenericAPIError{
+						Code:    awsErrCode,
+						Message: awsErrMessage,
+						Fault:   smithy.ErrorFault(1), // server error
+					}
 					return nil, awsErr
 				},
 				func(_ context.Context, _ *cognitoidentityprovider.AdminUserGlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
@@ -509,8 +517,11 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 				},
 				func(_ context.Context, signOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
 					if *signOutInput.Username == userNamesList[3] {
-						awsOrigErr := errors.New(awsErrCode)
-						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						awsErr := &smithy.GenericAPIError{
+							Code:    awsErrCode,
+							Message: awsErrMessage,
+							Fault:   smithy.ErrorFault(1), // server error
+						}
 						return nil, awsErr
 					}
 					return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
@@ -539,8 +550,11 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 					if *signOutInput.Username == userNamesList[3] {
 						awsErrCode := "TooManyRequestsException"
 						awsErrMessage := "Too many requets received"
-						awsOrigErr := errors.New(awsErrCode)
-						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						awsErr := &smithy.GenericAPIError{
+							Code:    awsErrCode,
+							Message: awsErrMessage,
+							Fault:   smithy.ErrorFault(2), // client error
+						}
 						return nil, awsErr
 					}
 					return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
@@ -616,8 +630,11 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 			},
 			{
 				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
-					awsOrigErr := errors.New(awsErrCode)
-					awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+					awsErr := &smithy.GenericAPIError{
+						Code:    awsErrCode,
+						Message: awsErrMessage,
+						Fault:   smithy.ErrorFault(1), // server error
+					}
 					return nil, awsErr
 				},
 				backoff,
@@ -629,8 +646,11 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 			{
 				func(_ context.Context, userInput *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 					if userInput.PaginationToken != nil {
-						awsOrigErr := errors.New(awsErrCode)
-						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						awsErr := &smithy.GenericAPIError{
+							Code:    awsErrCode,
+							Message: awsErrMessage,
+							Fault:   smithy.ErrorFault(1), // server error
+						}
 						// set error code index reference to 1 - expecting a http.StatusInternalServerError here
 						errCode = 1
 						return nil, awsErr
