@@ -427,14 +427,13 @@ func (api *API) SetGroupUsersHandler(ctx context.Context, _ http.ResponseWriter,
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
 	}
 	listOfUsers := models.UsersList{}
-	userType := types.UserType{}
 
 	for _, s1 := range bodyJSON {
 		validationErrs := group.ValidateAddRemoveUser(ctx, s1["user_id"])
 		if len(validationErrs) != 0 {
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErrs...)
 		}
-		userType = types.UserType{
+		userType := types.UserType{
 			Username:   aws.String(s1["user_id"]),
 			Enabled:    true,
 			UserStatus: types.UserStatusTypeConfirmed,
@@ -573,9 +572,8 @@ func (api *API) ListGroupsUsersCSV(groupsUsersList *[]models.ListGroupUsersType)
 	}
 	buf := new(bytes.Buffer)
 	w := csv.NewWriter(buf)
-	var rows [][]string
-	rows = append(rows, []string{csvHeader.GroupName, csvHeader.UserEmail})
 
+	rows := [][]string{{csvHeader.GroupName, csvHeader.UserEmail}}
 	for _, record := range *groupsUsersList {
 		rows = append(rows, []string{record.GroupName, record.UserEmail})
 	}
