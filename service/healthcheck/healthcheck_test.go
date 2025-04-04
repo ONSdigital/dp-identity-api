@@ -9,11 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/aws/smithy-go"
 
-	"github.com/ONSdigital/dp-identity-api/v2/models"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/ONSdigital/dp-identity-api/v2/service/healthcheck"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	. "github.com/smartystreets/goconvey/convey"
@@ -115,8 +113,10 @@ func TestGetHealthCheck(t *testing.T) {
 					if *inputData.GroupName == models.PublisherRoleGroup {
 						awsErrCode := "ResourceNotFoundException"
 						awsErrMessage := "Group not found."
-						awsOrigErr := errors.New(awsErrCode)
-						awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+						awsErr := &smithy.GenericAPIError{
+							Code:    awsErrCode,
+							Message: awsErrMessage,
+						}
 						return nil, awsErr
 					}
 					group := &cognitoidentityprovider.GetGroupOutput{
