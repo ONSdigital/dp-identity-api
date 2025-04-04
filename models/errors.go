@@ -3,9 +3,9 @@ package models
 import (
 	"context"
 	"errors"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 
 	"github.com/ONSdigital/log.go/v2/log"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/aws/smithy-go"
 )
 
@@ -52,11 +52,9 @@ func IsGroupExistsError(err error) bool {
 	//if errors.As(err, &cognitoErr) && cognitoErr.ErrorCode() == cognitoidentityprovider.ErrCodeGroupExistsException {
 	//	return true
 	//}
+	//return false
 	var groupExistsErr *types.GroupExistsException
-	if errors.As(err, &groupExistsErr) {
-		return true
-	}
-	return false
+	return errors.As(err, &groupExistsErr)
 }
 
 // NewCognitoError creates a new Error for errors returned from AWS Cognito, mapping it to a local error code.
