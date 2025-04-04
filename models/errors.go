@@ -3,10 +3,10 @@ package models
 import (
 	"context"
 	"errors"
+	"github.com/aws/smithy-go"
 
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
-	"github.com/aws/smithy-go"
 )
 
 // Error represents a custom error type with additional context and description.
