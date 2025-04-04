@@ -91,7 +91,6 @@ func TestCreateUserHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.AdminCreateUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
 					var userExistsException types.UsernameExistsException
 					userExistsException.Message = &userException
-					// userExistsException.RespMetadata.StatusCode = http.StatusBadRequest	// TODO find out how to replace this for aws-sdk-go-v2
 
 					return &cognitoidentityprovider.AdminCreateUserOutput{}, &userExistsException
 				},
@@ -128,7 +127,6 @@ func TestCreateUserHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.AdminCreateUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminCreateUserOutput, error) {
 					var internalErrorException types.InternalErrorException
 					internalErrorException.Message = &userException
-					//internalErrorException.RespMetadata.StatusCode = http.StatusInternalServerError	// TODO find out how to replace this for aws-sdk-go-v2
 
 					return &cognitoidentityprovider.AdminCreateUserOutput{}, &internalErrorException
 				},
@@ -268,9 +266,7 @@ func TestListUserHandler(t *testing.T) {
 			{
 				// 500 response from Cognito
 				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
-					awsOrigErr := smithy.ErrorFault(1) //server error
+					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
 						Message: awsErrMessage,
@@ -585,9 +581,7 @@ func TestGetUserHandler(t *testing.T) {
 			{
 				// 500 response from Cognito
 				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
-					awsOrigErr := smithy.ErrorFault(1) //server error
+					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
 						Message: awsErrMessage,
@@ -600,9 +594,7 @@ func TestGetUserHandler(t *testing.T) {
 			{
 				// 404 response from Cognito
 				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
-					//awsOrigErr := errors.New(awsUNFErrCode)
-					//awsErr := awserr.New(awsUNFErrCode, awsUNFErrMessage, awsOrigErr)
-					awsOrigErr := smithy.ErrorFault(2) //client error
+					awsOrigErr := smithy.ErrorFault(2) // client error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsUNFErrCode,
 						Message: awsUNFErrMessage,
@@ -741,9 +733,7 @@ func TestUpdateUserHandler(t *testing.T) {
 					return user, nil
 				},
 				func(_ context.Context, _ *cognitoidentityprovider.AdminEnableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
-					//awsOrigErr := errors.New(awsUNFErrCode)
-					//awsErr := awserr.New(awsUNFErrCode, awsUNFErrMessage, awsOrigErr)
-					awsOrigErr := smithy.ErrorFault(2) //client error
+					awsOrigErr := smithy.ErrorFault(2) // client error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsUNFErrCode,
 						Message: awsUNFErrMessage,
@@ -777,8 +767,6 @@ func TestUpdateUserHandler(t *testing.T) {
 					return user, nil
 				},
 				func(_ context.Context, _ *cognitoidentityprovider.AdminEnableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -816,8 +804,6 @@ func TestUpdateUserHandler(t *testing.T) {
 					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
 				},
 				func(_ context.Context, _ *cognitoidentityprovider.AdminDisableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
-					//awsOrigErr := errors.New(awsUNFErrCode)
-					//awsErr := awserr.New(awsUNFErrCode, awsUNFErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) // client error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsUNFErrCode,
@@ -852,8 +838,6 @@ func TestUpdateUserHandler(t *testing.T) {
 					return &cognitoidentityprovider.AdminEnableUserOutput{}, nil
 				},
 				func(_ context.Context, _ *cognitoidentityprovider.AdminDisableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -872,8 +856,6 @@ func TestUpdateUserHandler(t *testing.T) {
 			// 404 response from Cognito user update
 			{
 				func(_ context.Context, _ *cognitoidentityprovider.AdminUpdateUserAttributesInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
-					//awsOrigErr := errors.New(awsUNFErrCode)
-					//awsErr := awserr.New(awsUNFErrCode, awsUNFErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) // client error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsUNFErrCode,
@@ -907,8 +889,6 @@ func TestUpdateUserHandler(t *testing.T) {
 			// 500 response from Cognito user update
 			{
 				func(_ context.Context, _ *cognitoidentityprovider.AdminUpdateUserAttributesInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error) {
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -946,8 +926,6 @@ func TestUpdateUserHandler(t *testing.T) {
 					return user, nil
 				},
 				func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
-					//awsOrigErr := errors.New(awsUNFErrCode)
-					//awsErr := awserr.New(awsUNFErrCode, awsUNFErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) // client error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsUNFErrCode,
@@ -995,8 +973,6 @@ func TestProcessUpdateCognitoError(t *testing.T) {
 	ctx := context.Background()
 
 	Convey("Processes UserNotFound to a 404 response", t, func() {
-		//awsOrigErr := errors.New(awsUNFErrCode)
-		//awsErr := awserr.New(awsUNFErrCode, awsUNFErrMessage, awsOrigErr)
 		awsOrigErr := smithy.ErrorFault(2) // client error
 		awsErr := &smithy.GenericAPIError{
 			Code:    awsUNFErrCode,
@@ -1013,8 +989,6 @@ func TestProcessUpdateCognitoError(t *testing.T) {
 	Convey("Processes InternalError to a 500 response", t, func() {
 		awsErrCode := "InternalErrorException"
 		awsErrMessage := "something went wrong"
-		//awsOrigErr := errors.New(awsErrCode)
-		//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 		awsOrigErr := smithy.ErrorFault(1) // server error
 		awsErr := &smithy.GenericAPIError{
 			Code:    awsErrCode,
@@ -1031,8 +1005,6 @@ func TestProcessUpdateCognitoError(t *testing.T) {
 	Convey("Processes InvalidField to a 400 response", t, func() {
 		awsErrCode := "InvalidParameterException"
 		awsErrMessage := "param invalid"
-		//awsOrigErr := errors.New(awsErrCode)
-		//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 		awsOrigErr := smithy.ErrorFault(2) // client error
 		awsErr := &smithy.GenericAPIError{
 			Code:    awsErrCode,
@@ -1102,8 +1074,6 @@ func TestChangePasswordHandler(t *testing.T) {
 			{
 				// Cognito internal error
 				func(_ context.Context, _ *cognitoidentityprovider.RespondToAuthChallengeInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -1122,8 +1092,6 @@ func TestChangePasswordHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.RespondToAuthChallengeInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
 					awsErrCode := "CodeMismatchException"
 					awsErrMessage := "session invalid"
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -1142,8 +1110,6 @@ func TestChangePasswordHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.RespondToAuthChallengeInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
 					awsErrCode := "InvalidPasswordException"
 					awsErrMessage := "password invalid"
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) // client error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -1162,8 +1128,6 @@ func TestChangePasswordHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.RespondToAuthChallengeInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.RespondToAuthChallengeOutput, error) {
 					awsErrCode := "UserNotFoundException"
 					awsErrMessage := "user not found"
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) // client error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -1215,8 +1179,6 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 			// Cognito internal error
 			{
 				func(_ context.Context, _ *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -1232,8 +1194,6 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					awsErrCode := "CodeMismatchException"
 					awsErrMessage := "session invalid"
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(0) // unknown error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -1249,8 +1209,6 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					awsErrCode := "ExpiredCodeException"
 					awsErrMessage := "token expired"
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) // client error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -1266,8 +1224,6 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					awsErrCode := "InvalidPasswordException"
 					awsErrMessage := "password invalid"
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) // client error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -1283,8 +1239,6 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
 					awsErrCode := "UserNotFoundException"
 					awsErrMessage := "user not found"
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) // client error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -1388,8 +1342,6 @@ func TestPasswordResetHandler(t *testing.T) {
 			{
 				// Cognito internal error
 				func(_ context.Context, _ *cognitoidentityprovider.ForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -1405,8 +1357,7 @@ func TestPasswordResetHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.ForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
 					awsErrCode := "TooManyRequestsException"
 					awsErrMessage := "slow down"
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
+
 					awsOrigErr := smithy.ErrorFault(2) // client error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -1422,8 +1373,6 @@ func TestPasswordResetHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.ForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ForgotPasswordOutput, error) {
 					awsErrCode := "UserNotFoundException"
 					awsErrMessage := "user not found in user pool"
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) // client error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -1552,8 +1501,6 @@ func TestListUserGroupsHandler(t *testing.T) {
 			{
 				// 500 response from Cognito
 				func(_ context.Context, _ *cognitoidentityprovider.AdminListGroupsForUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
-					//awsOrigErr := errors.New(awsErrCode)
-					//awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
@@ -1567,8 +1514,6 @@ func TestListUserGroupsHandler(t *testing.T) {
 			{
 				// 404 response from Cognito
 				func(_ context.Context, _ *cognitoidentityprovider.AdminListGroupsForUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
-					//awsOrigErr := errors.New(awsUNFErrCode)
-					//awsErr := awserr.New(awsUNFErrCode, awsUNFErrMessage, awsOrigErr)
 					awsOrigErr := smithy.ErrorFault(2) // client error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsUNFErrCode,
