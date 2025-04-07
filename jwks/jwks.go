@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
-	dphttp "github.com/ONSdigital/dp-net/v2/http"
+	dphttp "github.com/ONSdigital/dp-net/v3/http"
 )
 
 //go:generate moq -out mock/jwks.go -pkg mock . Manager

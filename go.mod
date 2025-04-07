@@ -7,7 +7,7 @@ require (
 	github.com/ONSdigital/dp-authorisation/v2 v2.32.0
 	github.com/ONSdigital/dp-component-test v0.17.0
 	github.com/ONSdigital/dp-healthcheck v1.6.3
-	github.com/ONSdigital/dp-net/v2 v2.22.0
+	github.com/ONSdigital/dp-net/v3 v3.1.0
 	github.com/ONSdigital/dp-permissions-api v0.27.0
 	github.com/ONSdigital/log.go/v2 v2.4.4
 	github.com/aws/aws-sdk-go-v2 v1.36.3
@@ -28,7 +28,7 @@ require (
 
 require (
 	github.com/ONSdigital/dp-mongodb-in-memory v1.8.0 // indirect
-	github.com/ONSdigital/dp-net/v3 v3.1.0 // indirect
+	github.com/ONSdigital/dp-net/v2 v2.22.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.10 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.65 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.30 // indirect
