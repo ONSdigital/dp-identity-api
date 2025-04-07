@@ -56,7 +56,7 @@ func (m *CognitoIdentityProviderClientStub) AddMultipleActiveUsers(activeusersCo
 }
 
 func (m *CognitoIdentityProviderClientStub) GenerateUser(id, email, password, givenName, familyName string, isConfirmed bool) *User {
-	statusString := types.UserStatusTypeUnconfirmed
+	statusString := types.UserStatusTypeForceChangePassword
 	if isConfirmed {
 		statusString = types.UserStatusTypeConfirmed
 	}
