@@ -141,7 +141,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 			// http.StatusUnauthorized - 401
 			{
 				"NotAuthorizedException",
-				"Incorrect username or password.",
+				"incorrect username or password",
 				http.StatusUnauthorized,
 			},
 		}

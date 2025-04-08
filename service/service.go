@@ -34,7 +34,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	s := serviceList.GetHTTPServer(cfg.BindAddr, r, cfg)
 
-	cognitoclient := serviceList.GetCognitoClient(ctx, cfg.AWSRegion)
+	client := serviceList.GetCognitoClient(ctx, cfg.AWSRegion)
 
 	authorisationMiddleware, err := serviceList.GetAuthorisationMiddleware(ctx, cfg.AuthorisationConfig)
 	if err != nil {
@@ -42,7 +42,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	a, err := api.Setup(ctx, r, cognitoclient, cfg.AWSCognitoUserPoolID, cfg.AWSCognitoClientID, cfg.AWSCognitoClientSecret, cfg.AWSRegion, cfg.AWSAuthFlow, cfg.AllowedEmailDomains, authorisationMiddleware, jwksManager)
+	a, err := api.Setup(ctx, r, client, cfg.AWSCognitoUserPoolID, cfg.AWSCognitoClientID, cfg.AWSCognitoClientSecret, cfg.AWSRegion, cfg.AWSAuthFlow, cfg.AllowedEmailDomains, authorisationMiddleware, jwksManager)
 	if err != nil {
 		log.Fatal(ctx, "error returned from api setup", err)
 		return nil, err
@@ -54,7 +54,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	if err := registerCheckers(ctx, hc, cognitoclient, &cfg.AWSCognitoUserPoolID, authorisationMiddleware); err != nil {
+	if err := registerCheckers(ctx, hc, client, &cfg.AWSCognitoUserPoolID, authorisationMiddleware); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 

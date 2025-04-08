@@ -317,7 +317,7 @@ func (api *API) generateListUsersRequest(ctx context.Context, input *cognitoiden
 	return api.CognitoClient.ListUsers(ctx, input)
 }
 
-// calculateTokenTTLInSeconds takes a token unit and a number as received from Cognito and
+// calculateTokenTTLInSeconds takes a token unit and a number, as received from Cognito, and
 // returns the number of seconds.
 func calculateTokenTTLInSeconds(unit types.TimeUnitsType, number int) int {
 	switch unit {

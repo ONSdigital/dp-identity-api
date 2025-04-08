@@ -46,7 +46,7 @@ Scenario: POST /v1/tokens 401 - invalid credentials
             "errors": [
                 {
                     "code": "NotAuthorised",
-                    "description": "Incorrect username or password."
+                    "description": "incorrect username or password"
                 }
             ]
         }
@@ -67,7 +67,7 @@ Scenario: POST /v1/tokens 403 - too many failed attempts
             "errors": [
                 {
                     "code": "TooManyFailedAttempts",
-                    "description": "Password attempts exceeded"
+                    "description": "password attempts exceeded"
                 }
             ]
         }
