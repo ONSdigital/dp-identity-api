@@ -128,7 +128,7 @@ func (m *CognitoIdentityProviderClientStub) InitiateAuth(_ context.Context, inpu
 			} else if user.Email != input.AuthParameters["USERNAME"] {
 				return nil, &smithy.GenericAPIError{
 					Code:    errCodeNotAuthorized,
-					Message: "Incorrect username or password",
+					Message: "Incorrect username or password.",
 				}
 			} else if user.Password != input.AuthParameters["PASSWORD"] {
 				return nil, &smithy.GenericAPIError{

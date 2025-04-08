@@ -20,6 +20,7 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 			_ = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
 		}
 	}()
+	println("in TokensHandler 1")
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		println("Returning a handleBodyReadError")
@@ -31,18 +32,21 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 		println("Returning a handleBodyUnmarshallError")
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
+	println("in TokensHandler 2")
 	validationErrs := userSignIn.ValidateCredentials(ctx)
 	if validationErrs != nil {
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, *validationErrs...)
 	}
+	println("in TokensHandler 3")
 	input := userSignIn.BuildCognitoRequest(api.ClientID, api.ClientSecret, api.ClientAuthFlow)
 	result, authErr := api.CognitoClient.InitiateAuth(ctx, input)
-
+	println("in TokensHandler 4")
 	if authErr != nil {
 		responseErr := models.NewCognitoError(ctx, authErr, "Cognito InitiateAuth request from sign in handler")
 		if responseErr.Code == models.InternalError {
 			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 		}
+		println("The authErr description is: " + responseErr.Description)
 		switch responseErr.Description {
 		case models.SignInFailedDescription:
 			// Returning `WWW-Authenticate` in header as part of http.StatusUnauthorized response
@@ -59,6 +63,7 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, responseErr)
 		}
 	}
+	println("in TokensHandler 5")
 	// Determine the refresh token TTL (DescribeUserPoolClient)
 	userPoolClient, err := api.CognitoClient.DescribeUserPoolClient(ctx,
 		&cognitoidentityprovider.DescribeUserPoolClientInput{
