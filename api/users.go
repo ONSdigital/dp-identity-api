@@ -137,7 +137,14 @@ func (api *API) GetUserHandler(ctx context.Context, _ http.ResponseWriter, req *
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	user.MapCognitoGetResponse(userResp)
+	userDetails := user.MapCognitoGetResponse(userResp)
+	user.Active = userDetails.Active
+	user.Email = userDetails.Email
+	user.Forename = userDetails.Forename
+	user.Groups = userDetails.Groups
+	user.Lastname = userDetails.Lastname
+	user.Status = userDetails.Status
+	user.StatusNotes = userDetails.StatusNotes
 
 	jsonResponse, responseErr := user.BuildSuccessfulJSONResponse(ctx)
 	if responseErr != nil {
@@ -200,7 +207,14 @@ func (api *API) UpdateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	user.MapCognitoGetResponse(userDetailsResponse)
+	userDetails := user.MapCognitoGetResponse(userDetailsResponse)
+	user.Active = userDetails.Active
+	user.Email = userDetails.Email
+	user.Forename = userDetails.Forename
+	user.Groups = userDetails.Groups
+	user.Lastname = userDetails.Lastname
+	user.Status = userDetails.Status
+	user.StatusNotes = userDetails.StatusNotes
 
 	jsonResponse, responseErr := user.BuildSuccessfulJSONResponse(ctx)
 	if responseErr != nil {
