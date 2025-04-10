@@ -98,14 +98,18 @@ func ImportGroupsMembersFromS3(ctx context.Context, cfg *config.Config) error {
 func createGroup(ctx context.Context, lineNumber int, line []string, client *cognito.Client, userPoolID string, colsMap map[string]int) {
 	createGroup := models.CreateUpdateGroup{}
 	createGroup.ID = &line[colsMap["groupname"]]
-	precedence, _ := strconv.Atoi(line[colsMap["precedence"]])
-	precedence1 := int32(precedence)
-	createGroup.Precedence = &precedence1
+	parsed, err := strconv.ParseInt(line[colsMap["precedence"]], 10, 32)
+	if err != nil {
+		log.Error(ctx, fmt.Sprintf("failed to parse precedence on line: %d (incl. header)", lineNumber+1), err)
+		return
+	}
+	precedence := int32(parsed)
+	createGroup.Precedence = &precedence
 	createGroup.Name = &line[colsMap["description"]]
 	input := createGroup.BuildCreateGroupInput(&userPoolID)
 
-	_, err := client.CreateGroup(ctx, input)
-	if err != nil {
+	_, createErr := client.CreateGroup(ctx, input)
+	if createErr != nil {
 		log.Error(ctx, fmt.Sprintf("failed to process line: %d (incl. header) with name:%q group: %+v", lineNumber+1, *createGroup.Name, createGroup), err)
 	}
 }
