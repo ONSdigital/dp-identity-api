@@ -149,6 +149,8 @@ func TestUserParams_GeneratePassword(t *testing.T) {
 func TestUserParams_ValidateRegistration(t *testing.T) {
 	ctx := context.Background()
 	allowedDomains := []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
+	// Set blockPlusAddressing to false for the test
+	blockPlusAddressing := false
 
 	Convey("returns an InvalidForename error if an invalid forename is submitted", t, func() {
 		user := models.UserParams{
@@ -157,7 +159,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 			Lastname: "Smith",
 		}
 
-		errs := user.ValidateRegistration(ctx, allowedDomains)
+		errs := user.ValidateRegistration(ctx, allowedDomains, blockPlusAddressing)
 
 		So(len(errs), ShouldEqual, 1)
 		castErr := errs[0].(*models.Error)
@@ -172,7 +174,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 			Lastname: "",
 		}
 
-		errs := user.ValidateRegistration(ctx, allowedDomains)
+		errs := user.ValidateRegistration(ctx, allowedDomains, blockPlusAddressing)
 
 		So(len(errs), ShouldEqual, 1)
 		castErr := errs[0].(*models.Error)
@@ -187,7 +189,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 			Lastname: "Smith",
 		}
 
-		errs := user.ValidateRegistration(ctx, allowedDomains)
+		errs := user.ValidateRegistration(ctx, allowedDomains, blockPlusAddressing)
 
 		So(len(errs), ShouldEqual, 1)
 		castErr := errs[0].(*models.Error)
@@ -202,12 +204,44 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 			Lastname: "Smith",
 		}
 
-		errs := user.ValidateRegistration(ctx, allowedDomains)
+		errs := user.ValidateRegistration(ctx, allowedDomains, blockPlusAddressing)
 
 		So(len(errs), ShouldEqual, 1)
 		castErr := errs[0].(*models.Error)
 		So(castErr.Code, ShouldEqual, models.InvalidEmailError)
 		So(castErr.Description, ShouldEqual, models.InvalidEmailDescription)
+	})
+
+	Convey("returns an InvalidEmail error if the email contains a '+' sign and blockPlusAddressing is true", t, func() {
+		// Set blockPlusAddressing to true to enforce blocking of plus addressing
+		blockPlusAddressing = true
+		user := models.UserParams{
+			Email:    "email+01@ons.gov.uk",
+			Forename: "Stan",
+			Lastname: "Smith",
+		}
+
+		errs := user.ValidateRegistration(ctx, allowedDomains, blockPlusAddressing)
+
+		So(len(errs), ShouldEqual, 1)
+		castErr := errs[0].(*models.Error)
+		So(castErr.Code, ShouldEqual, models.InvalidEmailError)
+		So(castErr.Description, ShouldEqual, "the submitted email could not be validated")
+	})
+
+	Convey("allows registration if the email contains a '+' sign and blockPlusAddressing is false", t, func() {
+		// Set blockPlusAddressing to false to allow plus addressing
+		blockPlusAddressing = false
+		user := models.UserParams{
+			Email:    "email+01@ons.gov.uk",
+			Forename: "Stan",
+			Lastname: "Smith",
+		}
+
+		errs := user.ValidateRegistration(ctx, allowedDomains, blockPlusAddressing)
+
+		// No errors should occur in this case
+		So(len(errs), ShouldEqual, 0)
 	})
 }
 

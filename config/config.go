@@ -25,6 +25,7 @@ type Config struct {
 	AllowedEmailDomains        []string                `envconfig:"ALLOWED_EMAIL_DOMAINS"`
 	MessageAction              types.MessageActionType `envconfig:"MESSAGE_ACTION"`
 	HTTPWriteTimeout           *time.Duration          `envconfig:"HTTP_WRITE_TIMEOUT"`
+	BlockPlusAddressing        bool                    `envconfig:"ENABLE_PLUS_EMAIL_BLOCKING"`
 
 	AuthorisationConfig *authorisation.Config
 }
@@ -47,6 +48,7 @@ func Get() (*Config, error) {
 		AWSAuthFlow:                "USER_PASSWORD_AUTH",
 		AllowedEmailDomains:        []string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 		AuthorisationConfig:        authorisation.NewDefaultConfig(),
+		BlockPlusAddressing:        true,
 		HTTPWriteTimeout:           nil,
 	}
 

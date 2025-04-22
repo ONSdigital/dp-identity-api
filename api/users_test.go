@@ -39,13 +39,13 @@ const (
 
 func TestCreateUserHandler(t *testing.T) {
 	var (
-		ctx                                = context.Background()
-		name, surname, email, invalidEmail = "bob", "bobbings", "foo_bar123@ext.ons.gov.uk", "foo_bar123@test.ons.gov.ie"
-		userException                      = "UsernameExistsException: User account already exists"
-		userStatusType                     = types.UserStatusTypeUnconfirmed
+		ctx                                                  = context.Background()
+		name, surname, email, invalidEmail, invalidPlusEmail = "bob", "bobbings", "foo_bar123@ext.ons.gov.uk", "foo_bar123@test.ons.gov.ie", "foo_bar+01@ext.ons.gov.uk"
+		userException                                        = "UsernameExistsException: User account already exists"
+		userStatusType                                       = types.UserStatusTypeUnconfirmed
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("Admin create user - check expected responses", t, func() {
 		adminCreateUsersTests := []struct {
@@ -168,9 +168,10 @@ func TestCreateUserHandler(t *testing.T) {
 
 	Convey("Validation fails 400: validating email and username throws validation errors", t, func() {
 		userValidationTests := []struct {
-			userDetails  map[string]interface{}
-			errorCodes   []string
-			httpResponse int
+			userDetails         map[string]interface{}
+			errorCodes          []string
+			httpResponse        int
+			blockPlusAddressing bool
 		}{
 			// missing email
 			{
@@ -179,6 +180,7 @@ func TestCreateUserHandler(t *testing.T) {
 					models.InvalidEmailError,
 				},
 				http.StatusBadRequest,
+				true,
 			},
 			// missing both forename and surname
 			{
@@ -188,6 +190,7 @@ func TestCreateUserHandler(t *testing.T) {
 					models.InvalidSurnameError,
 				},
 				http.StatusBadRequest,
+				true,
 			},
 			// missing surname
 			{
@@ -196,6 +199,7 @@ func TestCreateUserHandler(t *testing.T) {
 					models.InvalidSurnameError,
 				},
 				http.StatusBadRequest,
+				true,
 			},
 			// missing forename
 			{
@@ -204,6 +208,7 @@ func TestCreateUserHandler(t *testing.T) {
 					models.InvalidForenameError,
 				},
 				http.StatusBadRequest,
+				true,
 			},
 			// missing forename, surname and email
 			{
@@ -214,18 +219,41 @@ func TestCreateUserHandler(t *testing.T) {
 					models.InvalidEmailError,
 				},
 				http.StatusBadRequest,
+				true,
 			},
-			// invalid email
+			// invalid email with blockPlusAddressing = true
 			{
 				map[string]interface{}{"forename": name, "lastname": surname, "email": invalidEmail},
 				[]string{
 					models.InvalidEmailError,
 				},
 				http.StatusBadRequest,
+				true,
+			},
+			// invalid email with blockPlusAddressing = false
+			{
+				map[string]interface{}{"forename": name, "lastname": surname, "email": invalidEmail},
+				[]string{
+					models.InvalidEmailError,
+				},
+				http.StatusBadRequest,
+				false,
+			},
+			// invalid plus email with blockPlusAddressing = true
+			{
+				map[string]interface{}{"forename": name, "lastname": surname, "email": invalidPlusEmail},
+				[]string{
+					models.InvalidEmailError,
+				},
+				http.StatusBadRequest,
+				true,
 			},
 		}
 
 		for _, tt := range userValidationTests {
+			// Set up API with the appropriate blockPlusAddressing value
+			api, w, m = apiTestBlockPlusAddressingSetup(tt.blockPlusAddressing)
+
 			body, _ := json.Marshal(tt.userDetails)
 			r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
 
@@ -246,7 +274,7 @@ func TestCreateUserHandler(t *testing.T) {
 func TestListUserHandler(t *testing.T) {
 	var ctx = context.Background()
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("List user - check expected responses", t, func() {
 		adminCreateUsersTests := []struct {
@@ -297,7 +325,7 @@ func TestListUserHandler(t *testing.T) {
 
 func TestListUserHandlerWithFilter(t *testing.T) {
 	var ctx = context.Background()
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("List user - check expected responses", t, func() {
 		listUsersTest := []struct {
@@ -386,7 +414,7 @@ func TestListUserHandlerWithSort(t *testing.T) {
 		ctx = context.Background()
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("List user - check expected responses", t, func() {
 		listUsersTest := []struct {
@@ -544,7 +572,7 @@ func TestGetUserHandler(t *testing.T) {
 		status                                   = types.UserStatusTypeUnconfirmed
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("Get user - check expected responses", t, func() {
 		adminGetUsersTests := []struct {
@@ -630,7 +658,7 @@ func TestUpdateUserHandler(t *testing.T) {
 		status                                   = types.UserStatusTypeConfirmed
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	successfullyGetUser := []types.AttributeType{
 		{
@@ -1014,7 +1042,7 @@ func TestChangePasswordHandler(t *testing.T) {
 		expireLength                       int32 = 500
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	m.DescribeUserPoolClientFunc = func(_ context.Context, _ *cognitoidentityprovider.DescribeUserPoolClientInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
 		tokenValidDays := int32(1)
@@ -1145,7 +1173,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 		verificationToken = "999999"
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 	Convey("ConfirmForgotPassword - check expected responses", t, func() {
 		confirmForgotPasswordTests := []struct {
 			confirmForgotPasswordFunction func(_ context.Context, _ *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error)
@@ -1301,7 +1329,7 @@ func TestPasswordResetHandler(t *testing.T) {
 		email = "foo_bar123@ext.ons.gov.uk"
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("ForgotPassword - check expected responses", t, func() {
 		respondToAuthChallengeTests := []struct {
@@ -1445,7 +1473,7 @@ func TestListUserGroupsHandler(t *testing.T) {
 		}
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("List groups for user -check expected responses", t, func() {
 		listusergroups := []struct {
@@ -1538,7 +1566,7 @@ func TestGetGroupsforUser(t *testing.T) {
 		},
 	}
 
-	api, _, m := apiSetup()
+	api, _, m := apiTestSetup()
 	Convey("error is returned when list groups for a user returns an error", t, func() {
 		m.ListGroupsForUserFunc = func(_ context.Context, _ *cognitoidentityprovider.AdminListGroupsForUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 			var userNotFoundException types.ResourceNotFoundException
@@ -1656,7 +1684,7 @@ func TestGetGroupsforUser(t *testing.T) {
 }
 
 func TestIsValidFilter(t *testing.T) {
-	api, _, _ := apiSetup()
+	api, _, _ := apiTestSetup()
 
 	Convey("Validate Filter - check expected responses", t, func() {
 		validateFilterTest := []struct {

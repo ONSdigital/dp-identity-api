@@ -42,7 +42,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	a, err := api.Setup(ctx, r, client, cfg.AWSCognitoUserPoolID, cfg.AWSCognitoClientID, cfg.AWSCognitoClientSecret, cfg.AWSRegion, cfg.AWSAuthFlow, cfg.AllowedEmailDomains, authorisationMiddleware, jwksManager)
+	a, err := api.Setup(ctx, r, client, cfg.AWSCognitoUserPoolID, cfg.AWSCognitoClientID, cfg.AWSCognitoClientSecret, cfg.AWSRegion, cfg.AWSAuthFlow, cfg.BlockPlusAddressing, cfg.AllowedEmailDomains, authorisationMiddleware, jwksManager)
 	if err != nil {
 		log.Fatal(ctx, "error returned from api setup", err)
 		return nil, err

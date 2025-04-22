@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
@@ -118,7 +119,7 @@ func (p *UserParams) GeneratePassword(ctx context.Context) error {
 }
 
 // ValidateRegistration validates the required fields for user creation, returning validation errors for any failures
-func (p *UserParams) ValidateRegistration(ctx context.Context, allowedDomains []string) []error {
+func (p *UserParams) ValidateRegistration(ctx context.Context, allowedDomains []string, blockPlusAddressing bool) []error {
 	var validationErrs []error
 	if p.Forename == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidForenameError, InvalidForenameErrorDescription))
@@ -126,6 +127,11 @@ func (p *UserParams) ValidateRegistration(ctx context.Context, allowedDomains []
 
 	if p.Lastname == "" {
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidSurnameError, InvalidSurnameErrorDescription))
+	}
+
+	// Check if the email contains a '+' and if it's blocked based on the environment setting
+	if blockPlusAddressing && strings.Contains(p.Email, "+") {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription))
 	}
 
 	if !validation.IsAllowedEmailDomain(p.Email, allowedDomains) {

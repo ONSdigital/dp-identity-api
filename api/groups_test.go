@@ -153,7 +153,7 @@ func TestAddUserToGroupHandler(t *testing.T) {
 		userID = "abcd1234"
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 	timeStamp := time.Now()
 	getGroupData := &types.GroupType{
 		Description:  aws.String("a test group"),
@@ -426,7 +426,7 @@ func TestAddUserToGroupHandler(t *testing.T) {
 }
 
 func TestRemoveUserFromGroupHandler(t *testing.T) {
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 	timeStamp := time.Now()
 	getGroupData := &types.GroupType{
 		Description:  aws.String("a test group"),
@@ -689,7 +689,7 @@ func TestRemoveUserFromGroupHandler(t *testing.T) {
 }
 
 func TestGetUsersFromGroupHandler(t *testing.T) {
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("adds the returned users to the user list and sets the count", t, func() {
 		cognitoResponse := cognitoidentityprovider.ListUsersInGroupOutput{
@@ -788,7 +788,7 @@ func TestGetUsersInAGroup(t *testing.T) {
 		ID: "test-group",
 	}
 
-	api, _, m := apiSetup()
+	api, _, m := apiTestSetup()
 	Convey("error is returned when list users in group returns an error", t, func() {
 		m.ListUsersInGroupFunc = func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 			var groupNotFoundException types.ResourceNotFoundException
@@ -873,7 +873,7 @@ func TestCreateNewGroup(t *testing.T) {
 		internalErrorDescription = "internal error"
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	// ListGroupsFunction template - success
 	listGroupsFuncSuccess := func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
@@ -1056,7 +1056,7 @@ func TestUpdateGroup(t *testing.T) {
 		internalErrorDescription, notFoundErrorDescription = "internal error", "not found error"
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("Update a group - check responses", t, func() {
 		createGroupTests := []struct {
@@ -1208,7 +1208,7 @@ func TestUpdateGroup(t *testing.T) {
 }
 
 func TestGetListGroups(t *testing.T) {
-	api, _, m := apiSetup()
+	api, _, m := apiTestSetup()
 
 	Convey("When there is no next token cognito is called once and an empty list of groups is returned", t, func() {
 		listOfGroups := []types.GroupType{
@@ -1302,7 +1302,7 @@ func TestListGroupsHandler(t *testing.T) {
 		}
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("List groups -check expected responses", t, func() {
 		internalErrorDescription := ""
@@ -1438,7 +1438,7 @@ func TestGetGroupHandler(t *testing.T) {
 		}
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("Get group -check expected responses", t, func() {
 		GetGroupTest := []struct {
@@ -1517,7 +1517,7 @@ func TestGetGroupHandler(t *testing.T) {
 }
 
 func TestDeleteGroupHandler(t *testing.T) {
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("Delete group -check expected responses", t, func() {
 		DeleteGroupTest := []struct {
@@ -1603,7 +1603,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 			UserPoolId:       aws.String("")}
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("Get group -check expected responses", t, func() {
 		GetGroupTest := []struct {
@@ -1892,7 +1892,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 }
 
 func TestSetGroupUsers(t *testing.T) {
-	api, _, m := apiSetup()
+	api, _, m := apiTestSetup()
 
 	Convey("Get group -check expected responses", t, func() {
 		GetGroupTest := []struct {
@@ -2052,7 +2052,7 @@ func TestRemoveUserFromGroup(t *testing.T) {
 	var (
 		userID = "abcd1234"
 	)
-	api, _, m := apiSetup()
+	api, _, m := apiTestSetup()
 	getGroupData := models.Group{
 		ID: "123456789",
 	}
@@ -2225,7 +2225,7 @@ func TestAddUserToGroup(t *testing.T) {
 	var (
 		userID = "abcd1234"
 	)
-	api, _, m := apiSetup()
+	api, _, m := apiTestSetup()
 	getGroupData := models.Group{
 		ID: "123456789",
 	}
@@ -2394,7 +2394,7 @@ func TestAddUserToGroup(t *testing.T) {
 }
 
 func TestListGroupsUsersHandler(t *testing.T) {
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 	Convey("Check results for json", t, func() {
 		listGroupsUsers := []struct {
 			description          string
@@ -2876,7 +2876,7 @@ func isJSON(successResponse *models.SuccessResponse, expectedLength int) bool {
 }
 
 func TestGetTeamsReportLines(t *testing.T) {
-	api, _, m := apiSetup()
+	api, _, m := apiTestSetup()
 	Convey("init", t, func() {
 		listGroupsUsers := []struct {
 			description           string

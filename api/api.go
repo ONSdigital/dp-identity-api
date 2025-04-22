@@ -6,15 +6,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
-
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-	"github.com/ONSdigital/dp-identity-api/v2/models"
-
 	"github.com/ONSdigital/dp-identity-api/v2/cognito"
-	"github.com/gorilla/mux"
-
 	"github.com/ONSdigital/dp-identity-api/v2/jwks"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/gorilla/mux"
 )
 
 var (
@@ -34,16 +31,17 @@ var (
 
 // API provides a struct to wrap the api around
 type API struct {
-	Router           *mux.Router
-	CognitoClient    cognito.Client
-	UserPoolID       string
-	ClientID         string
-	ClientSecret     string
-	ClientAuthFlow   types.AuthFlowType
-	AWSRegion        string
-	AllowedDomains   []string
-	APIRequestFilter map[string]map[string]string
-	JWKSManager      jwks.Manager
+	Router              *mux.Router
+	CognitoClient       cognito.Client
+	UserPoolID          string
+	ClientID            string
+	ClientSecret        string
+	ClientAuthFlow      types.AuthFlowType
+	AWSRegion           string
+	AllowedDomains      []string
+	APIRequestFilter    map[string]map[string]string
+	JWKSManager         jwks.Manager
+	BlockPlusAddressing bool
 }
 
 type baseHandler func(ctx context.Context, w http.ResponseWriter, r *http.Request) (*models.SuccessResponse, *models.ErrorResponse)
@@ -66,6 +64,7 @@ func Setup(ctx context.Context,
 	cognitoClient cognito.Client,
 	userPoolID, clientID, clientSecret, awsRegion string,
 	clientAuthFlow types.AuthFlowType,
+	blockPlusAddressing bool,
 	allowedDomains []string,
 	auth authorisation.Middleware,
 	jwksManager jwks.Manager) (*API, error) {
@@ -79,14 +78,15 @@ func Setup(ctx context.Context,
 	}
 
 	api := &API{
-		Router:         r,
-		CognitoClient:  cognitoClient,
-		UserPoolID:     userPoolID,
-		ClientID:       clientID,
-		ClientSecret:   clientSecret,
-		ClientAuthFlow: clientAuthFlow,
-		AWSRegion:      awsRegion,
-		AllowedDomains: allowedDomains,
+		Router:              r,
+		CognitoClient:       cognitoClient,
+		UserPoolID:          userPoolID,
+		ClientID:            clientID,
+		ClientSecret:        clientSecret,
+		ClientAuthFlow:      clientAuthFlow,
+		AWSRegion:           awsRegion,
+		BlockPlusAddressing: blockPlusAddressing,
+		AllowedDomains:      allowedDomains,
 		APIRequestFilter: map[string]map[string]string{
 			"/v1/users": {
 				"active=true":  "status=\"Enabled\"",

@@ -4,25 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
-
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/aws/smithy-go"
-
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
-
-	"github.com/ONSdigital/dp-identity-api/v2/models"
-
-	"github.com/gorilla/mux"
-	. "github.com/smartystreets/goconvey/convey"
-
 	authorisation "github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
 	"github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
 	jwksmock "github.com/ONSdigital/dp-identity-api/v2/jwks/mock"
+	"github.com/ONSdigital/dp-identity-api/v2/models"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/aws/smithy-go"
+	"github.com/gorilla/mux"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 const (
@@ -51,7 +46,7 @@ func TestSetup(t *testing.T) {
 		}
 
 		api, err := Setup(ctx, r, m,
-			"us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow", "eu-west-1234",
+			"us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow", "eu-west-1234", true,
 			[]string{"@ons.gov.uk", "@ext.ons.gov.uk"}, newAuthorisationMiddlwareMock(), jwksHandler)
 
 		Convey("When created the following route(s) should have been added", func() {
@@ -89,13 +84,14 @@ func TestSetup(t *testing.T) {
 	Convey("Given an API instance with an empty required parameter passed", t, func() {
 		authorisationMiddleware := newAuthorisationMiddlwareMock()
 		paramCheckTests := []struct {
-			testName       string
-			userPoolID     string
-			clientID       string
-			clientSecret   string
-			clientAuthFlow types.AuthFlowType
-			awsRegion      string
-			allowedDomains []string
+			testName            string
+			userPoolID          string
+			clientID            string
+			clientSecret        string
+			clientAuthFlow      types.AuthFlowType
+			awsRegion           string
+			blockPlusAddressing bool
+			allowedDomains      []string
 		}{
 			// missing userPoolID
 			{
@@ -105,6 +101,7 @@ func TestSetup(t *testing.T) {
 				"secret-ccc-ddd",
 				"authflow",
 				"eu-west-1234",
+				true,
 				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 			},
 			// missing clientID
@@ -115,6 +112,7 @@ func TestSetup(t *testing.T) {
 				"secret-ccc-ddd",
 				"authflow",
 				"eu-west-1234",
+				true,
 				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 			},
 			// missing clientSecret
@@ -123,8 +121,9 @@ func TestSetup(t *testing.T) {
 				"eu-west-22_bdsjhids2",
 				"client-aaa-bbb",
 				"",
-				"eu-west-1234",
 				"authflow",
+				"eu-west-1234",
+				true,
 				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 			},
 			// missing clientAuthFlow
@@ -133,8 +132,9 @@ func TestSetup(t *testing.T) {
 				"eu-west-22_bdsjhids2",
 				"client-aaa-bbb",
 				"secret-ccc-ddd",
-				"eu-west-1234",
 				"",
+				"eu-west-1234",
+				true,
 				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
 			},
 			// missing allowedDomains
@@ -143,8 +143,9 @@ func TestSetup(t *testing.T) {
 				"eu-west-22_bdsjhids2",
 				"client-aaa-bbb",
 				"secret-ccc-ddd",
-				"eu-west-1234",
 				"authflow",
+				"eu-west-1234",
+				true,
 				nil,
 			},
 		}
@@ -152,7 +153,7 @@ func TestSetup(t *testing.T) {
 		for _, tt := range paramCheckTests {
 			r := mux.NewRouter()
 			ctx := context.Background()
-			_, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, tt.userPoolID, tt.clientID, tt.clientSecret, tt.awsRegion, tt.clientAuthFlow, tt.allowedDomains, authorisationMiddleware, jwksHandler)
+			_, err := Setup(ctx, r, &mock.MockCognitoIdentityProviderClient{}, tt.userPoolID, tt.clientID, tt.clientSecret, tt.awsRegion, tt.clientAuthFlow, tt.blockPlusAddressing, tt.allowedDomains, authorisationMiddleware, jwksHandler)
 
 			Convey("Error should not be nil if require parameter is empty: "+tt.testName, func() {
 				So(err.Error(), ShouldEqual, models.MissingConfigError+": "+models.MissingConfigDescription)
@@ -170,7 +171,32 @@ func hasRoute(r *mux.Router, path, method string) bool {
 	return r.Match(req, match)
 }
 
-func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProviderClient) {
+func apiTestSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProviderClient) {
+	var (
+		ctx                                       = context.Background()
+		r                                         = mux.NewRouter()
+		poolID, clientID, clientSecret, awsRegion = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "eu-west-1234"
+		authFlow                                  = types.AuthFlowTypeUserPasswordAuth
+		blockPlusAddressing                       = true
+		allowedDomains                            = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
+	)
+
+	m := &mock.MockCognitoIdentityProviderClient{}
+	m.CreateGroupFunc = func(_ context.Context, _ *cognitoidentityprovider.CreateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.CreateGroupOutput, error) {
+		group := &cognitoidentityprovider.CreateGroupOutput{
+			Group: &types.GroupType{},
+		}
+		return group, nil
+	}
+
+	api, _ := Setup(ctx, r, m, poolID, clientID, clientSecret, awsRegion, authFlow, blockPlusAddressing, allowedDomains, newAuthorisationMiddlwareMock(), jwksHandler)
+
+	w := httptest.NewRecorder()
+
+	return api, w, m
+}
+
+func apiTestBlockPlusAddressingSetup(blockPlusAddressing bool) (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProviderClient) {
 	var (
 		ctx                                       = context.Background()
 		r                                         = mux.NewRouter()
@@ -186,8 +212,16 @@ func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProv
 		}
 		return group, nil
 	}
+	m.ListUsersFunc = func(_ context.Context, userInput *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
+		fmt.Println("Mock ListUsersFunc called with input:", userInput)
+		// Return a mock response
+		user := &cognitoidentityprovider.ListUsersOutput{
+			Users: []types.UserType{},
+		}
+		return user, nil
+	}
 
-	api, _ := Setup(ctx, r, m, poolID, clientID, clientSecret, awsRegion, authFlow, allowedDomains, newAuthorisationMiddlwareMock(), jwksHandler)
+	api, _ := Setup(ctx, r, m, poolID, clientID, clientSecret, awsRegion, authFlow, blockPlusAddressing, allowedDomains, newAuthorisationMiddlwareMock(), jwksHandler)
 
 	w := httptest.NewRecorder()
 

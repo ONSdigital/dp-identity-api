@@ -30,7 +30,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 		expireLength                       int32 = 500
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	// mock call to: AdminUserGlobalSignOut(input *cognitoidentityprovider.AdminUserGlobalSignOutInput) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error)
 	m.AdminUserGlobalSignOutFunc = func(_ context.Context, _ *cognitoidentityprovider.AdminUserGlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
@@ -211,7 +211,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 func TestAPI_SignOutHandler(t *testing.T) {
 	var ctx = context.Background()
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	m.GlobalSignOutFunc = func(_ context.Context, _ *cognitoidentityprovider.GlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 		return &cognitoidentityprovider.GlobalSignOutOutput{}, nil
@@ -292,7 +292,7 @@ func TestAPI_RefreshHandler(t *testing.T) {
 		expireLength               int32 = 500
 	)
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	m.InitiateAuthFunc = func(_ context.Context, _ *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 		return &cognitoidentityprovider.InitiateAuthOutput{
@@ -388,7 +388,7 @@ func TestAPI_RefreshHandler(t *testing.T) {
 func TestSignOutAllUsersHandlerAccessForProcessing(t *testing.T) {
 	var ctx = context.Background()
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("Testing users global signout - handler", t, func() {
 		signOutAllUsersTests := []struct {
@@ -424,7 +424,7 @@ func TestSignOutAllUsersHandlerAccessForProcessing(t *testing.T) {
 func TestSignOutAllUsersHandlerInternalServerError(t *testing.T) {
 	var ctx = context.Background()
 
-	api, w, m := apiSetup()
+	api, w, m := apiTestSetup()
 
 	Convey("Testing users global signout - handler", t, func() {
 		signOutAllUsersTests := []struct {
@@ -463,7 +463,7 @@ func TestSignOutAllUsersHandlerInternalServerError(t *testing.T) {
 func TestSignOutAllUsersGoRoutine(t *testing.T) {
 	var ctx = context.Background()
 
-	api, _, m := apiSetup()
+	api, _, m := apiTestSetup()
 
 	// a list of known UUIDs for testing
 	userNamesList := []string{
@@ -590,7 +590,7 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 	var ctx = context.Background()
 
-	api, _, m := apiSetup()
+	api, _, m := apiTestSetup()
 
 	Convey("Testing users global signout - go routine", t, func() {
 		var (

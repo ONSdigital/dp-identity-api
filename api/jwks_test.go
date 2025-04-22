@@ -20,7 +20,7 @@ const (
 )
 
 func TestCognitoPoolJWKSHandler(t *testing.T) {
-	api, w, _ := apiSetup()
+	api, w, _ := apiTestSetup()
 	r := httptest.NewRequest(http.MethodGet, jwksEndpoint, http.NoBody)
 
 	resp, err := api.CognitoPoolJWKSHandler(context.Background(), w, r)
@@ -34,7 +34,7 @@ func TestCognitoPoolJWKSHandler(t *testing.T) {
 }
 
 func TestCognitoPoolJWKSHandlerErrors404(t *testing.T) {
-	api, w, _ := apiSetup()
+	api, w, _ := apiTestSetup()
 
 	// override default jwks handler
 	api.JWKSManager = &mock.ManagerMock{
@@ -56,7 +56,7 @@ func TestCognitoPoolJWKSHandlerErrors404(t *testing.T) {
 }
 
 func TestCognitoPoolJWKSHandlerErrors500(t *testing.T) {
-	api, w, _ := apiSetup()
+	api, w, _ := apiTestSetup()
 
 	// override default jwks handler
 	api.JWKSManager = &mock.ManagerMock{
