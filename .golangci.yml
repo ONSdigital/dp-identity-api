@@ -59,6 +59,7 @@ linters:
     - gofmt
     - goimports
     - revive
+    - gosec
     - gosimple
     - govet
     - ineffassign
@@ -79,6 +80,10 @@ issues:
       text: "dot-imports"
       linters:
         - revive
-        - gosec
       source: "github.com/smartystreets/goconvey/convey"
+    # Allow integer overflow conversion int -> int32
+    - path: _mocker.go
+      text: "integer overflow"
+      linters:
+        - gosec
   new: false
