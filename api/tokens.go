@@ -20,7 +20,6 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 			_ = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
 		}
 	}()
-	println("in TokensHandler 1")
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		println("Returning a handleBodyReadError")

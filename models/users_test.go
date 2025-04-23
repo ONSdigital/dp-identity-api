@@ -17,10 +17,11 @@ import (
 )
 
 const (
-	userID       = "abcd1234"
-	userPoolID   = "euwest-99-aabbcc"
-	clientID     = "awsclientid"
-	clientSecret = "awsSecret"
+	userID                = "abcd1234"
+	userPoolID            = "euwest-99-aabbcc"
+	clientID              = "awsclientid"
+	clientSecret          = "awsSecret"
+	userStatusUnconfirmed = "UNCONFIRMED"
 )
 
 func TestUsersList_BuildListUserRequest(t *testing.T) {
@@ -127,7 +128,7 @@ func TestUsersList_BuildSuccessfulJsonResponse(t *testing.T) {
 		usersJSON := body["users"].([]interface{})
 		userJSON := usersJSON[0].(map[string]interface{})
 		So(userJSON["id"], ShouldEqual, name)
-		So(userJSON["status"], ShouldEqual, "UNCONFIRMED")
+		So(userJSON["status"], ShouldEqual, userStatusUnconfirmed)
 	})
 }
 
@@ -439,7 +440,7 @@ func TestUserParams_BuildSuccessfulJsonResponse(t *testing.T) {
 		err = json.Unmarshal(response, &userJSON)
 		So(err, ShouldBeNil)
 		So(userJSON["id"], ShouldEqual, name)
-		So(userJSON["status"], ShouldEqual, "UNCONFIRMED")
+		So(userJSON["status"], ShouldEqual, userStatusUnconfirmed)
 	})
 }
 

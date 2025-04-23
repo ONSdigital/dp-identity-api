@@ -277,9 +277,6 @@ func (p UserParams) MapCognitoDetails(userDetails types.UserType) UserParams {
 			statusNotes = *attr.Value
 		}
 	}
-	println("The ID will be: " + *userDetails.Username)
-	println("The Status will be: " + userDetails.UserStatus)
-	print("The Active value will be :" + strconv.FormatBool(userDetails.Enabled))
 
 	return UserParams{
 		Forename:    forename,
