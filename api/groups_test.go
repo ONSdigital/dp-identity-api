@@ -707,7 +707,7 @@ func TestGetUsersFromGroupHandler(t *testing.T) {
 			},
 		}
 		listOfUsers := models.UsersList{}
-		listOfUsers.Users, listOfUsers.Count = listOfUsers.MapCognitoUsers(&cognitoResponse.Users)
+		listOfUsers.MapCognitoUsers(&cognitoResponse.Users)
 		So(len(listOfUsers.Users), ShouldEqual, len(cognitoResponse.Users))
 		So(listOfUsers.Count, ShouldEqual, len(cognitoResponse.Users))
 	})

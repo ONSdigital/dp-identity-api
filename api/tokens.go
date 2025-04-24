@@ -237,7 +237,7 @@ func (api *API) ListUsersWorker(ctx context.Context, userFilterString *string, b
 	if usersListError != nil {
 		return nil, usersListError
 	}
-	usersList.Users, usersList.Count = usersList.MapCognitoUsers(&listUsersResp.Users)
+	usersList.MapCognitoUsers(&listUsersResp.Users)
 	return &usersList.Users, nil
 }
 
