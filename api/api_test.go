@@ -172,7 +172,7 @@ func apiSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProv
 		ctx                                       = context.Background()
 		r                                         = mux.NewRouter()
 		poolID, clientID, clientSecret, awsRegion = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "eu-west-1234"
-		authFlow                                  = types.AuthFlowTypeUserPasswordAuth // "USER_PASSWORD_AUTH"
+		authFlow                                  = types.AuthFlowTypeUserPasswordAuth
 		allowedDomains                            = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
 	)
 
