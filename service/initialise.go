@@ -90,7 +90,7 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 
 // DoGetCognitoClient creates a CognitoClient with the provided region
 func (e *Init) DoGetCognitoClient(ctx context.Context, awsRegion string) cognitoclient.Client {
-	cfg, err := sdkcfg.LoadDefaultConfig(context.TODO(),
+	cfg, err := sdkcfg.LoadDefaultConfig(ctx,
 		sdkcfg.WithRegion(awsRegion),
 	)
 
