@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
-
+	dpErrors "github.com/ONSdigital/dp-api-clients-go/v2/errors"
 	"github.com/ONSdigital/dp-identity-api/v2/models"
 	"github.com/ONSdigital/dp-identity-api/v2/scripts/import_users/config"
 	"github.com/ONSdigital/dp-identity-api/v2/scripts/utils"
 	"github.com/ONSdigital/log.go/v2/log"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/pkg/errors"
 )
 
@@ -71,7 +71,8 @@ func createUser(ctx context.Context, client *cognitoidentityprovider.Client, lin
 	createUserRequest := userInfo.BuildCreateUserRequest(userInfo.ID, cfg.AWSCognitoUserPoolID)
 	_, errCreateUser := client.AdminCreateUser(ctx, createUserRequest)
 	if errCreateUser != nil {
-		log.Error(ctx, fmt.Sprintf("failed to process line %v user: %+v", lineNumber, userInfo), err)
+		logdata := map[string]interface{}{"lineNumber": lineNumber, "user": userInfo}
+		log.Error(ctx, "an error occurred when creating the user", dpErrors.New(errCreateUser, 500, logdata))
 	}
 
 	// Disable user if it's 'enabled' column is not TRUE

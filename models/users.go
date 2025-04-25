@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
@@ -77,7 +76,6 @@ func (p UsersList) MapCognitoUsers(cognitoResults *[]types.UserType) (users []Us
 	for _, user := range *cognitoResults {
 		p.Users = append(p.Users, UserParams{}.MapCognitoDetails(user))
 	}
-	println("The length of UserParams, in the UsersList, is: " + strconv.Itoa(len(p.Users)))
 	p.Count = len(p.Users)
 	return p.Users, p.Count
 }
