@@ -22,6 +22,7 @@ import (
 const signInEndPoint = "http://localhost:25600/v1/tokens"
 const signOutEndPoint = "http://localhost:25600/v1/tokens/self"
 const tokenRefreshEndPoint = "http://localhost:25600/v1/tokens/self" // #nosec
+const serverError = smithy.ErrorFault(1)
 
 func TestAPI_TokensHandler(t *testing.T) {
 	var (
@@ -100,11 +101,10 @@ func TestAPI_TokensHandler(t *testing.T) {
 	})
 
 	Convey("Sign In Cognito internal error: adds an error to the ErrorResponse and sets its Status to 500", t, func() {
-		awsOrigErr := smithy.ErrorFault(1) // server error
 		awsErr := &smithy.GenericAPIError{
 			Code:    awsErrCode,
 			Message: awsErrMessage,
-			Fault:   awsOrigErr,
+			Fault:   serverError,
 		}
 		m.InitiateAuthFunc = func(_ context.Context, _ *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			return nil, awsErr
@@ -150,7 +150,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 			awsErr := &smithy.GenericAPIError{
 				Code:    tt.awsErrCode,
 				Message: tt.awsErrMessage,
-				Fault:   smithy.ErrorFault(1),
+				Fault:   serverError,
 			}
 			m.InitiateAuthFunc = func(_ context.Context, _ *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 				return nil, awsErr
@@ -245,7 +245,7 @@ func TestAPI_SignOutHandler(t *testing.T) {
 		awsErr := &smithy.GenericAPIError{
 			Code:    awsErrCode,
 			Message: awsErrMessage,
-			Fault:   smithy.ErrorFault(1), // server error
+			Fault:   serverError,
 		}
 		m.GlobalSignOutFunc = func(_ context.Context, _ *cognitoidentityprovider.GlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 			return nil, awsErr
@@ -265,11 +265,10 @@ func TestAPI_SignOutHandler(t *testing.T) {
 	Convey("Global Sign Out Cognito request error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
 		awsErrCode := "NotAuthorizedException"
 		awsErrMessage := "User is not authorized"
-		awsOrigErr := smithy.ErrorFault(1) // server error
 		awsErr := &smithy.GenericAPIError{
 			Code:    awsErrCode,
 			Message: awsErrMessage,
-			Fault:   awsOrigErr,
+			Fault:   serverError,
 		}
 		m.GlobalSignOutFunc = func(_ context.Context, _ *cognitoidentityprovider.GlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GlobalSignOutOutput, error) {
 			return nil, awsErr
@@ -340,7 +339,7 @@ func TestAPI_RefreshHandler(t *testing.T) {
 		awsErr := &smithy.GenericAPIError{
 			Code:    awsErrCode,
 			Message: awsErrMessage,
-			Fault:   smithy.ErrorFault(1), // server error
+			Fault:   serverError,
 		}
 		m.InitiateAuthFunc = func(_ context.Context, _ *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			return nil, awsErr
@@ -363,11 +362,10 @@ func TestAPI_RefreshHandler(t *testing.T) {
 	Convey("Token refresh Cognito request error: adds an error to the ErrorResponse and sets its Status to 403", t, func() {
 		awsErrCode := "NotAuthorizedException"
 		awsErrMessage := "User is not authorized"
-		awsOrigErr := smithy.ErrorFault(1) // server error
 		awsErr := &smithy.GenericAPIError{
 			Code:    awsErrCode,
 			Message: awsErrMessage,
-			Fault:   awsOrigErr,
+			Fault:   serverError,
 		}
 		m.InitiateAuthFunc = func(_ context.Context, _ *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 			return nil, awsErr
@@ -441,7 +439,7 @@ func TestSignOutAllUsersHandlerInternalServerError(t *testing.T) {
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
 						Message: awsErrMessage,
-						Fault:   smithy.ErrorFault(1), // server error
+						Fault:   serverError,
 					}
 					return nil, awsErr
 				},
@@ -520,7 +518,7 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 						awsErr := &smithy.GenericAPIError{
 							Code:    awsErrCode,
 							Message: awsErrMessage,
-							Fault:   smithy.ErrorFault(1), // server error
+							Fault:   serverError,
 						}
 						return nil, awsErr
 					}
@@ -633,7 +631,7 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
 						Message: awsErrMessage,
-						Fault:   smithy.ErrorFault(1), // server error
+						Fault:   serverError,
 					}
 					return nil, awsErr
 				},
@@ -649,7 +647,7 @@ func TestSignOutAllUsersGetAllUsersList(t *testing.T) {
 						awsErr := &smithy.GenericAPIError{
 							Code:    awsErrCode,
 							Message: awsErrMessage,
-							Fault:   smithy.ErrorFault(1), // server error
+							Fault:   serverError,
 						}
 						// set error code index reference to 1 - expecting a http.StatusInternalServerError here
 						errCode = 1
