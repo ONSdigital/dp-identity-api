@@ -64,7 +64,7 @@ func TestUsersList_MapCognitoUsers(t *testing.T) {
 			},
 		}
 		userList := models.UsersList{}
-		userList.Users, userList.Count = userList.MapCognitoUsers(&cognitoResponse.Users)
+		userList.MapCognitoUsers(&cognitoResponse.Users)
 
 		So(len(userList.Users), ShouldEqual, len(cognitoResponse.Users))
 		So(userList.Count, ShouldEqual, len(cognitoResponse.Users))
@@ -94,7 +94,7 @@ func TestUsersList_SetUsers(t *testing.T) {
 			},
 		}
 		userList := models.UsersList{}
-		userList.Users, userList.Count = userList.SetUsers(&listOfUsers)
+		userList.SetUsers(&listOfUsers)
 
 		So(len(userList.Users), ShouldEqual, len(listOfUsers))
 		So(userList.Count, ShouldEqual, len(listOfUsers))
@@ -138,8 +138,7 @@ func TestUserParams_GeneratePassword(t *testing.T) {
 
 		user := models.UserParams{}
 
-		var err error
-		user.Password, err = user.GeneratePassword(ctx)
+		err := user.GeneratePassword(ctx)
 
 		So(err, ShouldBeNil)
 		So(user.Password, ShouldNotBeNil)
@@ -543,7 +542,7 @@ func TestUserParams_MapCognitoGetResponse(t *testing.T) {
 			Enabled:    true,
 		}
 		user := models.UserParams{ID: id}
-		user = user.MapCognitoGetResponse(&cognitoUser)
+		user.MapCognitoGetResponse(&cognitoUser)
 
 		So(user.Forename, ShouldEqual, forename)
 		So(user.Lastname, ShouldEqual, surname)

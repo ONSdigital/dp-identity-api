@@ -63,7 +63,7 @@ func createUser(ctx context.Context, client *cognitoidentityprovider.Client, lin
 	}
 
 	var err error
-	_, err = userInfo.GeneratePassword(ctx)
+	err = userInfo.GeneratePassword(ctx)
 	if err != nil {
 		log.Error(ctx, "failed to generate password", err)
 	}

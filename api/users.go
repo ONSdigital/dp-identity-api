@@ -43,7 +43,7 @@ func (api *API) CreateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
 
-	user.Password, err = user.GeneratePassword(ctx)
+	err = user.GeneratePassword(ctx)
 	if err != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
 	}
@@ -106,7 +106,7 @@ func (api *API) ListUsersHandler(ctx context.Context, _ http.ResponseWriter, req
 		return nil, errResponse
 	}
 
-	usersList.Users, usersList.Count = usersList.SetUsers(listUserResp)
+	usersList.SetUsers(listUserResp)
 
 	if req.URL.Query().Get("sort") != "" {
 		requestSortQueryErrs := query.SortBy(req.URL.Query().Get("sort"), usersList.Users)
@@ -137,7 +137,7 @@ func (api *API) GetUserHandler(ctx context.Context, _ http.ResponseWriter, req *
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	user = user.MapCognitoGetResponse(userResp)
+	user.MapCognitoGetResponse(userResp)
 
 	jsonResponse, responseErr := user.BuildSuccessfulJSONResponse(ctx)
 	if responseErr != nil {
@@ -200,7 +200,7 @@ func (api *API) UpdateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	user = user.MapCognitoGetResponse(userDetailsResponse)
+	user.MapCognitoGetResponse(userDetailsResponse)
 
 	jsonResponse, responseErr := user.BuildSuccessfulJSONResponse(ctx)
 	if responseErr != nil {

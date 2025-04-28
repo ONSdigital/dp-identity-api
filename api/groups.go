@@ -189,7 +189,7 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, _ http.ResponseWrit
 	}
 
 	listOfUsers := models.UsersList{}
-	listOfUsers.Users, listOfUsers.Count = listOfUsers.MapCognitoUsers(&listUsers)
+	listOfUsers.MapCognitoUsers(&listUsers)
 
 	if err = req.ParseForm(); err != nil {
 		dplogs.Error(ctx, "error parsing form", err)
@@ -510,7 +510,7 @@ func (api *API) AddUserToGroup(ctx context.Context, group models.Group, userID s
 		return nil, err
 	}
 	listOfUsers := models.UsersList{}
-	listOfUsers.Users, listOfUsers.Count = listOfUsers.MapCognitoUsers(&listUsers)
+	listOfUsers.MapCognitoUsers(&listUsers)
 
 	return &listOfUsers, nil
 }
@@ -530,7 +530,7 @@ func (api *API) RemoveUserFromGroup(ctx context.Context, group models.Group, use
 	}
 
 	listOfUsers := models.UsersList{}
-	listOfUsers.Users, listOfUsers.Count = listOfUsers.MapCognitoUsers(&listUsers)
+	listOfUsers.MapCognitoUsers(&listUsers)
 
 	return &listOfUsers, nil
 }

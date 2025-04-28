@@ -80,9 +80,8 @@ func createUsers(ctx context.Context, client cognito.Client, userPoolID string, 
 	for i := range [UserCount]int{} {
 		for _, backoff := range backoffSchedule {
 			user := models.UserParams{}
-			var passwordError error
-			user.Password, passwordError = user.GeneratePassword(ctx)
-			if passwordError != nil {
+			err := user.GeneratePassword(ctx)
+			if err != nil {
 				break
 			}
 			lastName := baseLastName + fmt.Sprint(i)
@@ -135,9 +134,8 @@ func confirmUsers(ctx context.Context, client cognito.Client, userPoolID string,
 		}
 		for _, backoff := range backoffSchedule {
 			user := models.UserParams{}
-			var passwordError error
-			user.Password, passwordError = user.GeneratePassword(ctx)
-			if passwordError != nil {
+			err := user.GeneratePassword(ctx)
+			if err != nil {
 				break
 			}
 			userSetPasswordInput := cognitoidentityprovider.AdminSetUserPasswordInput{
