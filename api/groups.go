@@ -177,9 +177,7 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, _ http.ResponseWrit
 	vars := mux.Vars(req)
 	group := models.Group{ID: vars["id"]}
 
-	var listOfUsersInput []types.UserType
-
-	listUsers, err := api.getUsersInAGroup(ctx, listOfUsersInput, group)
+	listUsers, err := api.getUsersInAGroup(ctx, group)
 	if err != nil {
 		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from list users in group endpoint")
 		if cognitoErr.Code == models.NotFoundError {
@@ -235,7 +233,7 @@ func sortUsers(ctx context.Context, users []models.UserParams, sortBy []string) 
 	}
 }
 
-func (api *API) getUsersInAGroup(ctx context.Context, listOfUsers []types.UserType, group models.Group) ([]types.UserType, error) {
+func (api *API) getUsersInAGroup(ctx context.Context, group models.Group) (listOfUsers []types.UserType, err error) {
 	firstTimeCheck := false
 	var nextToken string
 	for {
@@ -457,8 +455,7 @@ func (api *API) SetGroupUsers(ctx context.Context, group models.Group, users mod
 	keep := false
 	successResponse := &models.UsersList{}
 
-	var listOfUsersInput []types.UserType
-	listUsers, err := api.getUsersInAGroup(ctx, listOfUsersInput, group)
+	listUsers, err := api.getUsersInAGroup(ctx, group)
 	if err != nil {
 		cognitoErr := models.NewCognitoError(ctx, err, "Cognito ListUsersInGroup request from set group membership endpoint")
 		if cognitoErr.Code == models.NotFoundError {
@@ -503,9 +500,8 @@ func (api *API) AddUserToGroup(ctx context.Context, group models.Group, userID s
 	if err != nil {
 		return nil, err
 	}
-	var listOfUsersInput []types.UserType
 
-	listUsers, err := api.getUsersInAGroup(ctx, listOfUsersInput, group)
+	listUsers, err := api.getUsersInAGroup(ctx, group)
 	if err != nil {
 		return nil, err
 	}
@@ -522,9 +518,8 @@ func (api *API) RemoveUserFromGroup(ctx context.Context, group models.Group, use
 	if err != nil {
 		return nil, err
 	}
-	var listOfUsersInput []types.UserType
 
-	listUsers, err := api.getUsersInAGroup(ctx, listOfUsersInput, group)
+	listUsers, err := api.getUsersInAGroup(ctx, group)
 	if err != nil {
 		return nil, err
 	}
@@ -590,8 +585,7 @@ func (api *API) GetTeamsReportLines(ctx context.Context, listOfGroups *cognitoid
 	var GroupsUsersList []models.ListGroupUsersType
 	for _, ListGroup := range listOfGroups.Groups {
 		inputGroup := models.Group{ID: *ListGroup.GroupName}
-		var listOfUsersInput []types.UserType
-		listUsers, err := api.getUsersInAGroup(ctx, listOfUsersInput, inputGroup)
+		listUsers, err := api.getUsersInAGroup(ctx, inputGroup)
 		if err != nil {
 			return nil, err
 		}

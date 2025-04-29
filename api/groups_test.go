@@ -796,7 +796,7 @@ func TestGetUsersInAGroup(t *testing.T) {
 			return nil, &groupNotFoundException
 		}
 
-		listOfUsersResponse, errorResponse := api.getUsersInAGroup(ctx, nil, getGroupData)
+		listOfUsersResponse, errorResponse := api.getUsersInAGroup(ctx, getGroupData)
 
 		So(listOfUsersResponse, ShouldBeNil)
 		So(errorResponse.Error(), ShouldResemble, "ResourceNotFoundException: group not found")
@@ -820,7 +820,7 @@ func TestGetUsersInAGroup(t *testing.T) {
 			return listUsersInGroup, nil
 		}
 
-		listOfUsersResponse, errorResponse := api.getUsersInAGroup(ctx, nil, getGroupData)
+		listOfUsersResponse, errorResponse := api.getUsersInAGroup(ctx, getGroupData)
 
 		So(listOfUsersResponse, ShouldResemble, listOfUsers)
 		So(errorResponse, ShouldBeNil)
@@ -861,42 +861,9 @@ func TestGetUsersInAGroup(t *testing.T) {
 			return listUsersInGroup, nil
 		}
 
-		listOfUsersResponse, errorResponse := api.getUsersInAGroup(ctx, nil, getGroupData)
+		listOfUsersResponse, errorResponse := api.getUsersInAGroup(ctx, getGroupData)
 
 		So(listOfUsersResponse, ShouldResemble, listOfUsers)
-		So(errorResponse, ShouldBeNil)
-	})
-
-	Convey("When GetUsersInAGroup in called with a list of users the appended list of users in returned", t, func() {
-		listOfUsers := []types.UserType{
-			{
-				Username: &name,
-			},
-		}
-
-		returnedListOfUsers := []types.UserType{
-			{
-				Username: &name,
-			},
-			{
-				Username: &name,
-			},
-		}
-
-		m.ListUsersInGroupFunc = func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
-			listUsersInGroup := &cognitoidentityprovider.ListUsersInGroupOutput{
-				Users: []types.UserType{
-					{
-						Username: &name,
-					},
-				},
-			}
-			return listUsersInGroup, nil
-		}
-
-		listOfUsersResponse, errorResponse := api.getUsersInAGroup(ctx, listOfUsers, getGroupData)
-
-		So(listOfUsersResponse, ShouldResemble, returnedListOfUsers)
 		So(errorResponse, ShouldBeNil)
 	})
 }
