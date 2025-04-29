@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	dpErrors "github.com/ONSdigital/dp-api-clients-go/v2/errors"
 	"io"
 	"strconv"
 	"strings"
@@ -100,7 +101,8 @@ func createGroup(ctx context.Context, lineNumber int, line []string, client *cog
 	createGroup.ID = &line[colsMap["groupname"]]
 	parsed, err := strconv.ParseInt(line[colsMap["precedence"]], 10, 32)
 	if err != nil {
-		log.Error(ctx, fmt.Sprintf("failed to parse precedence on line: %d (incl. header)", lineNumber+1), err)
+		logdata := map[string]interface{}{"lineNumber": lineNumber + 1}
+		log.Error(ctx, "failed to parse precedence", dpErrors.New(err, 500, logdata))
 		return
 	}
 	precedence := int32(parsed)

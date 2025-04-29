@@ -22,13 +22,11 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 	}()
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		println("Returning a handleBodyReadError")
 		return nil, handleBodyReadError(ctx, err)
 	}
 	var userSignIn models.UserSignIn
 	err = json.Unmarshal(body, &userSignIn)
 	if err != nil {
-		println("Returning a handleBodyUnmarshallError")
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
 	validationErrs := userSignIn.ValidateCredentials(ctx)
