@@ -30,6 +30,9 @@ const (
 	awsErrMessage    = "Something strange happened"
 	awsUNFErrCode    = "UserNotFoundException"
 	awsUNFErrMessage = "user could not be found"
+	unknownError     = smithy.ErrorFault(0)
+	serverError      = smithy.ErrorFault(1)
+	clientError      = smithy.ErrorFault(2)
 )
 
 var jwksHandler = jwksmock.JWKSStubbed
@@ -327,11 +330,10 @@ func TestInitialiseRoleGroups(t *testing.T) {
 					if *input.GroupName == models.AdminRoleGroup {
 						awsErrCode := "GroupExistsException"
 						awsErrMessage := "This group exists"
-						awsOrigErr := smithy.ErrorFault(2) // client error
 						awsErr := &smithy.GenericAPIError{
 							Code:    awsErrCode,
 							Message: awsErrMessage,
-							Fault:   awsOrigErr,
+							Fault:   clientError,
 						}
 						return nil, awsErr
 					}
@@ -348,11 +350,10 @@ func TestInitialiseRoleGroups(t *testing.T) {
 					if *input.GroupName == models.PublisherRoleGroup {
 						awsErrCode := "GroupExistsException"
 						awsErrMessage := "This group exists"
-						awsOrigErr := smithy.ErrorFault(2) // client error
 						awsErr := &smithy.GenericAPIError{
 							Code:    awsErrCode,
 							Message: awsErrMessage,
-							Fault:   awsOrigErr,
+							Fault:   clientError,
 						}
 						return nil, awsErr
 					}
@@ -366,11 +367,10 @@ func TestInitialiseRoleGroups(t *testing.T) {
 			{
 				// create group internal error
 				func(_ context.Context, _ *cognitoidentityprovider.CreateGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.CreateGroupOutput, error) {
-					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
 						Message: awsErrMessage,
-						Fault:   awsOrigErr,
+						Fault:   serverError,
 					}
 					return nil, awsErr
 				},

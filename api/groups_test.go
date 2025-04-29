@@ -1422,11 +1422,10 @@ func TestListGroupsHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.ListGroupsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListGroupsOutput, error) {
 					awsErrCode := "InternalErrorException"
 					awsErrMessage := internalErrorDescription
-					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
 						Message: awsErrMessage,
-						Fault:   awsOrigErr,
+						Fault:   serverError,
 					}
 					return nil, awsErr
 				},
@@ -1803,11 +1802,10 @@ func TestSetGroupUsersHandler(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					awsErrCode := "InternalErrorException"
 					awsErrMessage := internalErrorDescription
-					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
 						Message: awsErrMessage,
-						Fault:   awsOrigErr,
+						Fault:   serverError,
 					}
 					return nil, awsErr
 				},
@@ -2046,11 +2044,10 @@ func TestSetGroupUsers(t *testing.T) {
 				func(_ context.Context, _ *cognitoidentityprovider.ListUsersInGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersInGroupOutput, error) {
 					awsErrCode := "InternalErrorException"
 					awsErrMessage := internalErrorDescription
-					awsOrigErr := smithy.ErrorFault(1) // server error
 					awsErr := &smithy.GenericAPIError{
 						Code:    awsErrCode,
 						Message: awsErrMessage,
-						Fault:   awsOrigErr,
+						Fault:   serverError,
 					}
 					return nil, awsErr
 				},

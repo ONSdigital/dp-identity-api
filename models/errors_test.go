@@ -11,6 +11,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const serverError = smithy.ErrorFault(1)
+
 func TestError_Error(t *testing.T) {
 	Convey("returns the cause Error value when a cause is set", t, func() {
 		originalErr := errors.New("OriginalErrorCause")
@@ -81,7 +83,7 @@ func TestNewCognitoError(t *testing.T) {
 		awsErr := &smithy.GenericAPIError{
 			Code:    awsErrCode,
 			Message: awsErrMessage,
-			Fault:   smithy.ErrorFault(1),
+			Fault:   serverError,
 		}
 		errorContext := "dp-identity-api calling AWS Cognito"
 

@@ -22,7 +22,6 @@ import (
 const signInEndPoint = "http://localhost:25600/v1/tokens"
 const signOutEndPoint = "http://localhost:25600/v1/tokens/self"
 const tokenRefreshEndPoint = "http://localhost:25600/v1/tokens/self" // #nosec
-const serverError = smithy.ErrorFault(1)
 
 func TestAPI_TokensHandler(t *testing.T) {
 	var (
@@ -551,7 +550,7 @@ func TestSignOutAllUsersGoRoutine(t *testing.T) {
 						awsErr := &smithy.GenericAPIError{
 							Code:    awsErrCode,
 							Message: awsErrMessage,
-							Fault:   smithy.ErrorFault(2), // client error
+							Fault:   clientError, // client error
 						}
 						return nil, awsErr
 					}
