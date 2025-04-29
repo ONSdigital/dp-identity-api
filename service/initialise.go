@@ -4,17 +4,14 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
+	"github.com/ONSdigital/dp-healthcheck/healthcheck"
+	cognitoclient "github.com/ONSdigital/dp-identity-api/v2/cognito"
+	"github.com/ONSdigital/dp-identity-api/v2/config"
+	dphttp "github.com/ONSdigital/dp-net/v3/http"
 	"github.com/ONSdigital/log.go/v2/log"
 	sdkcfg "github.com/aws/aws-sdk-go-v2/config"
-
-	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-	cognitoclient "github.com/ONSdigital/dp-identity-api/v2/cognito"
 	cognito "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
-
-	"github.com/ONSdigital/dp-identity-api/v2/config"
-
-	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dphttp "github.com/ONSdigital/dp-net/v3/http"
 )
 
 // ExternalServiceList holds the initialiser and initialisation state of external services.

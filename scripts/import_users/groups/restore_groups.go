@@ -4,14 +4,13 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	dpErrors "github.com/ONSdigital/dp-api-clients-go/v2/errors"
 	"io"
 	"strconv"
 	"strings"
 
-	"github.com/ONSdigital/dp-identity-api/v2/scripts/import_users/config"
-
+	dpErrors "github.com/ONSdigital/dp-api-clients-go/v2/errors"
 	"github.com/ONSdigital/dp-identity-api/v2/models"
+	"github.com/ONSdigital/dp-identity-api/v2/scripts/import_users/config"
 	"github.com/ONSdigital/dp-identity-api/v2/scripts/utils"
 	"github.com/ONSdigital/log.go/v2/log"
 	cognito "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
