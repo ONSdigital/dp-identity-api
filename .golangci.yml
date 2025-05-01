@@ -86,4 +86,16 @@ issues:
       text: "integer overflow"
       linters:
         - gosec
+    # Allow log.Fatal in aws_utils.go
+    - path: aws_utils.go
+      text: "unreachable-code"
+      linters:
+        - revive
+      source: "log.Fatal"
+    # Allow log.Fatal in initialise.go
+    - path: initialise.go
+      text: "unreachable-code"
+      linters:
+        - revive
+      source: "log.Fatal"
   new: false

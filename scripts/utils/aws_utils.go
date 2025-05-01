@@ -26,6 +26,7 @@ func (s S3Reader) GetS3Reader(ctx context.Context, awsProfile, region, s3Bucket,
 
 	if err != nil {
 		log.Fatal(ctx, "unable to load the SDK", err)
+		os.Exit(1)
 	}
 
 	s3Client := s3.NewFromConfig(cfg)
@@ -50,6 +51,7 @@ func GetCognitoClient(ctx context.Context, awsProfile, region string) *cognitoid
 
 	if err != nil {
 		log.Fatal(ctx, "unable to load the SDK", err)
+		os.Exit(1)
 	}
 
 	client := cognitoidentityprovider.NewFromConfig(cfg)

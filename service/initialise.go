@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"net/http"
+	"os"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
@@ -93,6 +94,7 @@ func (e *Init) DoGetCognitoClient(ctx context.Context, awsRegion string) cognito
 
 	if err != nil {
 		log.Fatal(ctx, "unable to load the SDK", err)
+		os.Exit(1)
 	}
 
 	client := cognito.NewFromConfig(cfg)
