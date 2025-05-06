@@ -129,15 +129,27 @@ func (p *UserParams) ValidateRegistration(ctx context.Context, allowedDomains []
 		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidSurnameError, InvalidSurnameErrorDescription))
 	}
 
-	// Check if the email contains a '+' and if it's blocked based on the environment setting
-	if blockPlusAddressing && strings.Contains(p.Email, "+") {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription))
+	emailErr := validateEmail(ctx, p.Email, allowedDomains, blockPlusAddressing)
+	if emailErr != nil {
+		validationErrs = append(validationErrs, emailErr)
 	}
 
-	if !validation.IsAllowedEmailDomain(p.Email, allowedDomains) {
-		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription))
-	}
 	return validationErrs
+}
+
+// validateEmail checks the email for various validation errors (e.g., plus addressing and domain validation)
+func validateEmail(ctx context.Context, email string, allowedDomains []string, blockPlusAddressing bool) error {
+	// Check if the email contains a '+' and if it's blocked based on the environment setting
+	if blockPlusAddressing && strings.Contains(email, "+") {
+		return NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription)
+	}
+
+	// Check if the email domain is allowed
+	if !validation.IsAllowedEmailDomain(email, allowedDomains) {
+		return NewValidationError(ctx, InvalidEmailError, InvalidEmailDescription)
+	}
+
+	return nil
 }
 
 // ValidateUpdate validates the required fields for user update, returning validation errors for any failures

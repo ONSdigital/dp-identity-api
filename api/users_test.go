@@ -45,7 +45,7 @@ func TestCreateUserHandler(t *testing.T) {
 		userStatusType                                       = types.UserStatusTypeUnconfirmed
 	)
 
-	api, w, m := apiTestSetup()
+	api, w, m := apiMockSetup()
 
 	Convey("Admin create user - check expected responses", t, func() {
 		adminCreateUsersTests := []struct {
@@ -252,7 +252,7 @@ func TestCreateUserHandler(t *testing.T) {
 
 		for _, tt := range userValidationTests {
 			// Set up API with the appropriate blockPlusAddressing value
-			api, w, m = apiTestBlockPlusAddressingSetup(tt.blockPlusAddressing)
+			api, w, m = apiMockSetupWithDynamicBlockPlusAddressing(tt.blockPlusAddressing)
 
 			body, _ := json.Marshal(tt.userDetails)
 			r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
@@ -274,7 +274,7 @@ func TestCreateUserHandler(t *testing.T) {
 func TestListUserHandler(t *testing.T) {
 	var ctx = context.Background()
 
-	api, w, m := apiTestSetup()
+	api, w, m := apiMockSetup()
 
 	Convey("List user - check expected responses", t, func() {
 		adminCreateUsersTests := []struct {
@@ -325,7 +325,7 @@ func TestListUserHandler(t *testing.T) {
 
 func TestListUserHandlerWithFilter(t *testing.T) {
 	var ctx = context.Background()
-	api, w, m := apiTestSetup()
+	api, w, m := apiMockSetup()
 
 	Convey("List user - check expected responses", t, func() {
 		listUsersTest := []struct {
@@ -414,7 +414,7 @@ func TestListUserHandlerWithSort(t *testing.T) {
 		ctx = context.Background()
 	)
 
-	api, w, m := apiTestSetup()
+	api, w, m := apiMockSetup()
 
 	Convey("List user - check expected responses", t, func() {
 		listUsersTest := []struct {
@@ -572,7 +572,7 @@ func TestGetUserHandler(t *testing.T) {
 		status                                   = types.UserStatusTypeUnconfirmed
 	)
 
-	api, w, m := apiTestSetup()
+	api, w, m := apiMockSetup()
 
 	Convey("Get user - check expected responses", t, func() {
 		adminGetUsersTests := []struct {
@@ -658,7 +658,7 @@ func TestUpdateUserHandler(t *testing.T) {
 		status                                   = types.UserStatusTypeConfirmed
 	)
 
-	api, w, m := apiTestSetup()
+	api, w, m := apiMockSetup()
 
 	successfullyGetUser := []types.AttributeType{
 		{
@@ -1042,7 +1042,7 @@ func TestChangePasswordHandler(t *testing.T) {
 		expireLength                       int32 = 500
 	)
 
-	api, w, m := apiTestSetup()
+	api, w, m := apiMockSetup()
 
 	m.DescribeUserPoolClientFunc = func(_ context.Context, _ *cognitoidentityprovider.DescribeUserPoolClientInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.DescribeUserPoolClientOutput, error) {
 		tokenValidDays := int32(1)
@@ -1173,7 +1173,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 		verificationToken = "999999"
 	)
 
-	api, w, m := apiTestSetup()
+	api, w, m := apiMockSetup()
 	Convey("ConfirmForgotPassword - check expected responses", t, func() {
 		confirmForgotPasswordTests := []struct {
 			confirmForgotPasswordFunction func(_ context.Context, _ *cognitoidentityprovider.ConfirmForgotPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error)
@@ -1329,7 +1329,7 @@ func TestPasswordResetHandler(t *testing.T) {
 		email = "foo_bar123@ext.ons.gov.uk"
 	)
 
-	api, w, m := apiTestSetup()
+	api, w, m := apiMockSetup()
 
 	Convey("ForgotPassword - check expected responses", t, func() {
 		respondToAuthChallengeTests := []struct {
@@ -1473,7 +1473,7 @@ func TestListUserGroupsHandler(t *testing.T) {
 		}
 	)
 
-	api, w, m := apiTestSetup()
+	api, w, m := apiMockSetup()
 
 	Convey("List groups for user -check expected responses", t, func() {
 		listusergroups := []struct {
@@ -1566,7 +1566,7 @@ func TestGetGroupsforUser(t *testing.T) {
 		},
 	}
 
-	api, _, m := apiTestSetup()
+	api, _, m := apiMockSetup()
 	Convey("error is returned when list groups for a user returns an error", t, func() {
 		m.ListGroupsForUserFunc = func(_ context.Context, _ *cognitoidentityprovider.AdminListGroupsForUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
 			var userNotFoundException types.ResourceNotFoundException
@@ -1684,7 +1684,7 @@ func TestGetGroupsforUser(t *testing.T) {
 }
 
 func TestIsValidFilter(t *testing.T) {
-	api, _, _ := apiTestSetup()
+	api, _, _ := apiMockSetup()
 
 	Convey("Validate Filter - check expected responses", t, func() {
 		validateFilterTest := []struct {

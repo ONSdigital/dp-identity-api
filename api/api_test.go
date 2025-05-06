@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -171,7 +170,7 @@ func hasRoute(r *mux.Router, path, method string) bool {
 	return r.Match(req, match)
 }
 
-func apiTestSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProviderClient) {
+func apiMockSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProviderClient) {
 	var (
 		ctx                                       = context.Background()
 		r                                         = mux.NewRouter()
@@ -196,7 +195,7 @@ func apiTestSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentity
 	return api, w, m
 }
 
-func apiTestBlockPlusAddressingSetup(blockPlusAddressing bool) (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProviderClient) {
+func apiMockSetupWithDynamicBlockPlusAddressing(blockPlusAddressing bool) (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentityProviderClient) {
 	var (
 		ctx                                       = context.Background()
 		r                                         = mux.NewRouter()
@@ -212,8 +211,7 @@ func apiTestBlockPlusAddressingSetup(blockPlusAddressing bool) (*API, *httptest.
 		}
 		return group, nil
 	}
-	m.ListUsersFunc = func(_ context.Context, userInput *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
-		fmt.Println("Mock ListUsersFunc called with input:", userInput)
+	m.ListUsersFunc = func(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 		// Return a mock response
 		user := &cognitoidentityprovider.ListUsersOutput{
 			Users: []types.UserType{},
