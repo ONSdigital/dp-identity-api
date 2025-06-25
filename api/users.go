@@ -53,7 +53,7 @@ func (api *API) CreateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 	listUserInput := models.UsersList{}.BuildListUserRequest("email = \""+user.Email+"\"", "email", int32(1), nil, &api.UserPoolID)
 	listUserResp, err := api.CognitoClient.ListUsers(ctx, listUserInput)
 	if err != nil {
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint"))
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, models.NewCognitoError(ctx, err, "ListUsers request from create users endpoint"))
 	}
 	duplicateEmailErr := user.CheckForDuplicateEmail(ctx, listUserResp)
 	if duplicateEmailErr != nil {
@@ -130,7 +130,7 @@ func (api *API) GetUserHandler(ctx context.Context, _ http.ResponseWriter, req *
 	userInput := user.BuildAdminGetUserRequest(api.UserPoolID)
 	userResp, err := api.CognitoClient.AdminGetUser(ctx, userInput)
 	if err != nil {
-		responseErr := models.NewCognitoError(ctx, err, "Cognito ListUsers request from create users endpoint")
+		responseErr := models.NewCognitoError(ctx, err, "AdminGetUser request from get user endpoint")
 		if responseErr.Code == models.UserNotFoundError {
 			return nil, models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
 		}
