@@ -309,12 +309,12 @@ func TestWriteSuccessResponse(t *testing.T) {
 }
 
 func TestHandleBodyReadError(t *testing.T) {
-	Convey("returns an ErrorResponse with a BodyReadError and 500 status", t, func() {
+	Convey("returns an ErrorResponse with a BodyReadError and 400 status", t, func() {
 		ctx := context.Background()
 		err := errors.New("TestError")
 		errResponse := handleBodyReadError(ctx, err)
 
-		So(errResponse.Status, ShouldEqual, http.StatusInternalServerError)
+		So(errResponse.Status, ShouldEqual, http.StatusBadRequest)
 		castErr := errResponse.Errors[0].(*models.Error)
 		So(castErr.Code, ShouldEqual, models.BodyReadError)
 		So(castErr.Description, ShouldEqual, models.BodyReadFailedDescription)
@@ -322,12 +322,12 @@ func TestHandleBodyReadError(t *testing.T) {
 }
 
 func TestHandleBodyUnmarshalError(t *testing.T) {
-	Convey("returns an ErrorResponse with a JSONUnmarshalError and 500 status", t, func() {
+	Convey("returns an ErrorResponse with a JSONUnmarshalError and 400 status", t, func() {
 		ctx := context.Background()
 		err := errors.New("TestError")
 		errResponse := handleBodyUnmarshalError(ctx, err)
 
-		So(errResponse.Status, ShouldEqual, http.StatusInternalServerError)
+		So(errResponse.Status, ShouldEqual, http.StatusBadRequest)
 		castErr := errResponse.Errors[0].(*models.Error)
 		So(castErr.Code, ShouldEqual, models.JSONUnmarshalError)
 		So(castErr.Description, ShouldEqual, models.ErrorUnmarshalFailedDescription)

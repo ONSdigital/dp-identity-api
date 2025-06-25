@@ -133,17 +133,21 @@ Feature: Users - Create
       }
       """
 
-  Scenario: POST /v1/users and checking the response status 500
+  Scenario: POST /v1/users and checking the response status 400
     Given I am an admin user
     When I POST "/v1/users"
       """
 
       """
-    Then I should receive the following JSON response with status "500":
+    Then I should receive the following JSON response with status "400":
       """
       {
-        "code": "InternalServerError",
-        "description": "Internal Server Error"
+        "errors": [
+          {
+            "code": "JSONUnmarshalError",
+            "description": "failed to unmarshal the request body"
+          }
+        ]
       }
       """
 
