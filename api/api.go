@@ -110,6 +110,8 @@ func Setup(ctx context.Context,
 		Methods(http.MethodGet)
 	r.HandleFunc("/v1/users/{id}", auth.Require(UsersUpdatePermission, contextAndErrors(api.UpdateUserHandler))).
 		Methods(http.MethodPut)
+	r.HandleFunc("/v1/users/{id}/password", auth.Require(UsersUpdatePermission, contextAndErrors(api.UserSetPasswordHandler))).
+		Methods(http.MethodPost)
 	r.HandleFunc("/v1/users/{id}/groups", auth.Require(UsersReadPermission, contextAndErrors(api.ListUserGroupsHandler))).
 		Methods(http.MethodGet)
 	// self used in paths rather than identifier as the identifier is a Cognito Session string in change password requests

@@ -14,6 +14,7 @@ const (
 	InvalidEmailError            = "InvalidEmail"
 	InvalidTokenError            = "InvalidToken"
 	InternalError                = "InternalServerError"
+	InvalidStatusError           = "InvalidStatusError"
 	NotFoundError                = "NotFound"
 	UserNotFoundError            = "UserNotFound"
 	GroupExistsError             = "GroupExists"
@@ -85,6 +86,7 @@ const (
 	JWKSErrorDecodingDescription           = "error decoding json web key"
 	JWKSExponentErrorDescription           = "unexpected exponent: unable to decode JWK"
 	JWKSEmptyWebKeySetDescription          = "empty json web key set"
+	InvalidStatusDescription               = "user was not in a valid state to perform action"
 )
 
 // CognitoErrorMapping mapping Cognito error codes to API error codes

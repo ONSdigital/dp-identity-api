@@ -305,6 +305,33 @@ paths:
             $ref: '#/definitions/ErrorList'
         500:
           $ref: '#/responses/InternalError'
+  /users/{id}/password:
+    post:
+      tags:
+        - Users
+      summary: "Sets a generated password for a user"
+      description: "Sets a generated password for a user"
+      security:
+        - Authorization: []
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+          description: the users id
+      responses:
+        202:
+          description: "Password setting processed"
+        400:
+          $ref: '#/responses/BadRequestError'
+        401:
+          $ref: '#/responses/UnauthorizedError'
+        404:
+          description: "User not found"
+          schema:
+            $ref: '#/definitions/ErrorList'
+        500:
+          $ref: '#/responses/InternalError'
   /users/{id}/groups:
     get:
       tags:

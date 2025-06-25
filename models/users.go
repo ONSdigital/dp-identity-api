@@ -277,6 +277,28 @@ func (p UserParams) BuildAdminGetUserRequest(userPoolID string) *cognitoidentity
 	}
 }
 
+// ValidateSetPasswordRequest validates the user to see if a SetPasswordRequest
+// should be made
+func (p UserParams) ValidateSetPasswordRequest(ctx context.Context) []error {
+	var validationErrs []error
+
+	if p.Status != types.UserStatusTypeForceChangePassword {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidStatusError, InvalidStatusDescription))
+	}
+
+	return validationErrs
+}
+
+// BuildSetPasswordRequest generates a AdminSetUserPasswordInput for Cognito
+func (p UserParams) BuildSetPasswordRequest(userPoolID string) *cognitoidentityprovider.AdminSetUserPasswordInput {
+	return &cognitoidentityprovider.AdminSetUserPasswordInput{
+		Username:   &p.ID,
+		Password:   &p.Password,
+		UserPoolId: &userPoolID,
+		Permanent:  true,
+	}
+}
+
 // MapCognitoDetails maps the details from the Cognito ListUser User model to the UserParams model
 func (p UserParams) MapCognitoDetails(userDetails types.UserType) UserParams {
 	var forename, surname, email, statusNotes string

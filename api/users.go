@@ -210,6 +210,56 @@ func (api *API) UpdateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
+// UserSetPasswordHandler sets a users password to a generated password in Cognito and returns a http handler interface
+func (api *API) UserSetPasswordHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	vars := mux.Vars(req)
+	userID := vars["id"]
+
+	user := models.UserParams{ID: vars["id"]}
+	userInput := user.BuildAdminGetUserRequest(api.UserPoolID)
+
+	userResp, err := api.CognitoClient.AdminGetUser(ctx, userInput)
+	if err != nil {
+		responseErr := models.NewCognitoError(ctx, err, "AdminGetUser request from user set password endpoint")
+		if responseErr.Code == models.UserNotFoundError {
+			return nil, models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
+		}
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
+	user.MapCognitoGetResponse(userResp)
+
+	validationErrs := user.ValidateSetPasswordRequest(ctx)
+	if len(validationErrs) != 0 {
+		return nil, models.NewErrorResponse(http.StatusForbidden, nil, validationErrs...)
+	}
+
+	err = user.GeneratePassword(ctx)
+	if err != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+	}
+
+	userSetPasswordInput := user.BuildSetPasswordRequest(api.UserPoolID)
+
+	_, err = api.CognitoClient.AdminSetUserPassword(ctx, userSetPasswordInput)
+	if err != nil {
+		responseErr := models.NewCognitoError(ctx, err, "error whilst resetting user account")
+
+		switch responseErr.Code {
+		case models.LimitExceededError, models.TooManyRequestsError:
+			log.Error(ctx, "cognito request limit exceeded", responseErr, log.Data{"userID": userID})
+			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, responseErr)
+		case models.UserNotFoundError:
+			log.Error(ctx, "user not found", responseErr, log.Data{"userID": userID})
+			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+		}
+	}
+
+	log.Info(ctx, "user set password completed", log.Data{"userID": userID})
+
+	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
+}
+
 func processUpdateCognitoError(ctx context.Context, err error, errContext string) *models.ErrorResponse {
 	responseErr := models.NewCognitoError(ctx, err, errContext)
 

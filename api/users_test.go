@@ -32,7 +32,8 @@ const (
 	usersEndPointWithSortBy2FieldsDesc            = "http://localhost:25600/v1/users?sort=forename:desc,lastname:desc"
 	usersEndPointWithSortBy2KnownFieldsAndUnknown = "http://localhost:25600/v1/users?sort=forename:desc,lastname:desc,dog"
 	userEndPoint                                  = "http://localhost:25600/v1/users/abcd1234"
-	changePasswordEndPoint                        = "http://localhost:25600/v1/users/self/password" // #nosec
+	userSetPasswordEndPoint                       = "http://localhost:25600/v1/users/abcd123/password" // #nosec
+	changePasswordEndPoint                        = "http://localhost:25600/v1/users/self/password"    // #nosec
 	requestResetEndPoint                          = "http://localhost:25600/v1/password-reset"
 	userListGroupsEndPoint                        = "http://localhost:25600/v1/users/abcd1234/groups"
 )
@@ -984,6 +985,85 @@ func TestUpdateUserHandler(t *testing.T) {
 
 			tt.assertions(successResponse, errorResponse)
 		}
+	})
+}
+
+func TestSetUserPasswordHandler(t *testing.T) {
+	var (
+		ctx    = context.Background()
+		userID = "abcd1234"
+	)
+
+	mockAPI, w, mockCognito := apiMockSetup()
+
+	Convey("Given I have a Cognito mock that returns a user in FORCE_CHANGE_PASSWORD state", t, func() {
+		mockCognito.AdminGetUserFunc = func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+			user := &cognitoidentityprovider.AdminGetUserOutput{
+				UserStatus: types.UserStatusTypeForceChangePassword,
+				Username:   &userID,
+				Enabled:    true,
+			}
+			return user, nil
+		}
+
+		mockCognito.AdminSetUserPasswordFunc = func(_ context.Context, _ *cognitoidentityprovider.AdminSetUserPasswordInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminSetUserPasswordOutput, error) {
+			return &cognitoidentityprovider.AdminSetUserPasswordOutput{}, nil
+		}
+
+		Convey("When the SetUserPasswordHandler is called", func() {
+			r := httptest.NewRequest(http.MethodGet, userSetPasswordEndPoint, http.NoBody)
+			successResponse, errorResponse := mockAPI.UserSetPasswordHandler(ctx, w, r)
+
+			Convey("Then the request to set the password should be successful", func() {
+				So(successResponse, ShouldNotBeNil)
+				So(successResponse.Status, ShouldEqual, http.StatusAccepted)
+				So(errorResponse, ShouldBeNil)
+			})
+		})
+	})
+
+	Convey("Given I have a Cognito mock that returns a user in CONFIRMED state", t, func() {
+		mockCognito.AdminGetUserFunc = func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+			user := &cognitoidentityprovider.AdminGetUserOutput{
+				UserStatus: types.UserStatusTypeConfirmed,
+				Username:   &userID,
+				Enabled:    true,
+			}
+			return user, nil
+		}
+
+		Convey("When the SetUserPasswordHandler is called", func() {
+			r := httptest.NewRequest(http.MethodGet, userSetPasswordEndPoint, http.NoBody)
+			successResponse, errorResponse := mockAPI.UserSetPasswordHandler(ctx, w, r)
+
+			Convey("Then the request to set the password should be return a forbidden error", func() {
+				So(successResponse, ShouldBeNil)
+				So(errorResponse, ShouldNotBeNil)
+				So(errorResponse.Status, ShouldEqual, http.StatusForbidden)
+			})
+		})
+	})
+
+	Convey("Given I have a Cognito mock that returns no user", t, func() {
+		mockCognito.AdminGetUserFunc = func(_ context.Context, _ *cognitoidentityprovider.AdminGetUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+			awsErr := &smithy.GenericAPIError{
+				Code:    awsUNFErrCode,
+				Message: awsUNFErrMessage,
+				Fault:   clientError,
+			}
+			return nil, awsErr
+		}
+
+		Convey("When the SetUserPasswordHandler is called", func() {
+			r := httptest.NewRequest(http.MethodGet, userSetPasswordEndPoint, http.NoBody)
+			successResponse, errorResponse := mockAPI.UserSetPasswordHandler(ctx, w, r)
+
+			Convey("Then the request to set the password should be return a not found error", func() {
+				So(successResponse, ShouldBeNil)
+				So(errorResponse, ShouldNotBeNil)
+				So(errorResponse.Status, ShouldEqual, http.StatusNotFound)
+			})
+		})
 	})
 }
 

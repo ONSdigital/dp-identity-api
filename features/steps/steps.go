@@ -28,6 +28,7 @@ func (c *IdentityComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^a user with email "([^"]*)" and password "([^"]*)" exists in the database$`, c.aUserWithEmailAndPasswordExistsInTheDatabase)
 	ctx.Step(`^a user with non-verified email "([^"]*)" and password "([^"]*)"$`, c.aUserWithNonverifiedEmailAndPassword)
 	ctx.Step(`^a user with username "([^"]*)" and email "([^"]*)" exists in the database$`, c.aUserWithUsernameAndEmailExistsInTheDatabase)
+	ctx.Step(`^a user with username "([^"]*)" exists in the database and is unconfirmed$`, c.aUserWithUsernameExistsInTheDatabaseAndIsUnconfirmed)
 	ctx.Step(`^a user with username "([^"]*)" and email "([^"]*)" and forename "([^"]*)" exists in the database$`, c.aUserWithUsernameAndEmailAndForenameExistsInTheDatabase)
 	ctx.Step(`^an error is returned from Cognito$`, c.anErrorIsReturnedFromCognito)
 	ctx.Step(`^an internal server error is returned from Cognito$`, c.anInternalServerErrorIsReturnedFromCognito)
@@ -67,6 +68,11 @@ func (c *IdentityComponent) aUserWithAttributesExistsInTheDatabase(forename, las
 
 func (c *IdentityComponent) aUserWithUsernameAndEmailExistsInTheDatabase(username, email string) error {
 	c.CognitoClient.AddUserWithUsername(username, email, true)
+	return nil
+}
+
+func (c *IdentityComponent) aUserWithUsernameExistsInTheDatabaseAndIsUnconfirmed(username string) error {
+	c.CognitoClient.AddUserWithUsername(username, "", false)
 	return nil
 }
 
