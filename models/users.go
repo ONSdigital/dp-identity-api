@@ -281,13 +281,15 @@ func (p UserParams) BuildAdminGetUserRequest(userPoolID string) *cognitoidentity
 func (p UserParams) MapCognitoDetails(userDetails types.UserType) UserParams {
 	var forename, surname, email, statusNotes string
 	for _, attr := range userDetails.Attributes {
-		if *attr.Name == "given_name" {
+		//TODO: this needs refactoring with the other nearly identical switch in this file.
+		switch *attr.Name {
+		case "given_name":
 			forename = *attr.Value
-		} else if *attr.Name == "family_name" {
+		case "family_name":
 			surname = *attr.Value
-		} else if *attr.Name == "email" {
+		case "email":
 			email = *attr.Value
-		} else if *attr.Name == "custom:status_notes" {
+		case "custom:status_notes":
 			statusNotes = *attr.Value
 		}
 	}
@@ -307,13 +309,15 @@ func (p UserParams) MapCognitoDetails(userDetails types.UserType) UserParams {
 // MapCognitoGetResponse maps the details from the Cognito GetUser User model to the UserParams model
 func (p *UserParams) MapCognitoGetResponse(userDetails *cognitoidentityprovider.AdminGetUserOutput) {
 	for _, attr := range userDetails.UserAttributes {
-		if *attr.Name == "given_name" {
+		//TODO: this needs refactoring with the other nearly identical switch in this file.
+		switch *attr.Name {
+		case "given_name":
 			p.Forename = *attr.Value
-		} else if *attr.Name == "family_name" {
+		case "family_name":
 			p.Lastname = *attr.Value
-		} else if *attr.Name == "email" {
+		case "email":
 			p.Email = *attr.Value
-		} else if *attr.Name == "custom:status_notes" {
+		case "custom:status_notes":
 			p.StatusNotes = *attr.Value
 		}
 	}

@@ -269,8 +269,8 @@ func (c *IdentityComponent) requestHeaderAcceptIs() error {
 
 func (c *IdentityComponent) theResponseShouldMatchTheFollowingCsv(body *godog.DocString) (err error) {
 	tmpExpected, _ := io.ReadAll(c.apiFeature.HTTPResponse.Body)
-	actual := strings.Replace(strings.TrimSpace(string(tmpExpected)), "\t", "", -1)
-	expected := strings.Replace(strings.TrimSpace(body.Content), "\t", "", -1)
+	actual := strings.ReplaceAll(strings.TrimSpace(string(tmpExpected)), "\t", "")
+	expected := strings.ReplaceAll(strings.TrimSpace(body.Content), "\t", "")
 
 	if actual != expected {
 		return errors.New("expected body to be: " + "\n" + expected + "\n\t but actual is: " + "\n" + actual)

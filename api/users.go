@@ -212,12 +212,15 @@ func (api *API) UpdateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 
 func processUpdateCognitoError(ctx context.Context, err error, errContext string) *models.ErrorResponse {
 	responseErr := models.NewCognitoError(ctx, err, errContext)
-	if responseErr.Code == models.UserNotFoundError {
+
+	switch responseErr.Code {
+	case models.UserNotFoundError:
 		return models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
-	} else if responseErr.Code == models.InvalidFieldError {
+	case models.InvalidFieldError:
 		return models.NewErrorResponse(http.StatusBadRequest, nil, responseErr)
+	default:
+		return models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
-	return models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 }
 
 // ChangePasswordHandler processes changes to the users password
@@ -242,6 +245,8 @@ func (api *API) ChangePasswordHandler(ctx context.Context, _ http.ResponseWriter
 		return nil, handleBodyUnmarshalError(ctx, err)
 	}
 
+	//nolint:staticcheck // making this into a switch statement would not improve it
+	// that much. TODO: It needs a greater level of refactoring
 	if changePasswordParams.ChangeType == models.NewPasswordRequiredType {
 		validationErrs := changePasswordParams.ValidateNewPasswordRequiredRequest(ctx)
 		if len(validationErrs) != 0 {
@@ -367,10 +372,7 @@ func (api *API) PasswordResetHandler(ctx context.Context, _ http.ResponseWriter,
 func (api *API) getGroupsForUser(ctx context.Context, listOfGroups []types.GroupType, userID models.UserParams) ([]types.GroupType, error) {
 	firstTimeCheck := false
 	var nextToken string
-	for {
-		if firstTimeCheck && nextToken == "" {
-			break
-		}
+	for !firstTimeCheck || nextToken != "" {
 		firstTimeCheck = true
 
 		userGroupsRequest := userID.BuildListUserGroupsRequest(api.UserPoolID, nextToken)

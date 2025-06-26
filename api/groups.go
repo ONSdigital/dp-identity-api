@@ -236,10 +236,7 @@ func sortUsers(ctx context.Context, users []models.UserParams, sortBy []string) 
 func (api *API) getUsersInAGroup(ctx context.Context, group models.Group) (listOfUsers []types.UserType, err error) {
 	firstTimeCheck := false
 	var nextToken string
-	for {
-		if firstTimeCheck && nextToken == "" {
-			break
-		}
+	for !firstTimeCheck || nextToken != "" {
 		firstTimeCheck = true
 
 		groupMembersRequest := group.BuildListUsersInGroupRequestWithNextToken(api.UserPoolID, nextToken)
@@ -281,12 +278,15 @@ func (api *API) RemoveUserFromGroupHandler(ctx context.Context, _ http.ResponseW
 	response, responseErr := api.RemoveUserFromGroup(ctx, group, userID)
 	if responseErr != nil {
 		cognitoErr := models.NewCognitoError(ctx, responseErr, "Cognito RemoveUserFromGroupEndpoint request from add user to group endpoint")
-		if cognitoErr.Code == models.UserNotFoundError {
+
+		switch cognitoErr.Code {
+		case models.UserNotFoundError:
 			return nil, models.NewErrorResponse(http.StatusNotFound, nil, cognitoErr)
-		} else if cognitoErr.Code == models.NotFoundError {
+		case models.NotFoundError:
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, cognitoErr)
+		default:
+			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 		}
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
 	jsonResponse, responseErr := response.BuildSuccessfulJSONResponse(ctx)
 	if responseErr != nil {
@@ -302,10 +302,8 @@ func (api *API) GetListGroups(ctx context.Context) (*cognitoidentityprovider.Lis
 	group := models.ListUserGroupType{}
 
 	listOfGroups := cognitoidentityprovider.ListGroupsOutput{}
-	for {
-		if firstTimeCheck && nextToken == "" {
-			break
-		}
+
+	for !firstTimeCheck || nextToken != "" {
 		firstTimeCheck = true
 
 		listGroupsRequest := group.BuildListGroupsRequest(api.UserPoolID, nextToken)

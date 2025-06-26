@@ -93,6 +93,8 @@ func (m *CognitoIdentityProviderClientStub) AdminCreateUser(_ context.Context, i
 func (m *CognitoIdentityProviderClientStub) InitiateAuth(_ context.Context, input *cognitoidentityprovider.InitiateAuthInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 	var expiration int32 = 123
 
+	//nolint:staticcheck // making this into a switch statement would not improve it
+	// that much. TODO: It needs a greater level of refactoring
 	if input.AuthFlow == types.AuthFlowTypeUserPasswordAuth {
 		// non-verified response - ChallengName = "NEW_PASSWORD_REQUIRED"
 		var (
@@ -193,18 +195,20 @@ func (m *CognitoIdentityProviderClientStub) GlobalSignOut(_ context.Context, sig
 }
 
 func (m *CognitoIdentityProviderClientStub) AdminUserGlobalSignOut(_ context.Context, adminUserGlobalSignOutInput *cognitoidentityprovider.AdminUserGlobalSignOutInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminUserGlobalSignOutOutput, error) {
-	if *adminUserGlobalSignOutInput.Username == "internalservererror@ons.gov.uk" {
+	switch *adminUserGlobalSignOutInput.Username {
+	case "internalservererror@ons.gov.uk":
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
 			Message: "something went wrong",
 		}
-	} else if *adminUserGlobalSignOutInput.Username == "clienterror@ons.gov.uk" {
+	case "clienterror@ons.gov.uk":
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeNotAuthorized,
 			Message: "something went wrong",
 		}
+	default:
+		return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 	}
-	return &cognitoidentityprovider.AdminUserGlobalSignOutOutput{}, nil
 }
 
 func (m *CognitoIdentityProviderClientStub) ListUsers(_ context.Context, input *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
@@ -290,12 +294,13 @@ func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(_ context.Con
 			},
 		}
 
-		if input.ChallengeResponses["NEW_PASSWORD"] == "internalerrorException" {
+		switch input.ChallengeResponses["NEW_PASSWORD"] {
+		case "internalerrorException":
 			return nil, &smithy.GenericAPIError{
 				Code:    errCodeInternalError,
 				Message: "Something went wrong",
 			}
-		} else if input.ChallengeResponses["NEW_PASSWORD"] == "invalidpassword" {
+		case "invalidpassword":
 			return nil, &smithy.GenericAPIError{
 				Code:    errCodeInvalidPassword,
 				Message: "password does not meet requirements",
@@ -506,11 +511,15 @@ func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(_ context.
 				}
 			}
 			for _, attr := range input.UserAttributes {
-				if *attr.Name == "given_name" {
+				//TODO: this needs refactoring with the other nearly identical switch in this file.
+				switch *attr.Name {
+				case "given_name":
 					user.GivenName = *attr.Value
-				} else if *attr.Name == "family_name" {
+				case "family_name":
 					user.FamilyName = *attr.Value
-				} else if *attr.Name == "custom:status_notes" {
+				case "email":
+					user.Email = *attr.Value
+				case "custom:status_notes":
 					user.StatusNotes = *attr.Value
 				}
 			}
@@ -864,6 +873,9 @@ func (m *CognitoIdentityProviderClientStub) UpdateGroup(_ context.Context, input
 		response500       = `Internal Server Error`
 		userPoolID        = `aaaa-bbbb-ccc-dddd`
 	)
+
+	//nolint:staticcheck // making this into a switch statement would not improve it
+	// that much. TODO: It needs a greater level of refactoring
 	if *input.Description == response200 {
 		// 200 response - group updated
 		createdTime, _ := time.Parse("2006-Jan-1", "2010-Jan-1")
