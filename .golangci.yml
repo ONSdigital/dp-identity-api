@@ -75,10 +75,6 @@ linters:
         path: initialise.go
         text: unreachable-code
         source: log.Fatal
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
 issues:
   new: false
 formatters:
@@ -90,7 +86,3 @@ formatters:
       simplify: false
   exclusions:
     generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
