@@ -865,29 +865,29 @@ definitions:
       expirationTime:
         type: string
         description: "Expiration Time, UTC ISO 8601"
-        example: "YYYY-MM-DD hh-mm-ssZ"
+        example: "YYYY-MM-DD hh:mm:ssZ"
   SignInExpirationTime:
     type: object
     properties:
       expirationTime:
         type: string
         description: "Expiration Time, UTC ISO 8601"
-        example: "YYYY-MM-DD hh-mm-ssZ"
+        example: "YYYY-MM-DD hh:mm:ssZ"
       refreshTokenExpirationTime:
         type: string
         description: "Expiration Time, UTC ISO 8601"
-        example: "YYYY-MM-DD hh-mm-ssZ"
+        example: "YYYY-MM-DD hh:mm:ssZ"
   PasswordResetExpirationTime:
     type: object
     properties:
       expirationTime:
         type: string
         description: "Expiration Time, UTC ISO 8601"
-        example: "YYYY-MM-DD hh-mm-ssZ"
+        example: "YYYY-MM-DD hh:mm:ssZ"
       refreshTokenExpirationTime:
         type: string
         description: "Refresh Token Expiration Time, UTC ISO 8601"
-        example: "YYYY-MM-DD hh-mm-ssZ"
+        example: "YYYY-MM-DD hh:mm:ssZ"
   NewGroup:
     description: "The new group details for the response body"
     type: object
@@ -921,11 +921,11 @@ definitions:
         description: "The date the group was created"
         type: string
         format: date-time
-        example: "YYYY-MM-DD hh-mm-ssZ"
+        example: "YYYY-MM-DD hh:mm:ssZ"
       last_modified_date:
         type: string
         format: date-time
-        example: "YYYY-MM-DD hh-mm-ssZ"
+        example: "YYYY-MM-DD hh:mm:ssZ"
       role_arn:
         type: string
       user_pool_id:
