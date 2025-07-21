@@ -862,7 +862,7 @@ definitions:
   ExpirationTime:
     type: object
     properties:
-      message:
+      expirationTime:
         type: string
         description: "Expiration Time, UTC ISO 8601"
         example: "YYYY-MM-DD hh-mm-ssZ"
