@@ -173,7 +173,7 @@ func (api *API) AddUserToGroupHandler(ctx context.Context, _ http.ResponseWriter
 }
 
 // ListUsersInGroupHandler list the users in the specified group
-func (api *API) ListUsersInGroupHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+func (api *API) ListUsersInGroupHandler(ctx context.Context, rw http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	group := models.Group{ID: vars["id"]}
 
@@ -189,6 +189,7 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, _ http.ResponseWrit
 	listOfUsers := models.UsersList{}
 	listOfUsers.MapCognitoUsers(&listUsers)
 
+	req.Body = http.MaxBytesReader(rw, req.Body, 1<<20)
 	if err = req.ParseForm(); err != nil {
 		dplogs.Error(ctx, "error parsing form", err)
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
@@ -322,7 +323,7 @@ func (api *API) GetListGroups(ctx context.Context) (*cognitoidentityprovider.Lis
 }
 
 // ListGroupsHandler lists the users in the user pool
-func (api *API) ListGroupsHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+func (api *API) ListGroupsHandler(ctx context.Context, rw http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	finalGroupsResponse := models.ListUserGroups{}
 
 	listOfGroups, err := api.GetListGroups(ctx)
@@ -334,6 +335,7 @@ func (api *API) ListGroupsHandler(ctx context.Context, _ http.ResponseWriter, re
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
 
+	req.Body = http.MaxBytesReader(rw, req.Body, 1<<20)
 	if err = req.ParseForm(); err != nil {
 		dplogs.Error(ctx, "error parsing form", err)
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, err)
@@ -566,7 +568,8 @@ func (api *API) ListGroupsUsersCSV(groupsUsersList *[]models.ListGroupUsersType)
 	buf := new(bytes.Buffer)
 	w := csv.NewWriter(buf)
 
-	rows := [][]string{{csvHeader.GroupName, csvHeader.UserEmail}}
+	rows := make([][]string, 0, 1+len(*groupsUsersList))
+	rows = append(rows, []string{csvHeader.GroupName, csvHeader.UserEmail})
 	for _, record := range *groupsUsersList {
 		rows = append(rows, []string{record.GroupName, record.UserEmail})
 	}

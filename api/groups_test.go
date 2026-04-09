@@ -2970,7 +2970,7 @@ func listGroupsUsers(noOfUsers int) *cognitoidentityprovider.ListUsersInGroupOut
 	)
 
 	for i := 0; i < noOfUsers; i++ {
-		var userAttributes []types.AttributeType
+		userAttributes := make([]types.AttributeType, 0, 1)
 		userName := fmt.Sprintf("user_%d", i)
 		userEmail := userName + ".email@domain.test"
 		userAttribute := types.AttributeType{Name: &attributeEmail, Value: &userEmail}

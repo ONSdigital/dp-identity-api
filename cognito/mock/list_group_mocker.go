@@ -27,7 +27,7 @@ func (m *CognitoIdentityProviderClientStub) AddGroupWithNameAndDescription(name,
 		RoleArn:          nil,
 		UserPoolId:       nil,
 	}
-	var newGroupTypeList []types.GroupType
+	newGroupTypeList := make([]types.GroupType, 0, 1)
 	newGroupTypeList = append(newGroupTypeList, newGroupType)
 	groupsListOutput := cognitoidentityprovider.ListGroupsOutput{
 		Groups:    newGroupTypeList,

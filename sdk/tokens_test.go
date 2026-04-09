@@ -16,6 +16,18 @@ func TestGetToken(t *testing.T) {
 	ctx := context.Background()
 	tokensEndpoint := "/tokens"
 
+	assertExpectedCredentialsBody := func(req *http.Request) {
+		actualBody, err := io.ReadAll(req.Body)
+		So(err, ShouldBeNil)
+
+		var actualCredentials map[string]string
+		err = json.Unmarshal(actualBody, &actualCredentials)
+		So(err, ShouldBeNil)
+
+		So(actualCredentials["email"], ShouldEqual, defaultCredentials.Email)
+		So(actualCredentials["password"], ShouldEqual, defaultCredentials.Password)
+	}
+
 	Convey("Given Get Token is returned successfully", t, func() {
 		body := map[string]interface{}{
 			"expirationTime":             defaultExpirationTime,
@@ -63,10 +75,7 @@ func TestGetToken(t *testing.T) {
 						So(doCalls, ShouldHaveLength, 1)
 						So(doCalls[0].Req.URL.Path, ShouldEqual, tokensEndpoint)
 						So(doCalls[0].Req.Method, ShouldEqual, http.MethodPost)
-						expectedBody, _ := json.Marshal(defaultCredentials)
-						actualBody, _ := io.ReadAll(doCalls[0].Req.Body)
-
-						So(actualBody, ShouldResemble, expectedBody)
+						assertExpectedCredentialsBody(doCalls[0].Req)
 					})
 				})
 			})
@@ -96,10 +105,7 @@ func TestGetToken(t *testing.T) {
 						So(doCalls, ShouldHaveLength, 1)
 						So(doCalls[0].Req.URL.Path, ShouldEqual, tokensEndpoint)
 						So(doCalls[0].Req.Method, ShouldEqual, http.MethodPost)
-						expectedBody, _ := json.Marshal(defaultCredentials)
-						actualBody, _ := io.ReadAll(doCalls[0].Req.Body)
-
-						So(actualBody, ShouldResemble, expectedBody)
+						assertExpectedCredentialsBody(doCalls[0].Req)
 					})
 				})
 			})
@@ -129,10 +135,7 @@ func TestGetToken(t *testing.T) {
 						So(doCalls, ShouldHaveLength, 1)
 						So(doCalls[0].Req.URL.Path, ShouldEqual, tokensEndpoint)
 						So(doCalls[0].Req.Method, ShouldEqual, http.MethodPost)
-						expectedBody, _ := json.Marshal(defaultCredentials)
-						actualBody, _ := io.ReadAll(doCalls[0].Req.Body)
-
-						So(actualBody, ShouldResemble, expectedBody)
+						assertExpectedCredentialsBody(doCalls[0].Req)
 					})
 				})
 			})
@@ -165,10 +168,7 @@ func TestGetToken(t *testing.T) {
 						So(doCalls, ShouldHaveLength, 1)
 						So(doCalls[0].Req.URL.Path, ShouldEqual, tokensEndpoint)
 						So(doCalls[0].Req.Method, ShouldEqual, http.MethodPost)
-						expectedBody, _ := json.Marshal(defaultCredentials)
-						actualBody, _ := io.ReadAll(doCalls[0].Req.Body)
-
-						So(actualBody, ShouldResemble, expectedBody)
+						assertExpectedCredentialsBody(doCalls[0].Req)
 					})
 				})
 			})

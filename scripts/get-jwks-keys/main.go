@@ -29,7 +29,7 @@ func main() {
 		log.Fatal("could not retrieve the JWKS RSA public keys", err)
 	}
 
-	keys := []string{}
+	keys := make([]string, 0, len(jwksRSAKeys))
 	for k, v := range jwksRSAKeys {
 		key := fmt.Sprintf("%s:%s", k, v)
 		keys = append(keys, key)

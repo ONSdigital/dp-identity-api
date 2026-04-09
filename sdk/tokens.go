@@ -21,7 +21,12 @@ type TokenResponse struct {
 func (cli *Client) GetToken(ctx context.Context, credentials models.UserSignIn) (*TokenResponse, apiError.Error) {
 	path := fmt.Sprintf("%s/tokens", cli.hcCli.URL)
 
-	b, _ := json.Marshal(credentials)
+	b, err := json.Marshal(credentials) // #nosec G117 -- token endpoint requires password in request body
+	if err != nil {
+		return nil, apiError.StatusError{
+			Err: fmt.Errorf("failed to marshal credentials - error is: %v", err),
+		}
+	}
 
 	respInfo, apiErr := cli.callIdentityAPI(ctx, path, http.MethodPost, b)
 	if apiErr != nil {
