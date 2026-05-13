@@ -292,15 +292,6 @@ func TestProtectedHandlersRequireAuthEntityData(t *testing.T) {
 		createHandlerErr := createErr.Errors[0].(*models.Error)
 		So(createHandlerErr.Code, ShouldEqual, models.GetAuthEntityDataError)
 		So(createHandlerErr.Description, ShouldEqual, models.GetAuthEntityDataErrorDescription)
-
-		listReq := httptest.NewRequest(http.MethodGet, usersEndPoint, http.NoBody)
-		listSuccess, listErr := api.ListUsersHandler(ctx, w, listReq)
-		So(listSuccess, ShouldBeNil)
-		So(listErr, ShouldNotBeNil)
-		So(listErr.Status, ShouldEqual, http.StatusInternalServerError)
-		listHandlerErr := listErr.Errors[0].(*models.Error)
-		So(listHandlerErr.Code, ShouldEqual, models.GetAuthEntityDataError)
-		So(listHandlerErr.Description, ShouldEqual, models.GetAuthEntityDataErrorDescription)
 	})
 }
 

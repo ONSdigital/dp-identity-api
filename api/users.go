@@ -99,11 +99,6 @@ func (api *API) ListUsersHandler(ctx context.Context, _ http.ResponseWriter, req
 		filterString   = aws.String("")
 		validationErrs error
 	)
-	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
-	if !ok {
-		log.Error(ctx, "listUsersHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
-		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
-	}
 
 	usersList := models.UsersList{}
 
@@ -134,17 +129,11 @@ func (api *API) ListUsersHandler(ctx context.Context, _ http.ResponseWriter, req
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	logAuditEvent(ctx, "successfully listed users", authEntityData, models.ActionRead, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
 // GetUserHandler lists the users in the user pool
 func (api *API) GetUserHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
-	if !ok {
-		log.Error(ctx, "getUserHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
-		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
-	}
 	vars := mux.Vars(req)
 	user := models.UserParams{ID: vars["id"]}
 	userInput := user.BuildAdminGetUserRequest(api.UserPoolID)
@@ -164,7 +153,6 @@ func (api *API) GetUserHandler(ctx context.Context, _ http.ResponseWriter, req *
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	logAuditEvent(ctx, "successfully retrieved user", authEntityData, models.ActionRead, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -475,11 +463,6 @@ func (api *API) getGroupsForUser(ctx context.Context, listOfGroups []types.Group
 
 // ListUserGroupsHandler lists the users in the user pool
 func (api *API) ListUserGroupsHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
-	if !ok {
-		log.Error(ctx, "listUserGroupsHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
-		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
-	}
 	vars := mux.Vars(req)
 	userID := models.UserParams{ID: vars["id"]}
 	var listofgroupsInput []types.GroupType
@@ -500,7 +483,6 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, _ http.ResponseWriter
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	logAuditEvent(ctx, "successfully retrieved user groups", authEntityData, models.ActionRead, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 

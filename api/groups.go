@@ -197,11 +197,6 @@ func (api *API) AddUserToGroupHandler(ctx context.Context, _ http.ResponseWriter
 
 // ListUsersInGroupHandler list the users in the specified group
 func (api *API) ListUsersInGroupHandler(ctx context.Context, rw http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
-	if !ok {
-		dplogs.Error(ctx, "listUsersInGroupHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
-		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
-	}
 	vars := mux.Vars(req)
 	group := models.Group{ID: vars["id"]}
 
@@ -231,7 +226,6 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, rw http.ResponseWri
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	logAuditEvent(ctx, "successfully retrieved list of users in group", authEntityData, models.ActionRead, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -361,11 +355,6 @@ func (api *API) GetListGroups(ctx context.Context) (*cognitoidentityprovider.Lis
 
 // ListGroupsHandler lists the users in the user pool
 func (api *API) ListGroupsHandler(ctx context.Context, rw http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
-	if !ok {
-		dplogs.Error(ctx, "listGroupsHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
-		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
-	}
 	finalGroupsResponse := models.ListUserGroups{}
 
 	listOfGroups, err := api.GetListGroups(ctx)
@@ -397,8 +386,6 @@ func (api *API) ListGroupsHandler(ctx context.Context, rw http.ResponseWriter, r
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
-
-	logAuditEvent(ctx, "successfully retrieved list of groups", authEntityData, models.ActionRead, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -601,11 +588,6 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, _ http.ResponseWrite
 	var (
 		GroupsUsersList *[]models.ListGroupUsersType
 	)
-	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
-	if !ok {
-		dplogs.Error(ctx, "listGroupsUsersHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
-		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
-	}
 	listOfGroups, err := api.GetListGroups(ctx)
 	if err != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
@@ -625,7 +607,6 @@ func (api *API) ListGroupsUsersHandler(ctx context.Context, _ http.ResponseWrite
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
 	}
 
-	logAuditEvent(ctx, "successfully retrieved list of groups users", authEntityData, models.ActionRead, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
