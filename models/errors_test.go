@@ -1,10 +1,15 @@
 package models_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
+	"os"
+	"strings"
 	"testing"
 
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/smithy-go"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
@@ -16,7 +21,7 @@ const serverError = smithy.ErrorFault(1)
 func TestError_Error(t *testing.T) {
 	Convey("returns the cause Error value when a cause is set", t, func() {
 		originalErr := errors.New("OriginalErrorCause")
-		errorCode := "TestErrorCode"
+		errorCode := "TestErrorCode"                  
 		errorDescription := "description of the error"
 
 		err := models.Error{
@@ -55,6 +60,63 @@ func TestNewError(t *testing.T) {
 		So(err.Error(), ShouldEqual, cause.Error())
 		So(err.Code, ShouldEqual, errorCode)
 		So(err.Description, ShouldEqual, errorDescription)
+	})
+
+	Convey("logs additional data when a single logData is provided", t, func() {
+		cause := errors.New("TestError")
+		errorCode := "TestErrorCode"
+		errorDescription := "description of the error"
+		var destination bytes.Buffer
+
+		log.SetDestination(&destination, &destination)
+		defer log.SetDestination(os.Stdout, os.Stderr)
+
+		err := models.NewError(ctx, cause, errorCode, errorDescription, log.Data{
+			"request_id": "abc-123",
+			"endpoint":   "/tokens",
+		})
+
+		So(err, ShouldNotBeNil)
+
+		var payload map[string]interface{}
+		unmarshalErr := json.Unmarshal([]byte(strings.TrimSpace(destination.String())), &payload)
+		So(unmarshalErr, ShouldBeNil)
+
+		data, ok := payload["data"].(map[string]interface{})
+		So(ok, ShouldBeTrue)
+		So(data["request_id"], ShouldEqual, "abc-123")
+		So(data["endpoint"], ShouldEqual, "/tokens")
+	})
+
+	Convey("merges multiple logData maps and prioritises later values for duplicate keys", t, func() {
+		cause := errors.New("TestError")
+		errorCode := "TestErrorCode"
+		errorDescription := "description of the error"
+		var destination bytes.Buffer
+
+		log.SetDestination(&destination, &destination)
+		defer log.SetDestination(os.Stdout, os.Stderr)
+
+		err := models.NewError(
+			ctx,
+			cause,
+			errorCode,
+			errorDescription,
+			log.Data{"service": "identity-api", "request_id": "first"},
+			log.Data{"request_id": "second", "attempt": 2.0},
+		)
+
+		So(err, ShouldNotBeNil)
+
+		var payload map[string]interface{}
+		unmarshalErr := json.Unmarshal([]byte(strings.TrimSpace(destination.String())), &payload)
+		So(unmarshalErr, ShouldBeNil)
+
+		data, ok := payload["data"].(map[string]interface{})
+		So(ok, ShouldBeTrue)
+		So(data["service"], ShouldEqual, "identity-api")
+		So(data["request_id"], ShouldEqual, "second")
+		So(data["attempt"], ShouldEqual, 2.0)
 	})
 }
 

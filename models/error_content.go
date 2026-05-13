@@ -41,6 +41,7 @@ const (
 	InvalidGroupPrecedence       = "InvalidGroupPrecedence"
 	InvalidFilterQuery           = "InvalidFilterQuery"
 	JWKSParseError               = "JWKSParseError"
+	GetAuthEntityDataError       = "GetAuthEntityDataError"
 )
 
 // API error descriptions
@@ -87,6 +88,8 @@ const (
 	JWKSExponentErrorDescription           = "unexpected exponent: unable to decode JWK"
 	JWKSEmptyWebKeySetDescription          = "empty json web key set"
 	InvalidStatusDescription               = "user was not in a valid state to perform action"
+	GetAuthEntityDataErrorDescription      = "failed to get auth entity data from request"
+	EntityDataErrorDescription             = "unable to parse entity data from request context"
 )
 
 // CognitoErrorMapping mapping Cognito error codes to API error codes

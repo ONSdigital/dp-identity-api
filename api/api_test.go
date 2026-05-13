@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	authorisation "github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
+	auth "github.com/ONSdigital/dp-authorisation/v2/authorisation"
+	authmock "github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
 	"github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
 	jwksmock "github.com/ONSdigital/dp-identity-api/v2/jwks/mock"
 	"github.com/ONSdigital/dp-identity-api/v2/models"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/aws/smithy-go"
@@ -424,10 +427,32 @@ func TestInitialiseRoleGroups(t *testing.T) {
 	})
 }
 
-func newAuthorisationMiddlwareMock() *authorisation.MiddlewareMock {
-	return &authorisation.MiddlewareMock{
+func newAuthorisationMiddlwareMock() *authmock.MiddlewareMock {
+	return &authmock.MiddlewareMock{
 		RequireFunc: func(_ string, handlerFunc http.HandlerFunc) http.HandlerFunc {
-			return handlerFunc
+			return func(w http.ResponseWriter, r *http.Request) {
+				handlerFunc(w, addAuthEntityDataToRequest(r))
+			}
+		},
+		ParseFunc: func(_ string) (*permsdk.EntityData, error) {
+			return &permsdk.EntityData{
+				UserID: "test-user",
+				Groups: []string{"role-admin"},
+			}, nil
 		},
 	}
+}
+
+func addAuthEntityDataToRequest(r *http.Request) *http.Request {
+	entityData := &permsdk.EntityData{
+		UserID: "test-user",
+		Groups: []string{"role-admin"},
+	}
+	authEntityData := auth.CreateAuthEntityData(entityData, false)
+	ctx := auth.ContextWithAuthEntityData(r.Context(), authEntityData)
+	return r.WithContext(ctx)
+}
+
+func newAuthenticatedRequest(method, target string, body io.Reader) *http.Request {
+	return addAuthEntityDataToRequest(httptest.NewRequest(method, target, body))
 }

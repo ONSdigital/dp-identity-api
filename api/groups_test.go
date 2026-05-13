@@ -10,7 +10,6 @@ import (
 	"github.com/aws/smithy-go"
 
 	"net/http"
-	"net/http/httptest"
 	"strconv"
 	"strings"
 	"testing"
@@ -326,7 +325,7 @@ func TestAddUserToGroupHandler(t *testing.T) {
 				m.ListUsersInGroupFunc = tt.listUsersForGroupFunction
 				postBody := map[string]interface{}{"user_id": userID}
 				body, _ := json.Marshal(postBody)
-				r := httptest.NewRequest(http.MethodPost, addUserToGroupEndPoint, bytes.NewReader(body))
+				r := newAuthenticatedRequest(http.MethodPost, addUserToGroupEndPoint, bytes.NewReader(body))
 				urlVars := map[string]string{
 					"id": "efgh5678",
 				}
@@ -413,7 +412,7 @@ func TestAddUserToGroupHandler(t *testing.T) {
 				m.ListUsersInGroupFunc = tt.listUsersForGroupFunction
 				postBody := map[string]interface{}{"user_id": tt.userID}
 				body, _ := json.Marshal(postBody)
-				r := httptest.NewRequest(http.MethodPost, addUserToGroupEndPoint, bytes.NewReader(body))
+				r := newAuthenticatedRequest(http.MethodPost, addUserToGroupEndPoint, bytes.NewReader(body))
 				urlVars := map[string]string{
 					"id": tt.groupID,
 				}
@@ -590,7 +589,7 @@ func TestRemoveUserFromGroupHandler(t *testing.T) {
 				m.GetGroupFunc = tt.getGroupFunction
 				m.ListUsersInGroupFunc = tt.listUsersForGroupFunction
 
-				r := httptest.NewRequest(http.MethodDelete, removeUserFromGroupEndPoint, bytes.NewReader(nil))
+				r := newAuthenticatedRequest(http.MethodDelete, removeUserFromGroupEndPoint, bytes.NewReader(nil))
 
 				urlVars := map[string]string{
 					"id":      "efzgh5678",
@@ -672,7 +671,7 @@ func TestRemoveUserFromGroupHandler(t *testing.T) {
 				m.GetGroupFunc = tt.getGroupFunction
 				m.ListUsersInGroupFunc = tt.listUsersForGroupFunction
 
-				r := httptest.NewRequest(http.MethodDelete, removeUserFromGroupEndPoint, bytes.NewReader(nil))
+				r := newAuthenticatedRequest(http.MethodDelete, removeUserFromGroupEndPoint, bytes.NewReader(nil))
 
 				urlVars := map[string]string{
 					"id":      tt.groupID,
@@ -765,7 +764,7 @@ func TestGetUsersFromGroupHandler(t *testing.T) {
 		for _, tt := range listUsersInGroupTests {
 			m.ListUsersInGroupFunc = tt.listUsersForGroupFunction
 
-			r := httptest.NewRequest(http.MethodGet, getUsersInGroupEndPoint, http.NoBody)
+			r := newAuthenticatedRequest(http.MethodGet, getUsersInGroupEndPoint, http.NoBody)
 
 			urlVars := map[string]string{
 				"id": "efgh5678",
@@ -910,7 +909,7 @@ func TestCreateNewGroup(t *testing.T) {
 				listGroupsFuncSuccess,
 				map[string]interface{}{
 					"name":       "This is a test name",
-					"precedence": 22,
+					"precedence": 22,                   
 				},
 				map[string]interface{}{
 					"name":       "This is a test name",
@@ -1042,7 +1041,7 @@ func TestCreateNewGroup(t *testing.T) {
 			m.CreateGroupFunc = tt.createNewGroupFunction
 			m.ListGroupsFunc = tt.listGroupsFunction
 			body, _ := json.Marshal(tt.createGroupInput)
-			r := httptest.NewRequest(http.MethodPost, createGroupEndPoint, bytes.NewReader(body))
+			r := newAuthenticatedRequest(http.MethodPost, createGroupEndPoint, bytes.NewReader(body))
 
 			successResponse, errorResponse := api.CreateGroupHandler(context.Background(), w, r)
 
@@ -1198,7 +1197,7 @@ func TestUpdateGroup(t *testing.T) {
 		for _, tt := range createGroupTests {
 			m.UpdateGroupFunc = tt.updateGroupFunction
 			body, _ := json.Marshal(tt.updateGroupInput)
-			r := httptest.NewRequest(http.MethodPut, updateGroupEndPoint, bytes.NewReader(body))
+			r := newAuthenticatedRequest(http.MethodPut, updateGroupEndPoint, bytes.NewReader(body))
 
 			successResponse, errorResponse := api.UpdateGroupHandler(context.Background(), w, r)
 
@@ -1412,7 +1411,7 @@ func TestListGroupsHandler(t *testing.T) {
 				postBody := map[string]interface{}{"NextToken": tt.nextToken}
 				body, err := json.Marshal(postBody)
 				So(err, ShouldBeNil)
-				r := httptest.NewRequest(http.MethodGet, getListGroupsEndPoint, bytes.NewReader(body))
+				r := newAuthenticatedRequest(http.MethodGet, getListGroupsEndPoint, bytes.NewReader(body))
 				urlVars := map[string]string{
 					"id": "efgh5678",
 				}
@@ -1501,7 +1500,7 @@ func TestGetGroupHandler(t *testing.T) {
 				body, err := json.Marshal(postBody)
 				So(err, ShouldBeNil)
 
-				r := httptest.NewRequest(http.MethodGet, getListGroupsEndPoint, bytes.NewReader(body))
+				r := newAuthenticatedRequest(http.MethodGet, getListGroupsEndPoint, bytes.NewReader(body))
 
 				urlVars := map[string]string{
 					"id": "efgh5678",
@@ -1572,7 +1571,7 @@ func TestDeleteGroupHandler(t *testing.T) {
 				body, err := json.Marshal(postBody)
 				So(err, ShouldBeNil)
 
-				r := httptest.NewRequest(http.MethodGet, getListGroupsEndPoint, bytes.NewReader(body))
+				r := newAuthenticatedRequest(http.MethodGet, getListGroupsEndPoint, bytes.NewReader(body))
 
 				urlVars := map[string]string{
 					"id": "efgh5678",
@@ -1879,7 +1878,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 				postBody := tt.postbody
 				body, err := json.Marshal(postBody)
 				So(err, ShouldBeNil)
-				r := httptest.NewRequest(http.MethodPut, addUserToGroupEndPoint, bytes.NewReader(body))
+				r := newAuthenticatedRequest(http.MethodPut, addUserToGroupEndPoint, bytes.NewReader(body))
 				urlVars := map[string]string{
 					"id": "efgh5678",
 				}
@@ -2528,7 +2527,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 			Convey(tt.description, func() {
 				m.ListUsersInGroupFunc = tt.listUsersInGroupFunc
 				m.ListGroupsFunc = tt.listGroupsFunc
-				r := httptest.NewRequest(http.MethodGet, getGroupsReportEndPoint, http.NoBody)
+				r := newAuthenticatedRequest(http.MethodGet, getGroupsReportEndPoint, http.NoBody)
 				urlVars := map[string]string{
 					"id": "efgh5678",
 				}
@@ -2637,7 +2636,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 			Convey(tt.description, func() {
 				m.ListUsersInGroupFunc = tt.listUsersInGroupFunc
 				m.ListGroupsFunc = tt.listGroupsFunc
-				r := httptest.NewRequest(http.MethodGet, getGroupsReportEndPoint, http.NoBody)
+				r := newAuthenticatedRequest(http.MethodGet, getGroupsReportEndPoint, http.NoBody)
 				r.Header.Set("Accept", "text/csv")
 				urlVars := map[string]string{
 					"id": "efgh5678",
@@ -2740,7 +2739,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 			Convey(tt.description, func() {
 				m.ListUsersInGroupFunc = tt.listUsersInGroupFunc
 				m.ListGroupsFunc = tt.listGroupsFunc
-				r := httptest.NewRequest(http.MethodGet, getGroupsReportEndPoint, http.NoBody)
+				r := newAuthenticatedRequest(http.MethodGet, getGroupsReportEndPoint, http.NoBody)
 				r.Header.Set("Accept", "text/csv")
 				urlVars := map[string]string{
 					"id": "",

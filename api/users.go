@@ -3,10 +3,12 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
@@ -31,7 +33,11 @@ func (api *API) CreateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 			_ = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
 		}
 	}()
-
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		log.Error(ctx, "createUserHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
@@ -81,6 +87,7 @@ func (api *API) CreateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
+	logAuditEvent(ctx, "successfully created user", authEntityData, models.ActionCreate, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(jsonResponse, http.StatusCreated, nil), nil
 }
 
@@ -90,6 +97,11 @@ func (api *API) ListUsersHandler(ctx context.Context, _ http.ResponseWriter, req
 		filterString   = aws.String("")
 		validationErrs error
 	)
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		log.Error(ctx, "listUsersHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 
 	usersList := models.UsersList{}
 
@@ -120,11 +132,17 @@ func (api *API) ListUsersHandler(ctx context.Context, _ http.ResponseWriter, req
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
+	logAuditEvent(ctx, "successfully listed users", authEntityData, models.ActionRead, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
 // GetUserHandler lists the users in the user pool
 func (api *API) GetUserHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		log.Error(ctx, "getUserHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 	vars := mux.Vars(req)
 	user := models.UserParams{ID: vars["id"]}
 	userInput := user.BuildAdminGetUserRequest(api.UserPoolID)
@@ -144,6 +162,7 @@ func (api *API) GetUserHandler(ctx context.Context, _ http.ResponseWriter, req *
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
+	logAuditEvent(ctx, "successfully retrieved user", authEntityData, models.ActionRead, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -154,6 +173,11 @@ func (api *API) UpdateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 			_ = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
 		}
 	}()
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		log.Error(ctx, "updateUserHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 	vars := mux.Vars(req)
 
 	body, err := io.ReadAll(req.Body)
@@ -207,6 +231,7 @@ func (api *API) UpdateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
+	logAuditEvent(ctx, "successfully updated user", authEntityData, models.ActionUpdate, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -214,6 +239,11 @@ func (api *API) UpdateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 func (api *API) UserSetPasswordHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	userID := vars["id"]
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		log.Error(ctx, "userSetPasswordHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 
 	user := models.UserParams{ID: vars["id"]}
 	userInput := user.BuildAdminGetUserRequest(api.UserPoolID)
@@ -257,6 +287,7 @@ func (api *API) UserSetPasswordHandler(ctx context.Context, _ http.ResponseWrite
 
 	log.Info(ctx, "user set password completed", log.Data{"userID": userID})
 
+	logAuditEvent(ctx, "successfully set user password", authEntityData, models.ActionUpdate, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
 }
 
@@ -442,6 +473,11 @@ func (api *API) getGroupsForUser(ctx context.Context, listOfGroups []types.Group
 
 // ListUserGroupsHandler lists the users in the user pool
 func (api *API) ListUserGroupsHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		log.Error(ctx, "listUserGroupsHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 	vars := mux.Vars(req)
 	userID := models.UserParams{ID: vars["id"]}
 	var listofgroupsInput []types.GroupType
@@ -461,6 +497,8 @@ func (api *API) ListUserGroupsHandler(ctx context.Context, _ http.ResponseWriter
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
+
+	logAuditEvent(ctx, "successfully retrieved user groups", authEntityData, models.ActionRead, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 

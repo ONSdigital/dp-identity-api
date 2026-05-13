@@ -142,6 +142,7 @@ func TestCreateUserHandler(t *testing.T) {
 			postBody := map[string]interface{}{"forename": name, "lastname": surname, "email": email}
 			body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
+			r = addAuthEntityDataToRequest(r)
 
 			successResponse, errorResponse := api.CreateUserHandler(ctx, w, r)
 
@@ -158,6 +159,7 @@ func TestCreateUserHandler(t *testing.T) {
 
 	Convey("Admin create user returns 500: error unmarshalling request body", t, func() {
 		r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(nil))
+		r = addAuthEntityDataToRequest(r)
 
 		successResponse, errorResponse := api.CreateUserHandler(ctx, w, r)
 
@@ -257,6 +259,7 @@ func TestCreateUserHandler(t *testing.T) {
 
 			body, _ := json.Marshal(tt.userDetails)
 			r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
+			r = addAuthEntityDataToRequest(r)
 
 			successResponse, errorResponse := api.CreateUserHandler(ctx, w, r)
 
@@ -269,6 +272,35 @@ func TestCreateUserHandler(t *testing.T) {
 				So(castErr.Code, ShouldEqual, tt.errorCodes[1])
 			}
 		}
+	})
+}
+
+func TestProtectedHandlersRequireAuthEntityData(t *testing.T) {
+	var ctx = context.Background()
+
+	api, w, _ := apiMockSetup()
+
+	Convey("protected handlers return GetAuthEntityDataError when auth entity data is missing", t, func() {
+		postBody := map[string]interface{}{"forename": "bob", "lastname": "bobbings", "email": "foo_bar123@ext.ons.gov.uk"}
+		body, _ := json.Marshal(postBody)
+
+		createReq := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
+		createSuccess, createErr := api.CreateUserHandler(ctx, w, createReq)
+		So(createSuccess, ShouldBeNil)
+		So(createErr, ShouldNotBeNil)
+		So(createErr.Status, ShouldEqual, http.StatusInternalServerError)
+		createHandlerErr := createErr.Errors[0].(*models.Error)
+		So(createHandlerErr.Code, ShouldEqual, models.GetAuthEntityDataError)
+		So(createHandlerErr.Description, ShouldEqual, models.GetAuthEntityDataErrorDescription)
+
+		listReq := httptest.NewRequest(http.MethodGet, usersEndPoint, http.NoBody)
+		listSuccess, listErr := api.ListUsersHandler(ctx, w, listReq)
+		So(listSuccess, ShouldBeNil)
+		So(listErr, ShouldNotBeNil)
+		So(listErr.Status, ShouldEqual, http.StatusInternalServerError)
+		listHandlerErr := listErr.Errors[0].(*models.Error)
+		So(listHandlerErr.Code, ShouldEqual, models.GetAuthEntityDataError)
+		So(listHandlerErr.Description, ShouldEqual, models.GetAuthEntityDataErrorDescription)
 	})
 }
 
@@ -310,6 +342,7 @@ func TestListUserHandler(t *testing.T) {
 			m.ListUsersFunc = tt.listUsersFunction
 
 			r := httptest.NewRequest(http.MethodGet, usersEndPoint, http.NoBody)
+			r = addAuthEntityDataToRequest(r)
 			successResponse, errorResponse := api.ListUsersHandler(ctx, w, r)
 
 			// Check whether testing a success or error case
@@ -401,7 +434,7 @@ func TestListUserHandlerWithFilter(t *testing.T) {
 		for _, tt := range listUsersTest {
 			Convey(tt.description, func() {
 				m.ListUsersFunc = tt.listUsersFunction
-				r := tt.endpoint
+				r := addAuthEntityDataToRequest(tt.endpoint)
 				successResponse, errorResponse := api.ListUsersHandler(ctx, w, r)
 				tt.assertions(successResponse, errorResponse)
 			},
@@ -530,7 +563,7 @@ func TestListUserHandlerWithSort(t *testing.T) {
 		for _, tt := range listUsersTest {
 			Convey(tt.description, func() {
 				m.ListUsersFunc = tt.listUsersFunction
-				r := tt.endpoint
+				r := addAuthEntityDataToRequest(tt.endpoint)
 				successResponse, errorResponse := api.ListUsersHandler(ctx, w, r)
 				tt.assertions(successResponse, errorResponse)
 			},
@@ -636,6 +669,7 @@ func TestGetUserHandler(t *testing.T) {
 			m.AdminGetUserFunc = tt.getUserFunction
 
 			r := httptest.NewRequest(http.MethodGet, userEndPoint, http.NoBody)
+			r = addAuthEntityDataToRequest(r)
 
 			successResponse, errorResponse := api.GetUserHandler(ctx, w, r)
 
@@ -980,6 +1014,7 @@ func TestUpdateUserHandler(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			r := httptest.NewRequest(http.MethodGet, userEndPoint, bytes.NewReader(body))
+			r = addAuthEntityDataToRequest(r)
 
 			successResponse, errorResponse := api.UpdateUserHandler(ctx, w, r)
 
@@ -1012,6 +1047,7 @@ func TestSetUserPasswordHandler(t *testing.T) {
 
 		Convey("When the SetUserPasswordHandler is called", func() {
 			r := httptest.NewRequest(http.MethodGet, userSetPasswordEndPoint, http.NoBody)
+			r = addAuthEntityDataToRequest(r)
 			successResponse, errorResponse := mockAPI.UserSetPasswordHandler(ctx, w, r)
 
 			Convey("Then the request to set the password should be successful", func() {
@@ -1034,6 +1070,7 @@ func TestSetUserPasswordHandler(t *testing.T) {
 
 		Convey("When the SetUserPasswordHandler is called", func() {
 			r := httptest.NewRequest(http.MethodGet, userSetPasswordEndPoint, http.NoBody)
+			r = addAuthEntityDataToRequest(r)
 			successResponse, errorResponse := mockAPI.UserSetPasswordHandler(ctx, w, r)
 
 			Convey("Then the request to set the password should be return a forbidden error", func() {
@@ -1056,6 +1093,7 @@ func TestSetUserPasswordHandler(t *testing.T) {
 
 		Convey("When the SetUserPasswordHandler is called", func() {
 			r := httptest.NewRequest(http.MethodGet, userSetPasswordEndPoint, http.NoBody)
+			r = addAuthEntityDataToRequest(r)
 			successResponse, errorResponse := mockAPI.UserSetPasswordHandler(ctx, w, r)
 
 			Convey("Then the request to set the password should be return a not found error", func() {
@@ -1359,6 +1397,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 
 	Convey("ConfirmForgotPassword returns 500: error unmarshalling request body", t, func() {
 		r := httptest.NewRequest(http.MethodPut, changePasswordEndPoint, bytes.NewReader(nil))
+		r = addAuthEntityDataToRequest(r)
 
 		successResponse, errorResponse := api.CreateUserHandler(ctx, w, r)
 
@@ -1610,6 +1649,7 @@ func TestListUserGroupsHandler(t *testing.T) {
 			m.ListGroupsForUserFunc = tt.getUserGroupsFunction
 
 			r := httptest.NewRequest(http.MethodGet, userListGroupsEndPoint, http.NoBody)
+			r = addAuthEntityDataToRequest(r)
 
 			urlVars := map[string]string{
 				"id": "efgh5678",
