@@ -29,6 +29,8 @@ const (
 	errCodeTooManyRequests  = "TooManyRequestsException"
 	errCodeGroupExists      = "GroupExistsException"
 	errCodeResourceNotFound = "ResourceNotFoundException"
+	msgSomethingWentWrong   = "Something went wrong"
+	msgUserNotFound         = "the user could not be found"
 )
 
 type CognitoIdentityProviderClientStub struct {
@@ -143,7 +145,7 @@ func (m *CognitoIdentityProviderClientStub) InitiateAuth(_ context.Context, inpu
 		if input.AuthParameters["PASSWORD"] == "internalerrorException" {
 			return nil, &smithy.GenericAPIError{
 				Code:    errCodeInternalError,
-				Message: "Something went wrong",
+				Message: msgSomethingWentWrong,
 			}
 		}
 		return nil, &smithy.GenericAPIError{
@@ -154,7 +156,7 @@ func (m *CognitoIdentityProviderClientStub) InitiateAuth(_ context.Context, inpu
 		if input.AuthParameters["REFRESH_TOKEN"] == "InternalError" {
 			return nil, &smithy.GenericAPIError{
 				Code:    errCodeInternalError,
-				Message: "Something went wrong",
+				Message: msgSomethingWentWrong,
 			}
 		} else if input.AuthParameters["REFRESH_TOKEN"] == "ExpiredToken" {
 			return nil, &smithy.GenericAPIError{
@@ -180,7 +182,7 @@ func (m *CognitoIdentityProviderClientStub) GlobalSignOut(_ context.Context, sig
 	if *signOutInput.AccessToken == "InternalError" {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
-			Message: "Something went wrong",
+			Message: msgSomethingWentWrong,
 		}
 	}
 	for _, session := range m.Sessions {
@@ -222,7 +224,7 @@ func (m *CognitoIdentityProviderClientStub) ListUsers(_ context.Context, input *
 	if len(m.Users) > 0 && m.Users[0].Email == "internal.error@ons.gov.uk" {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
-			Message: "Something went wrong",
+			Message: msgSomethingWentWrong,
 		}
 	}
 
@@ -298,7 +300,7 @@ func (m *CognitoIdentityProviderClientStub) RespondToAuthChallenge(_ context.Con
 		case "internalerrorException":
 			return nil, &smithy.GenericAPIError{
 				Code:    errCodeInternalError,
-				Message: "Something went wrong",
+				Message: msgSomethingWentWrong,
 			}
 		case "invalidpassword":
 			return nil, &smithy.GenericAPIError{
@@ -326,7 +328,7 @@ func (m *CognitoIdentityProviderClientStub) ConfirmForgotPassword(_ context.Cont
 	if *input.Password == "internalerrorException" {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
-			Message: "Something went wrong",
+			Message: msgSomethingWentWrong,
 		}
 	} else if *input.Password == "invalidpassword" {
 		return nil, &smithy.GenericAPIError{
@@ -364,7 +366,7 @@ func (m *CognitoIdentityProviderClientStub) ForgotPassword(_ context.Context, in
 	if *input.Username == "internal.error@ons.gov.uk" {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
-			Message: "Something went wrong",
+			Message: msgSomethingWentWrong,
 		}
 	}
 	if *input.Username == "too.many@ons.gov.uk" {
@@ -395,7 +397,7 @@ func (m *CognitoIdentityProviderClientStub) AdminGetUser(_ context.Context, inpu
 			if user.Email == "internal.error@ons.gov.uk" {
 				return nil, &smithy.GenericAPIError{
 					Code:    errCodeInternalError,
-					Message: "Something went wrong",
+					Message: msgSomethingWentWrong,
 				}
 			}
 			return &cognitoidentityprovider.AdminGetUserOutput{
@@ -425,7 +427,7 @@ func (m *CognitoIdentityProviderClientStub) AdminGetUser(_ context.Context, inpu
 	}
 	return nil, &smithy.GenericAPIError{
 		Code:    errCodeUserNotFound,
-		Message: "the user could not be found",
+		Message: msgUserNotFound,
 	}
 }
 
@@ -443,7 +445,7 @@ func (m *CognitoIdentityProviderClientStub) CreateGroup(_ context.Context, input
 		if *input.GroupName == "internalError" {
 			return nil, &smithy.GenericAPIError{
 				Code:    errCodeInternalError,
-				Message: "Something went wrong",
+				Message: msgSomethingWentWrong,
 			}
 		}
 
@@ -494,7 +496,7 @@ func (m *CognitoIdentityProviderClientStub) CreateGroup(_ context.Context, input
 			// 500 response - internal server error
 			return nil, &smithy.GenericAPIError{
 				Code:    errCodeInternalError,
-				Message: "Something went wrong",
+				Message: msgSomethingWentWrong,
 			}
 		}
 	}
@@ -507,7 +509,7 @@ func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(_ context.
 			if user.Email == "update.internalerror@ons.gov.uk" {
 				return nil, &smithy.GenericAPIError{
 					Code:    errCodeInternalError,
-					Message: "Something went wrong",
+					Message: msgSomethingWentWrong,
 				}
 			}
 			for _, attr := range input.UserAttributes {
@@ -528,7 +530,7 @@ func (m *CognitoIdentityProviderClientStub) AdminUpdateUserAttributes(_ context.
 	}
 	return nil, &smithy.GenericAPIError{
 		Code:    errCodeUserNotFound,
-		Message: "the user could not be found",
+		Message: msgUserNotFound,
 	}
 }
 
@@ -547,7 +549,7 @@ func (m *CognitoIdentityProviderClientStub) AdminEnableUser(_ context.Context, i
 	}
 	return nil, &smithy.GenericAPIError{
 		Code:    errCodeUserNotFound,
-		Message: "the user could not be found",
+		Message: msgUserNotFound,
 	}
 }
 
@@ -566,7 +568,7 @@ func (m *CognitoIdentityProviderClientStub) AdminDisableUser(_ context.Context, 
 	}
 	return nil, &smithy.GenericAPIError{
 		Code:    errCodeUserNotFound,
-		Message: "the user could not be found",
+		Message: msgUserNotFound,
 	}
 }
 
@@ -574,7 +576,7 @@ func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(_ context.Contex
 	if *input.GroupName == internalError {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
-			Message: "Something went wrong",
+			Message: msgSomethingWentWrong,
 		}
 	}
 
@@ -590,7 +592,7 @@ func (m *CognitoIdentityProviderClientStub) AdminAddUserToGroup(_ context.Contex
 	if user == nil {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeUserNotFound,
-			Message: "the user could not be found",
+			Message: msgUserNotFound,
 		}
 	}
 
@@ -604,7 +606,7 @@ func (m *CognitoIdentityProviderClientStub) GetGroup(_ context.Context, input *c
 	if *input.GroupName == internalError || *input.GroupName == "get-group-internal-error" {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
-			Message: "Something went wrong",
+			Message: msgSomethingWentWrong,
 		}
 	}
 	if *input.GroupName == "get-group-not-found" {
@@ -643,7 +645,7 @@ func (m *CognitoIdentityProviderClientStub) ListUsersInGroup(_ context.Context, 
 	if *input.GroupName == internalError || *input.GroupName == "list-group-users-internal-error" {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
-			Message: "Something went wrong",
+			Message: msgSomethingWentWrong,
 		}
 	}
 	if *input.GroupName == "list-group-users-not-found" {
@@ -697,7 +699,7 @@ func (m *CognitoIdentityProviderClientStub) AdminRemoveUserFromGroup(_ context.C
 	if *input.GroupName == internalError {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
-			Message: "Something went wrong",
+			Message: msgSomethingWentWrong,
 		}
 	}
 
@@ -713,7 +715,7 @@ func (m *CognitoIdentityProviderClientStub) AdminRemoveUserFromGroup(_ context.C
 	if user == nil {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeUserNotFound,
-			Message: "the user could not be found",
+			Message: msgUserNotFound,
 		}
 	}
 
@@ -752,7 +754,7 @@ func (m *CognitoIdentityProviderClientStub) DeleteGroup(_ context.Context, input
 	if *input.GroupName == internalError || *input.GroupName == "get-group-internal-error" {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
-			Message: "Something went wrong",
+			Message: msgSomethingWentWrong,
 		}
 	}
 	if *input.GroupName == "delete-group-not-found" {
@@ -775,7 +777,7 @@ func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(_ context.Con
 	if *input.Username == internalError || *input.Username == "get-group-internal-error" {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
-			Message: "Something went wrong",
+			Message: msgSomethingWentWrong,
 		}
 	}
 	if *input.Username == "get-user-not-found" {
@@ -795,7 +797,7 @@ func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(_ context.Con
 	if user == nil {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeUserNotFound,
-			Message: "the user could not be found",
+			Message: msgUserNotFound,
 		}
 	}
 
@@ -804,7 +806,7 @@ func (m *CognitoIdentityProviderClientStub) AdminListGroupsForUser(_ context.Con
 	if user.Groups == nil {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
-			Message: "Something went wrong",
+			Message: msgSomethingWentWrong,
 		}
 	}
 
@@ -839,7 +841,7 @@ func (m *CognitoIdentityProviderClientStub) ListGroups(_ context.Context, input 
 	if *input.UserPoolId == internalError {
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
-			Message: "Something went wrong",
+			Message: msgSomethingWentWrong,
 		}
 	}
 
@@ -910,7 +912,7 @@ func (m *CognitoIdentityProviderClientStub) UpdateGroup(_ context.Context, input
 		// 500 response - internal server error
 		return nil, &smithy.GenericAPIError{
 			Code:    errCodeInternalError,
-			Message: "Something went wrong",
+			Message: msgSomethingWentWrong,
 		}
 	} else {
 		// 404 response - resource not found error

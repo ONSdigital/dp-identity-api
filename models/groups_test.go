@@ -113,7 +113,7 @@ func TestGroup_BuildGetGroupRequest(t *testing.T) {
 func TestGroup_BuildAddUserToGroupRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminAddUserToGroup request body", t, func() {
 		group := models.Group{
-			ID: "role-test",
+			ID: roleTest,
 		}
 
 		response := group.BuildAddUserToGroupRequest(userPoolID, userID)
@@ -128,7 +128,7 @@ func TestGroup_BuildAddUserToGroupRequest(t *testing.T) {
 func TestGroup_BuildRemoveUserFromGroupRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminRemoveUserFromGroup request body", t, func() {
 		group := models.Group{
-			ID: "role-test",
+			ID: roleTest,
 		}
 
 		response := group.BuildRemoveUserFromGroupRequest(userPoolID, userID)
@@ -143,7 +143,7 @@ func TestGroup_BuildRemoveUserFromGroupRequest(t *testing.T) {
 func TestGroup_BuildListUsersInGroupRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito ListUsersInGroup request body", t, func() {
 		group := models.Group{
-			ID: "role-test",
+			ID: roleTest,
 		}
 
 		response := group.BuildListUsersInGroupRequest(userPoolID)
@@ -201,7 +201,7 @@ func TestGroup_BuildSuccessfulJsonResponse(t *testing.T) {
 func TestGroup_BuildListUsersInGroupRequestWithNextToken(t *testing.T) {
 	Convey("builds a correctly populated Cognito ListUsersInGroup request body without a nextToken", t, func() {
 		group := models.Group{
-			ID: "role-test",
+			ID: roleTest,
 		}
 		nextToken := ""
 
@@ -215,7 +215,7 @@ func TestGroup_BuildListUsersInGroupRequestWithNextToken(t *testing.T) {
 
 	Convey("builds a correctly populated Cognito ListUsersInGroup request body with a nextToken", t, func() {
 		group := models.Group{
-			ID: "role-test",
+			ID: roleTest,
 		}
 		nextToken := "abcd"
 

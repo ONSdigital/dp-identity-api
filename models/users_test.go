@@ -22,14 +22,21 @@ const (
 	clientID              = "awsclientid"
 	clientSecret          = "awsSecret"
 	userStatusUnconfirmed = "UNCONFIRMED"
+	emailWithDot          = "email.email@ons.gov.uk"
+	lastnameSmith         = "Smith"
+	emailGmail            = "email@gmail.com"
+	testPassword          = "password"
+	passwordWithDigit     = "Password2"
+	authChallengeSession  = "auth-challenge-session"
+	roleTest              = "role-test"
 )
 
 func TestUsersList_BuildListUserRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito ListUsers request body", t, func() {
 		user := models.UserParams{
-			Email:    "email.email@ons.gov.uk",
+			Email:    emailWithDot,
 			Forename: "Stan",
-			Lastname: "Smith",
+			Lastname: lastnameSmith,
 		}
 
 		filterString := "email = \"" + user.Email + "\""
@@ -154,9 +161,9 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 
 	Convey("returns an InvalidForename error if an invalid forename is submitted", t, func() {
 		user := models.UserParams{
-			Email:    "email.email@ons.gov.uk",
+			Email:    emailWithDot,
 			Forename: "",
-			Lastname: "Smith",
+			Lastname: lastnameSmith,
 		}
 
 		errs := user.ValidateRegistration(ctx, allowedDomains, blockPlusAddressing)
@@ -169,7 +176,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 
 	Convey("returns an InvalidSurname error if an invalid surname is submitted", t, func() {
 		user := models.UserParams{
-			Email:    "email.email@ons.gov.uk",
+			Email:    emailWithDot,
 			Forename: "Stan",
 			Lastname: "",
 		}
@@ -186,7 +193,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 		user := models.UserParams{
 			Email:    "email",
 			Forename: "Stan",
-			Lastname: "Smith",
+			Lastname: lastnameSmith,
 		}
 
 		errs := user.ValidateRegistration(ctx, allowedDomains, blockPlusAddressing)
@@ -199,9 +206,9 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 
 	Convey("returns an InvalidEmail error if a non ONS email is submitted", t, func() {
 		user := models.UserParams{
-			Email:    "email@gmail.com",
+			Email:    emailGmail,
 			Forename: "Stan",
-			Lastname: "Smith",
+			Lastname: lastnameSmith,
 		}
 
 		errs := user.ValidateRegistration(ctx, allowedDomains, blockPlusAddressing)
@@ -218,7 +225,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 		user := models.UserParams{
 			Email:    "email+01@ons.gov.uk",
 			Forename: "Stan",
-			Lastname: "Smith",
+			Lastname: lastnameSmith,
 		}
 
 		errs := user.ValidateRegistration(ctx, allowedDomains, blockPlusAddressing)
@@ -235,7 +242,7 @@ func TestUserParams_ValidateRegistration(t *testing.T) {
 		user := models.UserParams{
 			Email:    "email+01@ons.gov.uk",
 			Forename: "Stan",
-			Lastname: "Smith",
+			Lastname: lastnameSmith,
 		}
 
 		errs := user.ValidateRegistration(ctx, allowedDomains, blockPlusAddressing)
@@ -253,7 +260,7 @@ func TestUserParams_ValidateUpdate(t *testing.T) {
 	Convey("returns an InvalidForename error if an invalid forename is submitted", t, func() {
 		user := models.UserParams{
 			Forename:    "",
-			Lastname:    "Smith",
+			Lastname:    lastnameSmith,
 			StatusNotes: "",
 		}
 
@@ -283,7 +290,7 @@ func TestUserParams_ValidateUpdate(t *testing.T) {
 	Convey("returns an InvalidStatusNotes error if an invalid status notes is submitted", t, func() {
 		user := models.UserParams{
 			Forename:    "Stan",
-			Lastname:    "Smith",
+			Lastname:    lastnameSmith,
 			StatusNotes: invalidStatusNotes,
 		}
 
@@ -316,7 +323,7 @@ func TestUserParams_ValidateUpdate(t *testing.T) {
 	Convey("returns an InvalidForename and InvalidStatusNotes errors if no forename and invalid notes are submitted", t, func() {
 		user := models.UserParams{
 			Forename:    "",
-			Lastname:    "Smith",
+			Lastname:    lastnameSmith,
 			StatusNotes: invalidStatusNotes,
 		}
 
@@ -376,9 +383,9 @@ func TestUserParams_CheckForDuplicateEmail(t *testing.T) {
 
 	Convey("returns nothing if there is no user returned from the ListUser request", t, func() {
 		user := models.UserParams{
-			Email:    "email.email@ons.gov.uk",
+			Email:    emailWithDot,
 			Forename: "Stan",
-			Lastname: "Smith",
+			Lastname: lastnameSmith,
 		}
 
 		listUserResponse := cognitoidentityprovider.ListUsersOutput{
@@ -392,9 +399,9 @@ func TestUserParams_CheckForDuplicateEmail(t *testing.T) {
 
 	Convey("returns an InvalidEmail error if there is a user returned from the ListUser request", t, func() {
 		user := models.UserParams{
-			Email:    "email.email@ons.gov.uk",
+			Email:    emailWithDot,
 			Forename: "Stan",
-			Lastname: "Smith",
+			Lastname: lastnameSmith,
 		}
 
 		name := "abcd-efgh-ijkl-mnop"
@@ -419,9 +426,9 @@ func TestUserParams_CheckForDuplicateEmail(t *testing.T) {
 func TestUserParams_BuildCreateUserRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito AdminUserCreateInput request body", t, func() {
 		user := models.UserParams{
-			Email:    "email.email@ons.gov.uk",
+			Email:    emailWithDot,
 			Forename: "Stan",
-			Lastname: "Smith",
+			Lastname: lastnameSmith,
 		}
 
 		response := user.BuildCreateUserRequest(userID, userPoolID)
@@ -440,7 +447,7 @@ func TestUserParams_BuildUpdateUserRequest(t *testing.T) {
 		user := models.UserParams{
 			ID:          "abcd1234",
 			Forename:    "Stan",
-			Lastname:    "Smith",
+			Lastname:    lastnameSmith,
 			StatusNotes: "user suspended",
 		}
 
@@ -521,7 +528,7 @@ func TestUserParams_BuildDisableUserRequest(t *testing.T) {
 
 func TestUserParams_MapCognitoDetails(t *testing.T) {
 	Convey("maps the returned user details to the UserParam attributes", t, func() {
-		var forename, surname, email, id = "Bob", "Smith", "email@ons.gov.uk", "user-1"
+		var forename, surname, email, id = "Bob", lastnameSmith, "email@ons.gov.uk", "user-1"
 		status := types.UserStatusTypeConfirmed
 		cognitoUser := types.UserType{
 			Attributes: []types.AttributeType{
@@ -554,7 +561,7 @@ func TestUserParams_MapCognitoDetails(t *testing.T) {
 
 func TestUserParams_MapCognitoGetResponse(t *testing.T) {
 	Convey("maps the returned user details to the UserParam attributes", t, func() {
-		var forename, surname, email, id = "Bob", "Smith", "email@ons.gov.uk", "user-1"
+		var forename, surname, email, id = "Bob", lastnameSmith, "email@ons.gov.uk", "user-1"
 		status := types.UserStatusTypeConfirmed
 		cognitoUser := cognitoidentityprovider.AdminGetUserOutput{
 			UserAttributes: []types.AttributeType{
@@ -591,8 +598,8 @@ func TestUserSignIn_ValidateCredentials(t *testing.T) {
 
 	Convey("no errors are returned if a valid email address and password are provided", t, func() {
 		signIn := models.UserSignIn{
-			Password: "password",
-			Email:    "email.email@ons.gov.uk",
+			Password: testPassword,
+			Email:    emailWithDot,
 		}
 
 		validationErrors := signIn.ValidateCredentials(ctx)
@@ -601,7 +608,7 @@ func TestUserSignIn_ValidateCredentials(t *testing.T) {
 
 	Convey("an InvalidPassword error is returned if there isn't a password field in the body", t, func() {
 		signIn := models.UserSignIn{
-			Email: "email.email@ons.gov.uk",
+			Email: emailWithDot,
 		}
 
 		validationErrors := *signIn.ValidateCredentials(ctx)
@@ -614,7 +621,7 @@ func TestUserSignIn_ValidateCredentials(t *testing.T) {
 	Convey("an InvalidPassword error is returned if there is an empty password field in the body", t, func() {
 		signIn := models.UserSignIn{
 			Password: "",
-			Email:    "email.email@ons.gov.uk",
+			Email:    emailWithDot,
 		}
 
 		validationErrors := *signIn.ValidateCredentials(ctx)
@@ -626,7 +633,7 @@ func TestUserSignIn_ValidateCredentials(t *testing.T) {
 
 	Convey("an InvalidEmail error is returned if there isn't an email field in the body", t, func() {
 		signIn := models.UserSignIn{
-			Password: "password",
+			Password: testPassword,
 		}
 
 		validationErrors := *signIn.ValidateCredentials(ctx)
@@ -638,7 +645,7 @@ func TestUserSignIn_ValidateCredentials(t *testing.T) {
 
 	Convey("an InvalidEmail error is returned if there is an empty email field in the body", t, func() {
 		signIn := models.UserSignIn{
-			Password: "password",
+			Password: testPassword,
 			Email:    "",
 		}
 
@@ -651,7 +658,7 @@ func TestUserSignIn_ValidateCredentials(t *testing.T) {
 
 	Convey("an InvalidEmail error is returned if the email doesn't conform to the expected format", t, func() {
 		signIn := models.UserSignIn{
-			Password: "password",
+			Password: testPassword,
 			Email:    "email",
 		}
 
@@ -682,8 +689,8 @@ func TestUserSignIn_ValidateCredentials(t *testing.T) {
 func TestUserSignIn_BuildCognitoRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito InitiateAuthInput request body", t, func() {
 		signIn := models.UserSignIn{
-			Email:    "email.email@ons.gov.uk",
-			Password: "password",
+			Email:    emailWithDot,
+			Password: testPassword,
 		}
 
 		clientAuthFlow := types.AuthFlowTypeUserAuth
@@ -746,21 +753,21 @@ func TestChangePassword_ValidateNewPasswordRequiredRequest(t *testing.T) {
 			{
 				// missing session
 				"",
-				"email@gmail.com",
-				"Password2",
+				emailGmail,
+				passwordWithDigit,
 				[]string{models.InvalidChallengeSessionError},
 			},
 			{
 				// missing email
-				"auth-challenge-session",
+				authChallengeSession,
 				"",
-				"Password2",
+				passwordWithDigit,
 				[]string{models.InvalidEmailError},
 			},
 			{
 				// missing password
-				"auth-challenge-session",
-				"email@gmail.com",
+				authChallengeSession,
+				emailGmail,
 				"",
 				[]string{models.InvalidPasswordError},
 			},
@@ -768,19 +775,19 @@ func TestChangePassword_ValidateNewPasswordRequiredRequest(t *testing.T) {
 				// missing session and email
 				"",
 				"",
-				"Password2",
+				passwordWithDigit,
 				[]string{models.InvalidEmailError, models.InvalidChallengeSessionError},
 			},
 			{
 				// missing session and password
 				"",
-				"email@gmail.com",
+				emailGmail,
 				"",
 				[]string{models.InvalidPasswordError, models.InvalidChallengeSessionError},
 			},
 			{
 				// missing email and password
-				"auth-challenge-session",
+				authChallengeSession,
 				"",
 				"",
 				[]string{models.InvalidPasswordError, models.InvalidEmailError},
@@ -814,9 +821,9 @@ func TestChangePassword_ValidateNewPasswordRequiredRequest(t *testing.T) {
 	Convey("returns an empty slice if there are no validation failures", t, func() {
 		passwordChangeParams := models.ChangePassword{
 			ChangeType:  models.NewPasswordRequiredType,
-			Session:     "auth-challenge-session",
-			Email:       "email@gmail.com",
-			NewPassword: "Password2",
+			Session:     authChallengeSession,
+			Email:       emailGmail,
+			NewPassword: passwordWithDigit,
 		}
 		validationErrs := passwordChangeParams.ValidateNewPasswordRequiredRequest(ctx)
 
@@ -828,9 +835,9 @@ func TestChangePassword_BuildAuthChallengeResponseRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito RespondToAuthChallengeInput request body", t, func() {
 		passwordChangeParams := models.ChangePassword{
 			ChangeType:  models.NewPasswordRequiredType,
-			Session:     "auth-challenge-session",
-			Email:       "email@gmail.com",
-			NewPassword: "Password2",
+			Session:     authChallengeSession,
+			Email:       emailGmail,
+			NewPassword: passwordWithDigit,
 		}
 
 		response := passwordChangeParams.BuildAuthChallengeResponseRequest(clientSecret, clientID, api.NewPasswordChallenge)
@@ -892,21 +899,21 @@ func TestChangePassword_ValidateForgottenPasswordRequest(t *testing.T) {
 			{
 				// missing VerificationToken
 				"",
-				"email@gmail.com",
-				"Password2",
+				emailGmail,
+				passwordWithDigit,
 				[]string{models.InvalidTokenError},
 			},
 			{
 				// missing email
 				"≈",
 				"",
-				"Password2",
+				passwordWithDigit,
 				[]string{models.InvalidUserIDError},
 			},
 			{
 				// missing password
 				"verification_token",
-				"email@gmail.com",
+				emailGmail,
 				"",
 				[]string{models.InvalidPasswordError},
 			},
@@ -914,13 +921,13 @@ func TestChangePassword_ValidateForgottenPasswordRequest(t *testing.T) {
 				// missing VerificationToken and email
 				"",
 				"",
-				"Password2",
+				passwordWithDigit,
 				[]string{models.InvalidUserIDError, models.InvalidTokenError},
 			},
 			{
 				// missing VerificationToken and password
 				"",
-				"email@gmail.com",
+				emailGmail,
 				"",
 				[]string{models.InvalidPasswordError, models.InvalidTokenError},
 			},
@@ -962,8 +969,8 @@ func TestForgottenPassword_BuildConfirmForgotPasswordRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito BuildConfirmForgotPasswordRequest request body", t, func() {
 		passwordChangeParams := models.ChangePassword{
 			VerificationToken: "verification_token",
-			Email:             "email@gmail.com",
-			NewPassword:       "Password2",
+			Email:             emailGmail,
+			NewPassword:       passwordWithDigit,
 		}
 
 		clientID := "awsclientid"
@@ -1006,7 +1013,7 @@ func TestPasswordReset_Validate(t *testing.T) {
 
 	Convey("returns nil if there are no validation failures", t, func() {
 		passwordResetParams := models.PasswordReset{
-			Email: "email@gmail.com",
+			Email: emailGmail,
 		}
 		validationErr := passwordResetParams.Validate(ctx)
 
@@ -1017,7 +1024,7 @@ func TestPasswordReset_Validate(t *testing.T) {
 func TestPasswordReset_BuildCognitoRequest(t *testing.T) {
 	Convey("builds a correctly populated Cognito ForgotPasswordInput request body", t, func() {
 		passwordResetParams := models.PasswordReset{
-			Email: "email@gmail.com",
+			Email: emailGmail,
 		}
 
 		response := passwordResetParams.BuildCognitoRequest(clientSecret, clientID)

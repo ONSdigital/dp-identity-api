@@ -30,6 +30,12 @@ const (
 	unknownError     = smithy.ErrorFault(0)
 	serverError      = smithy.ErrorFault(1)
 	clientError      = smithy.ErrorFault(2)
+	extOnsDomain     = "@ext.ons.gov.uk"
+	onsDomain        = "@ons.gov.uk"
+	testAwsRegion    = "eu-west-1234"
+	testEmail        = "email@ons.gov.uk"
+	passwordField    = "password"
+	lastnameField    = "lastname"
 )
 
 var jwksHandler = jwksmock.JWKSStubbed
@@ -48,8 +54,8 @@ func TestSetup(t *testing.T) {
 		}
 
 		api, err := Setup(ctx, r, m,
-			"us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow", "eu-west-1234", true,
-			[]string{"@ons.gov.uk", "@ext.ons.gov.uk"}, newAuthorisationMiddlwareMock(), jwksHandler)
+			"us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow", testAwsRegion, true,
+			[]string{onsDomain, extOnsDomain}, newAuthorisationMiddlwareMock(), jwksHandler)
 
 		Convey("When created the following route(s) should have been added", func() {
 			So(hasRoute(api.Router, "/v1/tokens", http.MethodPost), ShouldBeTrue)
@@ -102,9 +108,9 @@ func TestSetup(t *testing.T) {
 				"client-aaa-bbb",
 				"secret-ccc-ddd",
 				"authflow",
-				"eu-west-1234",
+				testAwsRegion,
 				true,
-				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
+				[]string{onsDomain, extOnsDomain},
 			},
 			// missing clientID
 			{
@@ -113,9 +119,9 @@ func TestSetup(t *testing.T) {
 				"",
 				"secret-ccc-ddd",
 				"authflow",
-				"eu-west-1234",
+				testAwsRegion,
 				true,
-				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
+				[]string{onsDomain, extOnsDomain},
 			},
 			// missing clientSecret
 			{
@@ -124,9 +130,9 @@ func TestSetup(t *testing.T) {
 				"client-aaa-bbb",
 				"",
 				"authflow",
-				"eu-west-1234",
+				testAwsRegion,
 				true,
-				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
+				[]string{onsDomain, extOnsDomain},
 			},
 			// missing clientAuthFlow
 			{
@@ -135,9 +141,9 @@ func TestSetup(t *testing.T) {
 				"client-aaa-bbb",
 				"secret-ccc-ddd",
 				"",
-				"eu-west-1234",
+				testAwsRegion,
 				true,
-				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
+				[]string{onsDomain, extOnsDomain},
 			},
 			// missing allowedDomains
 			{
@@ -146,7 +152,7 @@ func TestSetup(t *testing.T) {
 				"client-aaa-bbb",
 				"secret-ccc-ddd",
 				"authflow",
-				"eu-west-1234",
+				testAwsRegion,
 				true,
 				nil,
 			},
@@ -177,10 +183,10 @@ func apiMockSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentity
 	var (
 		ctx                                       = context.Background()
 		r                                         = mux.NewRouter()
-		poolID, clientID, clientSecret, awsRegion = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "eu-west-1234"
+		poolID, clientID, clientSecret, awsRegion = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", testAwsRegion
 		authFlow                                  = types.AuthFlowTypeUserPasswordAuth
 		blockPlusAddressing                       = true
-		allowedDomains                            = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
+		allowedDomains                            = []string{onsDomain, extOnsDomain}
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
@@ -202,9 +208,9 @@ func apiMockSetupWithDynamicBlockPlusAddressing(blockPlusAddressing bool) (*API,
 	var (
 		ctx                                       = context.Background()
 		r                                         = mux.NewRouter()
-		poolID, clientID, clientSecret, awsRegion = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "eu-west-1234"
+		poolID, clientID, clientSecret, awsRegion = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", testAwsRegion
 		authFlow                                  = types.AuthFlowTypeUserPasswordAuth
-		allowedDomains                            = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
+		allowedDomains                            = []string{onsDomain, extOnsDomain}
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}

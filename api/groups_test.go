@@ -31,6 +31,11 @@ const (
 	createGroupEndPoint         = "http://localhost:25600/v1/groups"
 	getListGroupsEndPoint       = "http://localhost:25600/v1/groups"
 	updateGroupEndPoint         = "http://localhost:25600/v1/groups/123e4567-e89b-12d3-a456-426614174000"
+	testGroupID                 = "efgh5678"
+	testGroupName               = "This is a test name"
+	userIDField                 = "user_id"
+	precedenceField             = "precedence"
+	testUserID1                 = "user_1"
 	usersJSON                   = `{
   "count": 3,
   "users": [
@@ -323,11 +328,11 @@ func TestAddUserToGroupHandler(t *testing.T) {
 				m.AdminAddUserToGroupFunc = tt.addUserToGroupFunction
 				m.GetGroupFunc = tt.getGroupFunction
 				m.ListUsersInGroupFunc = tt.listUsersForGroupFunction
-				postBody := map[string]interface{}{"user_id": userID}
+				postBody := map[string]interface{}{userIDField: userID}
 				body, _ := json.Marshal(postBody)
 				r := newAuthenticatedRequest(http.MethodPost, addUserToGroupEndPoint, bytes.NewReader(body))
 				urlVars := map[string]string{
-					"id": "efgh5678",
+					"id": testGroupID,
 				}
 				r = mux.SetURLVars(r, urlVars)
 				successResponse, errorResponse := api.AddUserToGroupHandler(ctx, w, r)
@@ -410,7 +415,7 @@ func TestAddUserToGroupHandler(t *testing.T) {
 				m.AdminAddUserToGroupFunc = tt.addUserToGroupFunction
 				m.GetGroupFunc = tt.getGroupFunction
 				m.ListUsersInGroupFunc = tt.listUsersForGroupFunction
-				postBody := map[string]interface{}{"user_id": tt.userID}
+				postBody := map[string]interface{}{userIDField: tt.userID}
 				body, _ := json.Marshal(postBody)
 				r := newAuthenticatedRequest(http.MethodPost, addUserToGroupEndPoint, bytes.NewReader(body))
 				urlVars := map[string]string{
@@ -592,8 +597,8 @@ func TestRemoveUserFromGroupHandler(t *testing.T) {
 				r := newAuthenticatedRequest(http.MethodDelete, removeUserFromGroupEndPoint, bytes.NewReader(nil))
 
 				urlVars := map[string]string{
-					"id":      "efzgh5678",
-					"user_id": "abcd1234",
+					"id":        "efzgh5678",
+					userIDField: "abcd1234",
 				}
 				r = mux.SetURLVars(r, urlVars)
 
@@ -674,8 +679,8 @@ func TestRemoveUserFromGroupHandler(t *testing.T) {
 				r := newAuthenticatedRequest(http.MethodDelete, removeUserFromGroupEndPoint, bytes.NewReader(nil))
 
 				urlVars := map[string]string{
-					"id":      tt.groupID,
-					"user_id": tt.userID,
+					"id":        tt.groupID,
+					userIDField: tt.userID,
 				}
 				r = mux.SetURLVars(r, urlVars)
 
@@ -767,7 +772,7 @@ func TestGetUsersFromGroupHandler(t *testing.T) {
 			r := newAuthenticatedRequest(http.MethodGet, getUsersInGroupEndPoint, http.NoBody)
 
 			urlVars := map[string]string{
-				"id": "efgh5678",
+				"id": testGroupID,
 			}
 			r = mux.SetURLVars(r, urlVars)
 
@@ -908,12 +913,12 @@ func TestCreateNewGroup(t *testing.T) {
 				},
 				listGroupsFuncSuccess,
 				map[string]interface{}{
-					"name":       "This is a test name",
-					"precedence": 22,
+					"name":          testGroupName,
+					precedenceField: 22,
 				},
 				map[string]interface{}{
-					"name":       "This is a test name",
-					"precedence": 22,
+					"name":          testGroupName,
+					precedenceField: 22,
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(successResponse, ShouldNotBeNil)
@@ -926,7 +931,7 @@ func TestCreateNewGroup(t *testing.T) {
 				nil,
 				listGroupsFuncSuccess,
 				map[string]interface{}{
-					"precedence": 22,
+					precedenceField: 22,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -943,7 +948,7 @@ func TestCreateNewGroup(t *testing.T) {
 				nil,
 				listGroupsFuncSuccess,
 				map[string]interface{}{
-					"name": "This is a test name",
+					"name": testGroupName,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -960,8 +965,8 @@ func TestCreateNewGroup(t *testing.T) {
 				nil,
 				listGroupsFuncSuccess,
 				map[string]interface{}{
-					"name":       "role-This is a test name",
-					"precedence": 22,
+					"name":          "role-This is a test name",
+					precedenceField: 22,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -978,8 +983,8 @@ func TestCreateNewGroup(t *testing.T) {
 				nil,
 				listGroupsFuncSuccess,
 				map[string]interface{}{
-					"name":       "This is a test name",
-					"precedence": 1,
+					"name":          testGroupName,
+					precedenceField: 1,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -1000,8 +1005,8 @@ func TestCreateNewGroup(t *testing.T) {
 					return nil, &internalError
 				},
 				map[string]interface{}{
-					"name":       "This&^ is- a MOCK. test**() NAMe",
-					"precedence": 12,
+					"name":          "This&^ is- a MOCK. test**() NAMe",
+					precedenceField: 12,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -1022,8 +1027,8 @@ func TestCreateNewGroup(t *testing.T) {
 				},
 				listGroupsFuncSuccess,
 				map[string]interface{}{
-					"name":       "This is a test name",
-					"precedence": 12,
+					"name":          testGroupName,
+					precedenceField: 12,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -1070,12 +1075,12 @@ func TestUpdateGroup(t *testing.T) {
 					return &cognitoidentityprovider.UpdateGroupOutput{}, nil
 				},
 				map[string]interface{}{
-					"name":       "This is a test name",
-					"precedence": 22,
+					"name":          testGroupName,
+					precedenceField: 22,
 				},
 				map[string]interface{}{
-					"name":       "This is a test name",
-					"precedence": 22,
+					"name":          testGroupName,
+					precedenceField: 22,
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(successResponse, ShouldNotBeNil)
@@ -1089,10 +1094,10 @@ func TestUpdateGroup(t *testing.T) {
 					return &cognitoidentityprovider.UpdateGroupOutput{}, nil
 				},
 				map[string]interface{}{
-					"name": "This is a test name",
+					"name": testGroupName,
 				},
 				map[string]interface{}{
-					"name": "This is a test name",
+					"name": testGroupName,
 				},
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
 					So(successResponse, ShouldNotBeNil)
@@ -1104,7 +1109,7 @@ func TestUpdateGroup(t *testing.T) {
 			{
 				nil,
 				map[string]interface{}{
-					"precedence": 22,
+					precedenceField: 22,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -1120,8 +1125,8 @@ func TestUpdateGroup(t *testing.T) {
 			{
 				nil,
 				map[string]interface{}{
-					"name":       "role-This is a test name",
-					"precedence": 22,
+					"name":          "role-This is a test name",
+					precedenceField: 22,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -1137,8 +1142,8 @@ func TestUpdateGroup(t *testing.T) {
 			{
 				nil,
 				map[string]interface{}{
-					"name":       "This is a test name",
-					"precedence": 1,
+					"name":          testGroupName,
+					precedenceField: 1,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -1158,8 +1163,8 @@ func TestUpdateGroup(t *testing.T) {
 					return nil, &internalError
 				},
 				map[string]interface{}{
-					"name":       "This is a test name",
-					"precedence": 12,
+					"name":          testGroupName,
+					precedenceField: 12,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -1179,8 +1184,8 @@ func TestUpdateGroup(t *testing.T) {
 					return nil, &notFoundError
 				},
 				map[string]interface{}{
-					"name":       "This is a test name",
-					"precedence": 12,
+					"name":          testGroupName,
+					precedenceField: 12,
 				},
 				nil,
 				func(successResponse *models.SuccessResponse, errorResponse *models.ErrorResponse) {
@@ -1413,7 +1418,7 @@ func TestListGroupsHandler(t *testing.T) {
 				So(err, ShouldBeNil)
 				r := newAuthenticatedRequest(http.MethodGet, getListGroupsEndPoint, bytes.NewReader(body))
 				urlVars := map[string]string{
-					"id": "efgh5678",
+					"id": testGroupID,
 				}
 				r = mux.SetURLVars(r, urlVars)
 				successResponse, errorResponse := api.ListGroupsHandler(ctx, w, r)
@@ -1503,7 +1508,7 @@ func TestGetGroupHandler(t *testing.T) {
 				r := newAuthenticatedRequest(http.MethodGet, getListGroupsEndPoint, bytes.NewReader(body))
 
 				urlVars := map[string]string{
-					"id": "efgh5678",
+					"id": testGroupID,
 				}
 				r = mux.SetURLVars(r, urlVars)
 
@@ -1574,7 +1579,7 @@ func TestDeleteGroupHandler(t *testing.T) {
 				r := newAuthenticatedRequest(http.MethodGet, getListGroupsEndPoint, bytes.NewReader(body))
 
 				urlVars := map[string]string{
-					"id": "efgh5678",
+					"id": testGroupID,
 				}
 				r = mux.SetURLVars(r, urlVars)
 
@@ -1620,8 +1625,8 @@ func TestSetGroupUsersHandler(t *testing.T) {
 			{
 				"200 response from Cognito  with input and output",
 				[]map[string]string{
-					{"user_id": name1},
-					{"user_id": name2},
+					{userIDField: name1},
+					{userIDField: name2},
 				},
 				func(_ context.Context, _ *cognitoidentityprovider.GetGroupInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.GetGroupOutput, error) {
 					return &cognitoidentityprovider.GetGroupOutput{
@@ -1880,7 +1885,7 @@ func TestSetGroupUsersHandler(t *testing.T) {
 				So(err, ShouldBeNil)
 				r := newAuthenticatedRequest(http.MethodPut, addUserToGroupEndPoint, bytes.NewReader(body))
 				urlVars := map[string]string{
-					"id": "efgh5678",
+					"id": testGroupID,
 				}
 				r = mux.SetURLVars(r, urlVars)
 				successResponse, errorResponse := api.SetGroupUsersHandler(ctx, w, r)
@@ -1909,7 +1914,7 @@ func TestSetGroupUsers(t *testing.T) {
 				"200 response from Cognito  with input and output",
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
 					return &models.UsersList{
-							Users: []models.UserParams{{ID: "user_1"}},
+							Users: []models.UserParams{{ID: testUserID1}},
 							Count: 1,
 						},
 						nil
@@ -1943,7 +1948,7 @@ func TestSetGroupUsers(t *testing.T) {
 					ID: "test-group",
 				},
 				models.UsersList{
-					Users: []models.UserParams{{ID: "user_1"}},
+					Users: []models.UserParams{{ID: testUserID1}},
 					Count: 1,
 				},
 				func(successResponse *models.UsersList, _ *models.ErrorResponse) {
@@ -1954,7 +1959,7 @@ func TestSetGroupUsers(t *testing.T) {
 				"404 response from Cognito ListUsers",
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
 					return &models.UsersList{
-							Users: []models.UserParams{{ID: "user_1"}},
+							Users: []models.UserParams{{ID: testUserID1}},
 							Count: 1,
 						},
 						nil
@@ -1977,7 +1982,7 @@ func TestSetGroupUsers(t *testing.T) {
 					ID: "test-group",
 				},
 				models.UsersList{
-					Users: []models.UserParams{{ID: "user_1"}},
+					Users: []models.UserParams{{ID: testUserID1}},
 					Count: 1,
 				},
 				func(successResponse *models.UsersList, errorResponse *models.ErrorResponse) {
@@ -1993,7 +1998,7 @@ func TestSetGroupUsers(t *testing.T) {
 				"500 response from Cognito listUsers ",
 				func(_ context.Context, _ models.Group, _ string) (*models.UsersList, *models.ErrorResponse) {
 					return &models.UsersList{
-							Users: []models.UserParams{{ID: "user_1"}},
+							Users: []models.UserParams{{ID: testUserID1}},
 							Count: 1,
 						},
 						nil
@@ -2021,7 +2026,7 @@ func TestSetGroupUsers(t *testing.T) {
 					ID: "test-group",
 				},
 				models.UsersList{
-					Users: []models.UserParams{{ID: "user_1"}},
+					Users: []models.UserParams{{ID: testUserID1}},
 					Count: 1,
 				},
 				func(successResponse *models.UsersList, errorResponse *models.ErrorResponse) {
@@ -2529,7 +2534,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				m.ListGroupsFunc = tt.listGroupsFunc
 				r := newAuthenticatedRequest(http.MethodGet, getGroupsReportEndPoint, http.NoBody)
 				urlVars := map[string]string{
-					"id": "efgh5678",
+					"id": testGroupID,
 				}
 				r = mux.SetURLVars(r, urlVars)
 				successResponse, errorResponse := api.ListGroupsUsersHandler(ctx, w, r)
@@ -2639,7 +2644,7 @@ func TestListGroupsUsersHandler(t *testing.T) {
 				r := newAuthenticatedRequest(http.MethodGet, getGroupsReportEndPoint, http.NoBody)
 				r.Header.Set("Accept", "text/csv")
 				urlVars := map[string]string{
-					"id": "efgh5678",
+					"id": testGroupID,
 				}
 				r = mux.SetURLVars(r, urlVars)
 				successResponse, errorResponse := api.ListGroupsUsersHandler(ctx, w, r)

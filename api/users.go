@@ -24,6 +24,8 @@ const (
 	UsersCreatePermission = "users:create"
 	UsersReadPermission   = "users:read"
 	UsersUpdatePermission = "users:update"
+	logKeyUserEmail       = "user_email"
+	emailField            = "email"
 )
 
 // CreateUserHandler creates a new user and returns a http handler interface
@@ -56,7 +58,7 @@ func (api *API) CreateUserHandler(ctx context.Context, _ http.ResponseWriter, re
 
 	validationErrs := user.ValidateRegistration(ctx, api.AllowedDomains, api.BlockPlusAddressing)
 
-	listUserInput := models.UsersList{}.BuildListUserRequest("email = \""+user.Email+"\"", "email", int32(1), nil, &api.UserPoolID)
+	listUserInput := models.UsersList{}.BuildListUserRequest("email = \""+user.Email+"\"", emailField, int32(1), nil, &api.UserPoolID)
 	listUserResp, err := api.CognitoClient.ListUsers(ctx, listUserInput)
 	if err != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, models.NewCognitoError(ctx, err, "ListUsers request from create users endpoint"))
@@ -423,11 +425,11 @@ func (api *API) PasswordResetHandler(ctx context.Context, _ http.ResponseWriter,
 	validationErr := passwordResetParams.Validate(ctx)
 
 	if validationErr != nil {
-		log.Error(ctx, "failed validation", validationErr, log.Data{"user_email": passwordResetParams.Email})
+		log.Error(ctx, "failed validation", validationErr, log.Data{logKeyUserEmail: passwordResetParams.Email})
 		return nil, models.NewErrorResponse(http.StatusBadRequest, nil, validationErr)
 	}
 
-	log.Info(ctx, "request reset parameters validated", log.Data{"user_email": passwordResetParams.Email})
+	log.Info(ctx, "request reset parameters validated", log.Data{logKeyUserEmail: passwordResetParams.Email})
 
 	forgotPasswordRequest := passwordResetParams.BuildCognitoRequest(api.ClientSecret, api.ClientID)
 
@@ -436,15 +438,15 @@ func (api *API) PasswordResetHandler(ctx context.Context, _ http.ResponseWriter,
 		responseErr := models.NewCognitoError(ctx, err, "ForgotPassword request from password reset endpoint")
 
 		if responseErr.Code == models.LimitExceededError || responseErr.Code == models.TooManyRequestsError {
-			log.Error(ctx, "cognito request limit exceeded", responseErr, log.Data{"user_email": passwordResetParams.Email})
+			log.Error(ctx, "cognito request limit exceeded", responseErr, log.Data{logKeyUserEmail: passwordResetParams.Email})
 			return nil, models.NewErrorResponse(http.StatusBadRequest, nil, responseErr)
 		} else if responseErr.Code != models.UserNotFoundError && responseErr.Code != models.UserNotConfirmedError {
-			log.Error(ctx, "user not found or user not confirmed", responseErr, log.Data{"user_email": passwordResetParams.Email})
+			log.Error(ctx, "user not found or user not confirmed", responseErr, log.Data{logKeyUserEmail: passwordResetParams.Email})
 			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 		}
 	}
 
-	log.Info(ctx, "password reset completed", log.Data{"user_email": passwordResetParams.Email})
+	log.Info(ctx, "password reset completed", log.Data{logKeyUserEmail: passwordResetParams.Email})
 
 	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
 }

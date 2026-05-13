@@ -139,7 +139,7 @@ func TestCreateUserHandler(t *testing.T) {
 			m.AdminCreateUserFunc = tt.createUsersFunction
 			m.ListUsersFunc = tt.listUsersFunction
 
-			postBody := map[string]interface{}{"forename": name, "lastname": surname, "email": email}
+			postBody := map[string]interface{}{forenameField: name, lastnameField: surname, emailField: email}
 			body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
 			r = addAuthEntityDataToRequest(r)
@@ -178,7 +178,7 @@ func TestCreateUserHandler(t *testing.T) {
 		}{
 			// missing email
 			{
-				map[string]interface{}{"forename": name, "lastname": surname, "email": ""},
+				map[string]interface{}{forenameField: name, lastnameField: surname, emailField: ""},
 				[]string{
 					models.InvalidEmailError,
 				},
@@ -187,7 +187,7 @@ func TestCreateUserHandler(t *testing.T) {
 			},
 			// missing both forename and surname
 			{
-				map[string]interface{}{"forename": "", "lastname": "", "email": email},
+				map[string]interface{}{forenameField: "", lastnameField: "", emailField: email},
 				[]string{
 					models.InvalidForenameError,
 					models.InvalidSurnameError,
@@ -197,7 +197,7 @@ func TestCreateUserHandler(t *testing.T) {
 			},
 			// missing surname
 			{
-				map[string]interface{}{"forename": name, "lastname": "", "email": email},
+				map[string]interface{}{forenameField: name, lastnameField: "", emailField: email},
 				[]string{
 					models.InvalidSurnameError,
 				},
@@ -206,7 +206,7 @@ func TestCreateUserHandler(t *testing.T) {
 			},
 			// missing forename
 			{
-				map[string]interface{}{"forename": "", "lastname": surname, "email": email},
+				map[string]interface{}{forenameField: "", lastnameField: surname, emailField: email},
 				[]string{
 					models.InvalidForenameError,
 				},
@@ -215,7 +215,7 @@ func TestCreateUserHandler(t *testing.T) {
 			},
 			// missing forename, surname and email
 			{
-				map[string]interface{}{"forename": "", "lastname": "", "email": ""},
+				map[string]interface{}{forenameField: "", lastnameField: "", emailField: ""},
 				[]string{
 					models.InvalidForenameError,
 					models.InvalidSurnameError,
@@ -226,7 +226,7 @@ func TestCreateUserHandler(t *testing.T) {
 			},
 			// invalid email with blockPlusAddressing = true
 			{
-				map[string]interface{}{"forename": name, "lastname": surname, "email": invalidEmail},
+				map[string]interface{}{forenameField: name, lastnameField: surname, emailField: invalidEmail},
 				[]string{
 					models.InvalidEmailError,
 				},
@@ -235,7 +235,7 @@ func TestCreateUserHandler(t *testing.T) {
 			},
 			// invalid email with blockPlusAddressing = false
 			{
-				map[string]interface{}{"forename": name, "lastname": surname, "email": invalidEmail},
+				map[string]interface{}{forenameField: name, lastnameField: surname, emailField: invalidEmail},
 				[]string{
 					models.InvalidEmailError,
 				},
@@ -244,7 +244,7 @@ func TestCreateUserHandler(t *testing.T) {
 			},
 			// invalid plus email with blockPlusAddressing = true
 			{
-				map[string]interface{}{"forename": name, "lastname": surname, "email": invalidPlusEmail},
+				map[string]interface{}{forenameField: name, lastnameField: surname, emailField: invalidPlusEmail},
 				[]string{
 					models.InvalidEmailError,
 				},
@@ -281,7 +281,7 @@ func TestProtectedHandlersRequireAuthEntityData(t *testing.T) {
 	api, w, _ := apiMockSetup()
 
 	Convey("protected handlers return GetAuthEntityDataError when auth entity data is missing", t, func() {
-		postBody := map[string]interface{}{"forename": "bob", "lastname": "bobbings", "email": "foo_bar123@ext.ons.gov.uk"}
+		postBody := map[string]interface{}{forenameField: "bob", lastnameField: "bobbings", emailField: "foo_bar123@ext.ons.gov.uk"}
 		body, _ := json.Marshal(postBody)
 
 		createReq := httptest.NewRequest(http.MethodPost, usersEndPoint, bytes.NewReader(body))
@@ -585,7 +585,7 @@ func listUserOutput(forename, surname, email, id string, cognitoUsersList []type
 				Value: &surname,
 			},
 			{
-				Name:  aws.String("email"),
+				Name:  aws.String(emailField),
 				Value: &email,
 			},
 		},
@@ -602,7 +602,7 @@ func TestGetUserHandler(t *testing.T) {
 	var (
 		ctx                                      = context.Background()
 		forename, lastname, email, userID        = "bob", "bobbings", "foo_bar123@ext.ons.gov.uk", "abcd1234"
-		givenNameAttr, familyNameAttr, emailAttr = "given_name", "family_name", "email"
+		givenNameAttr, familyNameAttr, emailAttr = "given_name", "family_name", emailField
 		status                                   = types.UserStatusTypeUnconfirmed
 	)
 
@@ -689,7 +689,7 @@ func TestUpdateUserHandler(t *testing.T) {
 	var (
 		ctx                                      = context.Background()
 		forename, lastname, email, userID        = "bob", "bobbings", "foo_bar123@ext.ons.gov.uk", "abcd1234"
-		givenNameAttr, familyNameAttr, emailAttr = "given_name", "family_name", "email"
+		givenNameAttr, familyNameAttr, emailAttr = "given_name", "family_name", emailField
 		status                                   = types.UserStatusTypeConfirmed
 	)
 
@@ -1008,7 +1008,7 @@ func TestUpdateUserHandler(t *testing.T) {
 			m.AdminEnableUserFunc = tt.enableUserFunction
 			m.AdminDisableUserFunc = tt.disableUserFunction
 
-			postBody := map[string]interface{}{"forename": tt.userForename, "lastname": lastname, "active": tt.userActive}
+			postBody := map[string]interface{}{forenameField: tt.userForename, lastnameField: lastname, "active": tt.userActive}
 			body, err := json.Marshal(postBody)
 
 			So(err, ShouldBeNil)
@@ -1274,7 +1274,7 @@ func TestChangePasswordHandler(t *testing.T) {
 		}
 		for _, tt := range respondToAuthChallengeTests {
 			m.RespondToAuthChallengeFunc = tt.respondToAuthChallengeFunction
-			postBody := map[string]interface{}{"type": models.NewPasswordRequiredType, "email": email, "password": password, "session": session}
+			postBody := map[string]interface{}{"type": models.NewPasswordRequiredType, emailField: email, passwordField: password, "session": session}
 			body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodPut, changePasswordEndPoint, bytes.NewReader(body))
 			successResponse, errorResponse := api.ChangePasswordHandler(ctx, w, r)
@@ -1378,7 +1378,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 		for _, tt := range confirmForgotPasswordTests {
 			m.ConfirmForgotPasswordFunc = tt.confirmForgotPasswordFunction
 
-			postBody := map[string]interface{}{"type": models.ForgottenPasswordType, "email": email, "password": password, "verification_token": verificationToken}
+			postBody := map[string]interface{}{"type": models.ForgottenPasswordType, emailField: email, passwordField: password, "verification_token": verificationToken}
 			body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodPut, changePasswordEndPoint, bytes.NewReader(body))
 
@@ -1415,13 +1415,13 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 		}{
 			// missing password change type
 			{
-				map[string]interface{}{"type": "", "email": email, "password": password, "verification_token": verificationToken},
+				map[string]interface{}{"type": "", emailField: email, passwordField: password, "verification_token": verificationToken},
 				models.UnknownRequestTypeError,
 				http.StatusBadRequest,
 			},
 			// missing a change request param
 			{
-				map[string]interface{}{"type": models.ForgottenPasswordType, "email": "", "password": password, "verification_token": verificationToken},
+				map[string]interface{}{"type": models.ForgottenPasswordType, emailField: "", passwordField: password, "verification_token": verificationToken},
 				models.InvalidUserIDError,
 				http.StatusBadRequest,
 			},
@@ -1509,7 +1509,7 @@ func TestPasswordResetHandler(t *testing.T) {
 		for _, tt := range respondToAuthChallengeTests {
 			m.ForgotPasswordFunc = tt.forgotPasswordFunction
 
-			postBody := map[string]interface{}{"email": email}
+			postBody := map[string]interface{}{emailField: email}
 			body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodPost, requestResetEndPoint, bytes.NewReader(body))
 
@@ -1545,7 +1545,7 @@ func TestPasswordResetHandler(t *testing.T) {
 		}{
 			// missing a change request param
 			{
-				map[string]interface{}{"email": ""},
+				map[string]interface{}{emailField: ""},
 				models.InvalidEmailError,
 				http.StatusBadRequest,
 			},
@@ -1652,7 +1652,7 @@ func TestListUserGroupsHandler(t *testing.T) {
 			r = addAuthEntityDataToRequest(r)
 
 			urlVars := map[string]string{
-				"id": "efgh5678",
+				"id": testGroupID,
 			}
 			r = mux.SetURLVars(r, urlVars)
 

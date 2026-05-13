@@ -63,8 +63,8 @@ func TestAPI_TokensHandler(t *testing.T) {
 
 	Convey("Sign in success: no ErrorResponse, SuccessResponse Status 201", t, func() {
 		body := map[string]interface{}{
-			"email":    "email@ons.gov.uk",
-			"password": "password",
+			emailField:    testEmail,
+			passwordField: passwordField,
 		}
 		jsonBody, err := json.Marshal(&body)
 		So(err, ShouldBeNil)
@@ -83,8 +83,8 @@ func TestAPI_TokensHandler(t *testing.T) {
 
 	Convey("Sign In validation error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
 		body := map[string]interface{}{
-			"email":    "email@ons.gov.uk",
-			"password": "",
+			emailField:    testEmail,
+			passwordField: "",
 		}
 		jsonBody, err := json.Marshal(&body)
 		So(err, ShouldBeNil)
@@ -109,8 +109,8 @@ func TestAPI_TokensHandler(t *testing.T) {
 		}
 
 		body := map[string]interface{}{
-			"email":    "email@ons.gov.uk",
-			"password": "password",
+			emailField:    testEmail,
+			passwordField: passwordField,
 		}
 		jsonBody, err := json.Marshal(&body)
 		So(err, ShouldBeNil)
@@ -155,8 +155,8 @@ func TestAPI_TokensHandler(t *testing.T) {
 			}
 
 			body := map[string]interface{}{
-				"email":    "email@ons.gov.uk",
-				"password": "password",
+				emailField:    testEmail,
+				passwordField: passwordField,
 			}
 			jsonBody, err := json.Marshal(&body)
 			So(err, ShouldBeNil)
@@ -188,8 +188,8 @@ func TestAPI_TokensHandler(t *testing.T) {
 		}
 
 		body := map[string]interface{}{
-			"email":    "email@ons.gov.uk",
-			"password": "password",
+			emailField:    testEmail,
+			passwordField: passwordField,
 		}
 		jsonBody, err := json.Marshal(&body)
 		So(err, ShouldBeNil)

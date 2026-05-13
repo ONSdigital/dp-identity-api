@@ -30,6 +30,7 @@ const (
 	GroupsDeletePermission = "groups:delete"
 	sortOrderAsc           = "asc"
 	sortOrderDesc          = "desc"
+	forenameField          = "forename"
 )
 
 // CreateGroupHandler creates a new group
@@ -239,7 +240,7 @@ func sortUsers(ctx context.Context, users []models.UserParams, sortBy []string) 
 		return true
 	}
 	switch sortBy[0] {
-	case "forename":
+	case forenameField:
 		switch sortBy[1] {
 		case sortOrderAsc:
 			sortByUserNameAsc := func(i, j int) bool {
@@ -661,7 +662,7 @@ func (api *API) GetTeamsReportLines(ctx context.Context, listOfGroups *cognitoid
 		}
 		for _, user := range listUsers {
 			for _, attribute := range user.Attributes {
-				if strings.EqualFold(*attribute.Name, "email") {
+				if strings.EqualFold(*attribute.Name, emailField) {
 					GroupsUsersList = append(GroupsUsersList, models.ListGroupUsersType{
 						GroupName: *ListGroup.Description,
 						UserEmail: *attribute.Value,
