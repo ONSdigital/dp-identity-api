@@ -909,7 +909,7 @@ func TestCreateNewGroup(t *testing.T) {
 				listGroupsFuncSuccess,
 				map[string]interface{}{
 					"name":       "This is a test name",
-					"precedence": 22,                   
+					"precedence": 22,
 				},
 				map[string]interface{}{
 					"name":       "This is a test name",

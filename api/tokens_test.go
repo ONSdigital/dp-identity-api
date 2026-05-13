@@ -64,7 +64,7 @@ func TestAPI_TokensHandler(t *testing.T) {
 	Convey("Sign in success: no ErrorResponse, SuccessResponse Status 201", t, func() {
 		body := map[string]interface{}{
 			"email":    "email@ons.gov.uk",
-			"password": "password",        
+			"password": "password",
 		}
 		jsonBody, err := json.Marshal(&body)
 		So(err, ShouldBeNil)

@@ -16,13 +16,17 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const serverError = smithy.ErrorFault(1)
+const (
+	serverError          = smithy.ErrorFault(1)
+	testErrorCode        = "TestErrorCode"
+	testErrorDescription = "description of the error"
+)
 
 func TestError_Error(t *testing.T) {
 	Convey("returns the cause Error value when a cause is set", t, func() {
 		originalErr := errors.New("OriginalErrorCause")
-		errorCode := "TestErrorCode"                  
-		errorDescription := "description of the error"
+		errorCode := testErrorCode
+		errorDescription := testErrorDescription
 
 		err := models.Error{
 			Cause:       originalErr,
@@ -34,8 +38,8 @@ func TestError_Error(t *testing.T) {
 	})
 
 	Convey("returns the Code and Description when a cause is not set", t, func() {
-		errorCode := "TestErrorCode"
-		errorDescription := "description of the error"
+		errorCode := testErrorCode
+		errorDescription := testErrorDescription
 
 		err := models.Error{
 			Code:        errorCode,
@@ -51,8 +55,8 @@ func TestNewError(t *testing.T) {
 
 	Convey("successfully constructs an Error object", t, func() {
 		cause := errors.New("TestError")
-		errorCode := "TestErrorCode"
-		errorDescription := "description of the error"
+		errorCode := testErrorCode
+		errorDescription := testErrorDescription
 
 		err := models.NewError(ctx, cause, errorCode, errorDescription)
 
@@ -64,8 +68,8 @@ func TestNewError(t *testing.T) {
 
 	Convey("logs additional data when a single logData is provided", t, func() {
 		cause := errors.New("TestError")
-		errorCode := "TestErrorCode"
-		errorDescription := "description of the error"
+		errorCode := testErrorCode
+		errorDescription := testErrorDescription
 		var destination bytes.Buffer
 
 		log.SetDestination(&destination, &destination)
@@ -90,8 +94,8 @@ func TestNewError(t *testing.T) {
 
 	Convey("merges multiple logData maps and prioritises later values for duplicate keys", t, func() {
 		cause := errors.New("TestError")
-		errorCode := "TestErrorCode"
-		errorDescription := "description of the error"
+		errorCode := testErrorCode
+		errorDescription := testErrorDescription
 		var destination bytes.Buffer
 
 		log.SetDestination(&destination, &destination)
