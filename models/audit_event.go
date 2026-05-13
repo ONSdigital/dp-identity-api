@@ -1,9 +1,9 @@
 package models
 
-// Action represents the action that was performed on the policy
+// Action represents the action that was performed given the request to the API
 type Action string
 
-// Outcome represents the outcome of the action
+// Outcome represents the outcome of the action given the request to the API
 type Outcome string
 
 const (
