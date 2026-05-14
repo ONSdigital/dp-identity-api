@@ -19,6 +19,8 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
+const roleAdminGroup = "groups/role-admin"
+
 type IdentityComponent struct {
 	ErrorFeature            componenttest.ErrorFeature
 	svcList                 *service.ExternalServiceList
@@ -94,49 +96,49 @@ func setupFakePermissionsAPI() *authorisationtest.FakePermissionsAPI {
 func getPermissionsBundle() *sdk.Bundle {
 	return &sdk.Bundle{
 		"users:create": { // role
-			"groups/role-admin": { // group
+			roleAdminGroup: { // group
 				{
 					ID: "1", // policy
 				},
 			},
 		},
 		"users:read": { // role
-			"groups/role-admin": { // group
+			roleAdminGroup: { // group
 				{
 					ID: "2", // policy
 				},
 			},
 		},
 		"users:update": { // role
-			"groups/role-admin": { // group
+			roleAdminGroup: { // group
 				{
 					ID: "2", // policy
 				},
 			},
 		},
 		"groups:create": { // role
-			"groups/role-admin": { // group
+			roleAdminGroup: { // group
 				{
 					ID: "1", // policy
 				},
 			},
 		},
 		"groups:read": { // role
-			"groups/role-admin": { // group
+			roleAdminGroup: { // group
 				{
 					ID: "2", // policy
 				},
 			},
 		},
 		"groups:update": { // role
-			"groups/role-admin": { // group
+			roleAdminGroup: { // group
 				{
 					ID: "2", // policy
 				},
 			},
 		},
 		"groups:delete": { // role
-			"groups/role-admin": { // group
+			roleAdminGroup: { // group
 				{
 					ID: "2", // policy
 				},

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -64,12 +63,12 @@ func TestAPI_TokensHandler(t *testing.T) {
 
 	Convey("Sign in success: no ErrorResponse, SuccessResponse Status 201", t, func() {
 		body := map[string]interface{}{
-			"email":    "email@ons.gov.uk",
-			"password": "password",
+			emailField:    testEmail,
+			passwordField: passwordField,
 		}
 		jsonBody, err := json.Marshal(&body)
 		So(err, ShouldBeNil)
-		request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
+		request := newAuthenticatedRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
 
 		successResponse, errorResponse := api.TokensHandler(ctx, w, request)
 
@@ -84,12 +83,12 @@ func TestAPI_TokensHandler(t *testing.T) {
 
 	Convey("Sign In validation error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
 		body := map[string]interface{}{
-			"email":    "email@ons.gov.uk",
-			"password": "",
+			emailField:    testEmail,
+			passwordField: "",
 		}
 		jsonBody, err := json.Marshal(&body)
 		So(err, ShouldBeNil)
-		request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
+		request := newAuthenticatedRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
 
 		successResponse, errorResponse := api.TokensHandler(ctx, w, request)
 
@@ -110,12 +109,12 @@ func TestAPI_TokensHandler(t *testing.T) {
 		}
 
 		body := map[string]interface{}{
-			"email":    "email@ons.gov.uk",
-			"password": "password",
+			emailField:    testEmail,
+			passwordField: passwordField,
 		}
 		jsonBody, err := json.Marshal(&body)
 		So(err, ShouldBeNil)
-		request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
+		request := newAuthenticatedRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
 
 		successResponse, errorResponse := api.TokensHandler(ctx, w, request)
 
@@ -156,12 +155,12 @@ func TestAPI_TokensHandler(t *testing.T) {
 			}
 
 			body := map[string]interface{}{
-				"email":    "email@ons.gov.uk",
-				"password": "password",
+				emailField:    testEmail,
+				passwordField: passwordField,
 			}
 			jsonBody, err := json.Marshal(&body)
 			So(err, ShouldBeNil)
-			request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
+			request := newAuthenticatedRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
 
 			successResponse, errorResponse := api.TokensHandler(ctx, w, request)
 			request.Header.Get(WWWAuthenticateName)
@@ -189,12 +188,12 @@ func TestAPI_TokensHandler(t *testing.T) {
 		}
 
 		body := map[string]interface{}{
-			"email":    "email@ons.gov.uk",
-			"password": "password",
+			emailField:    testEmail,
+			passwordField: passwordField,
 		}
 		jsonBody, err := json.Marshal(&body)
 		So(err, ShouldBeNil)
-		request := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
+		request := newAuthenticatedRequest(http.MethodPost, signInEndPoint, bytes.NewBuffer(jsonBody))
 
 		successResponse, errorResponse := api.TokensHandler(ctx, w, request)
 
@@ -218,7 +217,7 @@ func TestAPI_SignOutHandler(t *testing.T) {
 	}
 
 	Convey("Global Sign Out success: no errors added to ErrorResponse Errors list", t, func() {
-		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
+		request := newAuthenticatedRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
 		request.Header.Set(AccessTokenHeaderName, "Bearer zzzz-yyyy-xxxx")
 
 		successResponse, errorResponse := api.SignOutHandler(ctx, w, request)
@@ -229,7 +228,7 @@ func TestAPI_SignOutHandler(t *testing.T) {
 	})
 
 	Convey("Global Sign Out validation error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
-		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
+		request := newAuthenticatedRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
 		request.Header.Set(AccessTokenHeaderName, "")
 
 		successResponse, errorResponse := api.SignOutHandler(ctx, w, request)
@@ -250,7 +249,7 @@ func TestAPI_SignOutHandler(t *testing.T) {
 			return nil, awsErr
 		}
 
-		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
+		request := newAuthenticatedRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
 		request.Header.Set(AccessTokenHeaderName, "Bearer zzzz-yyyy-xxxx")
 
 		successResponse, errorResponse := api.SignOutHandler(ctx, w, request)
@@ -273,7 +272,7 @@ func TestAPI_SignOutHandler(t *testing.T) {
 			return nil, awsErr
 		}
 
-		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
+		request := newAuthenticatedRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
 		request.Header.Set(AccessTokenHeaderName, "Bearer zzzz-yyyy-xxxx")
 
 		successResponse, errorResponse := api.SignOutHandler(ctx, w, request)
@@ -305,7 +304,7 @@ func TestAPI_RefreshHandler(t *testing.T) {
 	}
 
 	Convey("Token refresh success: no errors added to ErrorResponse Errors list", t, func() {
-		request := httptest.NewRequest(http.MethodPut, tokenRefreshEndPoint, http.NoBody)
+		request := newAuthenticatedRequest(http.MethodPut, tokenRefreshEndPoint, http.NoBody)
 		idToken := mock.GenerateMockIDToken("test@ons.gov.uk")
 		So(idToken, ShouldNotEqual, "")
 		request.Header.Set(IDTokenHeaderName, idToken)
@@ -322,7 +321,7 @@ func TestAPI_RefreshHandler(t *testing.T) {
 	})
 
 	Convey("Token refresh validation error: adds an error to the ErrorResponse and sets its Status to 400", t, func() {
-		request := httptest.NewRequest(http.MethodPut, tokenRefreshEndPoint, http.NoBody)
+		request := newAuthenticatedRequest(http.MethodPut, tokenRefreshEndPoint, http.NoBody)
 		request.Header.Set(IDTokenHeaderName, "")
 		request.Header.Set(RefreshTokenHeaderName, "aaaa.bbbb.cccc.dddd.eeee")
 
@@ -344,7 +343,7 @@ func TestAPI_RefreshHandler(t *testing.T) {
 			return nil, awsErr
 		}
 
-		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
+		request := newAuthenticatedRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
 		idToken := mock.GenerateMockIDToken("test@ons.gov.uk")
 		So(idToken, ShouldNotEqual, "")
 		request.Header.Set(IDTokenHeaderName, idToken)
@@ -370,7 +369,7 @@ func TestAPI_RefreshHandler(t *testing.T) {
 			return nil, awsErr
 		}
 
-		request := httptest.NewRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
+		request := newAuthenticatedRequest(http.MethodDelete, signOutEndPoint, http.NoBody)
 		idToken := mock.GenerateMockIDToken("test@ons.gov.uk")
 		So(idToken, ShouldNotEqual, "")
 		request.Header.Set(IDTokenHeaderName, idToken)
@@ -412,7 +411,7 @@ func TestSignOutAllUsersHandlerAccessForProcessing(t *testing.T) {
 		for _, tt := range signOutAllUsersTests {
 			m.ListUsersFunc = tt.listUsersFunction
 			m.AdminUserGlobalSignOutFunc = tt.adminUserGlobalSignOutFunction
-			r := httptest.NewRequest(http.MethodPost, usersEndPoint, http.NoBody)
+			r := newAuthenticatedRequest(http.MethodPost, usersEndPoint, http.NoBody)
 
 			successResponse, errorResponse := api.SignOutAllUsersHandler(ctx, w, r)
 			So(successResponse.Status, ShouldEqual, tt.httpResponse)
@@ -451,7 +450,7 @@ func TestSignOutAllUsersHandlerInternalServerError(t *testing.T) {
 		for _, tt := range signOutAllUsersTests {
 			m.ListUsersFunc = tt.listUsersFunction
 			m.AdminUserGlobalSignOutFunc = tt.adminUserGlobalSignOutFunction
-			r := httptest.NewRequest(http.MethodGet, usersEndPoint, http.NoBody)
+			r := newAuthenticatedRequest(http.MethodGet, usersEndPoint, http.NoBody)
 
 			successResponse, errorResponse := api.SignOutAllUsersHandler(ctx, w, r)
 			So(successResponse, ShouldBeNil)

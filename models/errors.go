@@ -25,13 +25,25 @@ func (e *Error) Error() string {
 }
 
 // NewError creates and logs a new Error with the provided context, cause, code, and description.
-func NewError(ctx context.Context, cause error, code, description string) *Error {
+func NewError(ctx context.Context, cause error, code, description string, logDatas ...log.Data) *Error {
 	err := &Error{
 		Cause:       cause,
 		Code:        code,
 		Description: description,
 	}
-	log.Error(ctx, description, err)
+
+	if len(logDatas) == 0 {
+		log.Error(ctx, description, err)
+		return err
+	}
+
+	merged := log.Data{}
+	for _, d := range logDatas {
+		for k, v := range d {
+			merged[k] = v
+		}
+	}
+	log.Error(ctx, description, err, merged)
 	return err
 }
 
