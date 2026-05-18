@@ -295,6 +295,8 @@ func processUpdateCognitoError(ctx context.Context, err error, errContext string
 }
 
 // ChangePasswordHandler processes changes to the users password
+//
+//nolint:gocyclo // dispatches between password change types; refactor pending per the TODO at the staticcheck directive below
 func (api *API) ChangePasswordHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	defer func() {
 		if err := req.Body.Close(); err != nil {
@@ -304,6 +306,12 @@ func (api *API) ChangePasswordHandler(ctx context.Context, _ http.ResponseWriter
 	var jsonResponse []byte
 	var responseErr error
 	var headers map[string]string
+
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		log.Error(ctx, "changePasswordHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -386,6 +394,7 @@ func (api *API) ChangePasswordHandler(ctx context.Context, _ http.ResponseWriter
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
+	logAuditEvent(ctx, "successfully changed password", authEntityData, models.ActionUpdate, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(jsonResponse, http.StatusAccepted, headers), nil
 }
 
@@ -396,6 +405,12 @@ func (api *API) PasswordResetHandler(ctx context.Context, _ http.ResponseWriter,
 			_ = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
 		}
 	}()
+
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		log.Error(ctx, "passwordResetHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -435,6 +450,7 @@ func (api *API) PasswordResetHandler(ctx context.Context, _ http.ResponseWriter,
 	}
 
 	log.Info(ctx, "password reset completed", log.Data{logKeyUserEmail: passwordResetParams.Email})
+	logAuditEvent(ctx, "successfully requested password reset", authEntityData, models.ActionUpdate, req.URL.Path, models.OutcomeSuccess, "")
 
 	return models.NewSuccessResponse(nil, http.StatusAccepted, nil), nil
 }

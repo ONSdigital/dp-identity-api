@@ -22,6 +22,11 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 			_ = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
 		}
 	}()
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		log.Error(ctx, "tokensHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
@@ -95,7 +100,7 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 	if result.ChallengeName == NewPasswordChallenge {
 		httpStatus = http.StatusAccepted
 	}
-
+	logAuditEvent(ctx, "successfully signed in", authEntityData, models.ActionCreate, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(jsonResponse, httpStatus, headers), nil
 }
 
@@ -123,6 +128,12 @@ func (api *API) SignOutHandler(ctx context.Context, _ http.ResponseWriter, req *
 
 // RefreshHandler refreshes a users access token and returns new access and ID tokens, expiration time and the refresh token
 func (api *API) RefreshHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		log.Error(ctx, "refreshHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
+
 	var validationErrs []error
 	refreshToken := models.RefreshToken{TokenString: req.Header.Get(RefreshTokenHeaderName)}
 	validationErr := refreshToken.Validate(ctx)
@@ -161,6 +172,7 @@ func (api *API) RefreshHandler(ctx context.Context, _ http.ResponseWriter, req *
 		IDTokenHeaderName:     *result.AuthenticationResult.IdToken,
 	}
 
+	logAuditEvent(ctx, "successfully refreshed tokens", authEntityData, models.ActionUpdate, req.URL.Path, models.OutcomeSuccess, "")
 	return models.NewSuccessResponse(jsonResponse, http.StatusCreated, headers), nil
 }
 

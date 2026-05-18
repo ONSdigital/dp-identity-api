@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -381,6 +382,43 @@ func TestAPI_RefreshHandler(t *testing.T) {
 		So(errorResponse.Status, ShouldEqual, http.StatusForbidden)
 		So(len(errorResponse.Errors), ShouldEqual, 1)
 		So(errorResponse.Errors[0].Error(), ShouldEqual, awsErr.Error())
+	})
+}
+
+func TestTokensProtectedHandlersRequireAuthEntityData(t *testing.T) {
+	var ctx = context.Background()
+
+	api, w, _ := apiMockSetup()
+
+	Convey("TokensHandler returns GetAuthEntityDataError when auth entity data is missing", t, func() {
+		postBody := map[string]interface{}{
+			emailField:    testEmail,
+			passwordField: passwordField,
+		}
+		body, _ := json.Marshal(postBody)
+
+		r := httptest.NewRequest(http.MethodPost, signInEndPoint, bytes.NewReader(body))
+		successResponse, errorResponse := api.TokensHandler(ctx, w, r)
+
+		So(successResponse, ShouldBeNil)
+		So(errorResponse, ShouldNotBeNil)
+		So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+		handlerErr := errorResponse.Errors[0].(*models.Error)
+		So(handlerErr.Code, ShouldEqual, models.GetAuthEntityDataError)
+		So(handlerErr.Description, ShouldEqual, models.GetAuthEntityDataErrorDescription)
+	})
+
+	Convey("RefreshHandler returns GetAuthEntityDataError when auth entity data is missing", t, func() {
+		r := httptest.NewRequest(http.MethodPut, tokenRefreshEndPoint, http.NoBody)
+
+		successResponse, errorResponse := api.RefreshHandler(ctx, w, r)
+
+		So(successResponse, ShouldBeNil)
+		So(errorResponse, ShouldNotBeNil)
+		So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
+		handlerErr := errorResponse.Errors[0].(*models.Error)
+		So(handlerErr.Code, ShouldEqual, models.GetAuthEntityDataError)
+		So(handlerErr.Description, ShouldEqual, models.GetAuthEntityDataErrorDescription)
 	})
 }
 
