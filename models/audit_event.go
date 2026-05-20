@@ -6,6 +6,8 @@ type Action string
 // Outcome represents the outcome of the action given the request to the API
 type Outcome string
 
+type AuditEventParams map[string]interface{}
+
 const (
 	ActionCreate Action = "CREATE"
 	ActionRead   Action = "READ"

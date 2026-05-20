@@ -293,36 +293,6 @@ func TestProtectedHandlersRequireAuthEntityData(t *testing.T) {
 		So(createHandlerErr.Code, ShouldEqual, models.GetAuthEntityDataError)
 		So(createHandlerErr.Description, ShouldEqual, models.GetAuthEntityDataErrorDescription)
 	})
-
-	Convey("ChangePasswordHandler returns GetAuthEntityDataError when auth entity data is missing", t, func() {
-		postBody := map[string]interface{}{"type": models.NewPasswordRequiredType, emailField: "foo_bar123@ext.ons.gov.uk", passwordField: "Password2", "session": "auth-challenge-session"}
-		body, _ := json.Marshal(postBody)
-
-		r := httptest.NewRequest(http.MethodPut, changePasswordEndPoint, bytes.NewReader(body))
-		successResponse, errorResponse := api.ChangePasswordHandler(ctx, w, r)
-
-		So(successResponse, ShouldBeNil)
-		So(errorResponse, ShouldNotBeNil)
-		So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
-		handlerErr := errorResponse.Errors[0].(*models.Error)
-		So(handlerErr.Code, ShouldEqual, models.GetAuthEntityDataError)
-		So(handlerErr.Description, ShouldEqual, models.GetAuthEntityDataErrorDescription)
-	})
-
-	Convey("PasswordResetHandler returns GetAuthEntityDataError when auth entity data is missing", t, func() {
-		postBody := map[string]interface{}{emailField: "foo_bar123@ext.ons.gov.uk"}
-		body, _ := json.Marshal(postBody)
-
-		r := httptest.NewRequest(http.MethodPost, requestResetEndPoint, bytes.NewReader(body))
-		successResponse, errorResponse := api.PasswordResetHandler(ctx, w, r)
-
-		So(successResponse, ShouldBeNil)
-		So(errorResponse, ShouldNotBeNil)
-		So(errorResponse.Status, ShouldEqual, http.StatusInternalServerError)
-		handlerErr := errorResponse.Errors[0].(*models.Error)
-		So(handlerErr.Code, ShouldEqual, models.GetAuthEntityDataError)
-		So(handlerErr.Description, ShouldEqual, models.GetAuthEntityDataErrorDescription)
-	})
 }
 
 func TestListUserHandler(t *testing.T) {

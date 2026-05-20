@@ -87,7 +87,7 @@ func (api *API) CreateGroupHandler(ctx context.Context, _ http.ResponseWriter, r
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	logAuditEvent(ctx, "successfully created group", authEntityData, models.ActionCreate, req.URL.Path, models.OutcomeSuccess, "")
+	logAuditEvent(ctx, "successfully created group", authEntityData, models.ActionCreate, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return createGroup.NewSuccessResponse(jsonResponse, http.StatusCreated, nil), nil
 }
 
@@ -136,7 +136,7 @@ func (api *API) UpdateGroupHandler(ctx context.Context, _ http.ResponseWriter, r
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	logAuditEvent(ctx, "successfully updated group", authEntityData, models.ActionUpdate, req.URL.Path, models.OutcomeSuccess, "")
+	logAuditEvent(ctx, "successfully updated group", authEntityData, models.ActionUpdate, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return updateGroup.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -191,7 +191,7 @@ func (api *API) AddUserToGroupHandler(ctx context.Context, _ http.ResponseWriter
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	logAuditEvent(ctx, "successfully added user to group", authEntityData, models.ActionCreate, req.URL.Path, models.OutcomeSuccess, "")
+	logAuditEvent(ctx, "successfully added user to group", authEntityData, models.ActionCreate, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -323,7 +323,7 @@ func (api *API) RemoveUserFromGroupHandler(ctx context.Context, _ http.ResponseW
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	logAuditEvent(ctx, "successfully removed user from group", authEntityData, models.ActionDelete, req.URL.Path, models.OutcomeSuccess, "")
+	logAuditEvent(ctx, "successfully removed user from group", authEntityData, models.ActionDelete, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -415,7 +415,7 @@ func (api *API) GetGroupHandler(ctx context.Context, _ http.ResponseWriter, req 
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	logAuditEvent(ctx, "successfully retrieved group", authEntityData, models.ActionRead, req.URL.Path, models.OutcomeSuccess, "")
+	logAuditEvent(ctx, "successfully retrieved group", authEntityData, models.ActionRead, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -438,7 +438,7 @@ func (api *API) DeleteGroupHandler(ctx context.Context, _ http.ResponseWriter, r
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
 
-	logAuditEvent(ctx, "successfully deleted group", authEntityData, models.ActionDelete, req.URL.Path, models.OutcomeSuccess, "")
+	logAuditEvent(ctx, "successfully deleted group", authEntityData, models.ActionDelete, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return models.NewSuccessResponse(nil, http.StatusNoContent, nil), nil
 }
 
@@ -498,7 +498,7 @@ func (api *API) SetGroupUsersHandler(ctx context.Context, _ http.ResponseWriter,
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	logAuditEvent(ctx, "successfully updated group users", authEntityData, models.ActionUpdate, req.URL.Path, models.OutcomeSuccess, "")
+	logAuditEvent(ctx, "successfully updated group users", authEntityData, models.ActionUpdate, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
