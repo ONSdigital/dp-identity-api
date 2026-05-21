@@ -5,12 +5,14 @@ import (
 	"context"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"sort"
 	"strings"
 
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 
 	"github.com/ONSdigital/dp-identity-api/v2/models"
@@ -28,10 +30,16 @@ const (
 	GroupsDeletePermission = "groups:delete"
 	sortOrderAsc           = "asc"
 	sortOrderDesc          = "desc"
+	forenameField          = "forename"
 )
 
 // CreateGroupHandler creates a new group
 func (api *API) CreateGroupHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		dplogs.Error(ctx, "createGroupHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, handleBodyReadError(ctx, err)
@@ -79,11 +87,18 @@ func (api *API) CreateGroupHandler(ctx context.Context, _ http.ResponseWriter, r
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
+	logAuditEvent(ctx, "successfully created group", authEntityData, models.ActionCreate, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return createGroup.NewSuccessResponse(jsonResponse, http.StatusCreated, nil), nil
 }
 
 // UpdateGroupHandler update group details for a given group by id (GroupName)
 func (api *API) UpdateGroupHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		dplogs.Error(ctx, "updateGroupHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
+
 	vars := mux.Vars(req)
 
 	id := vars["id"]
@@ -121,11 +136,17 @@ func (api *API) UpdateGroupHandler(ctx context.Context, _ http.ResponseWriter, r
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
+	logAuditEvent(ctx, "successfully updated group", authEntityData, models.ActionUpdate, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return updateGroup.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
 // AddUserToGroupHandler adds a user to the specified group
 func (api *API) AddUserToGroupHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		dplogs.Error(ctx, "addUserToGroupHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 	vars := mux.Vars(req)
 	group := models.Group{ID: vars["id"]}
 
@@ -169,6 +190,8 @@ func (api *API) AddUserToGroupHandler(ctx context.Context, _ http.ResponseWriter
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
+
+	logAuditEvent(ctx, "successfully added user to group", authEntityData, models.ActionCreate, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -202,6 +225,7 @@ func (api *API) ListUsersInGroupHandler(ctx context.Context, rw http.ResponseWri
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
+
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -210,7 +234,7 @@ func sortUsers(ctx context.Context, users []models.UserParams, sortBy []string) 
 		return true
 	}
 	switch sortBy[0] {
-	case "forename":
+	case forenameField:
 		switch sortBy[1] {
 		case sortOrderAsc:
 			sortByUserNameAsc := func(i, j int) bool {
@@ -257,6 +281,11 @@ func (api *API) getUsersInAGroup(ctx context.Context, group models.Group) (listO
 
 // RemoveUserFromGroupHandler adds a user to the specified group
 func (api *API) RemoveUserFromGroupHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		dplogs.Error(ctx, "removeUserFromGroupHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 	vars := mux.Vars(req)
 	group := models.Group{ID: vars["id"]}
 	userID := vars["user_id"]
@@ -293,6 +322,8 @@ func (api *API) RemoveUserFromGroupHandler(ctx context.Context, _ http.ResponseW
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
+
+	logAuditEvent(ctx, "successfully removed user from group", authEntityData, models.ActionDelete, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -360,6 +391,11 @@ func (api *API) ListGroupsHandler(ctx context.Context, rw http.ResponseWriter, r
 
 // GetGroupHandler gets group details for given groups
 func (api *API) GetGroupHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		dplogs.Error(ctx, "getGroupHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 	vars := mux.Vars(req)
 	group := models.Group{ID: vars["id"]}
 	groupGetRequest := group.BuildGetGroupRequest(api.UserPoolID)
@@ -379,11 +415,17 @@ func (api *API) GetGroupHandler(ctx context.Context, _ http.ResponseWriter, req 
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
+	logAuditEvent(ctx, "successfully retrieved group", authEntityData, models.ActionRead, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
 // DeleteGroupHandler deletes the group for the given group id
 func (api *API) DeleteGroupHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		dplogs.Error(ctx, "deleteGroupHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 	vars := mux.Vars(req)
 	group := models.Group{ID: vars["id"]}
 	groupDeleteRequest := group.BuildDeleteGroupRequest(api.UserPoolID)
@@ -395,11 +437,18 @@ func (api *API) DeleteGroupHandler(ctx context.Context, _ http.ResponseWriter, r
 		}
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, cognitoErr)
 	}
+
+	logAuditEvent(ctx, "successfully deleted group", authEntityData, models.ActionDelete, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return models.NewSuccessResponse(nil, http.StatusNoContent, nil), nil
 }
 
 // SetGroupUsersHandler adds a user to the specified group
 func (api *API) SetGroupUsersHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		dplogs.Error(ctx, "setGroupUsersHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 	vars := mux.Vars(req)
 
 	group := models.Group{ID: vars["id"]}
@@ -448,6 +497,8 @@ func (api *API) SetGroupUsersHandler(ctx context.Context, _ http.ResponseWriter,
 	if responseErr != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
+
+	logAuditEvent(ctx, "successfully updated group users", authEntityData, models.ActionUpdate, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
@@ -592,7 +643,7 @@ func (api *API) GetTeamsReportLines(ctx context.Context, listOfGroups *cognitoid
 		}
 		for _, user := range listUsers {
 			for _, attribute := range user.Attributes {
-				if strings.EqualFold(*attribute.Name, "email") {
+				if strings.EqualFold(*attribute.Name, emailField) {
 					GroupsUsersList = append(GroupsUsersList, models.ListGroupUsersType{
 						GroupName: *ListGroup.Description,
 						UserEmail: *attribute.Value,

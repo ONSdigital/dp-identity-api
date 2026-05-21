@@ -3,14 +3,16 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
-
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-identity-api/v2/models"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 )
 
 // TokensHandler uses submitted email address and password to sign a user in against Cognito and returns a http handler interface
@@ -94,6 +96,10 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 		httpStatus = http.StatusAccepted
 	}
 
+	auditEventParams := models.AuditEventParams{
+		"email": userSignIn.Email,
+	}
+	logAuditEvent(ctx, "successfully signed in", nil, models.ActionCreate, req.URL.Path, models.OutcomeSuccess, "", &auditEventParams)
 	return models.NewSuccessResponse(jsonResponse, httpStatus, headers), nil
 }
 
@@ -159,11 +165,20 @@ func (api *API) RefreshHandler(ctx context.Context, _ http.ResponseWriter, req *
 		IDTokenHeaderName:     *result.AuthenticationResult.IdToken,
 	}
 
+	auditEventParams := models.AuditEventParams{
+		"email": idToken.Claims.Email,
+	}
+	logAuditEvent(ctx, "successfully refreshed tokens", nil, models.ActionUpdate, req.URL.Path, models.OutcomeSuccess, "", &auditEventParams)
 	return models.NewSuccessResponse(jsonResponse, http.StatusCreated, headers), nil
 }
 
 // SignOutAllUsersHandler bulk refresh token invalidation for panic sign out handling
 func (api *API) SignOutAllUsersHandler(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	authEntityData, ok := authorisation.AuthEntityDataFromContext(req.Context())
+	if !ok {
+		log.Error(ctx, "signOutAllUsersHandler endpoint: failed to parse auth entity data", errors.New(models.EntityDataErrorDescription))
+		return nil, handleAuthEntityDataError(ctx, errors.New(models.EntityDataErrorDescription), nil)
+	}
 	var (
 		userFilterString = `status="Enabled"`
 	)
@@ -184,6 +199,7 @@ func (api *API) SignOutAllUsersHandler(ctx context.Context, _ http.ResponseWrite
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, resErr)
 	}
 
+	logAuditEvent(ctx, "successfully signed out all users", authEntityData, models.ActionDelete, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return models.NewSuccessResponse(postBody, http.StatusAccepted, nil), nil
 }
 

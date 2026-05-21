@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	authorisation "github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
+	auth "github.com/ONSdigital/dp-authorisation/v2/authorisation"
+	authmock "github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
 	"github.com/ONSdigital/dp-identity-api/v2/cognito/mock"
 	jwksmock "github.com/ONSdigital/dp-identity-api/v2/jwks/mock"
 	"github.com/ONSdigital/dp-identity-api/v2/models"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/aws/smithy-go"
@@ -27,6 +30,12 @@ const (
 	unknownError     = smithy.ErrorFault(0)
 	serverError      = smithy.ErrorFault(1)
 	clientError      = smithy.ErrorFault(2)
+	extOnsDomain     = "@ext.ons.gov.uk"
+	onsDomain        = "@ons.gov.uk"
+	testAwsRegion    = "eu-west-1234"
+	testEmail        = "email@ons.gov.uk"
+	passwordField    = "password"
+	lastnameField    = "lastname"
 )
 
 var jwksHandler = jwksmock.JWKSStubbed
@@ -45,8 +54,8 @@ func TestSetup(t *testing.T) {
 		}
 
 		api, err := Setup(ctx, r, m,
-			"us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow", "eu-west-1234", true,
-			[]string{"@ons.gov.uk", "@ext.ons.gov.uk"}, newAuthorisationMiddlwareMock(), jwksHandler)
+			"us-west-2_aaaaaaaaa", "client-aaa-bbb", "secret-ccc-ddd", "authflow", testAwsRegion, true,
+			[]string{onsDomain, extOnsDomain}, newAuthorisationMiddlwareMock(), jwksHandler)
 
 		Convey("When created the following route(s) should have been added", func() {
 			So(hasRoute(api.Router, "/v1/tokens", http.MethodPost), ShouldBeTrue)
@@ -99,9 +108,9 @@ func TestSetup(t *testing.T) {
 				"client-aaa-bbb",
 				"secret-ccc-ddd",
 				"authflow",
-				"eu-west-1234",
+				testAwsRegion,
 				true,
-				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
+				[]string{onsDomain, extOnsDomain},
 			},
 			// missing clientID
 			{
@@ -110,9 +119,9 @@ func TestSetup(t *testing.T) {
 				"",
 				"secret-ccc-ddd",
 				"authflow",
-				"eu-west-1234",
+				testAwsRegion,
 				true,
-				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
+				[]string{onsDomain, extOnsDomain},
 			},
 			// missing clientSecret
 			{
@@ -121,9 +130,9 @@ func TestSetup(t *testing.T) {
 				"client-aaa-bbb",
 				"",
 				"authflow",
-				"eu-west-1234",
+				testAwsRegion,
 				true,
-				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
+				[]string{onsDomain, extOnsDomain},
 			},
 			// missing clientAuthFlow
 			{
@@ -132,9 +141,9 @@ func TestSetup(t *testing.T) {
 				"client-aaa-bbb",
 				"secret-ccc-ddd",
 				"",
-				"eu-west-1234",
+				testAwsRegion,
 				true,
-				[]string{"@ons.gov.uk", "@ext.ons.gov.uk"},
+				[]string{onsDomain, extOnsDomain},
 			},
 			// missing allowedDomains
 			{
@@ -143,7 +152,7 @@ func TestSetup(t *testing.T) {
 				"client-aaa-bbb",
 				"secret-ccc-ddd",
 				"authflow",
-				"eu-west-1234",
+				testAwsRegion,
 				true,
 				nil,
 			},
@@ -174,10 +183,10 @@ func apiMockSetup() (*API, *httptest.ResponseRecorder, *mock.MockCognitoIdentity
 	var (
 		ctx                                       = context.Background()
 		r                                         = mux.NewRouter()
-		poolID, clientID, clientSecret, awsRegion = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "eu-west-1234"
+		poolID, clientID, clientSecret, awsRegion = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", testAwsRegion
 		authFlow                                  = types.AuthFlowTypeUserPasswordAuth
 		blockPlusAddressing                       = true
-		allowedDomains                            = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
+		allowedDomains                            = []string{onsDomain, extOnsDomain}
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
@@ -199,9 +208,9 @@ func apiMockSetupWithDynamicBlockPlusAddressing(blockPlusAddressing bool) (*API,
 	var (
 		ctx                                       = context.Background()
 		r                                         = mux.NewRouter()
-		poolID, clientID, clientSecret, awsRegion = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", "eu-west-1234"
+		poolID, clientID, clientSecret, awsRegion = "us-west-11_bxushuds", "client-aaa-bbb", "secret-ccc-ddd", testAwsRegion
 		authFlow                                  = types.AuthFlowTypeUserPasswordAuth
-		allowedDomains                            = []string{"@ons.gov.uk", "@ext.ons.gov.uk"}
+		allowedDomains                            = []string{onsDomain, extOnsDomain}
 	)
 
 	m := &mock.MockCognitoIdentityProviderClient{}
@@ -424,10 +433,32 @@ func TestInitialiseRoleGroups(t *testing.T) {
 	})
 }
 
-func newAuthorisationMiddlwareMock() *authorisation.MiddlewareMock {
-	return &authorisation.MiddlewareMock{
+func newAuthorisationMiddlwareMock() *authmock.MiddlewareMock {
+	return &authmock.MiddlewareMock{
 		RequireFunc: func(_ string, handlerFunc http.HandlerFunc) http.HandlerFunc {
-			return handlerFunc
+			return func(w http.ResponseWriter, r *http.Request) {
+				handlerFunc(w, addAuthEntityDataToRequest(r))
+			}
+		},
+		ParseFunc: func(_ string) (*permsdk.EntityData, error) {
+			return &permsdk.EntityData{
+				UserID: "test-user",
+				Groups: []string{"role-admin"},
+			}, nil
 		},
 	}
+}
+
+func addAuthEntityDataToRequest(r *http.Request) *http.Request {
+	entityData := &permsdk.EntityData{
+		UserID: "test-user",
+		Groups: []string{"role-admin"},
+	}
+	authEntityData := auth.CreateAuthEntityData(entityData, false)
+	ctx := auth.ContextWithAuthEntityData(r.Context(), authEntityData)
+	return r.WithContext(ctx)
+}
+
+func newAuthenticatedRequest(method, target string, body io.Reader) *http.Request {
+	return addAuthEntityDataToRequest(httptest.NewRequest(method, target, body))
 }
