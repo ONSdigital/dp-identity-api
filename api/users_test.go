@@ -1268,6 +1268,7 @@ func TestChangePasswordHandler(t *testing.T) {
 			postBody := map[string]interface{}{"type": models.NewPasswordRequiredType, emailField: email, passwordField: password, "session": session}
 			body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodPut, changePasswordEndPoint, bytes.NewReader(body))
+			r = addAuthEntityDataToRequest(r)
 			successResponse, errorResponse := api.ChangePasswordHandler(ctx, w, r)
 			tt.assertions(successResponse, errorResponse)
 		}
@@ -1372,6 +1373,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 			postBody := map[string]interface{}{"type": models.ForgottenPasswordType, emailField: email, passwordField: password, "verification_token": verificationToken}
 			body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodPut, changePasswordEndPoint, bytes.NewReader(body))
+			r = addAuthEntityDataToRequest(r)
 
 			successResponse, errorResponse := api.ChangePasswordHandler(ctx, w, r)
 
@@ -1421,6 +1423,7 @@ func TestConfirmForgotPasswordChangePasswordHandler(t *testing.T) {
 		for _, tt := range validationTests {
 			body, _ := json.Marshal(tt.requestBody)
 			r := httptest.NewRequest(http.MethodPut, changePasswordEndPoint, bytes.NewReader(body))
+			r = addAuthEntityDataToRequest(r)
 
 			successResponse, errorResponse := api.ChangePasswordHandler(ctx, w, r)
 
@@ -1503,6 +1506,7 @@ func TestPasswordResetHandler(t *testing.T) {
 			postBody := map[string]interface{}{emailField: email}
 			body, _ := json.Marshal(postBody)
 			r := httptest.NewRequest(http.MethodPost, requestResetEndPoint, bytes.NewReader(body))
+			r = addAuthEntityDataToRequest(r)
 
 			successResponse, errorResponse := api.PasswordResetHandler(ctx, w, r)
 
@@ -1519,6 +1523,7 @@ func TestPasswordResetHandler(t *testing.T) {
 
 	Convey("ForgotPassword returns 500: error unmarshalling request body", t, func() {
 		r := httptest.NewRequest(http.MethodPost, requestResetEndPoint, bytes.NewReader(nil))
+		r = addAuthEntityDataToRequest(r)
 
 		successResponse, errorResponse := api.PasswordResetHandler(ctx, w, r)
 
@@ -1545,6 +1550,7 @@ func TestPasswordResetHandler(t *testing.T) {
 		for _, tt := range validationTests {
 			body, _ := json.Marshal(tt.requestBody)
 			r := httptest.NewRequest(http.MethodPost, requestResetEndPoint, bytes.NewReader(body))
+			r = addAuthEntityDataToRequest(r)
 
 			successResponse, errorResponse := api.PasswordResetHandler(ctx, w, r)
 

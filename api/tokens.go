@@ -96,6 +96,10 @@ func (api *API) TokensHandler(ctx context.Context, _ http.ResponseWriter, req *h
 		httpStatus = http.StatusAccepted
 	}
 
+	auditEventParams := models.AuditEventParams{
+		"email": userSignIn.Email,
+	}
+	logAuditEvent(ctx, "successfully signed in", nil, models.ActionCreate, req.URL.Path, models.OutcomeSuccess, "", &auditEventParams)
 	return models.NewSuccessResponse(jsonResponse, httpStatus, headers), nil
 }
 
@@ -161,6 +165,10 @@ func (api *API) RefreshHandler(ctx context.Context, _ http.ResponseWriter, req *
 		IDTokenHeaderName:     *result.AuthenticationResult.IdToken,
 	}
 
+	auditEventParams := models.AuditEventParams{
+		"email": idToken.Claims.Email,
+	}
+	logAuditEvent(ctx, "successfully refreshed tokens", nil, models.ActionUpdate, req.URL.Path, models.OutcomeSuccess, "", &auditEventParams)
 	return models.NewSuccessResponse(jsonResponse, http.StatusCreated, headers), nil
 }
 
@@ -191,7 +199,7 @@ func (api *API) SignOutAllUsersHandler(ctx context.Context, _ http.ResponseWrite
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, resErr)
 	}
 
-	logAuditEvent(ctx, "successfully signed out all users", authEntityData, models.ActionDelete, req.URL.Path, models.OutcomeSuccess, "")
+	logAuditEvent(ctx, "successfully signed out all users", authEntityData, models.ActionDelete, req.URL.Path, models.OutcomeSuccess, "", nil)
 	return models.NewSuccessResponse(postBody, http.StatusAccepted, nil), nil
 }
 

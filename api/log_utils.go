@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-identity-api/v2/models"
@@ -11,12 +12,8 @@ import (
 // logAuditEvent produces protective monitoring logging for the API endpoints given successful requests.
 // should we be logging a failed request we also log the reason for this.
 func logAuditEvent(ctx context.Context, message string, authEntityData *authorisation.AuthEntityData, action models.Action,
-	endpoint string, outcome models.Outcome, errReason string) {
+	endpoint string, outcome models.Outcome, errReason string, auditEventParams *models.AuditEventParams) {
 	identityType := log.USER
-	if authEntityData.IsServiceAuth {
-		identityType = log.SERVICE
-	}
-
 	data := log.Data{
 		"action":   action,
 		"endpoint": endpoint,
@@ -27,11 +24,30 @@ func logAuditEvent(ctx context.Context, message string, authEntityData *authoris
 		data["reason"] = errReason
 	}
 
-	log.Info(
-		ctx,
-		message,
-		log.Classification(log.ProtectiveMonitoring),
-		log.Auth(identityType, authEntityData.EntityData.UserID),
-		data,
-	)
+	if authEntityData != nil {
+		if authEntityData.IsServiceAuth {
+			identityType = log.SERVICE
+		}
+		log.Info(
+			ctx,
+			message,
+			log.Classification(log.ProtectiveMonitoring),
+			log.Auth(identityType, authEntityData.EntityData.UserID),
+			data,
+		)
+		return
+	}
+
+	if auditEventParams != nil {
+		for _, value := range *auditEventParams {
+			auditEventParamsString := fmt.Sprint(value)
+			log.Info(
+				ctx,
+				message,
+				log.Classification(log.ProtectiveMonitoring),
+				log.Auth(identityType, auditEventParamsString),
+				data,
+			)
+		}
+	}
 }
