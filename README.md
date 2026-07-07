@@ -32,7 +32,7 @@ To remove create test data from Cognito user pool:
 
 * No further dependencies other than those defined in `go.mod`
 
-To run make validate-specification you require Node v20.x and to install @redocly/cli:
+To run make validate-specification you require Node v24.x and to install @redocly/cli:
 
 ```sh
    npm install -g @redocly/cli
