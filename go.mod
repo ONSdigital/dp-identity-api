@@ -1,6 +1,6 @@
 module github.com/ONSdigital/dp-identity-api/v2
 
-go 1.26.5
+go 1.27.0
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.270.0
