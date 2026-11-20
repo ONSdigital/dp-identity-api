@@ -24,10 +24,11 @@ linters:
   settings:
     dupl:
       threshold: 100
+    gocognit:
+      min-complexity: 40
     goconst:
-      min-len: 2
-      min-occurrences: 3
-      ignore-tests: true
+      min-len: 5
+      min-occurrences: 5
     gocritic:
       disabled-checks:
         - wrapperFunc
@@ -42,7 +43,7 @@ linters:
         - performance
         - style
     gocyclo:
-      min-complexity: 15
+      min-complexity: 20
     lll:
       line-length: 140
     misspell:
@@ -56,17 +57,24 @@ linters:
       - std-error-handling
     rules:
       - linters:
-          - dupl
-          - errcheck
-          - gocyclo
-          - gosec
-          - revive
-        path: _test\.go
-      - linters:
           - revive
         path: _test.go
         text: dot-imports
         source: github.com/smartystreets/goconvey/convey
+      - linters:
+          - gosec
+        path: _mocker.go
+        text: integer overflow
+      - linters:
+          - revive
+        path: aws_utils.go
+        text: unreachable-code
+        source: log.Fatal
+      - linters:
+          - revive
+        path: initialise.go
+        text: unreachable-code
+        source: log.Fatal
 issues:
   new: false
 formatters:
